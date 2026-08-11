@@ -803,63 +803,13 @@
 
         let users = [
             { uid: 'u_admin', username: 'admin', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true },
-            { uid: 'u_salim', username: 'salimnashho', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true },
-            { uid: 'u_test', username: 'test', passwordHash: '123456', kunya: 'Abu test', gender: 'MALE', whatsapp: '+96725843608', role: 'USER', verifiedShop: false }
+            { uid: 'u_salim', username: 'salimnashho', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true }
         ];
 
         let archivedUsers = [];
 
-        // Initial default demo ads used as fallback and initial seed
-        const defaultDemoAds = [
-            {
-                id: 'AD-101',
-                title: 'Солнечная панель Trina Solar 550W Tier 1',
-                category: 'electronics',
-                region: 'DAM',
-                city: 'Дамаск (р-н Маззе)',
-                price: 110,
-                currency: 'USD',
-                isFree: false,
-                isWomenOnly: false,
-                condition: 'NEW',
-                pickup: 'PICKUP',
-                sellerUsername: 'salimnashho',
-                sellerKunya: 'Salim Nashho',
-                sellerWhatsapp: '+963956606833',
-                lat: 33.5138,
-                lng: 36.2765,
-                image: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=60',
-                desc: 'Новые запечатанные солнечные панели 550W. Высокая производительность. Гарантия от производителя.',
-                queue: [],
-                status: 'ACTIVE',
-                createdAt: Date.now()
-            },
-            {
-                id: 'AD-102',
-                title: 'Детская коляска Chicco в отличном состоянии',
-                category: 'home',
-                region: 'RIF_DAM',
-                city: 'Риф-Дамаск (Джарамана)',
-                price: 0,
-                currency: 'USD',
-                isFree: true,
-                isWomenOnly: true,
-                condition: 'EXCELLENT',
-                pickup: 'PICKUP',
-                sellerUsername: 'test',
-                sellerKunya: 'Abu test',
-                sellerWhatsapp: '+96725843608',
-                lat: 33.4833,
-                lng: 36.3500,
-                image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&auto=format&fit=crop&q=60',
-                desc: 'Отдаем даром детскую коляску Chicco. Все механизмы исправны, чистая. Только для сестёр.',
-                queue: [],
-                status: 'ACTIVE',
-                createdAt: Date.now() - 3600000
-            }
-        ];
-
-        let ads = [...defaultDemoAds];
+        // Clean empty initialization array - Zero phantom/demo ads
+        let ads = [];
 
         const TRANSLATIONS = {
             RU: {
@@ -899,7 +849,7 @@
                 resetCache: "Сброс кэша",
                 footerCopyright: "© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.",
                 developerLabel: "Разработчик:",
-                noAdsFound: "Объявлений по данному запросу не найдено",
+                noAdsFound: "Объявлений пока нет. Будьте первым, кто подаст объявление!",
                 btnFirstPage: "« Первая",
                 btnPrevPage: "< Назад",
                 btnNextPage: "Вперед >",
@@ -967,7 +917,6 @@
                 adminTabUsers: "Пользователи и Роли",
                 adminTabArchive: "Архив пользователей",
                 adminTabRates: "Курсы валют",
-                adminTabBackup: "Бэкап и Данные",
                 recsTitle: "3 главных совета для удачных и безопасных сделок в Сирии",
                 rec1Title: "Честное описание и изъяны",
                 rec1Desc: "Всегда указывайте дефекты и мелкие изъяны. Прозрачность ускоряет продажу и бережёт репутацию.",
@@ -1013,7 +962,7 @@
                 resetCache: "تحديث للتخزين",
                 footerCopyright: "© 2026 BarakaSouq. منصة الإعلانات المدنية في سوريا.",
                 developerLabel: "التطوير بواسطة:",
-                noAdsFound: "لم يتم العثور على إعلانات تطابق البحث",
+                noAdsFound: "لا توجد إعلانات حتى الآن. كن أول من يضيف إعلاناً!",
                 btnFirstPage: "« الأولى",
                 btnPrevPage: "< السابق",
                 btnNextPage: "التالي >",
@@ -1081,7 +1030,6 @@
                 adminTabUsers: "المستخدمون والرتب",
                 adminTabArchive: "أرشيف المستخدمين",
                 adminTabRates: "أسعار الصرف",
-                adminTabBackup: "النسخ الاحتياطي",
                 recsTitle: "3 نصائح رئيسية لصفقات ناجحة وآمنة في سوريا",
                 rec1Title: "الصدق في الوصف والعيوب",
                 rec1Desc: "اذكر دائماً العيوب بالتفصيل. الشفافية تسرع البيع وتحفظ سمعتك.",
@@ -1127,7 +1075,7 @@
                 resetCache: "Önbelleği Sıfırla",
                 footerCopyright: "© 2026 BarakaSouq. Suriye Sivil İlan Platformu.",
                 developerLabel: "Geliştirici:",
-                noAdsFound: "Aramanıza uygun ilan bulunamadı",
+                noAdsFound: "Henüz ilan bulunmuyor. İlk ilanı siz verin!",
                 btnFirstPage: "« İlk",
                 btnPrevPage: "< Geri",
                 btnNextPage: "İleri >",
@@ -1195,7 +1143,6 @@
                 adminTabUsers: "Kullanıcılar & Rolleri",
                 adminTabArchive: "Kullanıcı Arşivi",
                 adminTabRates: "Döviz Kurları",
-                adminTabBackup: "Yedekleme & Veri",
                 recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
                 rec1Title: "Dürüst Açıklama ve Kusurlar",
                 rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
@@ -1353,35 +1300,23 @@
             const syncStatus = document.getElementById('cloud-sync-status');
             if (syncStatus) syncStatus.classList.remove('hidden');
 
-            firebaseDb.ref('ads_initialized').once('value').then((initSnap) => {
-                const isInitialized = initSnap.val();
-
-                firebaseDb.ref('ads').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        if (Array.isArray(data)) {
-                            ads = data.filter(item => item != null);
-                        } else {
-                            ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
-                        }
-                    } else if (!isInitialized) {
-                        // Database never initialized -> Seed initial demo ads once
-                        ads = [...defaultDemoAds];
-                        defaultDemoAds.forEach(item => {
-                            firebaseDb.ref(`ads/${item.id}`).set(item);
-                        });
-                        firebaseDb.ref('ads_initialized').set(true);
+            firebaseDb.ref('ads').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (Array.isArray(data)) {
+                        ads = data.filter(item => item != null);
                     } else {
-                        // User deliberately deleted or archived all ads -> keep empty array!
-                        ads = [];
+                        ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
                     }
-                    if (syncStatus) syncStatus.classList.add('hidden');
-                    renderAds();
-                    renderCategoryPills();
-                }, (err) => {
-                    console.warn('Firebase ads sync error:', err);
-                    if (syncStatus) syncStatus.classList.add('hidden');
-                });
+                } else {
+                    ads = [];
+                }
+                if (syncStatus) syncStatus.classList.add('hidden');
+                renderAds();
+                renderCategoryPills();
+            }, (err) => {
+                console.warn('Firebase ads sync error:', err);
+                if (syncStatus) syncStatus.classList.add('hidden');
             });
 
             firebaseDb.ref('users').on('value', (snapshot) => {
