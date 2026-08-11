@@ -798,7 +798,8 @@
 
         let archivedUsers = [];
 
-        let ads = [
+        // Initial default demo ads used as fallback and auto-seed for empty Firebase databases
+        const defaultDemoAds = [
             {
                 id: 'AD-101',
                 title: 'Солнечная панель Trina Solar 550W Tier 1',
@@ -846,6 +847,8 @@
                 createdAt: Date.now() - 3600000
             }
         ];
+
+        let ads = [...defaultDemoAds];
 
         const TRANSLATIONS = {
             RU: {
@@ -1317,8 +1320,18 @@
 
             firebaseDb.ref('ads').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
+                if (data && ((Array.isArray(data) && data.length > 0) || Object.keys(data).length > 0)) {
+                    if (Array.isArray(data)) {
+                        ads = data.filter(item => item != null);
+                    } else {
+                        ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
+                    }
+                } else {
+                    // Firebase database is empty — seed it with default initial ads
+                    ads = [...defaultDemoAds];
+                    defaultDemoAds.forEach(item => {
+                        firebaseDb.ref(`ads/${item.id}`).set(item);
+                    });
                 }
                 if (syncStatus) syncStatus.classList.add('hidden');
                 renderAds();
@@ -1331,14 +1344,22 @@
             firebaseDb.ref('users').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    users = Object.keys(data).map(k => ({ ...data[k], uid: k }));
+                    if (Array.isArray(data)) {
+                        users = data.filter(item => item != null);
+                    } else {
+                        users = Object.keys(data).map(k => ({ ...data[k], uid: k }));
+                    }
                 }
             });
 
             firebaseDb.ref('archivedUsers').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    archivedUsers = Object.keys(data).map(k => ({ ...data[k], uid: k }));
+                    if (Array.isArray(data)) {
+                        archivedUsers = data.filter(item => item != null);
+                    } else {
+                        archivedUsers = Object.keys(data).map(k => ({ ...data[k], uid: k }));
+                    }
                 } else {
                     archivedUsers = [];
                 }
@@ -1373,7 +1394,6 @@
                     if (usdRate) {
                         const rawSyp = parseFloat(usdRate.sell || usdRate.buy);
                         if (!isNaN(rawSyp)) {
-                            /* Automatic de-denomination: shift decimal point 2 places to left if > 1000 */
                             sypVal = rawSyp > 1000 ? rawSyp / 100 : rawSyp;
                         }
                     }
@@ -1472,7 +1492,11 @@
                 if (c.id === 'favorites') {
                     count = favorites.length;
                 } else if (c.id === 'all') {
-                    count = ads.filter(a => a.status === 'ACTIVE').length;
+                    count = ads.filter(a => {
+                        if (a.status !== 'ACTIVE') return false;
+                        if (a.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN'))) return false;
+                        return true;
+                    }).length;
                 } else if (c.id === 'shops_dir') {
                     count = users.filter(u => u.verifiedShop).length;
                 } else {
@@ -1780,6 +1804,7 @@
                 const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
                 
                 if (found) {
+                    // Auto-sync or match password smoothly
                     const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
 
                     if (isPasswordValid) {
