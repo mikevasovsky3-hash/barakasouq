@@ -2556,6 +2556,11 @@
             renderAdminTabContent();
         }
 
+        function goToAdminSection(tab, subTab = null) {
+            if (subTab) adminAdsTab = subTab;
+            switchAdminTab(tab);
+        }
+
         function renderAdminTabContent() {
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
@@ -2565,22 +2570,22 @@
             if (tab === 'overview') {
                 container.innerHTML = `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-amber-400">${ads.filter(a => a.status === 'ACTIVE').length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Активных объявлений</div>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-purple-400">${ads.filter(a => a.status === 'ARCHIVED').length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Объявлений в архиве</div>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-blue-400">${users.length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Пользователей</div>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-rose-400">${archivedUsers.length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Аккаунтов в архиве</div>
-                        </div>
+                        <button onclick="goToAdminSection('ads', 'active')" class="bg-white/5 hover:bg-amber-500/10 border border-white/10 hover:border-amber-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-amber-400 group-hover:scale-110 transition-transform">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                            <div class="text-slate-300 group-hover:text-amber-300 text-[10px] uppercase font-bold tracking-wide">Активных объявлений</div>
+                        </button>
+                        <button onclick="goToAdminSection('ads', 'archived')" class="bg-white/5 hover:bg-purple-500/10 border border-white/10 hover:border-purple-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-purple-400 group-hover:scale-110 transition-transform">${ads.filter(a => a.status === 'ARCHIVED').length}</div>
+                            <div class="text-slate-300 group-hover:text-purple-300 text-[10px] uppercase font-bold tracking-wide">Объявлений в архиве</div>
+                        </button>
+                        <button onclick="goToAdminSection('users')" class="bg-white/5 hover:bg-blue-500/10 border border-white/10 hover:border-blue-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-blue-400 group-hover:scale-110 transition-transform">${users.length}</div>
+                            <div class="text-slate-300 group-hover:text-blue-300 text-[10px] uppercase font-bold tracking-wide">Пользователей</div>
+                        </button>
+                        <button onclick="goToAdminSection('archive')" class="bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-rose-400 group-hover:scale-110 transition-transform">${archivedUsers.length}</div>
+                            <div class="text-slate-300 group-hover:text-rose-300 text-[10px] uppercase font-bold tracking-wide">Аккаунтов в архиве</div>
+                        </button>
                     </div>
                 `;
             } else if (tab === 'ads') {
