@@ -303,7 +303,6 @@
                     <input type="password" id="auth-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="••••••••">
                 </div>
 
-                <!-- Remember session checkbox -->
                 <div class="flex items-center justify-between pt-1">
                     <label class="flex items-center gap-2 cursor-pointer text-slate-300">
                         <input type="checkbox" id="auth-remember-me" checked class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
@@ -483,6 +482,104 @@
         </div>
     </div>
 
+    <!-- Edit Ad Modal -->
+    <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-400"></i> <span>Редактирование объявления</span>
+                </h3>
+                <button onclick="closeModal('modal-edit-ad')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="handleEditAdSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <input type="hidden" id="edit-ad-id">
+                <div>
+                    <label class="block text-slate-400 mb-1">Заголовок объявления *</label>
+                    <input type="text" id="edit-ad-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Категория *</label>
+                        <select id="edit-ad-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Регион *</label>
+                        <select id="edit-ad-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="DAM" class="bg-slate-900">Дамаск</option>
+                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
+                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
+                            <option value="IDL" class="bg-slate-900">Идлиб</option>
+                            <option value="HOMS" class="bg-slate-900">Хомс</option>
+                            <option value="HAMA" class="bg-slate-900">Хама</option>
+                            <option value="LAT" class="bg-slate-900">Латакия</option>
+                            <option value="TAR" class="bg-slate-900">Тартус</option>
+                            <option value="RAQ" class="bg-slate-900">Ракка</option>
+                            <option value="DEIR" class="bg-slate-900">Дейр-эз-Зор</option>
+                            <option value="HAS" class="bg-slate-900">Хасеке</option>
+                            <option value="DAR" class="bg-slate-900">Дараа</option>
+                            <option value="SUW" class="bg-slate-900">Эс-Сувейда</option>
+                            <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-pink-300">Только для женщин 🌸</div>
+                            <div class="text-[10px] text-slate-400">Объявление будет видно исключительно женщинам</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="edit-ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Город / Населенный пункт *</label>
+                    <input type="text" id="edit-ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none">
+                </div>
+
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-emerald-300">Отдать даром (Бесплатно)</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="edit-ad-is-free" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Цена *</label>
+                        <input type="number" id="edit-ad-price" step="0.01" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Валюта *</label>
+                        <select id="edit-ad-currency" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="USD" class="bg-slate-900">USD ($)</option>
+                            <option value="SYP" class="bg-slate-900">SYP (ل.س)</option>
+                            <option value="TRY" class="bg-slate-900">TRY (₺)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-amber-300 font-bold mb-1">Описание и изъяны *</label>
+                    <textarea id="edit-ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                    Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Profile Modal -->
     <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
@@ -616,9 +713,9 @@
             <div class="flex border-b border-white/10 bg-white/5 overflow-x-auto text-xs shrink-0 no-scrollbar">
                 <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap" data-i18n="adminTabOverview">Обзор</button>
                 <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabUsers">Пользователи и Роли</button>
+                <button onclick="switchAdminTab('ads')" id="atab-ads" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Объявления и Модерация</button>
                 <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив и Очистка</button>
                 <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabRates">Курсы валют</button>
-                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabBackup">Бэкап и Данные</button>
             </div>
 
             <div id="admin-tab-content" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
@@ -660,7 +757,7 @@
         </div>
     </footer>
 
-    <!-- Toast Container -->
+    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
     <script>
@@ -695,6 +792,7 @@
 
         let users = [
             { uid: 'u_admin', username: 'admin', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true },
+            { uid: 'u_salim', username: 'salimnashho', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true },
             { uid: 'u_test', username: 'test', passwordHash: '123456', kunya: 'Abu test', gender: 'MALE', whatsapp: '+96725843608', role: 'USER', verifiedShop: false }
         ];
 
@@ -713,7 +811,7 @@
                 isWomenOnly: false,
                 condition: 'NEW',
                 pickup: 'PICKUP',
-                sellerUsername: 'admin',
+                sellerUsername: 'salimnashho',
                 sellerKunya: 'Salim Nashho',
                 sellerWhatsapp: '+963956606833',
                 lat: 33.5138,
@@ -940,7 +1038,7 @@
                 womenOnlyNotice: "سيكون هذا الإعلان مرئياً للنساء فقط",
                 adCityLabel: "المدينة / المنطقة *",
                 adMapLabel: "الموقع على الخريطة *",
-                adMapHelp: "انقر على الخريطة لتحديد الموقع exact.",
+                adMapHelp: "انقر على الخريطة لتحديد الموقع.",
                 freeGiveaway: "لوجه الله (مجاناً)",
                 freeGiveawayDesc: "تقديم السلعة بدون مقابل للمحتاجين",
                 priceLabel: "السعر *",
@@ -1097,7 +1195,6 @@
             }, 3500);
         }
 
-        /* Custom Confirmation Modal (No Browser confirm()) */
         function showConfirmModal(title, msg, onConfirm) {
             const modal = document.getElementById('modal-confirm');
             const titleEl = document.getElementById('confirm-modal-title');
@@ -1124,12 +1221,22 @@
             };
         }
 
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+        }
+
         function restoreUserSession() {
             try {
                 const saved = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    const found = users.find(u => u.username === parsed.username);
+                    const found = users.find(u => u.username.toLowerCase() === parsed.username.toLowerCase());
                     if (found) {
                         currentUser = found;
                     } else {
@@ -1361,7 +1468,17 @@
             pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: getTranslation('catShopsDir') });
 
             container.innerHTML = pills.map(c => {
-                const count = (c.id === 'shops_dir' || c.id === 'favorites') ? c.badge : getCategoryAdsCount(c.id);
+                let count = 0;
+                if (c.id === 'favorites') {
+                    count = favorites.length;
+                } else if (c.id === 'all') {
+                    count = ads.filter(a => a.status === 'ACTIVE').length;
+                } else if (c.id === 'shops_dir') {
+                    count = users.filter(u => u.verifiedShop).length;
+                } else {
+                    count = getCategoryAdsCount(c.id);
+                }
+
                 return `
                     <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95">
                         <i class="fa-solid ${c.icon} text-base sm:text-lg"></i>
@@ -1502,16 +1619,6 @@
                     <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">${getTranslation('btnLastPage')}</button>
                 `;
             }
-        }
-
-        function openModal(id) {
-            const m = document.getElementById(id);
-            if (m) m.classList.remove('hidden');
-        }
-
-        function closeModal(id) {
-            const m = document.getElementById(id);
-            if (m) m.classList.add('hidden');
         }
 
         function resetPageAndRender() {
@@ -1670,15 +1777,12 @@
                 closeModal('modal-auth');
                 showToast('Регистрация успешна!', 'success');
             } else {
-                // Поиск пользователя по логину (без учета регистра)
                 const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
                 
                 if (found) {
-                    // Если пароль совпадает, либо это администратор/аккаунт без поля пароля — пускаем беспрепятственно
                     const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
 
                     if (isPasswordValid) {
-                        // Автоматически привязываем введённый пароль к аккаунту в базе
                         found.passwordHash = password;
                         if (firebaseDb && found.uid) {
                             firebaseDb.ref(`users/${found.uid}/passwordHash`).set(password);
@@ -1789,12 +1893,10 @@
                 if (roleEl) u.role = roleEl.value;
             }
 
-            // Sync updated user object to Firebase
             if (firebaseDb && u.uid) {
                 firebaseDb.ref(`users/${u.uid}`).set(u);
             }
 
-            // Automatically update seller details on all existing ads owned by this user
             ads.forEach(ad => {
                 if (ad.sellerUsername === originalUsername) {
                     ad.sellerUsername = newLogin;
@@ -1806,7 +1908,6 @@
                 }
             });
 
-            // If editing own account, update current active session
             if (currentUser && currentUser.username === originalUsername) {
                 currentUser = { ...u };
                 saveUserSession(currentUser, true);
@@ -1816,7 +1917,6 @@
             closeModal('modal-profile');
             updateAuthUI();
 
-            // Refresh Admin Panel list if open
             if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
                 renderAdminTabContent();
             }
@@ -2028,7 +2128,6 @@
                         </div>
                     </div>
 
-                    <!-- Queue Block -->
                     <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
                         <div class="flex items-center justify-between text-xs font-bold text-amber-300">
                             <span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-amber-400"></i> ${getTranslation('queueStatusText', { count: queueList.length })}</span>
@@ -2048,7 +2147,6 @@
                         <p class="text-xs text-slate-300 leading-relaxed bg-white/5 p-3.5 rounded-2xl border border-white/5 whitespace-pre-line">${ad.desc}</p>
                     </div>
 
-                    <!-- WhatsApp Seller Action -->
                     <a href="https://wa.me/${(ad.sellerWhatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
                         <i class="fa-brands fa-whatsapp text-lg"></i>
                         <span>${getTranslation('contactSellerWa')}</span>
@@ -2056,14 +2154,75 @@
 
                     ${isOwner ? `
                         <div class="pt-2 border-t border-white/10 flex gap-2">
-                            <button onclick="deleteAdWithConfirm('${ad.id}')" class="w-full py-2.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold text-xs border border-rose-500/30 transition-all">
-                                Удалить объявление
+                            <button onclick="openEditAdModal('${ad.id}')" class="flex-1 py-2.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all">
+                                <i class="fa-solid fa-pen-to-square"></i> Редактировать объявление
+                            </button>
+                            <button onclick="deleteAdWithConfirm('${ad.id}')" class="flex-1 py-2.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold text-xs border border-rose-500/30 transition-all">
+                                <i class="fa-solid fa-trash"></i> Удалить объявление
                             </button>
                         </div>
                     ` : ''}
                 </div>
             `;
             openModal('modal-ad-detail');
+        }
+
+        function openEditAdModal(adId) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            const isOwner = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+            if (!isOwner) {
+                showToast('У вас нет прав для редактирования этого объявления!', 'error');
+                return;
+            }
+
+            const catSelect = document.getElementById('edit-ad-category');
+            if (catSelect) {
+                catSelect.innerHTML = customCategories.map(c => `
+                    <option value="${c.id}" class="bg-slate-900">${c.name}</option>
+                `).join('');
+            }
+
+            document.getElementById('edit-ad-id').value = ad.id;
+            document.getElementById('edit-ad-title').value = ad.title || '';
+            document.getElementById('edit-ad-category').value = ad.category || 'electronics';
+            document.getElementById('edit-ad-region').value = ad.region || 'DAM';
+            document.getElementById('edit-ad-city').value = ad.city || '';
+            document.getElementById('edit-ad-is-women-only').checked = !!ad.isWomenOnly;
+            document.getElementById('edit-ad-is-free').checked = !!ad.isFree;
+            document.getElementById('edit-ad-price').value = ad.price || 0;
+            document.getElementById('edit-ad-currency').value = ad.currency || 'USD';
+            document.getElementById('edit-ad-desc').value = ad.desc || '';
+
+            closeModal('modal-ad-detail');
+            openModal('modal-edit-ad');
+        }
+
+        function handleEditAdSubmit(e) {
+            e.preventDefault();
+            const adId = document.getElementById('edit-ad-id').value;
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            ad.title = document.getElementById('edit-ad-title').value.trim();
+            ad.category = document.getElementById('edit-ad-category').value;
+            ad.region = document.getElementById('edit-ad-region').value;
+            ad.city = document.getElementById('edit-ad-city').value.trim();
+            ad.isWomenOnly = document.getElementById('edit-ad-is-women-only').checked;
+            ad.isFree = document.getElementById('edit-ad-is-free').checked;
+            ad.price = ad.isFree ? 0 : parseFloat(document.getElementById('edit-ad-price').value || 0);
+            ad.currency = document.getElementById('edit-ad-currency').value;
+            ad.desc = document.getElementById('edit-ad-desc').value.trim();
+
+            if (firebaseDb) {
+                firebaseDb.ref(`ads/${adId}`).set(ad);
+            }
+
+            closeModal('modal-edit-ad');
+            renderCategoryPills();
+            renderAds();
+            showToast('Объявление успешно обновлено!', 'success');
         }
 
         function joinQueue(adId) {
@@ -2229,7 +2388,7 @@
 
         function switchAdminTab(tab) {
             SYSTEM_CONFIG.adminTab = tab;
-            ['overview', 'users', 'archive', 'rates', 'backup'].forEach(t => {
+            ['overview', 'users', 'ads', 'archive', 'rates'].forEach(t => {
                 const btn = document.getElementById(`atab-${t}`);
                 if (btn) {
                     btn.className = (t === tab) 
@@ -2267,26 +2426,53 @@
                         </div>
                     </div>
                 `;
+            } else if (tab === 'ads') {
+                container.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-white text-xs">Все опубликованные объявления (${ads.length})</h4>
+                    </div>
+                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                        ${ads.length === 0 ? '<div class="text-center py-8 text-slate-500">Нет объявлений</div>' : ads.map(a => `
+                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-3">
+                                    <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
+                                    <div>
+                                        <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
+                                        <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
+                                        Редактировать
+                                    </button>
+                                    <button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                        Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
             } else if (tab === 'users') {
                 container.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-white text-xs">Список зарегистрированных аккаунтов</h4>
-                        <button onclick="openModal('modal-admin-create-user')" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow">
-                            <i class="fa-solid fa-user-plus"></i> Создать пользователя
+                        <h4 class="font-bold text-white text-xs">Управление пользователями (${users.length})</h4>
+                        <button onclick="openModal('modal-admin-create-user')" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-user-plus text-xs"></i> <span>Создать пользователя</span>
                         </button>
                     </div>
                     <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                         ${users.map(u => `
                             <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                 <div>
-                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">${u.role}</span></div>
-                                    <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp || 'Нет WA'}</div>
+                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
+                                    <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
                                 </div>
                                 <div class="flex items-center gap-1.5">
                                     <button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 text-[11px]">
                                         Редактировать
                                     </button>
-                                    <button onclick="adminArchiveUser('${u.uid}', '${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                    <button onclick="adminArchiveUser('${u.uid || ''}', '${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
                                         В архив
                                     </button>
                                 </div>
@@ -2296,20 +2482,22 @@
                 `;
             } else if (tab === 'archive') {
                 container.innerHTML = `
-                    <h4 class="font-bold text-white text-xs mb-3">Заархивированные пользователи</h4>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-white text-xs">Заархивированные аккаунты (${archivedUsers.length})</h4>
+                    </div>
                     <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                         ${archivedUsers.length === 0 ? '<div class="text-center py-8 text-slate-500">Архив пуст</div>' : archivedUsers.map(u => `
                             <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                 <div>
                                     <div class="font-bold text-slate-300 text-xs">${u.kunya || u.username} (@${u.username})</div>
-                                    <div class="text-[10px] text-slate-500">${u.whatsapp || 'Нет WA'}</div>
+                                    <div class="text-[10px] text-slate-500">Роль: ${u.role}</div>
                                 </div>
                                 <div class="flex items-center gap-1.5">
                                     <button onclick="restoreUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
                                         Восстановить
                                     </button>
                                     <button onclick="permanentlyDeleteUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
-                                        Удалить навсегда
+                                        Удалить
                                     </button>
                                 </div>
                             </div>
@@ -2318,82 +2506,63 @@
                 `;
             } else if (tab === 'rates') {
                 container.innerHTML = `
-                    <div class="space-y-4 max-w-md mx-auto">
-                        <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-center space-y-2">
-                            <div class="text-xs text-purple-300 font-bold">Синхронизация с SP Proxy Worker</div>
-                            <button onclick="fetchLiveExchangeRates(true)" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-md">
-                                <i class="fa-solid fa-arrows-rotate"></i> Обновить курс с сервера
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-2xl bg-purple-900/20 border border-purple-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-white text-xs">Авто-синхронизация курсов SP Proxy</span>
+                                <button onclick="fetchLiveExchangeRates(true)" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow transition-all">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Обновить курс
+                                </button>
+                            </div>
+                            <div class="text-[11px] text-slate-300 font-mono bg-black/40 p-3 rounded-xl border border-white/10">
+                                Worker Proxy: https://sp-proxy.mikevasovsky3.workers.dev/
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <div>
+                                    <label class="block text-slate-400 text-[11px] mb-1">Курс SYP за $1 USD</label>
+                                    <input type="number" id="rate-syp-input" value="${EXCHANGE_RATES.SYP}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 text-[11px] mb-1">Курс TRY за $1 USD</label>
+                                    <input type="number" id="rate-try-input" value="${EXCHANGE_RATES.TRY}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300">
+                                </div>
+                            </div>
+                            <button onclick="saveManualRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow">
+                                Сохранить изменения курсов
                             </button>
                         </div>
                     </div>
                 `;
-            } else if (tab === 'backup') {
-                container.innerHTML = `
-                    <div class="space-y-4 max-w-md mx-auto text-center">
-                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                            <h4 class="font-bold text-white text-xs">Экспорт и Импорт базы данных</h4>
-                            <div class="flex gap-2">
-                                <button onclick="exportBackupData()" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow">
-                                    <i class="fa-solid fa-download"></i> Скачать JSON
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
         }
 
-        function exportBackupData() {
-            const backup = {
-                ads,
-                users,
-                archivedUsers,
-                EXCHANGE_RATES,
-                exportedAt: new Date().toISOString()
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `barakasouq_backup_${Date.now()}.json`);
-            dlAnchorElem.click();
-            showToast('Бэкап базы успешно создан!', 'success');
-        }
+        function saveManualRates() {
+            const sypVal = parseFloat(document.getElementById('rate-syp-input')?.value || EXCHANGE_RATES.SYP);
+            const tryVal = parseFloat(document.getElementById('rate-try-input')?.value || EXCHANGE_RATES.TRY);
 
-        window.onload = function() {
-            restoreUserSession();
+            EXCHANGE_RATES.SYP = sypVal;
+            EXCHANGE_RATES.TRY = tryVal;
 
-            try {
-                const savedFavs = localStorage.getItem('bs_favorites');
-                if (savedFavs) favorites = JSON.parse(savedFavs);
-                
-                const savedRates = localStorage.getItem('bs_exchange_rates');
-                if (savedRates) {
-                    const parsed = JSON.parse(savedRates);
-                    if (parsed.SYP) EXCHANGE_RATES.SYP = parsed.SYP;
-                    if (parsed.TRY) EXCHANGE_RATES.TRY = parsed.TRY;
-                }
-
-                if (localStorage.getItem('bs_rules_accepted')) {
-                    SYSTEM_CONFIG.rulesAccepted = true;
-                }
-            } catch (e) {}
-
-            try {
-                initFirebaseSync();
-            } catch (err) {
-                console.warn('Firebase sync init warning:', err);
-                renderCategoryPills();
-                renderAds();
+            if (firebaseDb) {
+                firebaseDb.ref('rates').set(EXCHANGE_RATES);
             }
 
-            updateLanguageUI();
             updateFooterRatesUI();
-            fetchLiveExchangeRates();
-            setInterval(fetchLiveExchangeRates, 300000);
+            renderAds();
+            showToast('Курсы валют сохранены вручную!', 'success');
+        }
 
-            if (!SYSTEM_CONFIG.rulesAccepted) {
-                openModal('modal-rules-agreement');
-            }
+        window.onload = function () {
+            restoreUserSession();
+            initFirebaseSync();
+            fetchLiveExchangeRates();
+            renderCategoryPills();
+            renderAds();
+            updateLanguageUI();
+
+            setInterval(() => {
+                fetchLiveExchangeRates();
+            }, 300000);
         };
     </script>
 </body>
