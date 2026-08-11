@@ -218,11 +218,11 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
-        
-        <!-- Categories Toolbar (Compact Icon Pills) -->
+
+        <!-- Categories Toolbar (Compact Icon Pills with Red Notification Badges) -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
-                <!-- Dynamically Rendered Category Icon Pills -->
+                <!-- Dynamically Rendered Category Icon Pills with Live Counts -->
             </div>
         </div>
 
@@ -251,11 +251,21 @@
                 <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto border border-amber-500/30">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
-                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила платформы BarakaSouq</h2>
+                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила и рекомендации BarakaSouq</h2>
                 <p class="text-xs text-amber-300 font-bold" data-i18n="rulesAyah">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
             </div>
 
             <div class="text-xs space-y-3 text-slate-300 overflow-y-auto pr-1 leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div class="border-b border-white/10 pb-3 mb-2 space-y-2">
+                    <div class="text-amber-400 font-extrabold flex items-center gap-1.5" data-i18n="recsTitle">
+                        <i class="fa-solid fa-lightbulb text-amber-300"></i>
+                        <span>3 главных совета для удачных сделок:</span>
+                    </div>
+                    <p>1. <strong class="text-white" data-i18n="rec1Title">Честное описание и изъяны:</strong> <span data-i18n="rec1Desc">Указывайте все дефекты. Прозрачность ускоряет продажу.</span></p>
+                    <p>2. <strong class="text-white" data-i18n="rec2Title">Безопасные места встреч:</strong> <span data-i18n="rec2Desc">Встречайтесь в людных и известных публичных местах.</span></p>
+                    <p>3. <strong class="text-white" data-i18n="rec3Title">Используйте Очередь:</strong> <span data-i18n="rec3Desc">Нажимайте «Занять очередь» для бронирования товаров.</span></p>
+                </div>
+
                 <p>1. <strong data-i18n="rule1Title">Честность и прозрачность:</strong> <span data-i18n="rule1Desc">Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.</span></p>
                 <p>2. <strong data-i18n="rule2Title">Запрещенные товары:</strong> <span data-i18n="rule2Desc">Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.</span></p>
                 <p>3. <strong data-i18n="rule3Title">Гражданский ресурс:</strong> <span data-i18n="rule3Desc">Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.</span></p>
@@ -369,7 +379,7 @@
                     </div>
                     <div>
                         <label class="block text-slate-400 mb-1" data-i18n="adRegionLabel">Регион *</label>
-                        <select id="ad-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        <select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
                             <option value="ALEP" class="bg-slate-900">Алеппо</option>
@@ -421,10 +431,10 @@
                             <div class="text-[10px] text-slate-400" data-i18n="freeGiveawayDesc">Отдаете вещь безвозмездно нуждающимся</div>
                         </div>
                     </div>
-                    <input type="checkbox" id="ad-is-free" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
+                    <input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
                 </div>
 
-                <div id="price-container" class="grid grid-cols-2 gap-3">
+                <div id="price-container" class="grid grid-cols-2 gap-3 transition-all duration-300">
                     <div>
                         <label class="block text-slate-400 mb-1" data-i18n="priceLabel">Цена *</label>
                         <input type="number" id="ad-price" step="0.01" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="100">
@@ -714,7 +724,7 @@
                 <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap" data-i18n="adminTabOverview">Обзор</button>
                 <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabUsers">Пользователи и Роли</button>
                 <button onclick="switchAdminTab('ads')" id="atab-ads" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Объявления и Модерация</button>
-                <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив и Очистка</button>
+                <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив пользователей</button>
                 <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabRates">Курсы валют</button>
             </div>
 
@@ -770,6 +780,7 @@
         let currentPage = 1;
         const itemsPerPage = 8;
         let favorites = [];
+        let adminAdsTab = 'active'; // 'active' or 'archived'
 
         let EXCHANGE_RATES = {
             SYP: 131.70,
@@ -798,7 +809,7 @@
 
         let archivedUsers = [];
 
-        // Initial default demo ads used as fallback and auto-seed for empty Firebase databases
+        // Initial default demo ads used as fallback and initial seed
         const defaultDemoAds = [
             {
                 id: 'AD-101',
@@ -909,6 +920,7 @@
                 contactSellerWa: "Связаться с продавцом через WhatsApp",
                 openAllSellerAds: "Открыть все товары продавца",
                 editAdBtn: "Редактировать объявление",
+                archiveAdBtn: "В архив",
                 rulesTitle: "Правила платформы BarakaSouq",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!",
                 rule1Title: "Честность и прозрачность:",
@@ -953,9 +965,16 @@
                 adminPanelTitle: "Панель управления Главного Администратора",
                 adminTabOverview: "Обзор",
                 adminTabUsers: "Пользователи и Роли",
-                adminTabArchive: "Архив и Очистка",
+                adminTabArchive: "Архив пользователей",
                 adminTabRates: "Курсы валют",
-                adminTabBackup: "Бэкап и Данные"
+                adminTabBackup: "Бэкап и Данные",
+                recsTitle: "3 главных совета для удачных и безопасных сделок в Сирии",
+                rec1Title: "Честное описание и изъяны",
+                rec1Desc: "Всегда указывайте дефекты и мелкие изъяны. Прозрачность ускоряет продажу и бережёт репутацию.",
+                rec2Title: "Безопасные места встреч",
+                rec2Desc: "Встречайтесь в людных и известных местах (у мечетей, рынков или центральных площадей).",
+                rec3Title: "Используйте Очередь",
+                rec3Desc: "Нажмите «Занять очередь», чтобы забронировать товар и не потерять свое место среди покупателей."
             },
             AR: {
                 brandTagline: "سوق سوريا المدني",
@@ -1015,6 +1034,7 @@
                 contactSellerWa: "التواصل عبر واتساب",
                 openAllSellerAds: "عرض جميع منتجات هذا البائع",
                 editAdBtn: "تعديل الإعلان",
+                archiveAdBtn: "أرشفة الإعلان",
                 rulesTitle: "قواعد منصة بركة سوق",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ",
                 rule1Title: "الصدق والشفافية:",
@@ -1059,9 +1079,16 @@
                 adminPanelTitle: "لوحة تحكم المدير العام",
                 adminTabOverview: "نظرة عامة",
                 adminTabUsers: "المستخدمون والرتب",
-                adminTabArchive: "الأرشيف والتنظيف",
+                adminTabArchive: "أرشيف المستخدمين",
                 adminTabRates: "أسعار الصرف",
-                adminTabBackup: "النسخ الاحتياطي"
+                adminTabBackup: "النسخ الاحتياطي",
+                recsTitle: "3 نصائح رئيسية لصفقات ناجحة وآمنة في سوريا",
+                rec1Title: "الصدق في الوصف والعيوب",
+                rec1Desc: "اذكر دائماً العيوب بالتفصيل. الشفافية تسرع البيع وتحفظ سمعتك.",
+                rec2Title: "أماكن التقاء آمنة",
+                rec2Desc: "التقِ دائماً في أماكن عامة معروفة (قرب المساجد، الأسواق أو الساحات العامة).",
+                rec3Title: "استخدم نظام الدور",
+                rec3Desc: "اضغط على «حجز دور» لحجز المنتج وحفظ أسبقيتك الشريفة."
             },
             TR: {
                 brandTagline: "Suriye İlan Pazarı",
@@ -1121,6 +1148,7 @@
                 contactSellerWa: "Satıcıyla WhatsApp'tan İletişime Geç",
                 openAllSellerAds: "Satıcının Tüm İlanlarını Gör",
                 editAdBtn: "İlanı Düzenle",
+                archiveAdBtn: "Arşive Kaldır",
                 rulesTitle: "BarakaSouq Platform Kuralları",
                 rulesAyah: "Ticarette Allah'tan korkun!",
                 rule1Title: "Dürüstlük ve Şeffaflık:",
@@ -1165,9 +1193,16 @@
                 adminPanelTitle: "Süper Yönetici Paneli",
                 adminTabOverview: "Genel Bakış",
                 adminTabUsers: "Kullanıcılar & Rolleri",
-                adminTabArchive: "Arşiv & Temizlik",
+                adminTabArchive: "Kullanıcı Arşivi",
                 adminTabRates: "Döviz Kurları",
-                adminTabBackup: "Yedekleme & Veri"
+                adminTabBackup: "Yedekleme & Veri",
+                recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
+                rec1Title: "Dürüst Açıklama ve Kusurlar",
+                rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
+                rec2Title: "Güvenli Buluşma Noktaları",
+                rec2Desc: "Buluşmaları her zaman kalabalık ve bilinen kamuya açık yerlerde yapın.",
+                rec3Title: "Sıra Sistemini Kullanın",
+                rec3Desc: "Ürünü rezerve etmek için «Sıraya Gir» butonuna tıklayın."
             }
         };
 
@@ -1318,27 +1353,35 @@
             const syncStatus = document.getElementById('cloud-sync-status');
             if (syncStatus) syncStatus.classList.remove('hidden');
 
-            firebaseDb.ref('ads').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && ((Array.isArray(data) && data.length > 0) || Object.keys(data).length > 0)) {
-                    if (Array.isArray(data)) {
-                        ads = data.filter(item => item != null);
+            firebaseDb.ref('ads_initialized').once('value').then((initSnap) => {
+                const isInitialized = initSnap.val();
+
+                firebaseDb.ref('ads').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        if (Array.isArray(data)) {
+                            ads = data.filter(item => item != null);
+                        } else {
+                            ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
+                        }
+                    } else if (!isInitialized) {
+                        // Database never initialized -> Seed initial demo ads once
+                        ads = [...defaultDemoAds];
+                        defaultDemoAds.forEach(item => {
+                            firebaseDb.ref(`ads/${item.id}`).set(item);
+                        });
+                        firebaseDb.ref('ads_initialized').set(true);
                     } else {
-                        ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
+                        // User deliberately deleted or archived all ads -> keep empty array!
+                        ads = [];
                     }
-                } else {
-                    // Firebase database is empty — seed it with default initial ads
-                    ads = [...defaultDemoAds];
-                    defaultDemoAds.forEach(item => {
-                        firebaseDb.ref(`ads/${item.id}`).set(item);
-                    });
-                }
-                if (syncStatus) syncStatus.classList.add('hidden');
-                renderAds();
-                renderCategoryPills();
-            }, (err) => {
-                console.warn('Firebase ads sync error:', err);
-                if (syncStatus) syncStatus.classList.add('hidden');
+                    if (syncStatus) syncStatus.classList.add('hidden');
+                    renderAds();
+                    renderCategoryPills();
+                }, (err) => {
+                    console.warn('Firebase ads sync error:', err);
+                    if (syncStatus) syncStatus.classList.add('hidden');
+                });
             });
 
             firebaseDb.ref('users').on('value', (snapshot) => {
@@ -1466,7 +1509,7 @@
 
             let pills = [
                 { id: 'all', icon: 'fa-border-all', name: getTranslation('catAll') },
-                { id: 'favorites', icon: 'fa-star text-amber-400', name: getTranslation('catFavorites'), badge: favorites.length > 0 ? favorites.length : null }
+                { id: 'favorites', icon: 'fa-star text-amber-400', name: getTranslation('catFavorites') }
             ];
 
             if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
@@ -1804,7 +1847,6 @@
                 const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
                 
                 if (found) {
-                    // Auto-sync or match password smoothly
                     const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
 
                     if (isPasswordValid) {
@@ -1978,20 +2020,66 @@
         let createMapInstance = null;
         let createMapMarker = null;
 
+        const SYRIA_REGION_COORDS = {
+            DAM: { lat: 33.5138, lng: 36.2765, zoom: 12 },
+            RIF_DAM: { lat: 33.5000, lng: 36.3000, zoom: 11 },
+            ALEP: { lat: 36.2021, lng: 37.1343, zoom: 12 },
+            IDL: { lat: 35.9306, lng: 36.6339, zoom: 12 },
+            HOMS: { lat: 34.7324, lng: 36.7137, zoom: 12 },
+            HAMA: { lat: 35.1318, lng: 36.7578, zoom: 12 },
+            LAT: { lat: 35.5317, lng: 35.7915, zoom: 12 },
+            TAR: { lat: 34.8890, lng: 35.8866, zoom: 12 },
+            RAQ: { lat: 35.9500, lng: 39.0167, zoom: 12 },
+            DEIR: { lat: 35.3333, lng: 40.1500, zoom: 12 },
+            HAS: { lat: 36.5000, lng: 40.7500, zoom: 12 },
+            DAR: { lat: 32.6189, lng: 36.1019, zoom: 12 },
+            SUW: { lat: 32.7089, lng: 36.5695, zoom: 12 },
+            QUN: { lat: 33.1258, lng: 35.8242, zoom: 12 }
+        };
+
+        function toggleFreePriceField(isFree) {
+            const priceContainer = document.getElementById('price-container');
+            const priceInput = document.getElementById('ad-price');
+            if (!priceContainer || !priceInput) return;
+
+            if (isFree) {
+                priceInput.removeAttribute('required');
+                priceInput.value = '0';
+                priceContainer.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                priceInput.setAttribute('required', 'true');
+                if (priceInput.value === '0') priceInput.value = '';
+                priceContainer.classList.remove('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        function handleRegionMapUpdate(regionCode) {
+            const coords = SYRIA_REGION_COORDS[regionCode];
+            if (!coords) return;
+
+            document.getElementById('ad-lat').value = coords.lat;
+            document.getElementById('ad-lng').value = coords.lng;
+
+            if (createMapInstance && createMapMarker) {
+                createMapInstance.setView([coords.lat, coords.lng], coords.zoom || 12);
+                createMapMarker.setLatLng([coords.lat, coords.lng]);
+            }
+        }
+
         function initCreateMap() {
             const mapContainer = document.getElementById('create-map');
             if (!mapContainer || createMapInstance) return;
 
-            const defaultLat = 33.5138;
-            const defaultLng = 36.2765;
+            const selectedRegion = document.getElementById('ad-region')?.value || 'DAM';
+            const initialCoords = SYRIA_REGION_COORDS[selectedRegion] || { lat: 33.5138, lng: 36.2765, zoom: 12 };
 
-            createMapInstance = L.map('create-map').setView([defaultLat, defaultLng], 12);
+            createMapInstance = L.map('create-map').setView([initialCoords.lat, initialCoords.lng], initialCoords.zoom || 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
                 attribution: '© OpenStreetMap'
             }).addTo(createMapInstance);
 
-            createMapMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(createMapInstance);
+            createMapMarker = L.marker([initialCoords.lat, initialCoords.lng], { draggable: true }).addTo(createMapInstance);
 
             const updateMapCoords = (lat, lng) => {
                 document.getElementById('ad-lat').value = lat;
@@ -2178,12 +2266,15 @@
                     </a>
 
                     ${isOwner ? `
-                        <div class="pt-2 border-t border-white/10 flex gap-2">
-                            <button onclick="openEditAdModal('${ad.id}')" class="flex-1 py-2.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all">
-                                <i class="fa-solid fa-pen-to-square"></i> Редактировать объявление
+                        <div class="pt-2 border-t border-white/10 flex gap-2 flex-wrap">
+                            <button onclick="openEditAdModal('${ad.id}')" class="flex-1 min-w-[120px] py-2.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all">
+                                <i class="fa-solid fa-pen-to-square"></i> ${getTranslation('editAdBtn')}
                             </button>
-                            <button onclick="deleteAdWithConfirm('${ad.id}')" class="flex-1 py-2.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold text-xs border border-rose-500/30 transition-all">
-                                <i class="fa-solid fa-trash"></i> Удалить объявление
+                            <button onclick="archiveAdWithConfirm('${ad.id}')" class="flex-1 min-w-[120px] py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold text-xs border border-purple-500/30 transition-all">
+                                <i class="fa-solid fa-box-archive"></i> ${getTranslation('archiveAdBtn')}
+                            </button>
+                            <button onclick="deleteAdWithConfirm('${ad.id}')" class="py-2.5 px-3 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold text-xs border border-rose-500/30 transition-all">
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
                     ` : ''}
@@ -2250,6 +2341,39 @@
             showToast('Объявление успешно обновлено!', 'success');
         }
 
+        function archiveAdWithConfirm(adId) {
+            showConfirmModal('Перевод в архив', 'Перенести это объявление в архив? Оно перестанет показываться в общей ленте.', () => {
+                const ad = ads.find(a => a.id === adId);
+                if (ad) {
+                    ad.status = 'ARCHIVED';
+                    if (firebaseDb) {
+                        firebaseDb.ref(`ads/${adId}`).set(ad);
+                    }
+                    closeModal('modal-ad-detail');
+                    renderAds();
+                    renderCategoryPills();
+                    if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
+                        renderAdminTabContent();
+                    }
+                    showToast('Объявление перенесено в архив', 'info');
+                }
+            });
+        }
+
+        function restoreAd(adId) {
+            const ad = ads.find(a => a.id === adId);
+            if (ad) {
+                ad.status = 'ACTIVE';
+                if (firebaseDb) {
+                    firebaseDb.ref(`ads/${adId}`).set(ad);
+                }
+                renderAds();
+                renderCategoryPills();
+                renderAdminTabContent();
+                showToast('Объявление восстановлено из архива!', 'success');
+            }
+        }
+
         function joinQueue(adId) {
             if (!currentUser) { openAuthModal(); return; }
             const ad = ads.find(a => a.id === adId);
@@ -2289,7 +2413,7 @@
         }
 
         function deleteAdWithConfirm(adId) {
-            showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью удалить это объявление?', () => {
+            showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью и навсегда удалить это объявление?', () => {
                 ads = ads.filter(a => a.id !== adId);
                 if (firebaseDb) {
                     firebaseDb.ref(`ads/${adId}`).remove();
@@ -2297,6 +2421,9 @@
                 closeModal('modal-ad-detail');
                 renderAds();
                 renderCategoryPills();
+                if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
+                    renderAdminTabContent();
+                }
                 showToast('Объявление успешно удалено', 'success');
             });
         }
@@ -2424,6 +2551,11 @@
             renderAdminTabContent();
         }
 
+        function switchAdminAdsSubTab(sub) {
+            adminAdsTab = sub;
+            renderAdminTabContent();
+        }
+
         function renderAdminTabContent() {
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
@@ -2434,48 +2566,71 @@
                 container.innerHTML = `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                         <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-amber-400">${ads.length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Всего объявлений</div>
+                            <div class="text-2xl font-extrabold text-amber-400">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Активных объявлений</div>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="text-2xl font-extrabold text-purple-400">${ads.filter(a => a.status === 'ARCHIVED').length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Объявлений в архиве</div>
                         </div>
                         <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
                             <div class="text-2xl font-extrabold text-blue-400">${users.length}</div>
                             <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Пользователей</div>
                         </div>
                         <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div class="text-2xl font-extrabold text-emerald-400">${ads.filter(a => a.isFree).length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Даром (Бесплатно)</div>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
                             <div class="text-2xl font-extrabold text-rose-400">${archivedUsers.length}</div>
-                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">В архиве</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Аккаунтов в архиве</div>
                         </div>
                     </div>
                 `;
             } else if (tab === 'ads') {
+                const activeList = ads.filter(a => a.status === 'ACTIVE');
+                const archivedList = ads.filter(a => a.status === 'ARCHIVED');
+                const currentList = adminAdsTab === 'active' ? activeList : archivedList;
+
                 container.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-white text-xs">Все опубликованные объявления (${ads.length})</h4>
-                    </div>
-                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                        ${ads.length === 0 ? '<div class="text-center py-8 text-slate-500">Нет объявлений</div>' : ads.map(a => `
-                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-3">
-                                    <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
-                                    <div>
-                                        <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
-                                        <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                            <div class="flex gap-2">
+                                <button onclick="switchAdminAdsSubTab('active')" class="px-3 py-1 rounded-xl font-bold text-xs ${adminAdsTab === 'active' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-white/5 text-slate-400'}">
+                                    Активные (${activeList.length})
+                                </button>
+                                <button onclick="switchAdminAdsSubTab('archived')" class="px-3 py-1 rounded-xl font-bold text-xs ${adminAdsTab === 'archived' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-slate-400'}">
+                                    Архивные (${archivedList.length})
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+                            ${currentList.length === 0 ? '<div class="text-center py-8 text-slate-500">Список пуст</div>' : currentList.map(a => `
+                                <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
+                                        <div>
+                                            <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
+                                            <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        ${a.status === 'ACTIVE' ? `
+                                            <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
+                                                Редактировать
+                                            </button>
+                                            <button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold border border-purple-500/30 text-[11px]">
+                                                В архив
+                                            </button>
+                                        ` : `
+                                            <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
+                                                Восстановить
+                                            </button>
+                                        `}
+                                        <button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                            Удалить
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
-                                        Редактировать
-                                    </button>
-                                    <button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
-                                        Удалить
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             } else if (tab === 'users') {
@@ -2584,6 +2739,10 @@
             renderCategoryPills();
             renderAds();
             updateLanguageUI();
+
+            if (!localStorage.getItem('bs_rules_accepted')) {
+                openModal('modal-rules-agreement');
+            }
 
             setInterval(() => {
                 fetchLiveExchangeRates();
