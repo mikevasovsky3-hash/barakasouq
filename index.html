@@ -782,6 +782,20 @@
         let favorites = [];
         let adminAdsTab = 'active'; // 'active' or 'archived'
 
+        // Dynamic helper: Always resolves active WhatsApp number live from user account
+        function getSellerWhatsapp(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
+        }
+
+        // Dynamic helper: Always resolves active Kunya/Name live from user account
+        function getSellerKunya(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
+        }
+
         let EXCHANGE_RATES = {
             SYP: 131.70,
             TRY: 47.74
@@ -1586,7 +1600,8 @@
 
             grid.innerHTML = pageAds.map(ad => {
                 const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
-                const seller = users.find(u => u.username === ad.sellerUsername);
+                const sellerKunya = getSellerKunya(ad);
+                const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
                 const isVerified = seller?.verifiedShop;
                 const queueCount = (ad.queue || []).length;
                 const isFav = favorites.includes(ad.id);
@@ -1631,7 +1646,7 @@
                             <div class="pt-2 border-t border-white/5 space-y-1">
                                 <div class="text-xs font-bold">${converted}</div>
                                 <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                    <span>${ad.sellerKunya || ad.sellerUsername}</span>
+                                    <span>${sellerKunya}</span>
                                     <span class="text-amber-400 font-bold">${queueCount > 0 ? getTranslation('inQueue', { count: queueCount }) : getTranslation('beFirstQueue')}</span>
                                 </div>
                             </div>
@@ -1898,13 +1913,13 @@
             const newKunya = document.getElementById('edit-profile-kunya').value.trim();
             const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
 
-            const userIndex = users.findIndex(u => u.username === originalUsername);
+            const userIndex = users.findIndex(u => u.username && u.username.toLowerCase() === originalUsername.toLowerCase());
             if (userIndex === -1) {
                 showToast('Пользователь не найден!', 'error');
                 return;
             }
 
-            if (newLogin !== originalUsername && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
+            if (newLogin.toLowerCase() !== originalUsername.toLowerCase() && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
                 showToast('Этот логин уже занят!', 'error');
                 return;
             }
@@ -1928,14 +1943,18 @@
                 firebaseDb.ref(`users/${u.uid}`).set(u);
             }
 
-            // Автоматическое обновление логина, имени и номера WhatsApp во всех ранее созданных объявлениях пользователя
+            // Автоматическая гарантированная перезапись номеров WhatsApp и логина во всех объявлениях пользователя и в кэше
             ads.forEach(ad => {
                 if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === originalUsername.toLowerCase()) {
                     ad.sellerUsername = newLogin;
                     ad.sellerKunya = newKunya;
                     ad.sellerWhatsapp = newWhatsapp;
                     if (firebaseDb && ad.id) {
-                        firebaseDb.ref(`ads/${ad.id}`).set(ad);
+                        firebaseDb.ref(`ads/${ad.id}`).update({
+                            sellerUsername: newLogin,
+                            sellerKunya: newKunya,
+                            sellerWhatsapp: newWhatsapp
+                        });
                     }
                 }
             });
@@ -1957,221 +1976,6 @@
             showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
         }
 
-        function openCreateAdModal() {
-            if (!currentUser) {
-                openAuthModal();
-                return;
-            }
-
-            const catSelect = document.getElementById('ad-category');
-            if (catSelect) {
-                catSelect.innerHTML = customCategories.map(c => `
-                    <option value="${c.id}" class="bg-slate-900">${c.name}</option>
-                `).join('');
-            }
-
-            const womenContainer = document.getElementById('women-only-container');
-            if (womenContainer) {
-                if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-                    womenContainer.classList.remove('hidden');
-                } else {
-                    womenContainer.classList.add('hidden');
-                }
-            }
-
-            openModal('modal-create-ad');
-            setTimeout(initCreateMap, 300);
-        }
-
-        let createMapInstance = null;
-        let createMapMarker = null;
-
-        const SYRIA_REGION_COORDS = {
-            DAM: { lat: 33.5138, lng: 36.2765, zoom: 12 },
-            RIF_DAM: { lat: 33.5000, lng: 36.3000, zoom: 11 },
-            ALEP: { lat: 36.2021, lng: 37.1343, zoom: 12 },
-            IDL: { lat: 35.9306, lng: 36.6339, zoom: 12 },
-            HOMS: { lat: 34.7324, lng: 36.7137, zoom: 12 },
-            HAMA: { lat: 35.1318, lng: 36.7578, zoom: 12 },
-            LAT: { lat: 35.5317, lng: 35.7915, zoom: 12 },
-            TAR: { lat: 34.8890, lng: 35.8866, zoom: 12 },
-            RAQ: { lat: 35.9500, lng: 39.0167, zoom: 12 },
-            DEIR: { lat: 35.3333, lng: 40.1500, zoom: 12 },
-            HAS: { lat: 36.5000, lng: 40.7500, zoom: 12 },
-            DAR: { lat: 32.6189, lng: 36.1019, zoom: 12 },
-            SUW: { lat: 32.7089, lng: 36.5695, zoom: 12 },
-            QUN: { lat: 33.1258, lng: 35.8242, zoom: 12 }
-        };
-
-        function toggleFreePriceField(isFree) {
-            const priceContainer = document.getElementById('price-container');
-            const priceInput = document.getElementById('ad-price');
-            if (!priceContainer || !priceInput) return;
-
-            if (isFree) {
-                priceInput.removeAttribute('required');
-                priceInput.value = '0';
-                priceContainer.classList.add('opacity-40', 'pointer-events-none');
-            } else {
-                priceInput.setAttribute('required', 'true');
-                if (priceInput.value === '0') priceInput.value = '';
-                priceContainer.classList.remove('opacity-40', 'pointer-events-none');
-            }
-        }
-
-        function handleRegionMapUpdate(regionCode) {
-            const coords = SYRIA_REGION_COORDS[regionCode];
-            if (!coords) return;
-
-            document.getElementById('ad-lat').value = coords.lat;
-            document.getElementById('ad-lng').value = coords.lng;
-
-            if (createMapInstance && createMapMarker) {
-                createMapInstance.setView([coords.lat, coords.lng], coords.zoom || 12);
-                createMapMarker.setLatLng([coords.lat, coords.lng]);
-            }
-        }
-
-        function initCreateMap() {
-            const mapContainer = document.getElementById('create-map');
-            if (!mapContainer || createMapInstance) return;
-
-            const selectedRegion = document.getElementById('ad-region')?.value || 'DAM';
-            const initialCoords = SYRIA_REGION_COORDS[selectedRegion] || { lat: 33.5138, lng: 36.2765, zoom: 12 };
-
-            createMapInstance = L.map('create-map').setView([initialCoords.lat, initialCoords.lng], initialCoords.zoom || 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18,
-                attribution: '© OpenStreetMap'
-            }).addTo(createMapInstance);
-
-            createMapMarker = L.marker([initialCoords.lat, initialCoords.lng], { draggable: true }).addTo(createMapInstance);
-
-            const updateMapCoords = (lat, lng) => {
-                document.getElementById('ad-lat').value = lat;
-                document.getElementById('ad-lng').value = lng;
-            };
-
-            createMapInstance.on('click', (e) => {
-                const { lat, lng } = e.latlng;
-                createMapMarker.setLatLng([lat, lng]);
-                updateMapCoords(lat, lng);
-            });
-
-            createMapMarker.on('dragend', (e) => {
-                const { lat, lng } = e.target.getLatLng();
-                updateMapCoords(lat, lng);
-            });
-        }
-
-        function handleImageCompressUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('Размер файла превышает 10 МБ!', 'error');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 533;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-                    document.getElementById('ad-image-data').value = compressedDataUrl;
-
-                    const previewImg = document.getElementById('image-preview-img');
-                    const previewBox = document.getElementById('image-preview-box');
-                    if (previewImg && previewBox) {
-                        previewImg.src = compressedDataUrl;
-                        previewBox.classList.remove('hidden');
-                    }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleCreateAdSubmit(e) {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const title = document.getElementById('ad-title').value.trim();
-            const category = document.getElementById('ad-category').value;
-            const region = document.getElementById('ad-region').value;
-            const city = document.getElementById('ad-city').value.trim();
-            const isWomenOnly = document.getElementById('ad-is-women-only')?.checked || false;
-            const isFree = document.getElementById('ad-is-free').checked;
-            const price = isFree ? 0 : parseFloat(document.getElementById('ad-price').value || 0);
-            const currency = document.getElementById('ad-currency').value;
-            const condition = document.getElementById('ad-condition').value;
-            const pickup = document.getElementById('ad-pickup').value;
-            const imageData = document.getElementById('ad-image-data').value || 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=60';
-            const desc = document.getElementById('ad-desc').value.trim();
-            const lat = parseFloat(document.getElementById('ad-lat').value || 33.5138);
-            const lng = parseFloat(document.getElementById('ad-lng').value || 36.2765);
-
-            const adId = 'AD-' + Date.now().toString().slice(-6);
-            const newAd = {
-                id: adId,
-                title,
-                category,
-                region,
-                city,
-                price,
-                currency,
-                isFree,
-                isWomenOnly,
-                condition,
-                pickup,
-                sellerUsername: currentUser.username,
-                sellerKunya: currentUser.kunya || currentUser.username,
-                sellerWhatsapp: currentUser.whatsapp || '',
-                lat,
-                lng,
-                image: imageData,
-                desc,
-                queue: [],
-                status: 'ACTIVE',
-                createdAt: Date.now()
-            };
-
-            ads.unshift(newAd);
-            saveCachedAds();
-
-            if (firebaseDb) {
-                firebaseDb.ref(`ads/${adId}`).set(newAd);
-            }
-
-            closeModal('modal-create-ad');
-            renderCategoryPills();
-            renderAds();
-            showToast('Объявление успешно опубликовано!', 'success');
-        }
-
         function openAdDetail(adId) {
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
@@ -2179,9 +1983,9 @@
             const content = document.getElementById('detail-content');
             if (!content) return;
 
-            // Динамически получаем свежий WhatsApp номер продавца из профиля пользователя
-            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-            const activeWhatsapp = seller?.whatsapp || ad.sellerWhatsapp || '';
+            // Динамическая сквозная свежая сверка номера WhatsApp и имени из профиля продавца
+            const activeWhatsapp = getSellerWhatsapp(ad);
+            const activeKunya = getSellerKunya(ad);
 
             const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
             const queueList = ad.queue || [];
@@ -2209,7 +2013,7 @@
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${ad.city}</span>
                             <span>•</span>
-                            <span><i class="fa-solid fa-user text-blue-400"></i> ${seller?.kunya || ad.sellerKunya || ad.sellerUsername}</span>
+                            <span><i class="fa-solid fa-user text-blue-400"></i> ${activeKunya}</span>
                         </div>
                     </div>
 
