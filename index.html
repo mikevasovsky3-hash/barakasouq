@@ -145,7 +145,7 @@
             <!-- Header Search Bar & Regions Selector -->
             <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
                 <div class="relative flex-1">
-                    <input type="text" id="search-input" onkeyup="resetPageAndRender()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
+                    <input type="text" id="search-input" oninput="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 </div>
                 <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[180px]">
@@ -200,7 +200,7 @@
 
         <div class="sm:hidden mt-2.5 flex gap-2">
             <div class="relative flex-1">
-                <input type="text" id="search-input-mobile" onkeyup="syncMobileSearch(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
+                <input type="text" id="search-input-mobile" oninput="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             </div>
             <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px]">
@@ -225,7 +225,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
 
-        <!-- Categories Toolbar (Compact Icon Pills with Live Badges) -->
+        <!-- Categories Toolbar -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
                 <!-- Dynamically Rendered Category Icon Pills -->
@@ -235,7 +235,7 @@
         <!-- Cloud Sync Loader Indicator -->
         <div id="cloud-sync-status" class="text-center text-[11px] text-amber-400 font-mono hidden flex items-center justify-center gap-2 py-1 bg-amber-500/10 rounded-xl border border-amber-500/20">
             <i class="fa-solid fa-arrows-rotate animate-spin"></i>
-            <span>Синхронизация с облаком Firebase...</span>
+            <span>Синхронизация с облаком...</span>
         </div>
 
         <!-- Main Listings Feed Container Grid -->
@@ -360,7 +360,7 @@
         </div>
     </div>
 
-    <!-- Create Ad Modal (With Up to 6 Photos Multi-Upload & Compressor) -->
+    <!-- Create Ad Modal (With Accelerated Compressor & Instant Tiles) -->
     <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -420,7 +420,6 @@
                     <input type="text" id="ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: р-н Маззе, Дамаск">
                 </div>
 
-                <!-- Interactive Map Pin Picker -->
                 <div>
                     <label class="block text-slate-400 mb-1" data-i18n="adMapLabel">Местоположение на карте *</label>
                     <div class="text-[10px] text-amber-300 mb-1" data-i18n="adMapHelp">Кликните на карту или перетащите маркер.</div>
@@ -487,7 +486,7 @@
 
                     <div id="create-photo-status" class="hidden text-[10px] text-amber-300 font-mono flex items-center gap-1.5 pt-1">
                         <i class="fa-solid fa-spinner animate-spin"></i>
-                        <span>Обработка и оптимизация фото...</span>
+                        <span>Обработка фото...</span>
                     </div>
 
                     <!-- Photo Thumbnails Grid -->
@@ -508,7 +507,7 @@
         </div>
     </div>
 
-    <!-- ShamCash Support / Donation Modal -->
+    <!-- ShamCash Support Modal -->
     <div id="modal-shamcash" class="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 border border-emerald-500/40 text-center space-y-4 relative">
             <button onclick="closeShamCashModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -527,7 +526,6 @@
                 <p id="shamcash-suggested-text" class="text-amber-300 font-medium"></p>
             </div>
 
-            <!-- QR Code and Account Info -->
             <div class="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3">
                 <div class="font-bold text-xs text-slate-200 flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-qrcode text-emerald-400"></i>
@@ -643,7 +641,6 @@
                     </div>
                 </div>
 
-                <!-- Multi-Photo Upload (Up to 6 Photos) for Edit Modal -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="block text-slate-400 font-bold">Фотографии товара (до 6 шт.) *</label>
@@ -656,10 +653,9 @@
 
                     <div id="edit-photo-status" class="hidden text-[10px] text-amber-300 font-mono flex items-center gap-1.5 pt-1">
                         <i class="fa-solid fa-spinner animate-spin"></i>
-                        <span>Обработка и оптимизация фото...</span>
+                        <span>Обработка фото...</span>
                     </div>
 
-                    <!-- Photo Thumbnails Grid -->
                     <div id="edit-photos-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
                         <!-- Thumbnail tiles injected here -->
                     </div>
@@ -860,7 +856,7 @@
         </div>
     </div>
 
-    <!-- Ad Detail Modal (With Interactive Gallery & Lightbox Support) -->
+    <!-- Ad Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
@@ -889,7 +885,7 @@
         </div>
     </div>
 
-    <!-- Superuser Admin Panel Modal (With Full System JSON Backup Support) -->
+    <!-- Superuser Admin Panel Modal -->
     <div id="modal-admin-panel" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-4xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
@@ -938,7 +934,7 @@
                     <span id="theme-text" data-i18n="themeDark">Тёмная тема</span>
                 </button>
 
-                <!-- Language Selector supporting RU, AR, TR -->
+                <!-- Language Selector -->
                 <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
                     <option value="RU" class="bg-slate-900 text-white">RU</option>
                     <option value="AR" class="bg-slate-900 text-white">AR</option>
@@ -959,18 +955,14 @@
         let currentUser = null;
         let selectedCategory = 'all';
         let currentPage = 1;
-        const itemsPerPage = 8;
         let favorites = [];
         let adminAdsTab = 'active';
 
         let createMap = null;
         let createMarker = null;
 
-        // Temporary arrays holding Base64 encoded photos during create/edit forms
         let pendingCreateImages = [];
         let pendingEditImages = [];
-
-        // Active image index for detail gallery
         let activeDetailGalleryIndex = 0;
 
         let EXCHANGE_RATES = {
@@ -1000,7 +992,18 @@
         let archivedUsers = [];
         let ads = [];
 
-        // --- LOCAL STORAGE CACHING HELPERS ---
+        function getItemsPerPage() {
+            return window.innerWidth < 640 ? 4 : 8;
+        }
+
+        let searchDebounceTimer = null;
+        function debouncedSearch() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                resetPageAndRender();
+            }, 250);
+        }
+
         function loadCachedAds() {
             try {
                 const cached = localStorage.getItem('bs_cached_ads');
@@ -1008,17 +1011,19 @@
                     ads = JSON.parse(cached);
                 }
             } catch (e) {
-                console.warn('Cache error:', e);
+                console.warn('Cache load error:', e);
             }
         }
 
         function saveCachedAds() {
             try {
                 localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
-            } catch (e) {}
+            } catch (e) {
+                console.warn('Cache save error:', e);
+            }
         }
 
-        // --- MULTI-PHOTO UPLOAD & CANVAS COMPRESSOR (UP TO 6 PHOTOS) ---
+        // Accelerated client-side image downscaling to max 650px & WebP/JPEG format
         function compressSingleImageFile(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1026,18 +1031,18 @@
                     const img = new Image();
                     img.onload = function () {
                         const canvas = document.createElement('canvas');
-                        const MAX_DIM = 800;
+                        const MAX_DIM = 650;
                         let width = img.width;
                         let height = img.height;
 
                         if (width > height) {
                             if (width > MAX_DIM) {
-                                height *= MAX_DIM / width;
+                                height = Math.round(height * (MAX_DIM / width));
                                 width = MAX_DIM;
                             }
                         } else {
                             if (height > MAX_DIM) {
-                                width *= MAX_DIM / height;
+                                width = Math.round(width * (MAX_DIM / height));
                                 height = MAX_DIM;
                             }
                         }
@@ -1047,7 +1052,12 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.70);
+                        let compressedBase64 = '';
+                        try {
+                            compressedBase64 = canvas.toDataURL('image/webp', 0.65);
+                        } catch (e) {
+                            compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
+                        }
                         resolve(compressedBase64);
                     };
                     img.src = event.target.result;
@@ -1082,12 +1092,12 @@
                     }
                     renderPhotoThumbnailsGrid(mode);
                 } catch (err) {
-                    console.warn('Error compressing photo:', err);
+                    console.warn('Error processing photo:', err);
                 }
             }
 
             if (statusEl) statusEl.classList.add('hidden');
-            e.target.value = ''; // Reset input selection
+            e.target.value = '';
         }
 
         function renderPhotoThumbnailsGrid(mode = 'create') {
@@ -1100,7 +1110,7 @@
 
             gridEl.innerHTML = targetArray.map((imgUrl, idx) => `
                 <div class="relative h-16 rounded-xl bg-slate-900 border border-white/10 overflow-hidden group shadow">
-                    <img src="${imgUrl}" class="w-full h-full object-cover">
+                    <img src="${imgUrl}" class="w-full h-full object-cover" loading="lazy">
                     <button type="button" onclick="removePendingPhoto(${idx}, '${mode}')" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600/90 text-white text-[10px] flex items-center justify-center hover:bg-rose-500 transition-all shadow">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -1182,11 +1192,11 @@
                 rulesTitle: "Правила и рекомендации Avito Sham",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!",
                 rule1Title: "Честность и прозрачность:",
-                rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.",
+                rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара.",
                 rule2Title: "Запрещенные товары:",
-                rule2Desc: "Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.",
+                rule2Desc: "Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ.",
                 rule3Title: "Гражданский ресурс:",
-                rule3Desc: "Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.",
+                rule3Desc: "Платформа является исключительно гражданской торговой площадкой.",
                 btnAcceptRules: "Я подтверждаю и принимаю условия",
                 tabSignIn: "Вход",
                 tabSignUp: "Регистрация",
@@ -1212,7 +1222,7 @@
                 currencyLabel: "Валюта *",
                 conditionLabel: "Состояние товара *",
                 pickupLabel: "Условия передачи *",
-                photoLabel: "Фотография товара *",
+                photoLabel: "Фотографии товара *",
                 descDefectsLabel: "Описание и возможные изъяны *",
                 btnPublishAd: "Опубликовать объявление",
                 editProfileTitle: "Редактирование анкеты",
@@ -1225,16 +1235,16 @@
                 adminTabUsers: "Пользователи и Роли",
                 adminTabArchive: "Архив пользователей",
                 adminTabRates: "Курсы валют",
-                recsTitle: "3 главных совета для удачных и безопасных сделок в Сирии",
+                recsTitle: "3 главных совета для удачных сделок",
                 rec1Title: "Честное описание и изъяны",
-                rec1Desc: "Всегда указывайте дефекты и мелкие изъяны. Прозрачность ускоряет продажу и бережёт репутацию.",
+                rec1Desc: "Указывайте все дефекты. Прозрачность ускоряет продажу.",
                 rec2Title: "Безопасные места встреч",
-                rec2Desc: "Встречайтесь в людных и известных местах (у мечетей, рынков или центральных площадей).",
+                rec2Desc: "Встречайтесь в людных местах.",
                 rec3Title: "Используйте Очередь",
-                rec3Desc: "Нажмите «Занять очередь», чтобы забронировать товар и не потерять свое место среди покупателей."
+                rec3Desc: "Нажимайте «Занять очередь» для бронирования товаров."
             },
             AR: {
-                brandTagline: "أافيتو شام — سوريا",
+                brandTagline: "أفيتو شام — سوريا",
                 searchPlaceholder: "البحث عن المنتجات، السيارات، الخدمات...",
                 btnPostAd: "أضف إعلاناً",
                 btnAdminPanel: "المدير العام",
@@ -1297,11 +1307,11 @@
                 rulesTitle: "قواعد منصة أفيو شام",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ",
                 rule1Title: "الصدق والشفافية:",
-                rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها، ويجب بيان الحالة الحقيقية بدقة.",
+                rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها.",
                 rule2Title: "المنتجات الممنوعة:",
-                rule2Desc: "يمنع منعاً باتاً نشر الأسلحة، الذخائر، أو أي مواد غير قانونية.",
+                rule2Desc: "يمنع منعاً باتاً نشر الأسلحة والذخائر.",
                 rule3Title: "منصة مدنية:",
-                rule3Desc: "هذه المنصة مخصصة للتجارة المدنية فقط، والإدارة غير مسؤولة عن التصرفات المخالفة.",
+                rule3Desc: "هذه المنصة مخصصة للتجارة المدنية فقط.",
                 btnAcceptRules: "أوافق على جميع الشروط",
                 tabSignIn: "دخول",
                 tabSignUp: "تسجيل جديد",
@@ -1309,7 +1319,7 @@
                 labelPassword: "كلمة المرور *",
                 rememberSession: "تذكر تسجيل دخولي على هذا الجهاز",
                 labelKunya: "الاسم أو الكنية *",
-                labelGender: "الجنس (خيار شرعي) *",
+                labelGender: "الجنس *",
                 genderMale: "رجل",
                 genderFemale: "امرأة",
                 labelWhatsapp: "رقم الواتساب *",
@@ -1342,11 +1352,11 @@
                 adminTabRates: "أسعار الصرف",
                 recsTitle: "3 نصائح رئيسية لصفقات ناجحة وآمنة في سوريا",
                 rec1Title: "الصدق في الوصف والعيوب",
-                rec1Desc: "اذكر دائماً العيوب بالتفصيل. الشفافية تسرع البيع وتحفظ سمعتك.",
+                rec1Desc: "اذكر دائماً العيوب بالتفصيل.",
                 rec2Title: "أماكن التقاء آمنة",
-                rec2Desc: "التقِ دائماً في أماكن عامة معروفة (قرب المساجد، الأسواق أو الساحات العامة).",
+                rec2Desc: "التقِ دائماً في أماكن عامة معروفة.",
                 rec3Title: "استخدم نظام الدور",
-                rec3Desc: "اضغط على «حجز دور» لحجز المنتج وحفظ أسبقيتك الشريفة."
+                rec3Desc: "اضغط على «حجز دور» لحجز المنتج."
             },
             TR: {
                 brandTagline: "Avito Sham — Suriye",
@@ -1457,7 +1467,7 @@
                 adminTabRates: "Döviz Kurları",
                 recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
                 rec1Title: "Dürüst Açıklama ve Kusurlar",
-                rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
+                rec1Desc: "Tüm kusurları açıkça belirtin.",
                 rec2Title: "Güvenli Buluşma Noktaları",
                 rec2Desc: "Buluşmaları her zaman kalabalık ve bilinen kamuya açık yerlerde yapın.",
                 rec3Title: "Sıra Sistemini Kullanın",
@@ -1533,8 +1543,15 @@
                 const saved = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    const found = users.find(u => u.username && parsed.username && u.username.toLowerCase() === parsed.username.toLowerCase());
-                    currentUser = found ? found : parsed;
+                    const found = users.find(u => 
+                        (u.uid && parsed.uid && u.uid === parsed.uid) ||
+                        (u.username && parsed.username && u.username.toLowerCase() === parsed.username.toLowerCase())
+                    );
+                    if (found) {
+                        currentUser = found;
+                    } else {
+                        currentUser = parsed;
+                    }
                 }
             } catch (e) {
                 console.warn('Error restoring user session:', e);
@@ -1582,10 +1599,10 @@
                 if (shopNavBtn) {
                     shopNavBtn.classList.remove('hidden');
                     if (currentUser.shop) {
-                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store text-amber-300"></i><span class="hidden md:inline" data-i18n="btnMyShop">${getTranslation('btnMyShop')}</span>`;
+                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store text-amber-300"></i><span class="hidden md:inline">${getTranslation('btnMyShop')}</span>`;
                         shopNavBtn.onclick = openMyShopModal;
                     } else {
-                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store"></i><span class="hidden md:inline" data-i18n="btnCreateShop">${getTranslation('btnCreateShop')}</span>`;
+                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store"></i><span class="hidden md:inline">${getTranslation('btnCreateShop')}</span>`;
                         shopNavBtn.onclick = openCreateShopModal;
                     }
                 }
@@ -1889,6 +1906,16 @@
                         users = Object.keys(data).map(k => ({ ...data[k], uid: k }));
                     }
                 }
+                if (currentUser) {
+                    const latestSelf = users.find(u => 
+                        (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
+                        (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
+                    );
+                    if (latestSelf) {
+                        currentUser = latestSelf;
+                        saveUserSession(currentUser, true);
+                    }
+                }
             });
 
             firebaseDb.ref('archivedUsers').on('value', (snapshot) => {
@@ -2099,11 +2126,12 @@
                 return true;
             });
 
-            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            const currentItemsPerPage = getItemsPerPage();
+            const totalPages = Math.ceil(filtered.length / currentItemsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const pageAds = filtered.slice(startIndex, startIndex + itemsPerPage);
+            const startIndex = (currentPage - 1) * currentItemsPerPage;
+            const pageAds = filtered.slice(startIndex, startIndex + currentItemsPerPage);
 
             if (pageAds.length === 0) {
                 grid.innerHTML = `
@@ -2130,8 +2158,8 @@
                 return `
                     <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
                         <div class="relative h-48 bg-slate-900 overflow-hidden flex items-center justify-center">
-                            <img src="${photosList[0]}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30">
-                            <img src="${photosList[0]}" alt="${ad.title}" class="relative z-0 max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'">
+                            <img src="${photosList[0]}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30" loading="lazy">
+                            <img src="${photosList[0]}" alt="${ad.title}" class="relative z-0 max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'">
                             
                             <div class="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
                                 ${ad.id}
@@ -2203,7 +2231,7 @@
         function syncMobileSearch(val) {
             const desktopInput = document.getElementById('search-input');
             if (desktopInput) desktopInput.value = val;
-            resetPageAndRender();
+            debouncedSearch();
         }
 
         function syncMobileRegion(val) {
@@ -2524,7 +2552,6 @@
 
             content.innerHTML = `
                 <div class="space-y-4">
-                    <!-- Photo Gallery Frame -->
                     <div class="relative h-72 sm:h-96 rounded-2xl bg-slate-900 overflow-hidden border border-white/10 flex items-center justify-center group">
                         <img id="detail-main-photo-bg" src="${photosList[0]}" class="absolute inset-0 w-full h-full object-cover blur-xl opacity-40">
                         <img id="detail-main-photo" src="${photosList[0]}" alt="${ad.title}" class="relative z-0 max-h-full max-w-full object-contain">
@@ -2547,7 +2574,6 @@
                         ` : ''}
                     </div>
 
-                    <!-- Gallery Thumbnails Strip -->
                     ${photosList.length > 1 ? `
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                             ${photosList.map((imgUrl, i) => `
@@ -2717,7 +2743,6 @@
             setDetailActiveImage(nextIndex, adId);
         }
 
-        // --- FULLSCREEN LIGHTBOX FUNCTIONS ---
         let currentLightboxAdId = null;
         let currentLightboxPhotoIdx = 0;
 
@@ -2790,7 +2815,11 @@
             currentUser.shop = shopData;
             currentUser.verifiedShop = true;
 
-            const userIndex = users.findIndex(u => u.username && u.username.toLowerCase() === currentUser.username.toLowerCase());
+            const userIndex = users.findIndex(u => 
+                (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
+                (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
+            );
+
             if (userIndex !== -1) {
                 users[userIndex] = currentUser;
             }
@@ -2840,7 +2869,6 @@
                         </div>
                     </div>
 
-                    <!-- Shop JSON Backup Import/Export Tools -->
                     <div class="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
                         <h4 class="font-extrabold text-white text-xs flex items-center gap-1.5">
                             <i class="fa-solid fa-database text-amber-400"></i>
@@ -3234,7 +3262,7 @@
                             ${currentList.length === 0 ? '<div class="text-center py-8 text-slate-500">Список пуст</div>' : currentList.map(a => `
                                 <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-3">
-                                        <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
+                                        <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" loading="lazy" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
                                         <div>
                                             <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
                                             <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
@@ -3429,6 +3457,10 @@
             if (!localStorage.getItem('bs_rules_accepted')) {
                 openModal('modal-rules-agreement');
             }
+
+            window.addEventListener('resize', () => {
+                renderAds();
+            });
 
             setInterval(() => {
                 fetchLiveExchangeRates();
