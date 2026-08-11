@@ -826,6 +826,7 @@
         let users = [];
         let ads = [];
         let archivedAds = [];
+        let archivedUsers = [];
         let customCategories = [
             { id: 'electronics', icon: 'fa-laptop', name: 'Электроника' },
             { id: 'transport', icon: 'fa-car', name: 'Транспорт' },
@@ -886,6 +887,15 @@
             db.ref('archivedAds').on('value', (snapshot) => {
                 const val = snapshot.val();
                 archivedAds = val ? Object.values(val) : [];
+            });
+
+            // Realtime listener for Archived Users
+            db.ref('archivedUsers').on('value', (snapshot) => {
+                const val = snapshot.val();
+                archivedUsers = val ? Object.values(val) : [];
+                if (currentAdminTab === 'archive' || currentAdminTab === 'users') {
+                    renderAdminTab(currentAdminTab);
+                }
             });
 
             // Realtime listener for Users
@@ -2272,25 +2282,7 @@
                                     <button onclick="openEditProfileModal('${u.username}')" class="px-2 py-1 rounded-lg bg-blue-600/30 text-blue-300 font-bold">
                                         Редактировать
                                     </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else if (tab === 'moderation') {
-                container.innerHTML = `
-                    <div class="space-y-2">
-                        ${ads.filter(a => a.status === 'ACTIVE').map(a => `
-                            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                <div class="min-w-0 flex-1">
-                                    <div class="font-bold text-white truncate">${a.title}</div>
-                                    <div class="text-[10px] text-slate-400">${a.id} • ${a.sellerKunya || a.sellerUsername}</div>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button onclick="closeModal('modal-admin-panel'); openEditAdModal('${a.id}');" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500/30">
-                                        Изменить
-                                    </button>
-                                    <button onclick="adminArchiveAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50">
+                                    <button onclick="adminArchiveUser('${u.username}')" class="px-2 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50" ${u.username === (currentUser?.username) ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="Нельзя отправить в архив себя"' : ''}>
                                         В архив
                                     </button>
                                 </div>
@@ -2300,7 +2292,7 @@
                 `;
             } else if (tab === 'archive') {
                 container.innerHTML = `
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                         <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
                             <div>
                                 <div class="font-bold text-white">Автоматическая очистка архива</div>
@@ -2314,14 +2306,44 @@
                             </select>
                         </div>
 
+                        <!-- Архив Пользователей -->
                         <div class="space-y-2">
-                            ${archivedAds.length === 0 ? '<div class="py-6 text-center text-slate-500">Архив пуст</div>' : archivedAds.map(a => `
+                            <h4 class="font-bold text-purple-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
+                                <i class="fa-solid fa-users-slash"></i> Заархивированные пользователи (${archivedUsers.length})
+                            </h4>
+                            ${archivedUsers.length === 0 ? '<div class="py-3 text-center text-slate-500">Архив пользователей пуст</div>' : archivedUsers.map(u => `
+                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-bold text-slate-200 flex items-center gap-1.5">
+                                            ${u.kunya || u.username}
+                                            <span class="text-[10px] text-slate-400 font-mono">(@${u.username})</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">${u.whatsapp || ''} • В архиве с ${u.archivedAt ? new Date(u.archivedAt).toLocaleDateString() : 'неизвестно'}</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button onclick="restoreUser('${u.uid || u.username}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50 text-[11px]">
+                                            Восстановить
+                                        </button>
+                                        <button onclick="permanentlyDeleteUser('${u.uid || u.username}')" class="px-2.5 py-1 rounded-lg bg-rose-600/40 text-rose-300 font-bold hover:bg-rose-600/70 text-[11px]">
+                                            Удалить навсегда
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Архив Объявлений -->
+                        <div class="space-y-2 pt-2">
+                            <h4 class="font-bold text-amber-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
+                                <i class="fa-solid fa-box-archive"></i> Заархивированные объявления (${archivedAds.length})
+                            </h4>
+                            ${archivedAds.length === 0 ? '<div class="py-4 text-center text-slate-500">Архив объявлений пуст</div>' : archivedAds.map(a => `
                                 <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
                                     <div class="min-w-0 flex-1">
                                         <div class="font-bold text-slate-300 truncate">${a.title}</div>
                                         <div class="text-[10px] text-rose-400">${a.deleteReason || 'Снято с публикации'}</div>
                                     </div>
-                                    <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50">
+                                    <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50 text-[11px]">
                                         Восстановить
                                     </button>
                                 </div>
@@ -2446,6 +2468,68 @@
                 }
                 renderAdminTab('moderation');
             }
+        }
+
+        function adminArchiveUser(username) {
+            const target = users.find(u => u.username === username);
+            if (!target) return;
+            if (currentUser && target.username === currentUser.username) {
+                alert('Вы не можете заархивировать свой собственный аккаунт!');
+                return;
+            }
+            if (!confirm(`Отправить аккаунт "@${target.username}" (${target.kunya || target.username}) в архив?`)) return;
+
+            target.archivedAt = new Date().toISOString();
+            target.archivedBy = currentUser ? currentUser.username : 'admin';
+
+            const userUid = target.uid || target.username;
+
+            if (db) {
+                db.ref('users/' + userUid).remove();
+                db.ref('archivedUsers/' + userUid).set(target);
+            } else {
+                const idx = users.findIndex(u => u.username === username);
+                if (idx !== -1) users.splice(idx, 1);
+                archivedUsers.push(target);
+            }
+            renderAdminTab('users');
+        }
+
+        function restoreUser(uidOrUsername) {
+            const target = archivedUsers.find(u => u.uid === uidOrUsername || u.username === uidOrUsername);
+            if (!target) return;
+
+            delete target.archivedAt;
+            delete target.archivedBy;
+
+            const userUid = target.uid || target.username;
+
+            if (db) {
+                db.ref('archivedUsers/' + userUid).remove();
+                db.ref('users/' + userUid).set(target);
+            } else {
+                const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
+                if (idx !== -1) archivedUsers.splice(idx, 1);
+                users.push(target);
+            }
+            renderAdminTab('archive');
+        }
+
+        function permanentlyDeleteUser(uidOrUsername) {
+            const target = archivedUsers.find(u => u.uid === uidOrUsername || u.username === uidOrUsername);
+            if (!target) return;
+
+            if (!confirm(`ВНИМАНИЕ! Вы действительно хотите НАВСЕГДА удалить аккаунт "@${target.username}"? Это действие невозможно отменить!`)) return;
+
+            const userUid = target.uid || target.username;
+
+            if (db) {
+                db.ref('archivedUsers/' + userUid).remove();
+            } else {
+                const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
+                if (idx !== -1) archivedUsers.splice(idx, 1);
+            }
+            renderAdminTab('archive');
         }
 
         function restoreAd(id) {
