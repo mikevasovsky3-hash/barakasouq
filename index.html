@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarakaSouq — Сирийская Платформа Объявлений</title>
+    <title>Avito Sham — Сирийская Платформа Объявлений</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -132,12 +132,12 @@
             <!-- Logo & Brand Identifier -->
             <div class="flex items-center gap-3 shrink-0">
                 <div onclick="resetPageAndRender()" class="cursor-pointer flex items-center gap-2 group">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg group-hover:scale-105 transition-transform">
-                        ب
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-amber-400 flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:scale-105 transition-transform border border-white/20">
+                        آ
                     </div>
                     <div>
-                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Baraka<span class="text-amber-400">Souq</span></span>
-                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Сирийский Рынок</span>
+                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Avito<span class="text-amber-400">Sham</span></span>
+                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Авито Шам — Сирия</span>
                     </div>
                 </div>
             </div>
@@ -168,6 +168,14 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
+                <!-- Shop Button (Create Shop or My Shop) -->
+                <div id="shop-btn-container">
+                    <button onclick="handleShopButtonClick()" id="shop-main-btn" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
+                        <i id="shop-btn-icon" class="fa-solid fa-store text-amber-300"></i>
+                        <span id="shop-btn-text" class="hidden md:inline" data-i18n="btnCreateShop">Создать магазин</span>
+                    </button>
+                </div>
+
                 <!-- Create Ad Button -->
                 <div id="create-ad-btn-container" class="hidden">
                     <button onclick="openCreateAdModal()" class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95">
@@ -178,9 +186,9 @@
 
                 <!-- Admin Quick Button -->
                 <div id="admin-quick-btn-container" class="hidden">
-                    <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
-                        <i class="fa-solid fa-user-shield text-amber-300"></i>
-                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Главный администратор</span>
+                    <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-amber-400/30">
+                        <i class="fa-solid fa-user-shield text-amber-200"></i>
+                        <span class="hidden lg:inline" data-i18n="btnAdminPanel">Главный админ</span>
                     </button>
                 </div>
 
@@ -251,7 +259,7 @@
                 <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto border border-amber-500/30">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
-                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила и рекомендации BarakaSouq</h2>
+                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила и рекомендации Avito Sham</h2>
                 <p class="text-xs text-amber-300 font-bold" data-i18n="rulesAyah">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
             </div>
 
@@ -288,6 +296,106 @@
             <div class="flex gap-2 pt-2">
                 <button id="confirm-btn-cancel" class="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs transition-all">Отмена</button>
                 <button id="confirm-btn-ok" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md">Да, выполнить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Store Modal -->
+    <div id="modal-create-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl border border-purple-500/30 overflow-hidden max-h-[90vh] flex flex-col relative">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-store text-amber-400"></i> <span data-i18n="modalCreateShopTitle">Открытие фирменного магазина</span>
+                </h3>
+                <button onclick="closeModal('modal-create-shop')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="handleCreateShopSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <div class="text-slate-300 bg-purple-500/10 p-3 rounded-2xl border border-purple-500/20 space-y-1">
+                    <div class="font-bold text-purple-300 text-xs">Зарегистрируйте свой бренд в Avito Sham!</div>
+                    <div class="text-[11px] text-slate-300">Создание магазина даст вам официальный знак подтверждения <i class="fa-solid fa-circle-check text-purple-400"></i>, собственный каталог и возможность сохранять бэкап товаров!</div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Название магазина / Бренда *</label>
+                    <input type="text" id="shop-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="Пример: Sham Solar Electronics">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Краткий слоган магазина</label>
+                    <input type="text" id="shop-slogan" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="Пример: Лучшее солнечное оборудование в Дамаске">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Специализация *</label>
+                        <select id="shop-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                            <option value="electronics" class="bg-slate-900">Электроника</option>
+                            <option value="transport" class="bg-slate-900">Транспорт / Авто</option>
+                            <option value="realestate" class="bg-slate-900">Недвижимость</option>
+                            <option value="home" class="bg-slate-900">Бытовые товары</option>
+                            <option value="services" class="bg-slate-900">Услуги</option>
+                            <option value="other" class="bg-slate-900">Универсальный магазин</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Главный регион *</label>
+                        <select id="shop-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                            <option value="DAM" class="bg-slate-900">Дамаск</option>
+                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
+                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
+                            <option value="IDL" class="bg-slate-900">Идлиб</option>
+                            <option value="HOMS" class="bg-slate-900">Хомс</option>
+                            <option value="HAMA" class="bg-slate-900">Хама</option>
+                            <option value="LAT" class="bg-slate-900">Латакия</option>
+                            <option value="TAR" class="bg-slate-900">Тартус</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Рабочий WhatsApp магазина *</label>
+                    <input type="text" id="shop-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="+963 933 123 456">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Логотип / Баннер магазина (Необязательно)</label>
+                    <input type="file" id="shop-logo-file" accept="image/*" onchange="handleShopLogoUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
+                    <input type="hidden" id="shop-logo-data">
+                    <div id="shop-logo-preview-box" class="hidden mt-2 h-24 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
+                        <img id="shop-logo-preview-img" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Описание магазина и условия *</label>
+                    <textarea id="shop-desc" required rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="Расскажите покупателям о вашем магазине, способах доставки и гарантии..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                    Зарегистрировать мой магазин
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- My Store Dashboard & Backup Modal -->
+    <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <button onclick="closeModal('modal-my-shop')" class="absolute top-4 right-4 z-20 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div id="my-shop-content" class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Dynamically rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Shop View Modal -->
+    <div id="modal-public-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-white/10 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <button onclick="closeModal('modal-public-shop')" class="absolute top-4 right-4 z-20 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <div id="public-shop-content" class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Dynamically rendered -->
             </div>
         </div>
     </div>
@@ -609,7 +717,7 @@
         </div>
     </div>
 
-    <!-- ShamCash Support / Donation Modal -->
+    <!-- ShamCash Donation Modal -->
     <div id="modal-shamcash" class="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 border border-emerald-500/40 text-center space-y-4 relative">
             <button onclick="closeShamCashModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -619,7 +727,7 @@
             </div>
 
             <div>
-                <h3 class="text-base font-extrabold text-white">Поддержка платформы BarakaSouq</h3>
+                <h3 class="text-base font-extrabold text-white">Поддержка платформы Avito Sham</h3>
                 <p class="text-xs text-emerald-300 font-semibold mt-0.5">Публикация объявления успешна! 🎉</p>
             </div>
 
@@ -804,6 +912,7 @@
                 <button onclick="switchAdminTab('ads')" id="atab-ads" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Объявления и Модерация</button>
                 <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив пользователей</button>
                 <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabRates">Курсы валют</button>
+                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap text-amber-300 flex items-center gap-1.5"><i class="fa-solid fa-database text-amber-400"></i> <span>Бэкап БД (JSON)</span></button>
             </div>
 
             <div id="admin-tab-content" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
@@ -815,7 +924,7 @@
     <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1">
-                <div data-i18n="footerCopyright">© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.</div>
+                <div data-i18n="footerCopyright">© 2026 Avito Sham. Гражданская платформа объявлений Сирии.</div>
                 <div>
                     <span data-i18n="developerLabel">Разработчик:</span> <span class="font-bold text-slate-200">Салим Нашхо</span> • 
                     <a href="https://wa.me/447887280238" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold inline-flex items-center gap-1">
@@ -897,34 +1006,14 @@
         let archivedUsers = [];
         let ads = [];
 
-        // Helper: Returns array of images for an ad with fallback to single image
-        function getAdImages(ad) {
-            if (!ad) return ['https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'];
-            if (Array.isArray(ad.images) && ad.images.length > 0) return ad.images;
-            if (ad.image) return [ad.image];
-            return ['https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'];
-        }
-
-        // Helper: Always resolves active WhatsApp number live from user account
-        function getSellerWhatsapp(ad) {
-            if (!ad) return '';
-            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-            return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
-        }
-
-        // Helper: Always resolves active Kunya/Name live from user account
-        function getSellerKunya(ad) {
-            if (!ad) return '';
-            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-            return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
-        }
-
         const TRANSLATIONS = {
             RU: {
-                brandTagline: "Сирийский Рынок",
+                brandTagline: "Авито Шам — Сирия",
                 searchPlaceholder: "Поиск товаров, транспорта, услуг...",
                 btnPostAd: "Подать объявление",
-                btnAdminPanel: "Главный администратор",
+                btnAdminPanel: "Главный админ",
+                btnCreateShop: "Создать магазин",
+                btnMyShop: "Мой магазин 🏪",
                 btnSignIn: "Войти",
                 regAll: "Все регионы (Сирия)",
                 regDam: "Дамаск",
@@ -955,7 +1044,7 @@
                 themeDark: "Тёмная тема",
                 themeLight: "Светлая тема",
                 resetCache: "Сброс кэша",
-                footerCopyright: "© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.",
+                footerCopyright: "© 2026 Avito Sham. Гражданская платформа объявлений Сирии.",
                 developerLabel: "Разработчик:",
                 noAdsFound: "Объявлений пока нет. Будьте первым, кто подаст объявление!",
                 btnFirstPage: "« Первая",
@@ -979,7 +1068,7 @@
                 openAllSellerAds: "Открыть все товары продавца",
                 editAdBtn: "Редактировать объявление",
                 archiveAdBtn: "В архив",
-                rulesTitle: "Правила платформы BarakaSouq",
+                rulesTitle: "Правила платформы Avito Sham",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!",
                 rule1Title: "Честность и прозрачность:",
                 rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.",
@@ -1025,6 +1114,7 @@
                 adminTabUsers: "Пользователи и Роли",
                 adminTabArchive: "Архив пользователей",
                 adminTabRates: "Курсы валют",
+                modalCreateShopTitle: "Открытие фирменного магазина в Avito Sham",
                 recsTitle: "3 главных совета для удачных и безопасных сделок в Сирии",
                 rec1Title: "Честное описание и изъяны",
                 rec1Desc: "Всегда указывайте дефекты и мелкие изъяны. Прозрачность ускоряет продажу и бережёт репутацию.",
@@ -1034,10 +1124,12 @@
                 rec3Desc: "Нажмите «Занять очередь», чтобы забронировать товар и не потерять свое место среди покупателей."
             },
             AR: {
-                brandTagline: "سوق سوريا المدني",
+                brandTagline: "أفيتو شام - سوق سوريا",
                 searchPlaceholder: "البحث عن المنتجات، السيارات، الخدمات...",
                 btnPostAd: "أضف إعلاناً",
                 btnAdminPanel: "المدير العام",
+                btnCreateShop: "إنشاء متجر",
+                btnMyShop: "متجري 🏪",
                 btnSignIn: "تسجيل الدخول",
                 regAll: "جميع المحافظات (سوريا)",
                 regDam: "دمشق",
@@ -1068,7 +1160,7 @@
                 themeDark: "المظهر الداكن",
                 themeLight: "المظهر الفاتح",
                 resetCache: "تحديث للتخزين",
-                footerCopyright: "© 2026 BarakaSouq. منصة الإعلانات المدنية في سوريا.",
+                footerCopyright: "© 2026 Avito Sham. منصة الإعلانات المدنية في سوريا.",
                 developerLabel: "التطوير بواسطة:",
                 noAdsFound: "لا توجد إعلانات حتى الآن. كن أول من يضيف إعلاناً!",
                 btnFirstPage: "« الأولى",
@@ -1092,7 +1184,7 @@
                 openAllSellerAds: "عرض جميع منتجات هذا البائع",
                 editAdBtn: "تعديل الإعلان",
                 archiveAdBtn: "أرشفة الإعلان",
-                rulesTitle: "قواعد منصة بركة سوق",
+                rulesTitle: "قواعد منصة أفيتو شام",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ",
                 rule1Title: "الصدق والشفافية:",
                 rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها، ويجب بيان الحالة الحقيقية بدقة.",
@@ -1138,6 +1230,7 @@
                 adminTabUsers: "المستخدمون والرتب",
                 adminTabArchive: "أرشيف المستخدمين",
                 adminTabRates: "أسعار الصرف",
+                modalCreateShopTitle: "افتتاح متجر خاص في أفيتو شام",
                 recsTitle: "3 نصائح رئيسية لصفقات ناجحة وآمنة في سوريا",
                 rec1Title: "الصدق في الوصف والعيوب",
                 rec1Desc: "اذكر دائماً العيوب بالتفصيل. الشفافية تسرع البيع وتحفظ سمعتك.",
@@ -1147,10 +1240,12 @@
                 rec3Desc: "اضغط على «حجز دور» لحجز المنتج وحفظ أسبقيتك الشريفة."
             },
             TR: {
-                brandTagline: "Suriye İlan Pazarı",
+                brandTagline: "Avito Sham - Suriye Pazarı",
                 searchPlaceholder: "Ürün, vasıta, hizmet ara...",
                 btnPostAd: "İlan Ver",
                 btnAdminPanel: "Süper Yönetici",
+                btnCreateShop: "Mağaza Aç",
+                btnMyShop: "Mağazam 🏪",
                 btnSignIn: "Giriş Yap",
                 regAll: "Tüm Bölgeler (Suriye)",
                 regDam: "Şam",
@@ -1181,7 +1276,7 @@
                 themeDark: "Karanlık Tema",
                 themeLight: "Aydınlık Tema",
                 resetCache: "Önbelleği Sıfırla",
-                footerCopyright: "© 2026 BarakaSouq. Suriye Sivil İlan Platformu.",
+                footerCopyright: "© 2026 Avito Sham. Suriye Sivil İlan Platformu.",
                 developerLabel: "Geliştirici:",
                 noAdsFound: "Henüz ilan bulunmuyor. İlk ilanı siz verin!",
                 btnFirstPage: "« İlk",
@@ -1205,7 +1300,7 @@
                 openAllSellerAds: "Satıcının Tüm İlanlarını Gör",
                 editAdBtn: "İlanı Düzenle",
                 archiveAdBtn: "Arşive Kaldır",
-                rulesTitle: "BarakaSouq Platform Kuralları",
+                rulesTitle: "Avito Sham Platform Kuralları",
                 rulesAyah: "Ticarette Allah'tan korkun!",
                 rule1Title: "Dürüstlük ve Şeffaflık:",
                 rule1Desc: "Ürünün kusurlarını gizlemek kesinlikle yasaktır.",
@@ -1251,6 +1346,7 @@
                 adminTabUsers: "Kullanıcılar & Rolleri",
                 adminTabArchive: "Kullanıcı Arşivi",
                 adminTabRates: "Döviz Kurları",
+                modalCreateShopTitle: "Avito Sham Mağazası Aç",
                 recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
                 rec1Title: "Dürüst Açıklama ve Kusurlar",
                 rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
@@ -1263,7 +1359,7 @@
 
         function loadCachedAds() {
             try {
-                const cached = localStorage.getItem('bs_cached_ads');
+                const cached = localStorage.getItem('as_cached_ads');
                 if (cached) {
                     ads = JSON.parse(cached);
                 }
@@ -1274,7 +1370,7 @@
 
         function saveCachedAds() {
             try {
-                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+                localStorage.setItem('as_cached_ads', JSON.stringify(ads));
             } catch (e) {}
         }
 
@@ -1339,6 +1435,429 @@
         function closeModal(id) {
             const m = document.getElementById(id);
             if (m) m.classList.add('hidden');
+        }
+
+        function handleShopLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 400;
+                    const MAX_HEIGHT = 400;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    document.getElementById('shop-logo-data').value = compressedDataUrl;
+
+                    const previewBox = document.getElementById('shop-logo-preview-box');
+                    const previewImg = document.getElementById('shop-logo-preview-img');
+                    if (previewBox && previewImg) {
+                        previewImg.src = compressedDataUrl;
+                        previewBox.classList.remove('hidden');
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleShopButtonClick() {
+            if (!currentUser) {
+                openAuthModal();
+                showToast('Сначала войдите в систему, чтобы создать или открыть магазин', 'warning');
+                return;
+            }
+
+            if (currentUser.shop || currentUser.verifiedShop) {
+                openMyShopModal();
+            } else {
+                openCreateShopModal();
+            }
+        }
+
+        function openCreateShopModal() {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            openModal('modal-create-shop');
+        }
+
+        function handleCreateShopSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const title = document.getElementById('shop-title').value.trim();
+            const slogan = document.getElementById('shop-slogan').value.trim();
+            const category = document.getElementById('shop-category').value;
+            const region = document.getElementById('shop-region').value;
+            const whatsapp = document.getElementById('shop-whatsapp').value.trim();
+            const logo = document.getElementById('shop-logo-data').value || 'https://placehold.co/400x400/3b82f6/fff?text=SHOP';
+            const desc = document.getElementById('shop-desc').value.trim();
+
+            const newShop = {
+                title,
+                slogan,
+                category,
+                region,
+                whatsapp,
+                logo,
+                desc,
+                createdAt: Date.now()
+            };
+
+            currentUser.shop = newShop;
+            currentUser.verifiedShop = true;
+
+            const userIdx = users.findIndex(u => u.username.toLowerCase() === currentUser.username.toLowerCase());
+            if (userIdx !== -1) {
+                users[userIdx].shop = newShop;
+                users[userIdx].verifiedShop = true;
+            }
+
+            if (firebaseDb && currentUser.uid) {
+                firebaseDb.ref(`users/${currentUser.uid}`).update({
+                    shop: newShop,
+                    verifiedShop: true
+                });
+            }
+
+            saveUserSession(currentUser, true);
+            closeModal('modal-create-shop');
+            renderCategoryPills();
+            renderAds();
+            updateAuthUI();
+            showToast('Поздравляем! Ваш магазин успешно открыт!', 'success');
+            openMyShopModal();
+        }
+
+        function openMyShopModal() {
+            if (!currentUser || !currentUser.shop) return;
+            const shop = currentUser.shop;
+            const content = document.getElementById('my-shop-content');
+            if (!content) return;
+
+            const myAds = ads.filter(a => a.sellerUsername?.toLowerCase() === currentUser.username.toLowerCase() && a.status === 'ACTIVE');
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <!-- Shop Banner / Header -->
+                    <div class="p-5 rounded-3xl bg-gradient-to-r from-purple-900/60 via-indigo-900/60 to-slate-900 border border-purple-500/30 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                        <img src="${shop.logo}" class="w-20 h-20 rounded-2xl object-cover border-2 border-amber-400 shadow-xl shrink-0" onerror="this.src='https://placehold.co/400x400/3b82f6/fff?text=SHOP'">
+                        <div class="text-center sm:text-left space-y-1 flex-1">
+                            <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                                <h2 class="text-lg font-extrabold text-white">${shop.title}</h2>
+                                <span class="bg-purple-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-amber-300"></i> Магазин Avito Sham
+                                </span>
+                            </div>
+                            <p class="text-xs text-amber-300 font-medium">${shop.slogan || 'Официальный проверенный магазин'}</p>
+                            <p class="text-[11px] text-slate-300">${shop.desc}</p>
+                            <div class="text-[11px] text-slate-400 pt-1 flex items-center justify-center sm:justify-start gap-3">
+                                <span><i class="fa-brands fa-whatsapp text-emerald-400"></i> ${shop.whatsapp}</span>
+                                <span><i class="fa-solid fa-boxes-stacked text-amber-400"></i> Товаров: ${myAds.length}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shop Actions Bar (Backup & Import/Export) -->
+                    <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-2">
+                        <div class="font-bold text-xs text-white flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk text-amber-400"></i>
+                            <span>Резервное копирование магазина (Бэкап JSON)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportStoreBackup()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Экспорт магазина</span>
+                            </button>
+
+                            <label class="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold text-xs border border-purple-500/30 transition-all cursor-pointer flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-import"></i>
+                                <span>Импорт магазина</span>
+                                <input type="file" accept=".json" onchange="importStoreBackup(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- List of Store Products -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-xs text-white">Товары вашего магазина (${myAds.length})</h4>
+                            <button onclick="closeModal('modal-my-shop'); openCreateAdModal();" class="text-xs text-emerald-400 font-bold hover:underline flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Добавить товар
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
+                            ${myAds.length === 0 ? `
+                                <div class="col-span-full py-6 text-center text-slate-500 text-xs">В магазине пока нет товаров. Нажмите "Добавить товар"!</div>
+                            ` : myAds.map(a => {
+                                const cover = getAdImages(a)[0];
+                                return `
+                                    <div class="bg-white/5 p-2.5 rounded-xl border border-white/10 flex items-center gap-2">
+                                        <img src="${cover}" class="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-bold text-white text-xs truncate">${a.title}</div>
+                                            <div class="text-[10px] text-amber-300 font-bold">${a.isFree ? 'ДАРОМ' : `$${a.price}`}</div>
+                                        </div>
+                                        <button onclick="openEditAdModal('${a.id}'); closeModal('modal-my-shop');" class="px-2 py-1 bg-amber-500/20 text-amber-300 text-[10px] rounded-lg border border-amber-500/30 hover:bg-amber-500/40">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('modal-my-shop');
+        }
+
+        // Export Shop JSON Backup
+        function exportStoreBackup() {
+            if (!currentUser || !currentUser.shop) return;
+            const myAds = ads.filter(a => a.sellerUsername?.toLowerCase() === currentUser.username.toLowerCase());
+            
+            const backupData = {
+                app: "AvitoSham",
+                backupType: "STORE_BACKUP",
+                exportedAt: new Date().toISOString(),
+                shop: currentUser.shop,
+                sellerUsername: currentUser.username,
+                sellerKunya: currentUser.kunya,
+                sellerWhatsapp: currentUser.whatsapp,
+                ads: myAds
+            };
+
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AvitoSham_Shop_${currentUser.username}_Backup.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Бэкап магазина успешно экспортирован!', 'success');
+        }
+
+        // Import Shop JSON Backup
+        function importStoreBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    if (data.ads && Array.isArray(data.ads)) {
+                        let addedCount = 0;
+                        data.ads.forEach(importedAd => {
+                            if (!importedAd.id) importedAd.id = 'AD-' + Math.floor(100 + Math.random() * 900);
+                            importedAd.sellerUsername = currentUser.username;
+                            importedAd.sellerKunya = currentUser.kunya || currentUser.username;
+                            importedAd.sellerWhatsapp = currentUser.whatsapp || '';
+                            if (!ads.some(a => a.id === importedAd.id)) {
+                                ads.unshift(importedAd);
+                                addedCount++;
+                                if (firebaseDb) {
+                                    firebaseDb.ref(`ads/${importedAd.id}`).set(importedAd);
+                                }
+                            }
+                        });
+
+                        if (data.shop) {
+                            currentUser.shop = { ...currentUser.shop, ...data.shop };
+                            currentUser.verifiedShop = true;
+                            if (firebaseDb && currentUser.uid) {
+                                firebaseDb.ref(`users/${currentUser.uid}`).update({
+                                    shop: currentUser.shop,
+                                    verifiedShop: true
+                                });
+                            }
+                        }
+
+                        saveCachedAds();
+                        renderAds();
+                        renderCategoryPills();
+                        openMyShopModal();
+                        showToast(`Успешно импортировано ${addedCount} товаров в ваш магазин!`, 'success');
+                    } else {
+                        showToast('Неверный формат файла бэкапа магазина!', 'error');
+                    }
+                } catch (err) {
+                    showToast('Ошибка импорта JSON: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function openPublicShopModal(sellerUsername) {
+            const seller = users.find(u => u.username && u.username.toLowerCase() === sellerUsername.toLowerCase());
+            const shop = seller?.shop || {
+                title: seller?.kunya || sellerUsername,
+                slogan: 'Фирменный магазин',
+                desc: 'Все товары продавца в одном месте.',
+                whatsapp: seller?.whatsapp || '',
+                logo: 'https://placehold.co/400x400/3b82f6/fff?text=SHOP'
+            };
+
+            const shopAds = ads.filter(a => a.sellerUsername?.toLowerCase() === sellerUsername.toLowerCase() && a.status === 'ACTIVE');
+            const content = document.getElementById('public-shop-content');
+            if (!content) return;
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-5 rounded-3xl bg-gradient-to-r from-purple-900/80 via-slate-900 to-indigo-950 border border-purple-500/30 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                        <img src="${shop.logo}" class="w-20 h-20 rounded-2xl object-cover border-2 border-amber-400 shadow-xl shrink-0" onerror="this.src='https://placehold.co/400x400/3b82f6/fff?text=SHOP'">
+                        <div class="text-center sm:text-left space-y-1 flex-1">
+                            <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                                <h2 class="text-lg font-extrabold text-white">${shop.title}</h2>
+                                <span class="bg-purple-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-amber-300"></i> Проверенный магазин
+                                </span>
+                            </div>
+                            <p class="text-xs text-amber-300 font-medium">${shop.slogan || ''}</p>
+                            <p class="text-[11px] text-slate-300">${shop.desc}</p>
+                            
+                            ${shop.whatsapp ? `
+                                <a href="https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i> Написать в WhatsApp магазина
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-xs text-white">Каталог товаров магазина (${shopAds.length})</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                            ${shopAds.length === 0 ? `
+                                <div class="col-span-full py-8 text-center text-slate-500 text-xs">В этом магазине пока нет активных товаров.</div>
+                            ` : shopAds.map(a => {
+                                const cover = getAdImages(a)[0];
+                                return `
+                                    <div onclick="closeModal('modal-public-shop'); openAdDetail('${a.id}');" class="bg-white/5 p-2 rounded-xl border border-white/10 hover:border-amber-400 cursor-pointer space-y-1.5 transition-all">
+                                        <img src="${cover}" class="w-full h-28 object-cover rounded-lg">
+                                        <div class="font-bold text-xs text-white line-clamp-1">${a.title}</div>
+                                        <div class="text-[11px] font-bold text-amber-400">${a.isFree ? '🎁 ДАРОМ' : `$${a.price}`}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('modal-public-shop');
+        }
+
+        function exportAdminDatabase() {
+            const fullDb = {
+                app: "AvitoSham",
+                version: "2.5",
+                exportedAt: new Date().toISOString(),
+                ads,
+                users,
+                archivedUsers,
+                rates: EXCHANGE_RATES
+            };
+
+            const jsonStr = JSON.stringify(fullDb, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AvitoSham_Full_Database_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Полная база данных Avito Sham экспортирована!', 'success');
+        }
+
+        function importAdminDatabase(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showConfirmModal('Импорт полной базы данных', 'Вы уверены? Импортированные данные обновят существующие записи в базе данных.', () => {
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    try {
+                        const dbData = JSON.parse(evt.target.result);
+                        if (dbData.ads || dbData.users) {
+                            if (Array.isArray(dbData.ads)) {
+                                ads = dbData.ads;
+                                saveCachedAds();
+                                if (firebaseDb) firebaseDb.ref('ads').set(ads);
+                            }
+                            if (Array.isArray(dbData.users)) {
+                                users = dbData.users;
+                                if (firebaseDb) firebaseDb.ref('users').set(users);
+                            }
+                            if (Array.isArray(dbData.archivedUsers)) {
+                                archivedUsers = dbData.archivedUsers;
+                                if (firebaseDb) firebaseDb.ref('archivedUsers').set(archivedUsers);
+                            }
+                            if (dbData.rates) {
+                                EXCHANGE_RATES = dbData.rates;
+                                if (firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES);
+                            }
+
+                            renderAds();
+                            renderCategoryPills();
+                            renderAdminTabContent();
+                            updateFooterRatesUI();
+                            showToast('База данных Avito Sham успешно импортирована!', 'success');
+                        } else {
+                            showToast('Файл не содержит валидных данных базы!', 'error');
+                        }
+                    } catch (err) {
+                        showToast('Ошибка чтения файла JSON: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            });
+        }
+
+        // Helper: Returns array of images for an ad with fallback to single image
+        function getAdImages(ad) {
+            if (!ad) return ['https://placehold.co/800x533/1e293b/fff?text=AvitoSham'];
+            if (Array.isArray(ad.images) && ad.images.length > 0) return ad.images;
+            if (ad.image) return [ad.image];
+            return ['https://placehold.co/800x533/1e293b/fff?text=AvitoSham'];
+        }
+
+        function getSellerWhatsapp(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
+        }
+
+        function getSellerKunya(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
         }
 
         function renderPhotoThumbnailsGrid(mode) {
@@ -1483,6 +2002,10 @@
                         <div class="flex justify-between">
                             <span class="text-slate-400">Пол:</span>
                             <span class="font-bold">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Статус магазина:</span>
+                            <span class="font-bold text-purple-400">${currentUser.shop ? 'Официальный магазин 🏪' : 'Частное лицо'}</span>
                         </div>
                     </div>
 
@@ -1788,10 +2311,21 @@
             const createAdBtn = document.getElementById('create-ad-btn-container');
             const adminQuickBtn = document.getElementById('admin-quick-btn-container');
 
+            const shopBtnText = document.getElementById('shop-btn-text');
+            const shopBtnIcon = document.getElementById('shop-btn-icon');
+
             if (currentUser) {
                 if (authBtnText) authBtnText.innerText = currentUser.kunya || currentUser.username;
                 if (authBtn) authBtn.onclick = openProfileModal;
                 if (createAdBtn) createAdBtn.classList.remove('hidden');
+
+                if (currentUser.shop || currentUser.verifiedShop) {
+                    if (shopBtnText) shopBtnText.innerText = getTranslation('btnMyShop');
+                    if (shopBtnIcon) shopBtnIcon.className = "fa-solid fa-store text-amber-300";
+                } else {
+                    if (shopBtnText) shopBtnText.innerText = getTranslation('btnCreateShop');
+                    if (shopBtnIcon) shopBtnIcon.className = "fa-solid fa-[#000] fa-plus text-amber-300";
+                }
 
                 if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
                     if (adminQuickBtn) adminQuickBtn.classList.remove('hidden');
@@ -1803,6 +2337,8 @@
                 if (authBtn) authBtn.onclick = openAuthModal;
                 if (createAdBtn) createAdBtn.classList.add('hidden');
                 if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
+
+                if (shopBtnText) shopBtnText.innerText = getTranslation('btnCreateShop');
             }
             renderCategoryPills();
             renderAds();
@@ -1972,7 +2508,7 @@
                 currency,
                 desc,
                 images: [...pendingCreateImages],
-                image: pendingCreateImages[0], // backward compatibility
+                image: pendingCreateImages[0],
                 lat,
                 lng,
                 sellerUsername: currentUser.username,
@@ -2235,7 +2771,7 @@
                         return true;
                     }).length;
                 } else if (c.id === 'shops_dir') {
-                    count = users.filter(u => u.verifiedShop).length;
+                    count = users.filter(u => u.verifiedShop || u.shop).length;
                 } else {
                     count = getCategoryAdsCount(c.id);
                 }
@@ -2274,6 +2810,56 @@
             const grid = document.getElementById('listings-view');
             const paginationContainer = document.getElementById('pagination-container');
             if (!grid) return;
+
+            // SPECIAL VIEW: Shops Directory Tab
+            if (selectedCategory === 'shops_dir') {
+                const shopUsers = users.filter(u => u.verifiedShop || u.shop);
+                
+                if (shopUsers.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-16 text-center text-slate-500">
+                            <i class="fa-solid fa-store text-4xl mb-3 block opacity-40"></i>
+                            Пока нет зарегистрированных магазинов. Станьте первым!
+                        </div>
+                    `;
+                    if (paginationContainer) paginationContainer.innerHTML = '';
+                    return;
+                }
+
+                grid.innerHTML = shopUsers.map(u => {
+                    const shop = u.shop || {
+                        title: u.kunya || u.username,
+                        slogan: 'Фирменный магазин',
+                        desc: 'Качественные товары с гарантией.',
+                        whatsapp: u.whatsapp || '',
+                        logo: 'https://placehold.co/400x400/3b82f6/fff?text=SHOP'
+                    };
+                    const storeAdsCount = ads.filter(a => a.sellerUsername?.toLowerCase() === u.username.toLowerCase() && a.status === 'ACTIVE').length;
+
+                    return `
+                        <div onclick="openPublicShopModal('${u.username}')" class="glass-panel p-4 rounded-2xl border border-purple-500/20 hover:border-amber-400 transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-lg relative">
+                            <div class="flex items-center gap-3">
+                                <img src="${shop.logo}" class="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shrink-0 group-hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/400x400/3b82f6/fff?text=SHOP'">
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="font-extrabold text-sm text-white truncate flex items-center gap-1">
+                                        <span>${shop.title}</span>
+                                        <i class="fa-solid fa-circle-check text-purple-400 text-xs"></i>
+                                    </h3>
+                                    <p class="text-[11px] text-amber-300 font-medium truncate">${shop.slogan || 'Официальный магазин'}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-300 line-clamp-2 leading-snug">${shop.desc}</p>
+                            <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+                                <span><i class="fa-solid fa-boxes-stacked text-amber-400"></i> ${storeAdsCount} товаров</span>
+                                <span class="text-purple-300 font-bold flex items-center gap-1">Открыть <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (paginationContainer) paginationContainer.innerHTML = '';
+                return;
+            }
 
             const searchQuery = (document.getElementById('search-input')?.value || document.getElementById('search-input-mobile')?.value || '').toLowerCase();
             const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
@@ -2328,26 +2914,20 @@
 
                 return `
                     <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
-                        <!-- Full Image Aspect Container with Blurred Background Fill -->
                         <div class="relative h-48 bg-slate-950 overflow-hidden flex items-center justify-center">
-                            <!-- Background Blurred Layer for Aesthetics -->
-                            <img src="${coverImage}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30 scale-110 pointer-events-none" aria-hidden="true" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
+                            <img src="${coverImage}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30 scale-110 pointer-events-none" aria-hidden="true" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=AvitoSham'">
                             
-                            <!-- Main Foreground Fully Visible Image -->
-                            <img src="${coverImage}" alt="${ad.title}" class="relative z-0 max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
+                            <img src="${coverImage}" alt="${ad.title}" class="relative z-0 max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=AvitoSham'">
                             
-                            <!-- Ad ID Badge -->
                             <div class="absolute top-2.5 left-2.5 z-10 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
                                 ${ad.id}
                             </div>
 
-                            <!-- Photo Counter Badge -->
                             <div class="absolute bottom-2.5 right-2.5 z-10 bg-black/75 backdrop-blur-md text-slate-200 px-2 py-0.5 rounded-md text-[10px] font-bold border border-white/10 flex items-center gap-1 shadow">
                                 <i class="fa-solid fa-camera text-amber-400 text-[10px]"></i>
                                 <span>${totalPhotos}</span>
                             </div>
 
-                            <!-- Favorite Button -->
                             <button onclick="toggleFavorite('${ad.id}', event)" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
                                 <i class="fa-solid fa-star ${isFav ? 'text-amber-400' : 'text-slate-400'}"></i>
                             </button>
@@ -2447,26 +3027,21 @@
 
             content.innerHTML = `
                 <div class="space-y-4">
-                    <!-- Gallery View Box with Blurred Backdrop & Full Frame Image -->
                     <div class="relative h-72 sm:h-96 rounded-2xl bg-slate-950 overflow-hidden border border-white/10 flex items-center justify-center group">
-                        <!-- Blurred Background Fill -->
                         <img src="${currentPhoto}" class="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none" aria-hidden="true">
                         
-                        <!-- Main Full-View Image -->
                         <img src="${currentPhoto}" alt="${ad.title}" onclick="openLightbox('${currentPhoto}')" class="relative z-10 max-w-full max-h-full object-contain cursor-zoom-in hover:scale-[1.01] transition-transform">
                         
                         <div class="absolute top-3 left-3 z-20 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10">
                             ${ad.id}
                         </div>
 
-                        <!-- Fullscreen Hint Badge -->
                         <button onclick="openLightbox('${currentPhoto}')" class="absolute top-3 right-14 z-20 bg-black/60 hover:bg-black/80 text-white px-2.5 py-1 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
                             <i class="fa-solid fa-expand text-amber-400"></i>
                             <span class="hidden sm:inline">На весь экран</span>
                         </button>
 
                         ${images.length > 1 ? `
-                            <!-- Gallery Prev/Next Navigation Controls -->
                             <button onclick="switchDetailGalleryPhoto('${ad.id}', ${activeDetailGalleryIndex - 1})" class="absolute left-3 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 transition-all shadow-lg active:scale-90">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
@@ -2474,14 +3049,12 @@
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
                             
-                            <!-- Counter Badge -->
                             <div class="absolute bottom-3 right-3 z-20 bg-black/70 backdrop-blur-md text-amber-300 font-mono text-xs px-2.5 py-1 rounded-xl border border-white/10 font-bold">
                                 ${activeDetailGalleryIndex + 1} / ${images.length}
                             </div>
                         ` : ''}
                     </div>
 
-                    <!-- Gallery Thumbnails Bar -->
                     ${images.length > 1 ? `
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                             ${images.map((imgUrl, idx) => `
@@ -2503,7 +3076,9 @@
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${ad.city}</span>
                             <span>•</span>
-                            <span><i class="fa-solid fa-user text-blue-400"></i> ${activeKunya}</span>
+                            <button onclick="openPublicShopModal('${ad.sellerUsername}')" class="text-amber-300 hover:underline font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-store text-purple-400"></i> ${activeKunya}
+                            </button>
                         </div>
                     </div>
 
@@ -2825,7 +3400,7 @@
 
         function switchAdminTab(tab) {
             SYSTEM_CONFIG.adminTab = tab;
-            ['overview', 'users', 'ads', 'archive', 'rates'].forEach(t => {
+            ['overview', 'users', 'ads', 'archive', 'rates', 'backup'].forEach(t => {
                 const btn = document.getElementById(`atab-${t}`);
                 if (btn) {
                     btn.className = (t === tab) 
@@ -2938,7 +3513,7 @@
                         ${users.map(u => `
                             <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                 <div>
-                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
+                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span> ${u.shop ? '<i class="fa-solid fa-store text-purple-400 text-xs ml-1" title="Владелец магазина"></i>' : ''}</div>
                                     <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
                                 </div>
                                 <div class="flex items-center gap-1.5">
@@ -3003,6 +3578,35 @@
                             <button onclick="saveManualRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow">
                                 Сохранить изменения курсов
                             </button>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'backup') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="p-5 rounded-3xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-bold border border-amber-500/30">
+                                    <i class="fa-solid fa-database"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-extrabold text-sm text-white">Полный резервный бэкап базы данных (JSON)</h4>
+                                    <p class="text-xs text-amber-300">Экспорт и импорт всех объявлений, пользователей, архива и настроек одним файлом.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                <button onclick="exportAdminDatabase()" class="p-4 rounded-2xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 font-extrabold text-xs border border-amber-500/40 transition-all flex flex-col items-center justify-center gap-2 shadow-lg active:scale-95">
+                                    <i class="fa-solid fa-file-export text-2xl"></i>
+                                    <span>Экспортировать всю БД в JSON</span>
+                                </button>
+
+                                <label class="p-4 rounded-2xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 font-extrabold text-xs border border-purple-500/40 transition-all flex flex-col items-center justify-center gap-2 shadow-lg cursor-pointer active:scale-95">
+                                    <i class="fa-solid fa-file-import text-2xl"></i>
+                                    <span>Импортировать БД из JSON</span>
+                                    <input type="file" accept=".json" onchange="importAdminDatabase(event)" class="hidden">
+                                </label>
+                            </div>
                         </div>
                     </div>
                 `;
