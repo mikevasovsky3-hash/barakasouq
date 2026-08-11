@@ -1764,7 +1764,10 @@
             const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
 
             const userIndex = users.findIndex(u => u.username === originalUsername);
-            if (userIndex === -1) return;
+            if (userIndex === -1) {
+                showToast('Пользователь не найден!', 'error');
+                return;
+            }
 
             if (newLogin !== originalUsername && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
                 showToast('Этот логин уже занят!', 'error');
@@ -1773,30 +1776,52 @@
 
             const u = users[userIndex];
             u.username = newLogin;
-            if (newPassword) u.passwordHash = newPassword;
+            if (newPassword && newPassword.trim() !== '') {
+                u.passwordHash = newPassword.trim();
+            }
             u.kunya = newKunya;
             u.whatsapp = newWhatsapp;
 
             if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                u.gender = document.getElementById('edit-profile-gender').value;
-                u.role = document.getElementById('edit-profile-role').value;
+                const genderEl = document.getElementById('edit-profile-gender');
+                const roleEl = document.getElementById('edit-profile-role');
+                if (genderEl) u.gender = genderEl.value;
+                if (roleEl) u.role = roleEl.value;
             }
 
+            // Sync updated user object to Firebase
             if (firebaseDb && u.uid) {
                 firebaseDb.ref(`users/${u.uid}`).set(u);
             }
 
+            // Automatically update seller details on all existing ads owned by this user
+            ads.forEach(ad => {
+                if (ad.sellerUsername === originalUsername) {
+                    ad.sellerUsername = newLogin;
+                    ad.sellerKunya = newKunya;
+                    ad.sellerWhatsapp = newWhatsapp;
+                    if (firebaseDb && ad.id) {
+                        firebaseDb.ref(`ads/${ad.id}`).set(ad);
+                    }
+                }
+            });
+
+            // If editing own account, update current active session
             if (currentUser && currentUser.username === originalUsername) {
                 currentUser = { ...u };
-                try {
-                    localStorage.setItem('bs_current_user', JSON.stringify(currentUser));
-                } catch (e) {}
+                saveUserSession(currentUser, true);
             }
 
             closeModal('modal-edit-profile');
             closeModal('modal-profile');
             updateAuthUI();
-            showToast('Профиль успешно обновлен!', 'success');
+
+            // Refresh Admin Panel list if open
+            if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
+                renderAdminTabContent();
+            }
+
+            showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
         }
 
         function openCreateAdModal() {
