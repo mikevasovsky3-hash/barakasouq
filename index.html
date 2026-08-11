@@ -639,11 +639,19 @@
             <form onsubmit="handleSaveProfile(event)" class="space-y-3">
                 <input type="hidden" id="edit-profile-username">
                 <div>
-                    <label class="block text-slate-400 mb-1">Имя / Кунья</label>
+                    <label class="block text-slate-400 mb-1">Логин (Имя входа) *</label>
+                    <input type="text" id="edit-profile-login" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Новый пароль</label>
+                    <input type="password" id="edit-profile-password" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400" placeholder="Оставьте пустым, если не меняете">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
                     <input type="text" id="edit-profile-kunya" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-slate-400 mb-1">WhatsApp</label>
+                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
                     <input type="text" id="edit-profile-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
                 </div>
                 <div id="edit-profile-admin-fields" class="space-y-3 pt-2 border-t border-white/10 hidden">
@@ -655,7 +663,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Роль в системе</label>
+                        <label class="block text-slate-400 mb-1">Роль / Статус в системе</label>
                         <select id="edit-profile-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
                             <option value="USER" class="bg-slate-900">Пользователь</option>
                             <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
@@ -663,7 +671,59 @@
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition-all">Сохранить</button>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition-all">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Create User Modal -->
+    <div id="modal-admin-create-user" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-purple-500/30 relative space-y-3 text-xs">
+            <button onclick="closeModal('modal-admin-create-user')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-emerald-400"></i> Создание нового аккаунта
+            </h3>
+            <form onsubmit="handleAdminCreateUser(event)" class="space-y-3">
+                <div>
+                    <label class="block text-slate-400 mb-1">Логин *</label>
+                    <input type="text" id="admin-create-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="Пример: salim_admin">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Пароль *</label>
+                    <input type="password" id="admin-create-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
+                    <input type="text" id="admin-create-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" placeholder="Пример: Абу Салим">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
+                    <input type="text" id="admin-create-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" value="+963">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Пол (Шариатский выбор) *</label>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                            <input type="radio" name="admin-create-gender" value="MALE" checked class="accent-blue-500">
+                            <span class="font-bold text-[11px]">Мужчина</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                            <input type="radio" name="admin-create-gender" value="FEMALE" class="accent-pink-500">
+                            <span class="font-bold text-[11px]">Женщина 🌸</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Роль / Статус аккаунта *</label>
+                    <select id="admin-create-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                        <option value="USER" class="bg-slate-900">Пользователь</option>
+                        <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
+                        <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-white transition-all shadow-md">
+                    Создать пользователя
+                </button>
             </form>
         </div>
     </div>
@@ -839,6 +899,57 @@
             SYP: 13100,
             TRY: 32.50
         };
+
+        /* -------------------------------------------------------------
+         * AUTOMATIC EXCHANGE RATE FETCHING FROM SP-PROXY WORKER
+         * ------------------------------------------------------------- */
+        async function fetchLiveExchangeRates() {
+            const PROXY_URL = 'https://sp-proxy.mikevasovsky3.workers.dev/';
+            try {
+                const response = await fetch(PROXY_URL);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const data = await response.json();
+                
+                let fetchedSYP = null;
+                let fetchedTRY = null;
+
+                // Flexible response parser supporting multiple JSON structures
+                if (typeof data === 'object' && data !== null) {
+                    const targetObj = data.rates || data.data || data.currencies || data;
+
+                    for (const [key, val] of Object.entries(targetObj)) {
+                        const upperKey = String(key).toUpperCase();
+                        const numVal = parseFloat(val);
+                        if (!isNaN(numVal) && numVal > 0) {
+                            if (upperKey.includes('SYP') || upperKey.includes('SYRIA') || upperKey === 'SYP_USD' || upperKey === 'USD_SYP') {
+                                fetchedSYP = numVal;
+                            }
+                            if (upperKey.includes('TRY') || upperKey.includes('TURK') || upperKey === 'TRY_USD' || upperKey === 'USD_TRY') {
+                                fetchedTRY = numVal;
+                            }
+                        }
+                    }
+                }
+
+                let isUpdated = false;
+                if (fetchedSYP && fetchedSYP > 0 && fetchedSYP !== EXCHANGE_RATES.SYP) {
+                    EXCHANGE_RATES.SYP = fetchedSYP;
+                    isUpdated = true;
+                }
+                if (fetchedTRY && fetchedTRY > 0 && fetchedTRY !== EXCHANGE_RATES.TRY) {
+                    EXCHANGE_RATES.TRY = fetchedTRY;
+                    isUpdated = true;
+                }
+
+                if (isUpdated) {
+                    if (db) db.ref('rates').set(EXCHANGE_RATES);
+                    renderAds();
+                    showToast(`Курсы обновлены через SP Proxy: SYP ${EXCHANGE_RATES.SYP}, TRY ${EXCHANGE_RATES.TRY}`);
+                }
+            } catch (err) {
+                console.warn('Ошибка автоматического обновления курса из SP Proxy:', err);
+            }
+        }
 
         const REGION_COORDS = {
             'DAM': [33.5138, 36.2765],
@@ -2231,6 +2342,8 @@
             if (!targetUser) return;
 
             document.getElementById('edit-profile-username').value = targetUser.username;
+            document.getElementById('edit-profile-login').value = targetUser.username;
+            document.getElementById('edit-profile-password').value = '';
             document.getElementById('edit-profile-kunya').value = targetUser.kunya || '';
             document.getElementById('edit-profile-whatsapp').value = targetUser.whatsapp || '';
 
@@ -2248,27 +2361,123 @@
 
         function handleSaveProfile(e) {
             e.preventDefault();
-            const targetUsername = document.getElementById('edit-profile-username').value;
-            const kunya = document.getElementById('edit-profile-kunya').value;
-            const whatsapp = document.getElementById('edit-profile-whatsapp').value;
+            const oldUsername = document.getElementById('edit-profile-username').value;
+            const newLogin = document.getElementById('edit-profile-login').value.trim().toLowerCase();
+            const newPassword = document.getElementById('edit-profile-password').value.trim();
+            const kunya = document.getElementById('edit-profile-kunya').value.trim();
+            const whatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
 
-            const u = users.find(x => x.username === targetUsername);
-            if (u && u.uid) {
-                u.kunya = kunya;
-                u.whatsapp = whatsapp;
+            const u = users.find(x => x.username === oldUsername);
+            if (!u || !u.uid) return;
 
-                if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                    u.gender = document.getElementById('edit-profile-gender').value;
-                    u.role = document.getElementById('edit-profile-role').value;
-                }
-
-                if (db) db.ref('users/' + u.uid).update(u);
-                closeModal('modal-edit-profile');
-                showToast('Анкета успешно обновлена!');
-                if (currentUser && currentUser.username === targetUsername) {
-                    openProfileModal();
-                }
+            // Check login collision if login changed
+            if (newLogin !== oldUsername && users.some(x => x.username === newLogin && x.uid !== u.uid)) {
+                showToast('Этот логин уже занят другим пользователем!', 'error');
+                return;
             }
+
+            u.username = newLogin;
+            u.kunya = kunya;
+            u.whatsapp = whatsapp;
+
+            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                u.gender = document.getElementById('edit-profile-gender').value;
+                u.role = document.getElementById('edit-profile-role').value;
+            }
+
+            // If password changed and editing own user via auth
+            if (newPassword && auth && auth.currentUser && currentUser && currentUser.username === oldUsername) {
+                auth.currentUser.updatePassword(newPassword).catch(err => {
+                    console.warn('Firebase auth password update notice:', err);
+                });
+            }
+
+            if (db) {
+                db.ref('users/' + u.uid).set(u).then(() => {
+                    showToast('Анкета и данные входа успешно сохранены!');
+                }).catch(err => {
+                    showToast('Ошибка при сохранении: ' + err.message, 'error');
+                });
+            } else {
+                showToast('Анкета обновлена!');
+            }
+
+            if (currentUser && currentUser.username === oldUsername) {
+                currentUser.username = newLogin;
+                currentUser.kunya = kunya;
+                currentUser.whatsapp = whatsapp;
+                if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+                    currentUser.gender = u.gender;
+                    currentUser.role = u.role;
+                }
+                saveUserSession(currentUser);
+                updateAuthUI();
+            }
+
+            closeModal('modal-edit-profile');
+            if (currentAdminTab === 'users') renderAdminTab('users');
+            if (document.getElementById('modal-profile') && !document.getElementById('modal-profile').classList.contains('hidden')) {
+                renderProfileContent();
+            }
+        }
+
+        function openAdminCreateUserModal() {
+            if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+                showToast('Доступ разрешен только администраторам!', 'error');
+                return;
+            }
+            document.getElementById('admin-create-username').value = '';
+            document.getElementById('admin-create-password').value = '';
+            document.getElementById('admin-create-kunya').value = '';
+            document.getElementById('admin-create-whatsapp').value = '+963';
+            document.getElementById('admin-create-role').value = 'USER';
+            openModal('modal-admin-create-user');
+        }
+
+        function handleAdminCreateUser(e) {
+            e.preventDefault();
+            const un = document.getElementById('admin-create-username').value.trim().toLowerCase();
+            const pw = document.getElementById('admin-create-password').value.trim();
+            const kunya = document.getElementById('admin-create-kunya').value.trim() || un;
+            const whatsapp = document.getElementById('admin-create-whatsapp').value.trim();
+            const gender = document.querySelector('input[name="admin-create-gender"]:checked')?.value || 'MALE';
+            const role = document.getElementById('admin-create-role').value;
+
+            if (users.some(u => u.username === un)) {
+                showToast('Пользователь с таким логином уже существует!', 'error');
+                return;
+            }
+
+            const newUid = 'user_' + Date.now();
+            const newUser = {
+                uid: newUid,
+                username: un,
+                kunya,
+                whatsapp,
+                gender,
+                role,
+                verifiedShop: (role === 'SUPERUSER' || role === 'ADMIN'),
+                createdAt: new Date().toISOString()
+            };
+
+            const fakeEmail = `${un}@barakasouq.local`;
+
+            if (auth && auth.createUserWithEmailAndPassword) {
+                auth.createUserWithEmailAndPassword(fakeEmail, pw).then((cred) => {
+                    newUser.uid = cred.user.uid;
+                    if (db) db.ref('users/' + cred.user.uid).set(newUser);
+                }).catch(() => {
+                    if (db) db.ref('users/' + newUid).set(newUser);
+                });
+            } else if (db) {
+                db.ref('users/' + newUid).set(newUser);
+            } else {
+                users.push(newUser);
+            }
+
+            closeModal('modal-admin-create-user');
+            showToast(`Пользователь @${un} [${role}] успешно создан!`);
+            if (currentAdminTab === 'users') renderAdminTab('users');
         }
 
         function openShopsDirectory() {
@@ -2396,29 +2605,46 @@
                 `;
             } else if (tab === 'users') {
                 container.innerHTML = `
-                    <div class="space-y-2">
-                        ${users.map(u => `
-                            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                <div>
-                                    <div class="font-bold text-white flex items-center gap-1.5">
-                                        ${u.kunya || u.username}
-                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">${u.role}</span>
-                                    </div>
-                                    <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp}</div>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button onclick="toggleVerifyShop('${u.username}')" class="px-2 py-1 rounded-lg ${u.verifiedShop ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400'} font-bold">
-                                        ${u.verifiedShop ? 'Магазин ✓' : '+ Магазин'}
-                                    </button>
-                                    <button onclick="openEditProfileModal('${u.username}')" class="px-2 py-1 rounded-lg bg-blue-600/30 text-blue-300 font-bold">
-                                        Редактировать
-                                    </button>
-                                    <button onclick="adminArchiveUser('${u.username}')" class="px-2 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50" ${u.username === (currentUser?.username) ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="Нельзя отправить в архив себя"' : ''}>
-                                        В архив
-                                    </button>
-                                </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                            <div>
+                                <h4 class="font-bold text-white text-xs">Всего аккаунтов в системе: ${users.length}</h4>
+                                <p class="text-[10px] text-slate-400">Управляйте ролями, сбрасывайте логины/пароли или создавайте новые аккаунты</p>
                             </div>
-                        `).join('')}
+                            <button onclick="openAdminCreateUserModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-plus text-xs"></i>
+                                <span>Создать аккаунт</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-2">
+                            ${users.map(u => `
+                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                    <div>
+                                        <div class="font-bold text-white flex items-center gap-1.5">
+                                            ${u.kunya || u.username}
+                                            <span class="text-[10px] px-1.5 py-0.5 rounded ${
+                                                u.role === 'SUPERUSER' ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40 font-extrabold' : 
+                                                u.role === 'ADMIN' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40 font-bold' : 
+                                                'bg-white/10 text-slate-300'
+                                            } font-mono">${u.role}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp || 'Без WhatsApp'}</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button onclick="toggleVerifyShop('${u.username}')" class="px-2 py-1 rounded-lg ${u.verifiedShop ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400'} font-bold">
+                                            ${u.verifiedShop ? 'Магазин ✓' : '+ Магазин'}
+                                        </button>
+                                        <button onclick="openEditProfileModal('${u.username}')" class="px-2 py-1 rounded-lg bg-blue-600/30 text-blue-300 font-bold hover:bg-blue-600/50">
+                                            <i class="fa-solid fa-user-pen mr-1"></i> Изменить
+                                        </button>
+                                        <button onclick="adminArchiveUser('${u.username}')" class="px-2 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50" ${u.username === (currentUser?.username) ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="Нельзя отправить в архив себя"' : ''}>
+                                            В архив
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             } else if (tab === 'archive') {
@@ -2484,7 +2710,17 @@
                 `;
             } else if (tab === 'rates') {
                 container.innerHTML = `
-                    <div class="space-y-3 max-w-sm mx-auto">
+                    <div class="space-y-4 max-w-sm mx-auto text-xs">
+                        <div class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2 text-center">
+                            <div class="font-bold text-purple-300 flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-arrows-rotate animate-spin"></i> Авто-синхронизация курсов
+                            </div>
+                            <p class="text-[11px] text-slate-300 font-mono break-all">https://sp-proxy.mikevasovsky3.workers.dev/</p>
+                            <button onclick="fetchLiveExchangeRates()" class="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-sync"></i> Обновить курс из SP Proxy
+                            </button>
+                        </div>
+
                         <div>
                             <label class="block text-slate-400 mb-1">Курс Сирийского фунта (SYP за $1)</label>
                             <input type="number" id="rate-syp" value="${EXCHANGE_RATES.SYP}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
@@ -2493,8 +2729,8 @@
                             <label class="block text-slate-400 mb-1">Курс Турецкой лиры (TRY за $1)</label>
                             <input type="number" step="0.1" id="rate-try" value="${EXCHANGE_RATES.TRY}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
                         </div>
-                        <button onclick="saveRates()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all">
-                            Сохранить новые курсы
+                        <button onclick="saveRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                            Сохранить ручные изменения
                         </button>
                     </div>
                 `;
@@ -2722,6 +2958,10 @@
                 renderCategoryPills();
                 renderAds();
             }
+
+            // Автоматический запрос к прокси при загрузке страницы и каждые 5 минут
+            fetchLiveExchangeRates();
+            setInterval(fetchLiveExchangeRates, 300000);
 
             updateAuthUI();
             renderCategoryPills();
