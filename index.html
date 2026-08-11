@@ -1928,8 +1928,9 @@
                 firebaseDb.ref(`users/${u.uid}`).set(u);
             }
 
+            // Автоматическое обновление логина, имени и номера WhatsApp во всех ранее созданных объявлениях пользователя
             ads.forEach(ad => {
-                if (ad.sellerUsername === originalUsername) {
+                if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === originalUsername.toLowerCase()) {
                     ad.sellerUsername = newLogin;
                     ad.sellerKunya = newKunya;
                     ad.sellerWhatsapp = newWhatsapp;
@@ -1940,7 +1941,7 @@
             });
             saveCachedAds();
 
-            if (currentUser && currentUser.username === originalUsername) {
+            if (currentUser && currentUser.username.toLowerCase() === originalUsername.toLowerCase()) {
                 currentUser = { ...u };
                 saveUserSession(currentUser, true);
             }
@@ -2178,11 +2179,15 @@
             const content = document.getElementById('detail-content');
             if (!content) return;
 
+            // Динамически получаем свежий WhatsApp номер продавца из профиля пользователя
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            const activeWhatsapp = seller?.whatsapp || ad.sellerWhatsapp || '';
+
             const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
             const queueList = ad.queue || [];
             const isUserInQueue = currentUser && queueList.some(q => q.username === currentUser.username);
             const userQueueRank = isUserInQueue ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0;
-            const isOwner = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+            const isOwner = currentUser && (currentUser.username.toLowerCase() === ad.sellerUsername.toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
 
             content.innerHTML = `
                 <div class="space-y-4">
@@ -2204,7 +2209,7 @@
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${ad.city}</span>
                             <span>•</span>
-                            <span><i class="fa-solid fa-user text-blue-400"></i> ${ad.sellerKunya || ad.sellerUsername}</span>
+                            <span><i class="fa-solid fa-user text-blue-400"></i> ${seller?.kunya || ad.sellerKunya || ad.sellerUsername}</span>
                         </div>
                     </div>
 
@@ -2227,7 +2232,7 @@
                         <p class="text-xs text-slate-300 leading-relaxed bg-white/5 p-3.5 rounded-2xl border border-white/5 whitespace-pre-line">${ad.desc}</p>
                     </div>
 
-                    <a href="https://wa.me/${(ad.sellerWhatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+                    <a href="https://wa.me/${activeWhatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
                         <i class="fa-brands fa-whatsapp text-lg"></i>
                         <span>${getTranslation('contactSellerWa')}</span>
                     </a>
