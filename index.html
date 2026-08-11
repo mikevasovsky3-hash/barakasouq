@@ -219,10 +219,10 @@
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
 
-        <!-- Categories Toolbar (Compact Icon Pills with Red Notification Badges) -->
+        <!-- Categories Toolbar (Compact Icon Pills with Live Badges) -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
-                <!-- Dynamically Rendered Category Icon Pills with Live Counts -->
+                <!-- Dynamically Rendered Category Icon Pills -->
             </div>
         </div>
 
@@ -234,7 +234,7 @@
 
         <!-- Main Listings Feed Container Grid -->
         <div id="listings-view" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            <!-- Listings Dynamically Injected Here -->
+            <!-- Listings Injected Here -->
         </div>
 
         <!-- Pagination Controls -->
@@ -808,7 +808,7 @@
 
         let archivedUsers = [];
 
-        // Clean empty initialization array - Zero phantom/demo ads
+        // Clean initial array — differential caching will manage state
         let ads = [];
 
         const TRANSLATIONS = {
@@ -1153,6 +1153,24 @@
             }
         };
 
+        // --- LOCAL STORAGE CACHING HELPERS ---
+        function loadCachedAds() {
+            try {
+                const cached = localStorage.getItem('bs_cached_ads');
+                if (cached) {
+                    ads = JSON.parse(cached);
+                }
+            } catch (e) {
+                console.warn('Cache error:', e);
+            }
+        }
+
+        function saveCachedAds() {
+            try {
+                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+            } catch (e) {}
+        }
+
         function getTranslation(key, params = {}) {
             const langDict = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.RU;
             let text = langDict[key] || TRANSLATIONS.RU[key] || key;
@@ -1285,6 +1303,7 @@
             showToast('Вы успешно вышли из аккаунта', 'info');
         }
 
+        // --- DIFFERENTIAL CLOUD SYNC LOGIC ---
         function initFirebaseSync() {
             const firebaseConfig = {
                 databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com"
@@ -1302,18 +1321,28 @@
 
             firebaseDb.ref('ads').on('value', (snapshot) => {
                 const data = snapshot.val();
+                let updatedAds = [];
+
                 if (data) {
                     if (Array.isArray(data)) {
-                        ads = data.filter(item => item != null);
+                        updatedAds = data.filter(item => item != null);
                     } else {
-                        ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
+                        updatedAds = Object.keys(data).map(k => ({ ...data[k], id: k }));
                     }
-                } else {
-                    ads = [];
                 }
+
+                const currentStr = JSON.stringify(ads);
+                const newStr = JSON.stringify(updatedAds);
+
+                // Differential Check: Only re-render if data has changed
+                if (currentStr !== newStr) {
+                    ads = updatedAds;
+                    saveCachedAds();
+                    renderAds();
+                    renderCategoryPills();
+                }
+
                 if (syncStatus) syncStatus.classList.add('hidden');
-                renderAds();
-                renderCategoryPills();
             }, (err) => {
                 console.warn('Firebase ads sync error:', err);
                 if (syncStatus) syncStatus.classList.add('hidden');
@@ -1909,6 +1938,7 @@
                     }
                 }
             });
+            saveCachedAds();
 
             if (currentUser && currentUser.username === originalUsername) {
                 currentUser = { ...u };
@@ -2129,6 +2159,8 @@
             };
 
             ads.unshift(newAd);
+            saveCachedAds();
+
             if (firebaseDb) {
                 firebaseDb.ref(`ads/${adId}`).set(newAd);
             }
@@ -2266,6 +2298,8 @@
             ad.currency = document.getElementById('edit-ad-currency').value;
             ad.desc = document.getElementById('edit-ad-desc').value.trim();
 
+            saveCachedAds();
+
             if (firebaseDb) {
                 firebaseDb.ref(`ads/${adId}`).set(ad);
             }
@@ -2281,6 +2315,7 @@
                 const ad = ads.find(a => a.id === adId);
                 if (ad) {
                     ad.status = 'ARCHIVED';
+                    saveCachedAds();
                     if (firebaseDb) {
                         firebaseDb.ref(`ads/${adId}`).set(ad);
                     }
@@ -2299,6 +2334,7 @@
             const ad = ads.find(a => a.id === adId);
             if (ad) {
                 ad.status = 'ACTIVE';
+                saveCachedAds();
                 if (firebaseDb) {
                     firebaseDb.ref(`ads/${adId}`).set(ad);
                 }
@@ -2324,6 +2360,8 @@
                 timestamp: Date.now()
             });
 
+            saveCachedAds();
+
             if (firebaseDb) {
                 firebaseDb.ref(`ads/${adId}`).set(ad);
             }
@@ -2339,6 +2377,8 @@
 
             ad.queue = ad.queue.filter(q => q.username !== currentUser.username);
 
+            saveCachedAds();
+
             if (firebaseDb) {
                 firebaseDb.ref(`ads/${adId}`).set(ad);
             }
@@ -2350,6 +2390,7 @@
         function deleteAdWithConfirm(adId) {
             showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью и навсегда удалить это объявление?', () => {
                 ads = ads.filter(a => a.id !== adId);
+                saveCachedAds();
                 if (firebaseDb) {
                     firebaseDb.ref(`ads/${adId}`).remove();
                 }
@@ -2673,11 +2714,12 @@
         }
 
         window.onload = function () {
+            loadCachedAds(); // Load immediately from local cache
             restoreUserSession();
             initFirebaseSync();
             fetchLiveExchangeRates();
             renderCategoryPills();
-            renderAds();
+            renderAds(); // Instant render from cache
             updateLanguageUI();
 
             if (!localStorage.getItem('bs_rules_accepted')) {
