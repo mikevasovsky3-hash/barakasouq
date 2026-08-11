@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Авито Шам — Сирийская Платформа Объявлений</title>
+    <title>Авито Шам — Сирийский Маркетплейс Объявлений</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -136,8 +136,8 @@
                         А
                     </div>
                     <div>
-                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Авито <span class="text-amber-400">Шам</span></span>
-                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Авито Шам — Сирия</span>
+                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Авито<span class="text-amber-400">Шам</span></span>
+                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Сирийский Маркетплейс</span>
                     </div>
                 </div>
             </div>
@@ -145,7 +145,7 @@
             <!-- Header Search Bar & Regions Selector -->
             <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
                 <div class="relative flex-1">
-                    <input type="text" id="search-input" oninput="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
+                    <input type="text" id="search-input" onkeyup="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 </div>
                 <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[180px]">
@@ -168,11 +168,13 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Shop Management Button -->
-                <button id="shop-nav-btn" class="hidden flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
-                    <i class="fa-solid fa-store"></i>
-                    <span class="hidden md:inline" data-i18n="btnCreateShop">Создать магазин</span>
-                </button>
+                <!-- Shop Management Header Button (Dynamically toggles: Create Store or My Store) -->
+                <div id="shop-header-btn-container" class="hidden">
+                    <button id="shop-header-btn" onclick="handleHeaderShopAction()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
+                        <i id="shop-header-btn-icon" class="fa-solid fa-store text-amber-300"></i>
+                        <span id="shop-header-btn-text" class="hidden md:inline">Создать магазин</span>
+                    </button>
+                </div>
 
                 <!-- Create Ad Button -->
                 <div id="create-ad-btn-container" class="hidden">
@@ -186,7 +188,7 @@
                 <div id="admin-quick-btn-container" class="hidden">
                     <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-amber-400/30">
                         <i class="fa-solid fa-user-shield text-amber-300"></i>
-                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Главный админ</span>
+                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Админ панель</span>
                     </button>
                 </div>
 
@@ -198,9 +200,10 @@
             </div>
         </div>
 
+        <!-- Mobile Search and Region Filter -->
         <div class="sm:hidden mt-2.5 flex gap-2">
             <div class="relative flex-1">
-                <input type="text" id="search-input-mobile" oninput="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
+                <input type="text" id="search-input-mobile" onkeyup="debouncedSearchMobile(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск объявлений..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             </div>
             <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px]">
@@ -225,9 +228,9 @@
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
 
-        <!-- Categories Toolbar -->
+        <!-- Categories Toolbar (Compact Wrap on Mobile so Badges are Never Clipped) -->
         <div class="flex items-center justify-between">
-            <div id="categories-container" class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 sm:overflow-x-auto pt-2.5 pb-2 px-1 no-scrollbar text-xs w-full">
+            <div id="categories-container" class="flex flex-wrap justify-center sm:flex-nowrap sm:justify-start gap-2 text-xs w-full pt-2.5 pb-2 px-1">
                 <!-- Dynamically Rendered Category Icon Pills -->
             </div>
         </div>
@@ -235,7 +238,7 @@
         <!-- Cloud Sync Loader Indicator -->
         <div id="cloud-sync-status" class="text-center text-[11px] text-amber-400 font-mono hidden flex items-center justify-center gap-2 py-1 bg-amber-500/10 rounded-xl border border-amber-500/20">
             <i class="fa-solid fa-arrows-rotate animate-spin"></i>
-            <span>Синхронизация с облаком...</span>
+            <span>Синхронизация с облаком Firebase...</span>
         </div>
 
         <!-- Main Listings Feed Container Grid -->
@@ -250,14 +253,14 @@
 
     </main>
 
-    <!-- Rules Modal -->
+    <!-- Rules Modal (Appears Unconditionally Every Launch) -->
     <div id="modal-rules-agreement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-amber-500/30 space-y-4 max-h-[90vh] flex flex-col justify-between">
             <div class="text-center space-y-2">
                 <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto border border-amber-500/30">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
-                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила и рекомендации Avito Sham</h2>
+                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила и рекомендации Авито Шам</h2>
                 <p class="text-xs text-amber-300 font-bold" data-i18n="rulesAyah">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
             </div>
 
@@ -280,6 +283,106 @@
             <button onclick="acceptLaunchRules()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95" data-i18n="btnAcceptRules">
                 Я подтверждаю и принимаю условия
             </button>
+        </div>
+    </div>
+
+    <!-- Create Shop Modal -->
+    <div id="modal-create-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-store text-amber-400"></i>
+                    <span>Открытие нового магазина в Авито Шам</span>
+                </h3>
+                <button onclick="closeModal('modal-create-shop')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="handleCreateShopSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <div>
+                    <label class="block text-slate-400 mb-1">Название магазина *</label>
+                    <input type="text" id="shop-name" required placeholder="Пример: Sham Solar & Tech" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Слоган / Краткое описание *</label>
+                    <input type="text" id="shop-slogan" required placeholder="Пример: Лучшая электроника и солнечные панели в Дамаске" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Основная специализация *</label>
+                        <select id="shop-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="electronics" class="bg-slate-900">Электроника и Техника</option>
+                            <option value="transport" class="bg-slate-900">Авто & Запчасти</option>
+                            <option value="realestate" class="bg-slate-900">Недвижимость</option>
+                            <option value="home" class="bg-slate-900">Товары для дома</option>
+                            <option value="services" class="bg-slate-900">Услуги & Сервис</option>
+                            <option value="other" class="bg-slate-900">Разное</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Регион базирования *</label>
+                        <select id="shop-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="DAM" class="bg-slate-900">Дамаск</option>
+                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
+                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
+                            <option value="IDL" class="bg-slate-900">Идлиб</option>
+                            <option value="HOMS" class="bg-slate-900">Хомс</option>
+                            <option value="HAMA" class="bg-slate-900">Хама</option>
+                            <option value="LAT" class="bg-slate-900">Латакия</option>
+                            <option value="TAR" class="bg-slate-900">Тартус</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">WhatsApp магазина *</label>
+                    <input type="text" id="shop-whatsapp" required placeholder="+963..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Подробная информация о магазине *</label>
+                    <textarea id="shop-desc" required rows="3" placeholder="Расскажите покупателям о вашем магазине, гарантиях и доставке..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Логотип магазина (Авто-подгонка 1:1) *</label>
+                    <input type="file" id="shop-logo-file" accept="image/*" onchange="processShopLogoUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
+                    <input type="hidden" id="shop-logo-data">
+                    <div id="shop-logo-preview-box" class="hidden mt-2 w-20 h-20 rounded-2xl bg-slate-900 overflow-hidden relative border border-purple-500/40">
+                        <img id="shop-logo-preview-img" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] leading-relaxed">
+                    <i class="fa-solid fa-circle-info"></i> Магазин будет зарегистрирован в системе и автоматически отправлен на проверку администратору.
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg transition-all active:scale-95">
+                    Создать магазин
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- My Shop Dashboard & Backup Modal -->
+    <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <button onclick="closeModal('modal-my-shop')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div id="my-shop-content" class="p-6 overflow-y-auto space-y-4 text-xs">
+                <!-- Dynamically Injected Shop Info and Backup Tools -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Store Showcase Modal -->
+    <div id="modal-shop-showcase" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <button onclick="closeModal('modal-shop-showcase')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <div id="shop-showcase-content" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <!-- Dynamically Injected Shop Showcase -->
+            </div>
         </div>
     </div>
 
@@ -360,7 +463,7 @@
         </div>
     </div>
 
-    <!-- Create Ad Modal (With Accelerated Compressor & Instant Tiles) -->
+    <!-- Create Ad Modal (Up to 6 Photos Upload) -->
     <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -415,11 +518,20 @@
                     <input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
                 </div>
 
+                <!-- Personal Store Category Selection (If Seller Has Store) -->
+                <div id="ad-store-cat-container" class="hidden">
+                    <label class="block text-purple-300 font-bold mb-1"><i class="fa-solid fa-tags"></i> Личная категория Вашего магазина</label>
+                    <select id="ad-store-category" class="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs focus:outline-none text-purple-200">
+                        <option value="" class="bg-slate-900 text-slate-400">Без специальной категории магазина</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="block text-slate-400 mb-1" data-i18n="adCityLabel">Город / Населенный пункт *</label>
                     <input type="text" id="ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: р-н Маззе, Дамаск">
                 </div>
 
+                <!-- Interactive Map Pin Picker -->
                 <div>
                     <label class="block text-slate-400 mb-1" data-i18n="adMapLabel">Местоположение на карте *</label>
                     <div class="text-[10px] text-amber-300 mb-1" data-i18n="adMapHelp">Кликните на карту или перетащите маркер.</div>
@@ -454,44 +566,17 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1" data-i18n="conditionLabel">Состояние товара *</label>
-                        <select id="ad-condition" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="NEW" class="bg-slate-900">Новый (Запечатан)</option>
-                            <option value="EXCELLENT" class="bg-slate-900">Отличное Б/У</option>
-                            <option value="WITH_DEFECTS" class="bg-slate-900">Есть дефекты / нюансы</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1" data-i18n="pickupLabel">Условия передачи *</label>
-                        <select id="ad-pickup" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="PICKUP" class="bg-slate-900">Самовывоз</option>
-                            <option value="DELIVERY" class="bg-slate-900">Доставка продавцом</option>
-                            <option value="AGREEMENT" class="bg-slate-900">По договоренности</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Multi-Photo Upload (Up to 6 Photos) -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
+                <!-- Multi-Photo Upload Area (up to 6 photos) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
                         <label class="block text-slate-400 font-bold" data-i18n="photoLabel">Фотографии товара (до 6 шт.) *</label>
-                        <span id="create-photos-count-badge" class="text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">0 / 6</span>
+                        <span id="create-photo-count-badge" class="text-[11px] font-mono font-bold text-amber-400">0 / 6</span>
                     </div>
                     
-                    <div class="relative">
-                        <input type="file" id="create-ad-photos-input" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event, 'create')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
-                    </div>
-
-                    <div id="create-photo-status" class="hidden text-[10px] text-amber-300 font-mono flex items-center gap-1.5 pt-1">
-                        <i class="fa-solid fa-spinner animate-spin"></i>
-                        <span>Обработка фото...</span>
-                    </div>
-
-                    <!-- Photo Thumbnails Grid -->
-                    <div id="create-photos-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
-                        <!-- Thumbnail tiles injected here -->
+                    <input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event, 'create')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                    
+                    <div id="create-thumbnails-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-2">
+                        <!-- Dynamically Injected Photo Thumbnails -->
                     </div>
                 </div>
 
@@ -504,54 +589,6 @@
                     Опубликовать объявление
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- ShamCash Support Modal -->
-    <div id="modal-shamcash" class="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 border border-emerald-500/40 text-center space-y-4 relative">
-            <button onclick="closeShamCashModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto border border-emerald-500/30 shadow-lg">
-                <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-
-            <div>
-                <h3 class="text-base font-extrabold text-white">Поддержка платформы Avito Sham</h3>
-                <p class="text-xs text-emerald-300 font-semibold mt-0.5">Развиваем платформу вместе! 🎉</p>
-            </div>
-
-            <div class="text-xs text-slate-300 bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2">
-                <p class="text-slate-200">Использование Сервиса <strong class="text-emerald-400">абсолютно бесплатное для всех граждан Сирии</strong>.</p>
-                <p id="shamcash-suggested-text" class="text-amber-300 font-medium"></p>
-            </div>
-
-            <div class="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3">
-                <div class="font-bold text-xs text-slate-200 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-qrcode text-emerald-400"></i>
-                    <span>Оплата через ShamCash</span>
-                </div>
-
-                <div class="w-44 h-44 bg-white p-2 rounded-2xl mx-auto shadow-inner flex items-center justify-center">
-                    <img id="shamcash-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=3adfe36abcbe52f1a4b008cd324082fb" alt="ShamCash QR Code" class="w-full h-full object-contain">
-                </div>
-
-                <div class="space-y-1">
-                    <div class="text-[11px] text-slate-400">Владелец счета:</div>
-                    <div class="text-xs font-extrabold text-amber-300 font-mono">لوم علي موسار محمد</div>
-                    <div class="text-[10px] text-slate-400 mt-1">ID счета ShamCash:</div>
-                    <div class="text-[11px] font-mono text-emerald-400 bg-white/5 py-1 px-2 rounded-lg break-all select-all border border-white/10">3adfe36abcbe52f1a4b008cd324082fb</div>
-                </div>
-
-                <button onclick="copyShamCashCode()" class="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-copy"></i>
-                    <span>Скопировать ID код</span>
-                </button>
-            </div>
-
-            <button onclick="closeShamCashModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all active:scale-95">
-                Продолжить работу
-            </button>
         </div>
     </div>
 
@@ -641,23 +678,15 @@
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
+                <!-- Multi-Photo Edit Area -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
                         <label class="block text-slate-400 font-bold">Фотографии товара (до 6 шт.) *</label>
-                        <span id="edit-photos-count-badge" class="text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">0 / 6</span>
+                        <span id="edit-photo-count-badge" class="text-[11px] font-mono font-bold text-amber-400">0 / 6</span>
                     </div>
-                    
-                    <div class="relative">
-                        <input type="file" id="edit-ad-photos-input" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event, 'edit')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer">
-                    </div>
-
-                    <div id="edit-photo-status" class="hidden text-[10px] text-amber-300 font-mono flex items-center gap-1.5 pt-1">
-                        <i class="fa-solid fa-spinner animate-spin"></i>
-                        <span>Обработка фото...</span>
-                    </div>
-
-                    <div id="edit-photos-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
-                        <!-- Thumbnail tiles injected here -->
+                    <input type="file" id="edit-ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event, 'edit')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer">
+                    <div id="edit-thumbnails-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-2">
+                        <!-- Dynamically Injected Photo Thumbnails -->
                     </div>
                 </div>
 
@@ -673,90 +702,14 @@
         </div>
     </div>
 
-    <!-- Create Shop Modal (With Auto-Crop Logo Upload) -->
-    <div id="modal-create-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl border border-purple-500/30 overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
-                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-store text-purple-400"></i> <span>Создание официального магазина</span>
-                </h3>
-                <button onclick="closeModal('modal-create-shop')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <form onsubmit="handleCreateShopSubmit(event)" class="p-6 overflow-y-auto space-y-3.5 text-xs flex-1">
-                <div>
-                    <label class="block text-slate-400 mb-1">Название магазина *</label>
-                    <input type="text" id="shop-name" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="Пример: Sham Tech Electronics">
-                </div>
-
-                <!-- Logo Upload with Auto 1:1 Square Crop / Resize -->
-                <div>
-                    <label class="block text-slate-400 mb-1">Логотип / Аватар магазина *</label>
-                    <div class="flex items-center gap-3">
-                        <input type="file" id="shop-logo-file" accept="image/*" onchange="handleShopLogoCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
-                        <input type="hidden" id="shop-logo-data">
-                        <div id="shop-logo-preview-box" class="w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center text-slate-500 text-xs font-bold shadow">
-                            <i class="fa-solid fa-store"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-slate-400 mb-1">Слоган / Короткое описание</label>
-                    <input type="text" id="shop-slogan" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400" placeholder="Лучшая электроника с гарантией">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Главная категория *</label>
-                        <select id="shop-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="electronics" class="bg-slate-900">Электроника</option>
-                            <option value="transport" class="bg-slate-900">Транспорт</option>
-                            <option value="realestate" class="bg-slate-900">Недвижимость</option>
-                            <option value="home" class="bg-slate-900">Бытовые вещи</option>
-                            <option value="services" class="bg-slate-900">Услуги</option>
-                            <option value="other" class="bg-slate-900">Прочее</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Регион работы *</label>
-                        <select id="shop-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="DAM" class="bg-slate-900">Дамаск</option>
-                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
-                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
-                            <option value="IDL" class="bg-slate-900">Идлиб</option>
-                            <option value="HOMS" class="bg-slate-900">Хомс</option>
-                            <option value="HAMA" class="bg-slate-900">Хама</option>
-                            <option value="LAT" class="bg-slate-900">Латакия</option>
-                            <option value="TAR" class="bg-slate-900">Тартус</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-slate-400 mb-1">Рабочий WhatsApp магазина *</label>
-                    <input type="text" id="shop-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-slate-400 mb-1">Описание магазина и условия продажи</label>
-                    <textarea id="shop-desc" rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none" placeholder="Укажите адрес магазина, режим работы, гарантийные условия..."></textarea>
-                </div>
-
-                <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs transition-all shadow-lg active:scale-95">
-                    Зарегистрировать мой магазин
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- My Shop Dashboard & Backup Modal -->
-    <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
-            <button onclick="closeModal('modal-my-shop')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            
-            <div id="my-shop-content" class="p-6 overflow-y-auto space-y-4 text-xs">
-                <!-- Dynamically Injected Shop Info and Backup Tools -->
+    <!-- Ad Detail Modal (With Multi-Photo Carousel Viewer & Lightbox) -->
+    <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
+            <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
+                <!-- Dynamically Rendered -->
             </div>
         </div>
     </div>
@@ -816,91 +769,10 @@
         </div>
     </div>
 
-    <!-- Admin Create User Modal -->
-    <div id="modal-admin-create-user" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-purple-500/30 relative space-y-3 text-xs">
-            <button onclick="closeModal('modal-admin-create-user')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-emerald-400"></i> <span data-i18n="btnCreateUser">Создание нового аккаунта</span>
-            </h3>
-            <form onsubmit="handleAdminCreateUser(event)" class="space-y-3">
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="labelLogin">Логин *</label>
-                    <input type="text" id="admin-create-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="Пример: salim_admin">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="labelPassword">Пароль *</label>
-                    <input type="password" id="admin-create-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="••••••••">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
-                    <input type="text" id="admin-create-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" placeholder="Пример: Абу Салим">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="labelWhatsapp">WhatsApp *</label>
-                    <input type="text" id="admin-create-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" value="+963">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="labelGender">Пол *</label>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
-                            <input type="radio" name="admin-create-gender" value="MALE" checked class="accent-blue-500">
-                            <span class="font-bold text-[11px]" data-i18n="genderMale">Мужчина</span>
-                        </label>
-                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
-                            <input type="radio" name="admin-create-gender" value="FEMALE" class="accent-pink-500">
-                            <span class="font-bold text-[11px]" data-i18n="genderFemale">Женщина 🌸</span>
-                        </label>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="roleLabel">Роль / Статус аккаунта *</label>
-                    <select id="admin-create-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                        <option value="USER" class="bg-slate-900">Пользователь</option>
-                        <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
-                        <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-white transition-all shadow-md" data-i18n="btnCreateUser">
-                    Создать пользователя
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Ad Detail Modal -->
-    <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
-            <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
-                <!-- Dynamically Rendered -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Full-Screen Lightbox Zoom Modal -->
-    <div id="modal-lightbox" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md hidden flex flex-col items-center justify-between p-4">
-        <div class="w-full flex items-center justify-between z-10">
-            <span id="lightbox-counter" class="text-xs font-mono font-bold text-amber-400">1 / 1</span>
-            <button onclick="closeLightbox()" class="text-white hover:text-amber-400 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        
-        <div class="relative flex-1 w-full flex items-center justify-center my-auto overflow-hidden">
-            <img id="lightbox-img" src="" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl transition-all duration-300">
-        </div>
-
-        <div class="w-full flex justify-center gap-4 py-2 z-10">
-            <button onclick="navigateLightbox(-1)" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-chevron-left"></i> Назад</button>
-            <button onclick="navigateLightbox(1)" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs flex items-center gap-1.5">Вперед <i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-    </div>
-
     <!-- Superuser Admin Panel Modal -->
     <div id="modal-admin-panel" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-4xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
+        <div class="modal-card glass-panel w-full max-w-4xl rounded-3xl border border-amber-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-amber-950/40">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-user-shield text-amber-400 text-lg"></i>
                     <h3 class="text-sm font-extrabold text-white" data-i18n="adminPanelTitle">Панель управления Главного Администратора</h3>
@@ -909,13 +781,13 @@
             </div>
 
             <div class="flex border-b border-white/10 bg-white/5 overflow-x-auto text-xs shrink-0 no-scrollbar">
-                <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap" data-i18n="adminTabOverview">Обзор</button>
-                <button onclick="switchAdminTab('shops')" id="atab-shops" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap"><i class="fa-solid fa-store text-purple-400"></i> Магазины и Модерация</button>
+                <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-amber-500 text-amber-300 whitespace-nowrap" data-i18n="adminTabOverview">Обзор</button>
+                <button onclick="switchAdminTab('shops')" id="atab-shops" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Магазины и Верификация</button>
                 <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabUsers">Пользователи и Роли</button>
                 <button onclick="switchAdminTab('ads')" id="atab-ads" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Объявления и Модерация</button>
                 <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив пользователей</button>
                 <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabRates">Курсы валют</button>
-                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-amber-400 whitespace-nowrap"><i class="fa-solid fa-database"></i> Бэкап БД (JSON)</button>
+                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Бэкап БД (JSON)</button>
             </div>
 
             <div id="admin-tab-content" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
@@ -924,55 +796,46 @@
         </div>
     </div>
 
-    <footer class="mt-auto border-t border-white/10 bg-slate-900/90 backdrop-blur-md py-3 px-4 text-xs">
+    <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             
-            <!-- Compact ShamCash Support Widget in Footer -->
-            <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
-                <div class="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
-                    <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
-                    <span>Поддержка ShamCash:</span>
+            <!-- Developer & Compact ShamCash Support Bar -->
+            <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1.5">
+                <div class="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                    <span data-i18n="developerLabel">Разработчик:</span> <span class="font-bold text-slate-200">Салим Нашхо</span> • 
+                    <a href="https://wa.me/447887280238" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold inline-flex items-center gap-1">
+                        <i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238
+                    </a>
                 </div>
-                <span class="text-[10px] font-mono text-emerald-300 bg-white/5 px-2 py-0.5 rounded-lg border border-white/10 hidden sm:inline">3adfe36abcbe52f1a4b...</span>
-                <div class="flex items-center gap-1">
-                    <button onclick="copyShamCashCode()" title="Скопировать ID" class="px-2 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 rounded-lg border border-emerald-500/30 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1">
-                        <i class="fa-solid fa-copy text-[10px]"></i>
-                        <span>Копировать</span>
-                    </button>
-                    <button onclick="openShamCashModal(0, 'USD')" title="QR-Код" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition-all shadow active:scale-95 flex items-center gap-1">
-                        <i class="fa-solid fa-qrcode text-[10px]"></i>
-                        <span>QR</span>
+
+                <!-- Compact ShamCash Donation Widget -->
+                <div class="inline-flex items-center gap-2 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] text-emerald-300">
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i>
+                    <span>Поддержка сервера (ShamCash): <strong class="text-amber-300 font-mono">3adfe36abcbe52f1a4b008cd324082fb</strong> (لوم علي موسار)</span>
+                    <button onclick="copyShamCashCode()" title="Скопировать ID" class="bg-emerald-600/40 hover:bg-emerald-600/70 text-emerald-200 px-1.5 py-0.5 rounded transition-all active:scale-95">
+                        <i class="fa-solid fa-copy"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Developer Info -->
-            <div class="text-slate-400 text-[11px] text-center md:text-left">
-                <span data-i18n="developerLabel">Разработчик:</span> <span class="font-bold text-slate-200">Салим Нашхо</span> • 
-                <a href="https://wa.me/447887280238" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold inline-flex items-center gap-1 ml-1">
-                    <i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238
-                </a>
+            <!-- Live Rates Display in Footer -->
+            <div id="footer-rates-container" class="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-[11px] font-mono text-amber-300">
+                <!-- Dynamically populated -->
             </div>
 
-            <!-- Live Rates Display & Theme/Lang Controls in Footer -->
-            <div class="flex flex-wrap items-center justify-center gap-2">
-                <div id="footer-rates-container" class="flex items-center gap-2 bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl text-[11px] font-mono text-amber-300">
-                    <!-- Dynamically populated -->
-                </div>
-
-                <button onclick="toggleTheme()" class="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold hover:bg-white/10 transition-all">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-semibold hover:bg-white/10 transition-all">
                     <i id="theme-icon" class="fa-solid fa-moon text-amber-300"></i>
-                    <span id="theme-text" class="hidden sm:inline" data-i18n="themeDark">Тёмная тема</span>
+                    <span id="theme-text" data-i18n="themeDark">Тёмная тема</span>
                 </button>
 
-                <!-- Language Selector -->
-                <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
+                <!-- Language Selector supporting RU, AR, TR -->
+                <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
                     <option value="RU" class="bg-slate-900 text-white">RU</option>
                     <option value="AR" class="bg-slate-900 text-white">AR</option>
                     <option value="TR" class="bg-slate-900 text-white">TR</option>
                 </select>
             </div>
-
         </div>
     </footer>
 
@@ -987,6 +850,7 @@
         let currentUser = null;
         let selectedCategory = 'all';
         let currentPage = 1;
+        let itemsPerPage = (window.innerWidth < 640) ? 4 : 8;
         let favorites = [];
         let adminAdsTab = 'active';
 
@@ -995,7 +859,6 @@
 
         let pendingCreateImages = [];
         let pendingEditImages = [];
-        let activeDetailGalleryIndex = 0;
 
         let EXCHANGE_RATES = {
             SYP: 131.70,
@@ -1024,195 +887,27 @@
         let archivedUsers = [];
         let ads = [];
 
-        function getItemsPerPage() {
-            return window.innerWidth < 640 ? 4 : 8;
+        // Helper: Always resolves active WhatsApp number live from user account
+        function getSellerWhatsapp(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
         }
 
-        let searchDebounceTimer = null;
-        function debouncedSearch() {
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                resetPageAndRender();
-            }, 250);
-        }
-
-        function loadCachedAds() {
-            try {
-                const cached = localStorage.getItem('bs_cached_ads');
-                if (cached) {
-                    ads = JSON.parse(cached);
-                }
-            } catch (e) {
-                console.warn('Cache load error:', e);
-            }
-        }
-
-        function saveCachedAds() {
-            try {
-                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
-            } catch (e) {
-                console.warn('Cache save error:', e);
-            }
-        }
-
-        // Accelerated client-side image downscaling to max 650px & WebP/JPEG format
-        function compressSingleImageFile(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    const img = new Image();
-                    img.onload = function () {
-                        const canvas = document.createElement('canvas');
-                        const MAX_DIM = 650;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_DIM) {
-                                height = Math.round(height * (MAX_DIM / width));
-                                width = MAX_DIM;
-                            }
-                        } else {
-                            if (height > MAX_DIM) {
-                                width = Math.round(width * (MAX_DIM / height));
-                                height = MAX_DIM;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        let compressedBase64 = '';
-                        try {
-                            compressedBase64 = canvas.toDataURL('image/webp', 0.65);
-                        } catch (e) {
-                            compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
-                        }
-                        resolve(compressedBase64);
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Auto 1:1 Aspect-Fill Square Cropper for Store Logo Uploads
-        function handleShopLogoCompressUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const img = new Image();
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const SIZE = 300; // Standard 300x300 logo size
-                    canvas.width = SIZE;
-                    canvas.height = SIZE;
-                    const ctx = canvas.getContext('2d');
-
-                    // Center Crop Algorithm
-                    let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
-                    if (img.width > img.height) {
-                        srcW = img.height;
-                        srcX = (img.width - img.height) / 2;
-                    } else if (img.height > img.width) {
-                        srcH = img.width;
-                        srcY = (img.height - img.width) / 2;
-                    }
-
-                    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, SIZE, SIZE);
-
-                    let compressedBase64 = '';
-                    try {
-                        compressedBase64 = canvas.toDataURL('image/webp', 0.80);
-                    } catch (err) {
-                        compressedBase64 = canvas.toDataURL('image/jpeg', 0.80);
-                    }
-
-                    document.getElementById('shop-logo-data').value = compressedBase64;
-                    const previewBox = document.getElementById('shop-logo-preview-box');
-                    if (previewBox) {
-                        previewBox.innerHTML = `<img src="${compressedBase64}" class="w-full h-full object-cover">`;
-                    }
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function handleMultiImageCompressUpload(e, mode = 'create') {
-            const files = Array.from(e.target.files || []);
-            if (files.length === 0) return;
-
-            const targetArray = (mode === 'create') ? pendingCreateImages : pendingEditImages;
-            const statusEl = document.getElementById(mode === 'create' ? 'create-photo-status' : 'edit-photo-status');
-            
-            const remainingSlots = 6 - targetArray.length;
-            if (remainingSlots <= 0) {
-                showToast('Максимум 6 фотографий для одного объявления!', 'warning');
-                return;
-            }
-
-            const filesToProcess = files.slice(0, remainingSlots);
-            if (statusEl) statusEl.classList.remove('hidden');
-
-            for (const file of filesToProcess) {
-                try {
-                    const compressedBase64 = await compressSingleImageFile(file);
-                    if (mode === 'create') {
-                        if (pendingCreateImages.length < 6) pendingCreateImages.push(compressedBase64);
-                    } else {
-                        if (pendingEditImages.length < 6) pendingEditImages.push(compressedBase64);
-                    }
-                    renderPhotoThumbnailsGrid(mode);
-                } catch (err) {
-                    console.warn('Error processing photo:', err);
-                }
-            }
-
-            if (statusEl) statusEl.classList.add('hidden');
-            e.target.value = '';
-        }
-
-        function renderPhotoThumbnailsGrid(mode = 'create') {
-            const targetArray = (mode === 'create') ? pendingCreateImages : pendingEditImages;
-            const gridEl = document.getElementById(mode === 'create' ? 'create-photos-grid' : 'edit-photos-grid');
-            const badgeEl = document.getElementById(mode === 'create' ? 'create-photos-count-badge' : 'edit-photos-count-badge');
-
-            if (badgeEl) badgeEl.innerText = `${targetArray.length} / 6`;
-            if (!gridEl) return;
-
-            gridEl.innerHTML = targetArray.map((imgUrl, idx) => `
-                <div class="relative h-16 rounded-xl bg-slate-900 border border-white/10 overflow-hidden group shadow">
-                    <img src="${imgUrl}" class="w-full h-full object-cover" loading="lazy">
-                    <button type="button" onclick="removePendingPhoto(${idx}, '${mode}')" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600/90 text-white text-[10px] flex items-center justify-center hover:bg-rose-500 transition-all shadow">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function removePendingPhoto(index, mode = 'create') {
-            if (mode === 'create') {
-                pendingCreateImages.splice(index, 1);
-            } else {
-                pendingEditImages.splice(index, 1);
-            }
-            renderPhotoThumbnailsGrid(mode);
+        // Helper: Always resolves active Kunya/Name live from user account
+        function getSellerKunya(ad) {
+            if (!ad) return '';
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
         }
 
         const TRANSLATIONS = {
             RU: {
-                brandTagline: "Авито Шам — Сирия",
+                brandTagline: "Сирийский Маркетплейс",
                 searchPlaceholder: "Поиск товаров, транспорта, услуг...",
                 btnPostAd: "Подать объявление",
-                btnAdminPanel: "Главный админ",
+                btnAdminPanel: "Админ панель",
                 btnSignIn: "Войти",
-                btnCreateShop: "Создать магазин",
-                btnMyShop: "Мой магазин",
                 regAll: "Все регионы (Сирия)",
                 regDam: "Дамаск",
                 regRifDam: "Риф-Дамаск",
@@ -1242,7 +937,6 @@
                 themeDark: "Тёмная тема",
                 themeLight: "Светлая тема",
                 resetCache: "Сброс кэша",
-                footerCopyright: "© 2026 Avito Sham. Гражданская платформа объявлений Сирии.",
                 developerLabel: "Разработчик:",
                 noAdsFound: "Объявлений пока нет. Будьте первым, кто подаст объявление!",
                 btnFirstPage: "« Первая",
@@ -1260,20 +954,18 @@
                 queueFreeText: "Очередь свободна",
                 btnJoinQueue: "Хочу этот товар! (Занять очередь)",
                 btnLeaveQueue: "Выйти из очереди",
-                sellerLocation: "Геолокация продавца:",
                 descAndDefects: "Описание и изъяны:",
                 contactSellerWa: "Связаться с продавцом через WhatsApp",
-                openAllSellerAds: "Открыть все товары продавца",
                 editAdBtn: "Редактировать объявление",
                 archiveAdBtn: "В архив",
-                rulesTitle: "Правила и рекомендации Avito Sham",
+                rulesTitle: "Правила платформы Авито Шам",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!",
                 rule1Title: "Честность и прозрачность:",
-                rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара.",
+                rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.",
                 rule2Title: "Запрещенные товары:",
-                rule2Desc: "Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ.",
+                rule2Desc: "Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.",
                 rule3Title: "Гражданский ресурс:",
-                rule3Desc: "Платформа является исключительно гражданской торговой площадкой.",
+                rule3Desc: "Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.",
                 btnAcceptRules: "Я подтверждаю и принимаю условия",
                 tabSignIn: "Вход",
                 tabSignUp: "Регистрация",
@@ -1299,7 +991,7 @@
                 currencyLabel: "Валюта *",
                 conditionLabel: "Состояние товара *",
                 pickupLabel: "Условия передачи *",
-                photoLabel: "Фотографии товара *",
+                photoLabel: "Фотография товара *",
                 descDefectsLabel: "Описание и возможные изъяны *",
                 btnPublishAd: "Опубликовать объявление",
                 editProfileTitle: "Редактирование анкеты",
@@ -1312,22 +1004,20 @@
                 adminTabUsers: "Пользователи и Роли",
                 adminTabArchive: "Архив пользователей",
                 adminTabRates: "Курсы валют",
-                recsTitle: "3 главных совета для удачных сделок",
+                recsTitle: "3 главных совета для удачных и безопасных сделок в Сирии",
                 rec1Title: "Честное описание и изъяны",
-                rec1Desc: "Указывайте все дефекты. Прозрачность ускоряет продажу.",
+                rec1Desc: "Всегда указывайте дефекты и мелкие изъяны. Прозрачность ускоряет продажу и бережёт репутацию.",
                 rec2Title: "Безопасные места встреч",
-                rec2Desc: "Встречайтесь в людных местах.",
+                rec2Desc: "Встречайтесь в людных и известных местах (у мечетей, рынков или центральных площадей).",
                 rec3Title: "Используйте Очередь",
-                rec3Desc: "Нажимайте «Занять очередь» для бронирования товаров."
+                rec3Desc: "Нажмите «Занять очередь», чтобы забронировать товар и не потерять свое место среди покупателей."
             },
             AR: {
-                brandTagline: "أفيتو شام — سوريا",
+                brandTagline: "سوق أفيطو الشام",
                 searchPlaceholder: "البحث عن المنتجات، السيارات، الخدمات...",
                 btnPostAd: "أضف إعلاناً",
                 btnAdminPanel: "المدير العام",
                 btnSignIn: "تسجيل الدخول",
-                btnCreateShop: "إنشاء متجر",
-                btnMyShop: "متجري",
                 regAll: "جميع المحافظات (سوريا)",
                 regDam: "دمشق",
                 regRifDam: "ريف دمشق",
@@ -1357,7 +1047,6 @@
                 themeDark: "المظهر الداكن",
                 themeLight: "المظهر الفاتح",
                 resetCache: "تحديث للتخزين",
-                footerCopyright: "© 2026 Avito Sham. منصة الإعلانات المدنية في سوريا.",
                 developerLabel: "التطوير بواسطة:",
                 noAdsFound: "لا توجد إعلانات حتى الآن. كن أول من يضيف إعلاناً!",
                 btnFirstPage: "« الأولى",
@@ -1375,20 +1064,18 @@
                 queueFreeText: "قائمة الانتظار فارغة",
                 btnJoinQueue: "أريد هذا المنتج! (حجز دور)",
                 btnLeaveQueue: "إلغاء الدور في الانتظار",
-                sellerLocation: "موقع البائع على الخريطة:",
                 descAndDefects: "الوصف والعيوب:",
                 contactSellerWa: "التواصل عبر واتساب",
-                openAllSellerAds: "عرض جميع منتجات هذا البائع",
                 editAdBtn: "تعديل الإعلان",
                 archiveAdBtn: "أرشفة الإعلان",
-                rulesTitle: "قواعد منصة أفيو شام",
+                rulesTitle: "قواعد منصة أفيطو الشام",
                 rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ",
                 rule1Title: "الصدق والشفافية:",
-                rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها.",
+                rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها، ويجب بيان الحالة الحقيقية بدقة.",
                 rule2Title: "المنتجات الممنوعة:",
-                rule2Desc: "يمنع منعاً باتاً نشر الأسلحة والذخائر.",
+                rule2Desc: "يمنع منعاً باتاً نشر الأسلحة، الذخائر، أو أي مواد غير قانونية.",
                 rule3Title: "منصة مدنية:",
-                rule3Desc: "هذه المنصة مخصصة للتجارة المدنية فقط.",
+                rule3Desc: "هذه المنصة مخصصة للتجارة المدنية فقط، والإدارة غير مسؤولة عن التصرفات المخالفة.",
                 btnAcceptRules: "أوافق على جميع الشروط",
                 tabSignIn: "دخول",
                 tabSignUp: "تسجيل جديد",
@@ -1396,7 +1083,7 @@
                 labelPassword: "كلمة المرور *",
                 rememberSession: "تذكر تسجيل دخولي على هذا الجهاز",
                 labelKunya: "الاسم أو الكنية *",
-                labelGender: "الجنس *",
+                labelGender: "الجنس (خيار شرعي) *",
                 genderMale: "رجل",
                 genderFemale: "امرأة",
                 labelWhatsapp: "رقم الواتساب *",
@@ -1429,20 +1116,18 @@
                 adminTabRates: "أسعار الصرف",
                 recsTitle: "3 نصائح رئيسية لصفقات ناجحة وآمنة في سوريا",
                 rec1Title: "الصدق في الوصف والعيوب",
-                rec1Desc: "اذكر دائماً العيوب بالتفصيل.",
+                rec1Desc: "اذكر دائماً العيوب بالتفصيل. الشفافية تسرع البيع وتحفظ سمعتك.",
                 rec2Title: "أماكن التقاء آمنة",
-                rec2Desc: "التقِ دائماً في أماكن عامة معروفة.",
+                rec2Desc: "التقِ دائماً في أماكن عامة معروفة (قرب المساجد، الأسواق أو الساحات العامة).",
                 rec3Title: "استخدم نظام الدور",
-                rec3Desc: "اضغط على «حجز دور» لحجز المنتج."
+                rec3Desc: "اضغط على «حجز دور» لحجز المنتج وحفظ أسبقيتك الشريفة."
             },
             TR: {
-                brandTagline: "Avito Sham — Suriye",
+                brandTagline: "Avito Sham İlan Pazarı",
                 searchPlaceholder: "Ürün, vasıta, hizmet ara...",
                 btnPostAd: "İlan Ver",
                 btnAdminPanel: "Süper Yönetici",
                 btnSignIn: "Giriş Yap",
-                btnCreateShop: "Mağaza Oluştur",
-                btnMyShop: "Mağazam",
                 regAll: "Tüm Bölgeler (Suriye)",
                 regDam: "Şam",
                 regRifDam: "Kırsal Şam",
@@ -1472,7 +1157,6 @@
                 themeDark: "Karanlık Tema",
                 themeLight: "Aydınlık Tema",
                 resetCache: "Önbelleği Sıfırla",
-                footerCopyright: "© 2026 Avito Sham. Suriye Sivil İlan Platformu.",
                 developerLabel: "Geliştirici:",
                 noAdsFound: "Henüz ilan bulunmuyor. İlk ilanı siz verin!",
                 btnFirstPage: "« İlk",
@@ -1490,10 +1174,8 @@
                 queueFreeText: "Sıra boş",
                 btnJoinQueue: "Bu Ürünü İstiyorum! (Sıraya Gir)",
                 btnLeaveQueue: "Sıradan Çık",
-                sellerLocation: "Satıcının Konumu:",
                 descAndDefects: "Açıklama ve Kusurlar:",
                 contactSellerWa: "Satıcıyla WhatsApp'tan İletişime Geç",
-                openAllSellerAds: "Satıcının Tüm İlanlarını Gör",
                 editAdBtn: "İlanı Düzenle",
                 archiveAdBtn: "Arşive Kaldır",
                 rulesTitle: "Avito Sham Platform Kuralları",
@@ -1544,13 +1226,31 @@
                 adminTabRates: "Döviz Kurları",
                 recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
                 rec1Title: "Dürüst Açıklama ve Kusurlar",
-                rec1Desc: "Tüm kusurları açıkça belirtin.",
+                rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
                 rec2Title: "Güvenli Buluşma Noktaları",
                 rec2Desc: "Buluşmaları her zaman kalabalık ve bilinen kamuya açık yerlerde yapın.",
                 rec3Title: "Sıra Sistemini Kullanın",
                 rec3Desc: "Ürünü rezerve etmek için «Sıraya Gir» butonuna tıklayın."
             }
         };
+
+        // --- LOCAL STORAGE CACHING HELPERS ---
+        function loadCachedAds() {
+            try {
+                const cached = localStorage.getItem('bs_cached_ads');
+                if (cached) {
+                    ads = JSON.parse(cached);
+                }
+            } catch (e) {
+                console.warn('Cache error:', e);
+            }
+        }
+
+        function saveCachedAds() {
+            try {
+                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+            } catch (e) {}
+        }
 
         function getTranslation(key, params = {}) {
             const langDict = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.RU;
@@ -1620,10 +1320,7 @@
                 const saved = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    const found = users.find(u => 
-                        (u.uid && parsed.uid && u.uid === parsed.uid) ||
-                        (u.username && parsed.username && u.username.toLowerCase() === parsed.username.toLowerCase())
-                    );
+                    const found = users.find(u => u.username && parsed.username && u.username.toLowerCase() === parsed.username.toLowerCase());
                     if (found) {
                         currentUser = found;
                     } else {
@@ -1650,38 +1347,27 @@
             updateAuthUI();
         }
 
-        function logout() {
-            currentUser = null;
-            try {
-                localStorage.removeItem('bs_current_user');
-                sessionStorage.removeItem('bs_current_user');
-            } catch (e) {}
-            closeModal('modal-profile');
-            updateAuthUI();
-            showToast('Вы успешно вышли из аккаунта', 'info');
-        }
-
         function updateAuthUI() {
             const authBtnText = document.getElementById('auth-btn-text');
             const authBtn = document.getElementById('auth-btn');
             const createAdBtn = document.getElementById('create-ad-btn-container');
             const adminQuickBtn = document.getElementById('admin-quick-btn-container');
-            const shopNavBtn = document.getElementById('shop-nav-btn');
+            const shopHeaderContainer = document.getElementById('shop-header-btn-container');
+            const shopHeaderBtnText = document.getElementById('shop-header-btn-text');
+            const shopHeaderBtnIcon = document.getElementById('shop-header-btn-icon');
 
             if (currentUser) {
                 if (authBtnText) authBtnText.innerText = currentUser.kunya || currentUser.username;
                 if (authBtn) authBtn.onclick = openProfileModal;
                 if (createAdBtn) createAdBtn.classList.remove('hidden');
 
-                if (shopNavBtn) {
-                    shopNavBtn.classList.remove('hidden');
-                    if (currentUser.shop) {
-                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store text-amber-300"></i><span class="hidden md:inline">${getTranslation('btnMyShop')}</span>`;
-                        shopNavBtn.onclick = openMyShopModal;
-                    } else {
-                        shopNavBtn.innerHTML = `<i class="fa-solid fa-store"></i><span class="hidden md:inline">${getTranslation('btnCreateShop')}</span>`;
-                        shopNavBtn.onclick = openCreateShopModal;
-                    }
+                if (shopHeaderContainer) shopHeaderContainer.classList.remove('hidden');
+                if (currentUser.shop) {
+                    if (shopHeaderBtnText) shopHeaderBtnText.innerText = "Мой магазин";
+                    if (shopHeaderBtnIcon) shopHeaderBtnIcon.className = "fa-solid fa-store text-emerald-400";
+                } else {
+                    if (shopHeaderBtnText) shopHeaderBtnText.innerText = "Создать магазин";
+                    if (shopHeaderBtnIcon) shopHeaderBtnIcon.className = "fa-solid fa-plus-circle text-amber-300";
                 }
 
                 if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
@@ -1694,24 +1380,173 @@
                 if (authBtn) authBtn.onclick = openAuthModal;
                 if (createAdBtn) createAdBtn.classList.add('hidden');
                 if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
-                if (shopNavBtn) shopNavBtn.classList.add('hidden');
+                if (shopHeaderContainer) shopHeaderContainer.classList.add('hidden');
             }
             renderCategoryPills();
             renderAds();
         }
 
-        function getSellerWhatsapp(ad) {
-            if (!ad) return '';
-            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-            return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
+        function handleHeaderShopAction() {
+            if (!currentUser) {
+                openAuthModal();
+                showToast('Войдите в аккаунт для создания магазина', 'warning');
+                return;
+            }
+
+            if (currentUser.shop) {
+                openMyShopModal();
+            } else {
+                openModal('modal-create-shop');
+            }
         }
 
-        function getSellerKunya(ad) {
-            if (!ad) return '';
-            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-            return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
+        function logout() {
+            currentUser = null;
+            try {
+                localStorage.removeItem('bs_current_user');
+                sessionStorage.removeItem('bs_current_user');
+            } catch (e) {}
+            closeModal('modal-profile');
+            updateAuthUI();
+            showToast('Вы успешно вышли из аккаунта', 'info');
         }
 
+        // --- MULTI-PHOTO UPLOAD WITH CANVAS COMPRESSION & WEBP (Up to 6 Photos) ---
+        function compressSingleImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error("File read error"));
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error("Image load error"));
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const MAX_DIM = 650;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_DIM) {
+                                height = Math.round(height * (MAX_DIM / width));
+                                width = MAX_DIM;
+                            }
+                        } else {
+                            if (height > MAX_DIM) {
+                                width = Math.round(width * (MAX_DIM / height));
+                                height = MAX_DIM;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        let compressedDataUrl = canvas.toDataURL('image/webp', 0.65);
+                        if (!compressedDataUrl.startsWith('data:image/webp')) {
+                            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                        }
+                        resolve(compressedDataUrl);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleMultiImageCompressUpload(e, mode = 'create') {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+
+            let targetArr = mode === 'create' ? pendingCreateImages : pendingEditImages;
+            const currentCount = targetArr.length;
+            const availableSlots = 6 - currentCount;
+
+            if (availableSlots <= 0) {
+                showToast('Максимум 6 фотографий для одного объявления!', 'warning');
+                return;
+            }
+
+            const filesToProcess = files.slice(0, availableSlots);
+            showToast(`Обработка ${filesToProcess.length} фото...`, 'info');
+
+            for (const file of filesToProcess) {
+                try {
+                    const compressed = await compressSingleImageFile(file);
+                    targetArr.push(compressed);
+                    renderPhotoThumbnailsGrid(mode);
+                } catch (err) {
+                    console.warn('Error compressing photo:', err);
+                }
+            }
+
+            e.target.value = '';
+        }
+
+        function renderPhotoThumbnailsGrid(mode = 'create') {
+            const isCreate = mode === 'create';
+            const targetArr = isCreate ? pendingCreateImages : pendingEditImages;
+            const gridEl = document.getElementById(isCreate ? 'create-thumbnails-grid' : 'edit-thumbnails-grid');
+            const badgeEl = document.getElementById(isCreate ? 'create-photo-count-badge' : 'edit-photo-count-badge');
+
+            if (badgeEl) badgeEl.innerText = `${targetArr.length} / 6`;
+
+            if (!gridEl) return;
+
+            gridEl.innerHTML = targetArr.map((imgData, index) => `
+                <div class="relative h-16 rounded-xl overflow-hidden bg-slate-900 border border-white/10 group">
+                    <img src="${imgData}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removePendingPhoto('${mode}', ${index})" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600/90 text-white flex items-center justify-center text-[10px] hover:bg-rose-500 shadow transition-all">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    ${index === 0 ? `<span class="absolute bottom-0 inset-x-0 bg-amber-500/80 text-slate-950 text-[8px] font-extrabold text-center py-0.5">Главная</span>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function removePendingPhoto(mode, index) {
+            let targetArr = mode === 'create' ? pendingCreateImages : pendingEditImages;
+            targetArr.splice(index, 1);
+            renderPhotoThumbnailsGrid(mode);
+        }
+
+        // --- STORE LOGO PROCESSOR (AUTO 1:1 SQUARE CROP & FIT) ---
+        function processShopLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const SIZE = 300;
+                    canvas.width = SIZE;
+                    canvas.height = SIZE;
+                    const ctx = canvas.getContext('2d');
+
+                    const minDim = Math.min(img.width, img.height);
+                    const sx = (img.width - minDim) / 2;
+                    const sy = (img.height - minDim) / 2;
+
+                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, SIZE, SIZE);
+
+                    const compressedLogo = canvas.toDataURL('image/jpeg', 0.80);
+                    document.getElementById('shop-logo-data').value = compressedLogo;
+
+                    const previewBox = document.getElementById('shop-logo-preview-box');
+                    const previewImg = document.getElementById('shop-logo-preview-img');
+                    if (previewBox && previewImg) {
+                        previewImg.src = compressedLogo;
+                        previewBox.classList.remove('hidden');
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- AD CREATION & MAP FUNCTIONS ---
         function openCreateAdModal() {
             if (!currentUser) {
                 openAuthModal();
@@ -1729,6 +1564,19 @@
                     let translatedName = TRANSLATIONS[CURRENT_LANG]?.[catNameKey] || c.name;
                     return `<option value="${c.id}" class="bg-slate-900">${translatedName}</option>`;
                 }).join('');
+            }
+
+            // Populate store custom categories if seller has a store
+            const storeCatContainer = document.getElementById('ad-store-cat-container');
+            const storeCatSelect = document.getElementById('ad-store-category');
+            if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) {
+                if (storeCatContainer && storeCatSelect) {
+                    storeCatSelect.innerHTML = `<option value="" class="bg-slate-900 text-slate-400">Без специальной категории магазина</option>` +
+                        currentUser.shop.customCategories.map(cat => `<option value="${cat}" class="bg-slate-900 text-purple-300">${cat}</option>`).join('');
+                    storeCatContainer.classList.remove('hidden');
+                }
+            } else if (storeCatContainer) {
+                storeCatContainer.classList.add('hidden');
             }
 
             const womenOnlyBox = document.getElementById('women-only-container');
@@ -1832,11 +1680,6 @@
             e.preventDefault();
             if (!currentUser) return;
 
-            if (pendingCreateImages.length === 0) {
-                showToast('Загрузите хотя бы 1 фотографию товара!', 'warning');
-                return;
-            }
-
             const title = document.getElementById('ad-title').value.trim();
             const category = document.getElementById('ad-category').value;
             const region = document.getElementById('ad-region').value;
@@ -1848,17 +1691,22 @@
             const desc = document.getElementById('ad-desc').value.trim();
             const lat = parseFloat(document.getElementById('ad-lat').value || 33.5138);
             const lng = parseFloat(document.getElementById('ad-lng').value || 36.2765);
+            const storeCategory = document.getElementById('ad-store-category')?.value || '';
 
             const adId = 'AD-' + Math.floor(100 + Math.random() * 900);
             const activeWhatsapp = getSellerWhatsapp({ sellerUsername: currentUser.username, sellerWhatsapp: currentUser.whatsapp });
             const activeKunya = getSellerKunya({ sellerUsername: currentUser.username, sellerKunya: currentUser.kunya });
 
             const imagesToSave = [...pendingCreateImages];
+            if (imagesToSave.length === 0) {
+                imagesToSave.push('https://placehold.co/800x533/1e293b/fff?text=Avito+Sham');
+            }
 
             const newAd = {
                 id: adId,
                 title,
                 category,
+                storeCategory,
                 region,
                 city,
                 isWomenOnly,
@@ -1886,38 +1734,10 @@
             }
 
             closeModal('modal-create-ad');
-            pendingCreateImages = [];
             renderCategoryPills();
             renderAds();
 
-            openShamCashModal(price, currency);
-        }
-
-        function openShamCashModal(price, currency) {
-            const modal = document.getElementById('modal-shamcash');
-            const suggestedEl = document.getElementById('shamcash-suggested-text');
-            if (!modal) return;
-
-            let priceInUSD = price;
-            if (currency === 'SYP') priceInUSD = price / EXCHANGE_RATES.SYP;
-            if (currency === 'TRY') priceInUSD = price / EXCHANGE_RATES.TRY;
-
-            let recommendedFee = "0$ (По желанию)";
-            if (priceInUSD >= 20 && priceInUSD < 100) recommendedFee = "~0.5$ - 1$";
-            if (priceInUSD >= 100 && priceInUSD < 500) recommendedFee = "~2$";
-            if (priceInUSD >= 500 && priceInUSD < 2000) recommendedFee = "~5$";
-            if (priceInUSD >= 2000) recommendedFee = "~10$";
-
-            if (suggestedEl) {
-                suggestedEl.innerText = `Рекомендуемый взнос для поддержки сервера: ${recommendedFee}`;
-            }
-
-            modal.classList.remove('hidden');
-        }
-
-        function closeShamCashModal() {
-            closeModal('modal-shamcash');
-            showToast('Благодарим за поддержку Авито Шам!', 'success');
+            showToast('Объявление успешно опубликовано!', 'success');
         }
 
         function copyShamCashCode() {
@@ -1928,9 +1748,414 @@
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
-            showToast('ID код скопирован в буфер обмена!', 'success');
+            showToast('ID код ShamCash скопирован в буфер обмена!', 'success');
         }
 
+        // --- STORE MANAGEMENT LOGIC ---
+        function handleCreateShopSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showToast('Пожалуйста, войдите в аккаунт!', 'warning');
+                return;
+            }
+
+            const name = document.getElementById('shop-name').value.trim();
+            const slogan = document.getElementById('shop-slogan').value.trim();
+            const category = document.getElementById('shop-category').value;
+            const region = document.getElementById('shop-region').value;
+            const whatsapp = document.getElementById('shop-whatsapp').value.trim();
+            const desc = document.getElementById('shop-desc').value.trim();
+            const logo = document.getElementById('shop-logo-data').value || 'https://placehold.co/300/6366f1/fff?text=SHOP';
+
+            const shopData = {
+                id: 'SHOP-' + Date.now(),
+                name,
+                slogan,
+                category,
+                region,
+                whatsapp,
+                desc,
+                logo,
+                customCategories: [],
+                isVerified: false,
+                createdAt: Date.now()
+            };
+
+            currentUser.shop = shopData;
+            currentUser.verifiedShop = false;
+
+            const userIndex = users.findIndex(u => 
+                (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
+                (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
+            );
+
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+            } else {
+                users.push(currentUser);
+            }
+
+            const userUidKey = currentUser.uid || ('u_' + Date.now());
+            currentUser.uid = userUidKey;
+
+            if (firebaseDb) {
+                firebaseDb.ref(`users/${userUidKey}`).set(currentUser);
+            }
+
+            saveUserSession(currentUser, true);
+            closeModal('modal-create-shop');
+            showToast(`Магазин "${name}" успешно создан! Он станет публичным сразу после проверки администратором.`, 'info');
+            updateAuthUI();
+        }
+
+        function addShopCustomCategory() {
+            if (!currentUser || !currentUser.shop) return;
+            const input = document.getElementById('new-shop-cat-input');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) return;
+
+            if (!currentUser.shop.customCategories) currentUser.shop.customCategories = [];
+            if (currentUser.shop.customCategories.includes(val)) {
+                showToast('Такая категория уже есть!', 'warning');
+                return;
+            }
+
+            currentUser.shop.customCategories.push(val);
+            if (firebaseDb && currentUser.uid) {
+                firebaseDb.ref(`users/${currentUser.uid}/shop/customCategories`).set(currentUser.shop.customCategories);
+            }
+            saveUserSession(currentUser, true);
+            openMyShopModal();
+            showToast(`Категория "${val}" добавлена!`, 'success');
+        }
+
+        function removeShopCustomCategory(index) {
+            if (!currentUser || !currentUser.shop || !currentUser.shop.customCategories) return;
+            currentUser.shop.customCategories.splice(index, 1);
+            if (firebaseDb && currentUser.uid) {
+                firebaseDb.ref(`users/${currentUser.uid}/shop/customCategories`).set(currentUser.shop.customCategories);
+            }
+            saveUserSession(currentUser, true);
+            openMyShopModal();
+            showToast('Категория удалена', 'info');
+        }
+
+        function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') {
+            const seller = users.find(u => u.uid === shopUserUid);
+            if (!seller || !seller.shop) {
+                showToast('Магазин не найден', 'error');
+                return;
+            }
+
+            const shop = seller.shop;
+            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE');
+            const customCats = shop.customCategories || [];
+
+            const filteredShopAds = (filterStoreCat === 'ALL')
+                ? shopAds
+                : shopAds.filter(a => a.storeCategory === filterStoreCat);
+
+            const showcaseContent = document.getElementById('shop-showcase-content');
+            if (!showcaseContent) return;
+
+            showcaseContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-purple-500/30 overflow-hidden shrink-0 shadow flex items-center justify-center text-purple-400">
+                                ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store text-2xl"></i>`}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white flex items-center gap-1.5">
+                                    <span>${shop.name}</span>
+                                    <i class="fa-solid fa-circle-check text-emerald-400 text-sm" title="Подтвержденный магазин"></i>
+                                </h3>
+                                <p class="text-xs text-purple-300 font-medium">${shop.slogan || 'Официальный магазин'}</p>
+                                <p class="text-[11px] text-slate-400 mt-1">${shop.desc || ''}</p>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all shrink-0 flex items-center gap-1.5">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp магазина
+                        </a>
+                    </div>
+
+                    ${customCats.length > 0 ? `
+                        <div class="space-y-1.5">
+                            <div class="text-[11px] text-slate-400 font-bold">Категории магазина:</div>
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                                <button onclick="openShopShowcase('${shopUserUid}', 'ALL')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${filterStoreCat === 'ALL' ? 'bg-purple-600 text-white border-purple-400' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'} transition-all">
+                                    Все товары (${shopAds.length})
+                                </button>
+                                ${customCats.map(catName => {
+                                    const catCount = shopAds.filter(a => a.storeCategory === catName).length;
+                                    return `
+                                        <button onclick="openShopShowcase('${shopUserUid}', '${catName}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${filterStoreCat === catName ? 'bg-purple-600 text-white border-purple-400' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'} transition-all shrink-0">
+                                            ${catName} (${catCount})
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        ${filteredShopAds.length === 0 ? '<div class="col-span-full py-8 text-center text-slate-500">Товаров в данной категории пока нет</div>' : filteredShopAds.map(ad => `
+                            <div onclick="openAdDetail('${ad.id}')" class="glass-panel p-2.5 rounded-xl border border-white/10 hover:border-purple-400 transition-all cursor-pointer space-y-2">
+                                <div class="h-28 rounded-lg overflow-hidden bg-slate-900 relative">
+                                    <img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">
+                                    ${ad.storeCategory ? `<span class="absolute bottom-1.5 left-1.5 bg-purple-900/80 text-purple-200 px-1.5 py-0.5 rounded text-[9px] font-bold border border-purple-400/30">${ad.storeCategory}</span>` : ''}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-white truncate">${ad.title}</div>
+                                    <div class="text-[11px] font-extrabold text-amber-400 mt-0.5">$${ad.price}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            openModal('modal-shop-showcase');
+        }
+
+        function openMyShopModal() {
+            if (!currentUser || !currentUser.shop) return;
+            const shop = currentUser.shop;
+            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase());
+            const content = document.getElementById('my-shop-content');
+            if (!content) return;
+
+            const isVerified = currentUser.verifiedShop || shop.isVerified;
+            const customCats = shop.customCategories || [];
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-purple-500/30 text-purple-400 flex items-center justify-center overflow-hidden shrink-0 shadow">
+                                ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store text-xl"></i>`}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white leading-snug">${shop.name}</h3>
+                                <p class="text-xs text-purple-300 font-medium mt-0.5">${shop.slogan || 'Официальный магазин'}</p>
+                            </div>
+                        </div>
+                        <span class="${isVerified ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'} px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid ${isVerified ? 'fa-circle-check text-emerald-400' : 'fa-hourglass-half text-amber-400'}"></i>
+                            <span>${isVerified ? 'Подтвержден' : 'На проверке админа'}</span>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10">
+                            <div class="text-[10px] text-slate-400">Товаров в магазине:</div>
+                            <div class="text-lg font-extrabold text-amber-400">${shopAds.length} шт.</div>
+                        </div>
+                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10">
+                            <div class="text-[10px] text-slate-400">WhatsApp:</div>
+                            <div class="text-xs font-extrabold text-emerald-400">${shop.whatsapp}</div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Custom Store Categories Management -->
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                        <h4 class="font-extrabold text-white text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-purple-400"></i>
+                            <span>Личные категории магазина</span>
+                        </h4>
+                        <div class="flex gap-2">
+                            <input type="text" id="new-shop-cat-input" placeholder="Например: Запчасти или Чехлы" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400">
+                            <button onclick="addShopCustomCategory()" class="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all shrink-0">
+                                <i class="fa-solid fa-plus"></i> Добавить
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${customCats.length === 0 ? '<div class="text-[11px] text-slate-500">У Вас пока нет собственных категорий</div>' : customCats.map((cat, idx) => `
+                                <span class="bg-purple-950/60 border border-purple-500/30 text-purple-200 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-2">
+                                    <span>${cat}</span>
+                                    <button onclick="removeShopCustomCategory(${idx})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
+                        <h4 class="font-extrabold text-white text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-database text-amber-400"></i>
+                            <span>Резервное копирование магазина (JSON Бэкап)</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow">
+                                <i class="fa-solid fa-download"></i> Экспорт в JSON
+                            </button>
+                            <label class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow cursor-pointer">
+                                <i class="fa-solid fa-upload"></i> Импорт из JSON
+                                <input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-white/10">
+                        <h4 class="font-bold text-white text-xs">Товары Вашего магазина:</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            ${shopAds.length === 0 ? '<div class="text-center py-4 text-slate-500">У Вас пока нет опубликованных товаров</div>' : shopAds.map(a => `
+                                <div class="bg-white/5 p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <img src="${a.images ? a.images[0] : a.image}" class="w-8 h-8 rounded-lg object-cover">
+                                        <span class="font-bold text-white">${a.title}</span>
+                                        ${a.storeCategory ? `<span class="text-[10px] bg-purple-950 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold">${a.storeCategory}</span>` : ''}
+                                    </div>
+                                    <button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg text-[10px] font-bold">Изменить</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('modal-my-shop');
+        }
+
+        function exportShopDatabaseJSON() {
+            if (!currentUser || !currentUser.shop) return;
+            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase());
+            
+            const backupData = {
+                version: '1.0',
+                type: 'AVITO_SHAM_SHOP_BACKUP',
+                exportDate: new Date().toISOString(),
+                shop: currentUser.shop,
+                products: shopAds
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Shop_Backup_${currentUser.shop.name.replace(/\s+/g, '_')}_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showToast('Бэкап магазина успешно экспортирован!', 'success');
+        }
+
+        function importShopDatabaseJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.type !== 'AVITO_SHAM_SHOP_BACKUP' || !imported.shop) {
+                        showToast('Неверный формат файла бэкапа магазина!', 'error');
+                        return;
+                    }
+
+                    currentUser.shop = imported.shop;
+                    if (firebaseDb && currentUser.uid) {
+                        firebaseDb.ref(`users/${currentUser.uid}/shop`).set(imported.shop);
+                    }
+
+                    if (Array.isArray(imported.products)) {
+                        imported.products.forEach(newAd => {
+                            newAd.sellerUsername = currentUser.username;
+                            newAd.sellerKunya = currentUser.kunya || currentUser.username;
+                            newAd.sellerWhatsapp = currentUser.whatsapp || '';
+
+                            const existingIdx = ads.findIndex(a => a.id === newAd.id);
+                            if (existingIdx !== -1) {
+                                ads[existingIdx] = newAd;
+                            } else {
+                                ads.unshift(newAd);
+                            }
+
+                            if (firebaseDb) {
+                                firebaseDb.ref(`ads/${newAd.id}`).set(newAd);
+                            }
+                        });
+                    }
+
+                    saveCachedAds();
+                    saveUserSession(currentUser, true);
+                    openMyShopModal();
+                    renderAds();
+                    showToast('Данные магазина успешно импортированы!', 'success');
+                } catch (err) {
+                    showToast('Ошибка чтения JSON файла: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- FULL ADMIN DATABASE BACKUP (JSON EXPORT/IMPORT) ---
+        function exportFullDatabaseJSON() {
+            if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+
+            const fullBackup = {
+                version: '2.0',
+                type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP',
+                exportDate: new Date().toISOString(),
+                users: users,
+                archivedUsers: archivedUsers,
+                ads: ads,
+                rates: EXCHANGE_RATES
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullBackup, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `AvitoSham_FullDB_Backup_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showToast('Полный бэкап платформы успешно выгружен!', 'success');
+        }
+
+        function importFullDatabaseJSON(event) {
+            if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showConfirmModal('Импорт полной базы данных', 'Вы уверены? Это действие обновит локальную и облачную базу данных платформы!', () => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported.type !== 'AVITO_SHAM_FULL_PLATFORM_BACKUP') {
+                            showToast('Файл не является бэкапом Авито Шам!', 'error');
+                            return;
+                        }
+
+                        if (Array.isArray(imported.ads)) ads = imported.ads;
+                        if (Array.isArray(imported.users)) users = imported.users;
+                        if (Array.isArray(imported.archivedUsers)) archivedUsers = imported.archivedUsers;
+                        if (imported.rates) EXCHANGE_RATES = imported.rates;
+
+                        saveCachedAds();
+
+                        if (firebaseDb) {
+                            firebaseDb.ref('ads').set(ads);
+                            firebaseDb.ref('users').set(users);
+                            firebaseDb.ref('archivedUsers').set(archivedUsers);
+                            firebaseDb.ref('rates').set(EXCHANGE_RATES);
+                        }
+
+                        renderCategoryPills();
+                        renderAds();
+                        renderAdminTabContent();
+                        updateFooterRatesUI();
+
+                        showToast('Полная база данных успешно импортирована!', 'success');
+                    } catch (err) {
+                        showToast('Ошибка при загрузке бэкапа: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        // --- FIREBASE REALTIME SYNC ---
         function initFirebaseSync() {
             const firebaseConfig = {
                 databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com"
@@ -1982,15 +2207,13 @@
                     } else {
                         users = Object.keys(data).map(k => ({ ...data[k], uid: k }));
                     }
-                }
-                if (currentUser) {
-                    const latestSelf = users.find(u => 
-                        (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
-                        (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
-                    );
-                    if (latestSelf) {
-                        currentUser = latestSelf;
-                        saveUserSession(currentUser, true);
+
+                    if (currentUser) {
+                        const updatedSelf = users.find(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+                        if (updatedSelf) {
+                            currentUser = updatedSelf;
+                            saveUserSession(currentUser, true);
+                        }
                     }
                 }
             });
@@ -2056,10 +2279,6 @@
                 EXCHANGE_RATES.SYP = parseFloat(sypVal.toFixed(2));
                 EXCHANGE_RATES.TRY = parseFloat(tryVal.toFixed(2));
 
-                try {
-                    localStorage.setItem('bs_exchange_rates', JSON.stringify(EXCHANGE_RATES));
-                } catch (e) {}
-
                 if (firebaseDb) {
                     firebaseDb.ref('rates').set(EXCHANGE_RATES);
                 }
@@ -2070,7 +2289,7 @@
                 if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success');
             } catch (err) {
                 console.warn('Error fetching live rates:', err);
-                if (manual) showToast('Ошибка получения данных с сервера прокси', 'error');
+                if (manual) showToast('Ошибка получения курса валют', 'error');
             } finally {
                 if (spinEl) spinEl.classList.remove('animate-spin');
             }
@@ -2141,15 +2360,17 @@
                         return true;
                     }).length;
                 } else if (c.id === 'shops_dir') {
-                    count = users.filter(u => u.verifiedShop || u.shop).length;
+                    // Count only VERIFIED shops for directory
+                    count = users.filter(u => u.shop && (u.verifiedShop || u.shop.isVerified)).length;
                 } else {
                     count = getCategoryAdsCount(c.id);
                 }
 
                 return `
-                    <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95">
-                        <i class="fa-solid ${c.icon} text-base sm:text-lg"></i>
-                        ${count && count > 0 ? `<span class="absolute -top-1 -right-1 text-[9px] bg-rose-600 text-white font-extrabold px-1 py-0.5 rounded-full border border-slate-950 shadow-md z-10 animate-pulse leading-none flex items-center justify-center min-w-[18px] h-[18px]">${count}</span>` : ''}
+                    <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95 text-xs">
+                        <i class="fa-solid ${c.icon} text-sm sm:text-base"></i>
+                        <span class="ml-1.5 hidden sm:inline font-semibold">${c.name}</span>
+                        ${count && count > 0 ? `<span class="absolute -top-1 -right-1 text-[9px] bg-rose-600 text-white font-extrabold px-1 py-0.5 rounded-full border border-slate-950 shadow-md animate-pulse leading-none flex items-center justify-center min-w-[18px] h-[18px] z-10">${count}</span>` : ''}
                     </button>
                 `;
             }).join('');
@@ -2176,6 +2397,20 @@
             return `${usd} <span class="text-slate-400 text-[10px]">/ ${syp} / ${tryVal}</span>`;
         }
 
+        let searchDebounceTimer = null;
+        function debouncedSearch() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                resetPageAndRender();
+            }, 250);
+        }
+
+        function debouncedSearchMobile(val) {
+            const desktopInput = document.getElementById('search-input');
+            if (desktopInput) desktopInput.value = val;
+            debouncedSearch();
+        }
+
         function renderAds() {
             const grid = document.getElementById('listings-view');
             const paginationContainer = document.getElementById('pagination-container');
@@ -2183,6 +2418,56 @@
 
             const searchQuery = (document.getElementById('search-input')?.value || document.getElementById('search-input-mobile')?.value || '').toLowerCase();
             const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
+
+            // SPECIAL CASE: Shops Directory View
+            if (selectedCategory === 'shops_dir') {
+                const verifiedShops = users.filter(u => u.shop && (u.verifiedShop || u.shop.isVerified) && (selectedRegion === 'ALL' || u.shop.region === selectedRegion));
+                
+                if (verifiedShops.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-16 text-center text-slate-500">
+                            <i class="fa-solid fa-store text-4xl mb-3 block opacity-40 text-purple-400"></i>
+                            Подтвержденных магазинов в данном регионе пока нет.
+                        </div>
+                    `;
+                    if (paginationContainer) paginationContainer.innerHTML = '';
+                    return;
+                }
+
+                grid.innerHTML = verifiedShops.map(u => {
+                    const shop = u.shop;
+                    const shopAdsCount = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === u.username.toLowerCase() && a.status === 'ACTIVE').length;
+                    return `
+                        <div class="glass-panel rounded-2xl p-4 border border-purple-500/30 hover:border-purple-400 transition-all flex flex-col justify-between group shadow-lg">
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-purple-500/30 overflow-hidden shrink-0 shadow flex items-center justify-center text-purple-400">
+                                        ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store text-xl"></i>`}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-extrabold text-sm text-white flex items-center gap-1.5 truncate">
+                                            <span>${shop.name}</span>
+                                            <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0" title="Подтвержденный магазин"></i>
+                                        </div>
+                                        <div class="text-[11px] text-purple-300 font-medium truncate mt-0.5">${shop.slogan || 'Официальный магазин'}</div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-300 line-clamp-2 bg-white/5 p-2.5 rounded-xl border border-white/5">${shop.desc || 'Официальный магазин платформы Авито Шам.'}</p>
+                            </div>
+                            <div class="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                                <span class="text-[11px] font-bold text-amber-400"><i class="fa-solid fa-boxes-stacked"></i> ${shopAdsCount} товаров</span>
+                                <button onclick="openShopShowcase('${u.uid}')" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow transition-all active:scale-95 flex items-center gap-1">
+                                    <i class="fa-solid fa-shop"></i>
+                                    <span>Смотреть магазин</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (paginationContainer) paginationContainer.innerHTML = '';
+                return;
+            }
 
             const filtered = ads.filter(ad => {
                 if (ad.status !== 'ACTIVE') return false;
@@ -2203,12 +2488,11 @@
                 return true;
             });
 
-            const currentItemsPerPage = getItemsPerPage();
-            const totalPages = Math.ceil(filtered.length / currentItemsPerPage) || 1;
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
 
-            const startIndex = (currentPage - 1) * currentItemsPerPage;
-            const pageAds = filtered.slice(startIndex, startIndex + currentItemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageAds = filtered.slice(startIndex, startIndex + itemsPerPage);
 
             if (pageAds.length === 0) {
                 grid.innerHTML = `
@@ -2225,34 +2509,30 @@
                 const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
                 const sellerKunya = getSellerKunya(ad);
                 const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-                const isVerified = seller?.verifiedShop || seller?.shop?.isVerified;
+                const isVerified = seller?.verifiedShop;
                 const queueCount = (ad.queue || []).length;
                 const isFav = favorites.includes(ad.id);
-
-                const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image || 'https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'];
-                const photosCount = photosList.length;
+                const imgList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image || 'https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'];
+                const photoCount = imgList.length;
 
                 return `
                     <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
-                        <div class="relative h-48 bg-slate-900 overflow-hidden flex items-center justify-center">
-                            <img src="${photosList[0]}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30" loading="lazy">
-                            <img src="${photosList[0]}" alt="${ad.title}" class="relative z-0 max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'">
+                        <div class="relative h-44 bg-slate-900 overflow-hidden">
+                            <!-- Background Blurred Backdrop for Perfect Aspect Containment -->
+                            <div class="absolute inset-0 bg-cover bg-center blur-md opacity-30 scale-110" style="background-image: url('${imgList[0]}');"></div>
                             
-                            <div class="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
-                                ${ad.id}
+                            <img src="${imgList[0]}" alt="${ad.title}" loading="lazy" class="relative w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 z-0">
+                            
+                            <div class="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10 z-10 flex items-center gap-1">
+                                <span>${ad.id}</span>
+                                ${photoCount > 1 ? `<span class="text-white/80 font-normal">| <i class="fa-solid fa-images"></i> ${photoCount}</span>` : ''}
                             </div>
 
-                            ${photosCount > 1 ? `
-                                <div class="absolute bottom-2.5 right-2.5 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-white border border-white/10 flex items-center gap-1">
-                                    <i class="fa-solid fa-camera"></i> 1/${photosCount}
-                                </div>
-                            ` : ''}
-
-                            <button onclick="toggleFavorite('${ad.id}', event)" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
+                            <button onclick="toggleFavorite('${ad.id}', event)" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-20 border border-white/10">
                                 <i class="fa-solid fa-star ${isFav ? 'text-amber-400' : 'text-slate-400'}"></i>
                             </button>
 
-                            <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end">
+                            <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end z-10">
                                 ${ad.isWomenOnly ? `
                                     <span class="bg-pink-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
                                         <i class="fa-solid fa-user-large-slash"></i> ${getTranslation('womenTag')}
@@ -2263,8 +2543,8 @@
                                         ${getTranslation('freeTag')}
                                     </span>
                                 ` : isVerified ? `
-                                    <span class="bg-purple-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
-                                        <i class="fa-solid fa-circle-check text-emerald-300"></i> ${getTranslation('shopTag')}
+                                    <span class="bg-purple-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow">
+                                        <i class="fa-solid fa-circle-check"></i> ${getTranslation('shopTag')}
                                     </span>
                                 ` : ''}
                             </div>
@@ -2303,12 +2583,6 @@
         function resetPageAndRender() {
             currentPage = 1;
             renderAds();
-        }
-
-        function syncMobileSearch(val) {
-            const desktopInput = document.getElementById('search-input');
-            if (desktopInput) desktopInput.value = val;
-            debouncedSearch();
         }
 
         function syncMobileRegion(val) {
@@ -2430,7 +2704,7 @@
                 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
                 const whatsapp = document.getElementById('auth-whatsapp').value.trim();
 
-                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
                     showToast('Пользователь с таким логином уже существует!', 'error');
                     return;
                 }
@@ -2455,7 +2729,7 @@
                 closeModal('modal-auth');
                 showToast('Регистрация успешна!', 'success');
             } else {
-                const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+                const found = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase());
                 
                 if (found) {
                     const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
@@ -2500,12 +2774,6 @@
                             <span class="text-slate-400">Пол:</span>
                             <span class="font-bold">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</span>
                         </div>
-                        ${currentUser.shop ? `
-                            <div class="flex justify-between border-t border-white/10 pt-2">
-                                <span class="text-slate-400">Мой магазин:</span>
-                                <span class="font-bold text-purple-300">${currentUser.shop.name}</span>
-                            </div>
-                        ` : ''}
                     </div>
 
                     <div class="flex gap-2 pt-2">
@@ -2557,7 +2825,7 @@
                 return;
             }
 
-            if (newLogin.toLowerCase() !== originalUsername.toLowerCase() && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
+            if (newLogin.toLowerCase() !== originalUsername.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === newLogin.toLowerCase())) {
                 showToast('Этот логин уже занят!', 'error');
                 return;
             }
@@ -2606,13 +2874,11 @@
             closeModal('modal-profile');
             updateAuthUI();
 
-            if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
-                renderAdminTabContent();
-            }
-
             showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
         }
 
+        // --- AD DETAIL MODAL WITH MULTI-PHOTO CAROUSEL & LIGHTBOX ---
+        let currentDetailPhotoIndex = 0;
         function openAdDetail(adId) {
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
@@ -2620,8 +2886,8 @@
             const content = document.getElementById('detail-content');
             if (!content) return;
 
-            activeDetailGalleryIndex = 0;
-            const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image || 'https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'];
+            const imgList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image || 'https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'];
+            currentDetailPhotoIndex = 0;
 
             const activeWhatsapp = getSellerWhatsapp(ad);
             const activeKunya = getSellerKunya(ad);
@@ -2634,33 +2900,34 @@
 
             content.innerHTML = `
                 <div class="space-y-4">
-                    <div class="relative h-72 sm:h-96 rounded-2xl bg-slate-900 overflow-hidden border border-white/10 flex items-center justify-center group">
-                        <img id="detail-main-photo-bg" src="${photosList[0]}" class="absolute inset-0 w-full h-full object-cover blur-xl opacity-40">
-                        <img id="detail-main-photo" src="${photosList[0]}" alt="${ad.title}" class="relative z-0 max-h-full max-w-full object-contain">
+                    <!-- Photo Carousel Frame -->
+                    <div class="relative h-64 sm:h-80 rounded-2xl bg-slate-900 overflow-hidden border border-white/10 group">
+                        <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-md opacity-30 scale-110" style="background-image: url('${imgList[0]}');"></div>
+                        <img id="detail-main-img" src="${imgList[0]}" alt="${ad.title}" class="relative w-full h-full object-contain z-0 transition-all duration-300">
                         
-                        <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10">
+                        <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10 z-10">
                             ${ad.id}
                         </div>
 
-                        <button onclick="openLightbox('${ad.id}')" class="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-bold border border-white/10 flex items-center gap-1.5 backdrop-blur-md transition-all">
-                            <i class="fa-solid fa-expand"></i> <span>Увеличить</span>
-                        </button>
-
-                        ${photosList.length > 1 ? `
-                            <button onclick="navigateDetailGallery(-1, '${ad.id}')" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
+                        ${imgList.length > 1 ? `
+                            <button onclick="changeDetailPhoto('${ad.id}', -1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all z-10 border border-white/10">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
-                            <button onclick="navigateDetailGallery(1, '${ad.id}')" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
+                            <button onclick="changeDetailPhoto('${ad.id}', 1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all z-10 border border-white/10">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
+                            <div id="detail-photo-counter" class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-[10px] font-mono text-white z-10 border border-white/10">
+                                1 / ${imgList.length}
+                            </div>
                         ` : ''}
                     </div>
 
-                    ${photosList.length > 1 ? `
+                    <!-- Photo Thumbnails Carousel Bar -->
+                    ${imgList.length > 1 ? `
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                            ${photosList.map((imgUrl, i) => `
-                                <button onclick="setDetailActiveImage(${i}, '${ad.id}')" class="w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === 0 ? 'border-amber-400 scale-105' : 'border-white/10 opacity-60 hover:opacity-100'}" id="detail-thumb-${i}">
-                                    <img src="${imgUrl}" class="w-full h-full object-cover">
+                            ${imgList.map((img, idx) => `
+                                <button onclick="setDetailPhoto('${ad.id}', ${idx})" class="w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${idx === 0 ? 'border-amber-400 scale-105' : 'border-white/10 opacity-70 hover:opacity-100'}" id="detail-thumb-${idx}">
+                                    <img src="${img}" class="w-full h-full object-cover">
                                 </button>
                             `).join('')}
                         </div>
@@ -2723,6 +2990,40 @@
             openModal('modal-ad-detail');
         }
 
+        function changeDetailPhoto(adId, dir) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+            const imgList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
+            currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgList.length) % imgList.length;
+            setDetailPhoto(adId, currentDetailPhotoIndex);
+        }
+
+        function setDetailPhoto(adId, idx) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+            const imgList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
+            currentDetailPhotoIndex = idx;
+
+            const mainImg = document.getElementById('detail-main-img');
+            const bgBlur = document.getElementById('detail-bg-blur');
+            const counter = document.getElementById('detail-photo-counter');
+
+            if (mainImg) mainImg.src = imgList[idx];
+            if (bgBlur) bgBlur.style.backgroundImage = `url('${imgList[idx]}')`;
+            if (counter) counter.innerText = `${idx + 1} / ${imgList.length}`;
+
+            imgList.forEach((_, i) => {
+                const thumbBtn = document.getElementById(`detail-thumb-${i}`);
+                if (thumbBtn) {
+                    if (i === idx) {
+                        thumbBtn.className = "w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 border-amber-400 scale-105";
+                    } else {
+                        thumbBtn.className = "w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 border-white/10 opacity-70 hover:opacity-100";
+                    }
+                }
+            });
+        }
+
         function openEditAdModal(adId) {
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
@@ -2733,15 +3034,15 @@
                 return;
             }
 
+            pendingEditImages = ad.images ? [...ad.images] : [ad.image];
+            renderPhotoThumbnailsGrid('edit');
+
             const catSelect = document.getElementById('edit-ad-category');
             if (catSelect) {
                 catSelect.innerHTML = customCategories.map(c => `
                     <option value="${c.id}" class="bg-slate-900">${c.name}</option>
                 `).join('');
             }
-
-            pendingEditImages = (ad.images && ad.images.length > 0) ? [...ad.images] : (ad.image ? [ad.image] : []);
-            renderPhotoThumbnailsGrid('edit');
 
             document.getElementById('edit-ad-id').value = ad.id;
             document.getElementById('edit-ad-title').value = ad.title || '';
@@ -2764,9 +3065,9 @@
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
 
-            if (pendingEditImages.length === 0) {
-                showToast('Загрузите хотя бы 1 фотографию товара!', 'warning');
-                return;
+            const imagesToSave = [...pendingEditImages];
+            if (imagesToSave.length === 0) {
+                imagesToSave.push('https://placehold.co/800x533/1e293b/fff?text=Avito+Sham');
             }
 
             ad.title = document.getElementById('edit-ad-title').value.trim();
@@ -2778,8 +3079,8 @@
             ad.price = ad.isFree ? 0 : parseFloat(document.getElementById('edit-ad-price').value || 0);
             ad.currency = document.getElementById('edit-ad-currency').value;
             ad.desc = document.getElementById('edit-ad-desc').value.trim();
-            ad.images = [...pendingEditImages];
-            ad.image = pendingEditImages[0];
+            ad.images = imagesToSave;
+            ad.image = imagesToSave[0];
 
             saveCachedAds();
 
@@ -2788,296 +3089,9 @@
             }
 
             closeModal('modal-edit-ad');
-            pendingEditImages = [];
             renderCategoryPills();
             renderAds();
             showToast('Объявление успешно обновлено!', 'success');
-        }
-
-        function setDetailActiveImage(index, adId) {
-            const ad = ads.find(a => a.id === adId);
-            if (!ad) return;
-            const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
-            if (index < 0 || index >= photosList.length) return;
-
-            activeDetailGalleryIndex = index;
-            const mainImg = document.getElementById('detail-main-photo');
-            const mainBg = document.getElementById('detail-main-photo-bg');
-
-            if (mainImg) mainImg.src = photosList[index];
-            if (mainBg) mainBg.src = photosList[index];
-
-            photosList.forEach((_, i) => {
-                const thumbBtn = document.getElementById(`detail-thumb-${i}`);
-                if (thumbBtn) {
-                    thumbBtn.className = `w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === index ? 'border-amber-400 scale-105' : 'border-white/10 opacity-60 hover:opacity-100'}`;
-                }
-            });
-        }
-
-        function navigateDetailGallery(dir, adId) {
-            const ad = ads.find(a => a.id === adId);
-            if (!ad) return;
-            const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
-            let nextIndex = activeDetailGalleryIndex + dir;
-            if (nextIndex < 0) nextIndex = photosList.length - 1;
-            if (nextIndex >= photosList.length) nextIndex = 0;
-            setDetailActiveImage(nextIndex, adId);
-        }
-
-        let currentLightboxAdId = null;
-        let currentLightboxPhotoIdx = 0;
-
-        function openLightbox(adId) {
-            const ad = ads.find(a => a.id === adId);
-            if (!ad) return;
-
-            currentLightboxAdId = adId;
-            currentLightboxPhotoIdx = activeDetailGalleryIndex || 0;
-            updateLightboxView();
-            openModal('modal-lightbox');
-        }
-
-        function closeLightbox() {
-            closeModal('modal-lightbox');
-        }
-
-        function navigateLightbox(dir) {
-            const ad = ads.find(a => a.id === currentLightboxAdId);
-            if (!ad) return;
-            const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
-
-            currentLightboxPhotoIdx += dir;
-            if (currentLightboxPhotoIdx < 0) currentLightboxPhotoIdx = photosList.length - 1;
-            if (currentLightboxPhotoIdx >= photosList.length) currentLightboxPhotoIdx = 0;
-
-            updateLightboxView();
-        }
-
-        function updateLightboxView() {
-            const ad = ads.find(a => a.id === currentLightboxAdId);
-            if (!ad) return;
-            const photosList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image];
-
-            const imgEl = document.getElementById('lightbox-img');
-            const counterEl = document.getElementById('lightbox-counter');
-
-            if (imgEl) imgEl.src = photosList[currentLightboxPhotoIdx];
-            if (counterEl) counterEl.innerText = `${currentLightboxPhotoIdx + 1} / ${photosList.length}`;
-        }
-
-        function openCreateShopModal() {
-            if (!currentUser) { openAuthModal(); return; }
-            document.getElementById('shop-whatsapp').value = currentUser.whatsapp || '+963';
-            openModal('modal-create-shop');
-        }
-
-        function handleCreateShopSubmit(e) {
-            e.preventDefault();
-            if (!currentUser) {
-                showToast('Пожалуйста, войдите в аккаунт!', 'warning');
-                return;
-            }
-
-            const name = document.getElementById('shop-name').value.trim();
-            const slogan = document.getElementById('shop-slogan').value.trim();
-            const category = document.getElementById('shop-category').value;
-            const region = document.getElementById('shop-region').value;
-            const whatsapp = document.getElementById('shop-whatsapp').value.trim();
-            const desc = document.getElementById('shop-desc').value.trim();
-            const logo = document.getElementById('shop-logo-data').value || 'https://placehold.co/300/6366f1/fff?text=SHOP';
-
-            const shopData = {
-                id: 'SHOP-' + Date.now(),
-                name,
-                slogan,
-                category,
-                region,
-                whatsapp,
-                desc,
-                logo,
-                isVerified: false,
-                createdAt: Date.now()
-            };
-
-            currentUser.shop = shopData;
-            currentUser.verifiedShop = false;
-
-            const userIndex = users.findIndex(u => 
-                (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
-                (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())
-            );
-
-            if (userIndex !== -1) {
-                users[userIndex] = currentUser;
-            } else {
-                users.push(currentUser);
-            }
-
-            const userUidKey = currentUser.uid || ('u_' + Date.now());
-            currentUser.uid = userUidKey;
-
-            if (firebaseDb) {
-                firebaseDb.ref(`users/${userUidKey}`).set(currentUser);
-            }
-
-            saveUserSession(currentUser, true);
-            closeModal('modal-create-shop');
-            showToast(`Магазин "${name}" успешно создан и отправлен на верификацию!`, 'success');
-            updateAuthUI();
-        }
-
-        function toggleShopVerification(userUid) {
-            const targetUser = users.find(u => u.uid === userUid);
-            if (!targetUser || !targetUser.shop) return;
-
-            const newStatus = !(targetUser.verifiedShop || targetUser.shop.isVerified);
-            targetUser.verifiedShop = newStatus;
-            targetUser.shop.isVerified = newStatus;
-
-            if (currentUser && currentUser.uid === targetUser.uid) {
-                currentUser.verifiedShop = newStatus;
-                currentUser.shop.isVerified = newStatus;
-                saveUserSession(currentUser, true);
-            }
-
-            if (firebaseDb && targetUser.uid) {
-                firebaseDb.ref(`users/${targetUser.uid}`).set(targetUser);
-            }
-
-            renderAdminTabContent();
-            renderAds();
-            showToast(`Статус верификации магазина "${targetUser.shop.name}" обновлен!`, 'info');
-        }
-
-        function openMyShopModal() {
-            if (!currentUser || !currentUser.shop) return;
-            const shop = currentUser.shop;
-            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase());
-            const content = document.getElementById('my-shop-content');
-            if (!content) return;
-
-            const isVerified = currentUser.verifiedShop || shop.isVerified;
-
-            content.innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-purple-500/30 text-purple-400 flex items-center justify-center overflow-hidden shrink-0 shadow">
-                                ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store text-xl"></i>`}
-                            </div>
-                            <div>
-                                <h3 class="text-base font-extrabold text-white leading-snug">${shop.name}</h3>
-                                <p class="text-xs text-purple-300 font-medium mt-0.5">${shop.slogan || 'Официальный магазин'}</p>
-                            </div>
-                        </div>
-                        <span class="${isVerified ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'} px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 shrink-0">
-                            <i class="fa-solid ${isVerified ? 'fa-circle-check text-emerald-400' : 'fa-hourglass-half text-amber-400'}"></i>
-                            <span>${isVerified ? 'Подтвержден' : 'На проверке'}</span>
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10">
-                            <div class="text-[10px] text-slate-400">Товаров в магазине:</div>
-                            <div class="text-lg font-extrabold text-amber-400">${shopAds.length} шт.</div>
-                        </div>
-                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10">
-                            <div class="text-[10px] text-slate-400">WhatsApp:</div>
-                            <div class="text-xs font-extrabold text-emerald-400">${shop.whatsapp}</div>
-                        </div>
-                    </div>
-
-                    <div class="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
-                        <h4 class="font-extrabold text-white text-xs flex items-center gap-1.5">
-                            <i class="fa-solid fa-database text-amber-400"></i>
-                            <span>Резервное копирование магазина (JSON Бэкап)</span>
-                        </h4>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow">
-                                <i class="fa-solid fa-download"></i> Экспорт в JSON
-                            </button>
-                            <label class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow cursor-pointer">
-                                <i class="fa-solid fa-upload"></i> Импорт из JSON
-                                <input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden">
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2 pt-2 border-t border-white/10">
-                        <h4 class="font-bold text-white text-xs">Товары Вашего магазина:</h4>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            ${shopAds.length === 0 ? '<div class="text-center py-4 text-slate-500">У Вас пока нет опубликованных товаров</div>' : shopAds.map(a => `
-                                <div class="bg-white/5 p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <img src="${a.image}" class="w-8 h-8 rounded-lg object-cover">
-                                        <span class="font-bold text-white">${a.title}</span>
-                                    </div>
-                                    <button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg text-[10px] font-bold">Изменить</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            openModal('modal-my-shop');
-        }
-
-        function exportShopDatabaseJSON() {
-            if (!currentUser || !currentUser.shop) return;
-            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase());
-            const backupData = {
-                shop: currentUser.shop,
-                ads: shopAds,
-                exportedAt: new Date().toISOString()
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `shop_backup_${currentUser.username}_${Date.now()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast('Бэкап магазина успешно экспортирован!', 'success');
-        }
-
-        function importShopDatabaseJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if (imported.shop && Array.isArray(imported.ads)) {
-                        currentUser.shop = imported.shop;
-
-                        imported.ads.forEach(importedAd => {
-                            const existingIdx = ads.findIndex(a => a.id === importedAd.id);
-                            if (existingIdx !== -1) {
-                                ads[existingIdx] = importedAd;
-                            } else {
-                                ads.unshift(importedAd);
-                            }
-                            if (firebaseDb) {
-                                firebaseDb.ref(`ads/${importedAd.id}`).set(importedAd);
-                            }
-                        });
-
-                        saveCachedAds();
-                        saveUserSession(currentUser, true);
-                        openMyShopModal();
-                        renderAds();
-                        showToast('База магазина успешно импортирована!', 'success');
-                    } else {
-                        showToast('Неверный формат файла бэкапа магазина!', 'error');
-                    }
-                } catch (err) {
-                    showToast('Ошибка чтения JSON файла', 'error');
-                }
-            };
-            reader.readAsText(file);
         }
 
         function archiveAdWithConfirm(adId) {
@@ -3092,9 +3106,6 @@
                     closeModal('modal-ad-detail');
                     renderAds();
                     renderCategoryPills();
-                    if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
-                        renderAdminTabContent();
-                    }
                     showToast('Объявление перенесено в архив', 'info');
                 }
             });
@@ -3113,6 +3124,20 @@
                 renderAdminTabContent();
                 showToast('Объявление восстановлено из архива!', 'success');
             }
+        }
+
+        function deleteAdWithConfirm(adId) {
+            showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью и навсегда удалить это объявление?', () => {
+                ads = ads.filter(a => a.id !== adId);
+                saveCachedAds();
+                if (firebaseDb) {
+                    firebaseDb.ref(`ads/${adId}`).remove();
+                }
+                closeModal('modal-ad-detail');
+                renderAds();
+                renderCategoryPills();
+                showToast('Объявление успешно удалено', 'success');
+            });
         }
 
         function joinQueue(adId) {
@@ -3157,124 +3182,7 @@
             showToast('Вы вышли из очереди', 'info');
         }
 
-        function deleteAdWithConfirm(adId) {
-            showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью и навсегда удалить это объявление?', () => {
-                ads = ads.filter(a => a.id !== adId);
-                saveCachedAds();
-                if (firebaseDb) {
-                    firebaseDb.ref(`ads/${adId}`).remove();
-                }
-                closeModal('modal-ad-detail');
-                renderAds();
-                renderCategoryPills();
-                if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
-                    renderAdminTabContent();
-                }
-                showToast('Объявление успешно удалено', 'success');
-            });
-        }
-
-        function adminArchiveUser(userUid, username) {
-            const targetUser = users.find(u => u.uid === userUid || u.username === username);
-            if (!targetUser) {
-                showToast('Пользователь не найден', 'error');
-                return;
-            }
-
-            if (currentUser && currentUser.username === targetUser.username) {
-                showToast('Вы не можете заархивировать самого себя!', 'warning');
-                return;
-            }
-
-            showConfirmModal('Архивация аккаунта', `Отправить аккаунт "${targetUser.username}" (${targetUser.kunya || ''}) в архив?`, () => {
-                const uidKey = targetUser.uid || ('u_' + Date.now());
-
-                if (firebaseDb) {
-                    firebaseDb.ref(`archivedUsers/${uidKey}`).set(targetUser).then(() => {
-                        return firebaseDb.ref(`users/${uidKey}`).remove();
-                    }).then(() => {
-                        showToast(`Пользователь ${targetUser.username} перенесен в архив`, 'success');
-                    }).catch((err) => {
-                        showToast('Ошибка архивации в облаке: ' + err.message, 'error');
-                    });
-                } else {
-                    archivedUsers.push(targetUser);
-                    users = users.filter(u => u.username !== targetUser.username);
-                    showToast(`Пользователь ${targetUser.username} заархивирован локально`, 'success');
-                }
-
-                renderAdminTabContent();
-            });
-        }
-
-        function restoreUser(uid) {
-            const target = archivedUsers.find(u => u.uid === uid);
-            if (!target) return;
-
-            if (firebaseDb) {
-                firebaseDb.ref(`users/${uid}`).set(target).then(() => {
-                    return firebaseDb.ref(`archivedUsers/${uid}`).remove();
-                }).then(() => {
-                    showToast('Пользователь восстановлен!', 'success');
-                });
-            } else {
-                users.push(target);
-                archivedUsers = archivedUsers.filter(u => u.uid !== uid);
-                showToast('Пользователь восстановлен локально', 'success');
-            }
-            renderAdminTabContent();
-        }
-
-        function permanentlyDeleteUser(uid) {
-            showConfirmModal('Окончательное удаление', 'Удалить пользователя навсегда без возможности восстановления?', () => {
-                if (firebaseDb) {
-                    firebaseDb.ref(`archivedUsers/${uid}`).remove().then(() => {
-                        showToast('Пользователь удален из базы', 'success');
-                    });
-                } else {
-                    archivedUsers = archivedUsers.filter(u => u.uid !== uid);
-                    showToast('Пользователь удален из памяти', 'success');
-                }
-                renderAdminTabContent();
-            });
-        }
-
-        function handleAdminCreateUser(e) {
-            e.preventDefault();
-            const username = document.getElementById('admin-create-username').value.trim();
-            const password = document.getElementById('admin-create-password').value;
-            const kunya = document.getElementById('admin-create-kunya').value.trim() || username;
-            const whatsapp = document.getElementById('admin-create-whatsapp').value.trim();
-            const gender = document.querySelector('input[name="admin-create-gender"]:checked')?.value || 'MALE';
-            const role = document.getElementById('admin-create-role').value;
-
-            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                showToast('Пользователь с таким логином уже существует!', 'error');
-                return;
-            }
-
-            const uid = 'u_' + Date.now();
-            const newUser = {
-                uid,
-                username,
-                passwordHash: password,
-                kunya,
-                gender,
-                whatsapp,
-                role,
-                verifiedShop: false
-            };
-
-            users.push(newUser);
-            if (firebaseDb) {
-                firebaseDb.ref(`users/${uid}`).set(newUser);
-            }
-
-            closeModal('modal-admin-create-user');
-            showToast(`Создан новый пользователь: ${username}`, 'success');
-            renderAdminTabContent();
-        }
-
+        // --- ADMIN PANEL LOGIC ---
         function openAdminPanel() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
                 showToast('Доступ запрещен!', 'error');
@@ -3290,7 +3198,7 @@
                 const btn = document.getElementById(`atab-${t}`);
                 if (btn) {
                     btn.className = (t === tab) 
-                        ? "px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap"
+                        ? "px-4 py-3 font-bold border-b-2 border-amber-500 text-amber-300 whitespace-nowrap"
                         : "px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap";
                 }
             });
@@ -3302,9 +3210,25 @@
             renderAdminTabContent();
         }
 
-        function goToAdminSection(tab, subTab = null) {
-            if (subTab) adminAdsTab = subTab;
-            switchAdminTab(tab);
+        function adminVerifyShop(userUid, verifyStatus) {
+            const user = users.find(u => u.uid === userUid);
+            if (!user || !user.shop) {
+                showToast('Магазин не найден', 'error');
+                return;
+            }
+
+            user.verifiedShop = verifyStatus;
+            user.shop.isVerified = verifyStatus;
+
+            if (firebaseDb && user.uid) {
+                firebaseDb.ref(`users/${user.uid}`).set(user);
+            }
+
+            saveUserSession(currentUser, true);
+            renderAdminTabContent();
+            renderCategoryPills();
+            renderAds();
+            showToast(`Статус магазина "${user.shop.name}" обновлен!`, 'success');
         }
 
         function renderAdminTabContent() {
@@ -3314,59 +3238,55 @@
             const tab = SYSTEM_CONFIG.adminTab;
 
             if (tab === 'overview') {
-                const shopUsers = users.filter(u => u.shop);
+                const shopsCount = users.filter(u => u.shop).length;
                 container.innerHTML = `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <button onclick="goToAdminSection('ads', 'active')" class="bg-white/5 hover:bg-amber-500/10 border border-white/10 hover:border-amber-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
-                            <div class="text-2xl font-extrabold text-amber-400 group-hover:scale-110 transition-transform">${ads.filter(a => a.status === 'ACTIVE').length}</div>
-                            <div class="text-slate-300 group-hover:text-amber-300 text-[10px] uppercase font-bold tracking-wide">Активных объявлений</div>
-                        </button>
-                        <button onclick="goToAdminSection('shops')" class="bg-white/5 hover:bg-purple-500/10 border border-white/10 hover:border-purple-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
-                            <div class="text-2xl font-extrabold text-purple-400 group-hover:scale-110 transition-transform">${shopUsers.length}</div>
-                            <div class="text-slate-300 group-hover:text-purple-300 text-[10px] uppercase font-bold tracking-wide">Магазинов</div>
-                        </button>
-                        <button onclick="goToAdminSection('users')" class="bg-white/5 hover:bg-blue-500/10 border border-white/10 hover:border-blue-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
-                            <div class="text-2xl font-extrabold text-blue-400 group-hover:scale-110 transition-transform">${users.length}</div>
-                            <div class="text-slate-300 group-hover:text-blue-300 text-[10px] uppercase font-bold tracking-wide">Пользователей</div>
-                        </button>
-                        <button onclick="goToAdminSection('archive')" class="bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
-                            <div class="text-2xl font-extrabold text-rose-400 group-hover:scale-110 transition-transform">${archivedUsers.length}</div>
-                            <div class="text-slate-300 group-hover:text-rose-300 text-[10px] uppercase font-bold tracking-wide">Аккаунтов в архиве</div>
-                        </button>
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
+                            <div class="text-2xl font-extrabold text-amber-400">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Активных объявлений</div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
+                            <div class="text-2xl font-extrabold text-purple-400">${shopsCount}</div>
+                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Всего магазинов</div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
+                            <div class="text-2xl font-extrabold text-blue-400">${users.length}</div>
+                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Пользователей</div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
+                            <div class="text-2xl font-extrabold text-rose-400">${archivedUsers.length}</div>
+                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">В архиве</div>
+                        </div>
                     </div>
                 `;
             } else if (tab === 'shops') {
-                const shopUsers = users.filter(u => u.shop);
+                const shopsList = users.filter(u => u.shop);
                 container.innerHTML = `
                     <div class="space-y-3">
-                        <div class="flex justify-between items-center border-b border-white/10 pb-2">
-                            <h4 class="font-bold text-white text-xs">Модерация и верификация магазинов (${shopUsers.length})</h4>
-                        </div>
+                        <h4 class="font-bold text-white text-xs">Управление и Верификация Магазинов (${shopsList.length})</h4>
                         <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                            ${shopUsers.length === 0 ? '<div class="text-center py-8 text-slate-500">Зарегистрированных магазинов пока нет</div>' : shopUsers.map(u => {
+                            ${shopsList.length === 0 ? '<div class="text-center py-8 text-slate-500">Зарегистрированных магазинов пока нет</div>' : shopsList.map(u => {
                                 const shop = u.shop;
-                                const isVerified = u.verifiedShop || shop.isVerified;
+                                const isVer = u.verifiedShop || shop.isVerified;
                                 return `
-                                    <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-3">
+                                    <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-xl bg-slate-900 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center text-purple-400">
+                                            <div class="w-10 h-10 rounded-xl bg-slate-900 border border-purple-500/30 overflow-hidden shrink-0 flex items-center justify-center text-purple-400">
                                                 ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store"></i>`}
                                             </div>
                                             <div>
                                                 <div class="font-bold text-white text-xs flex items-center gap-1.5">
                                                     <span>${shop.name}</span>
-                                                    <span class="${isVerified ? 'text-emerald-400' : 'text-amber-400'} text-[10px]">
-                                                        <i class="fa-solid ${isVerified ? 'fa-circle-check' : 'fa-hourglass-half'}"></i>
+                                                    <span class="${isVer ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'} px-2 py-0.2 rounded-full text-[9px] border">
+                                                        ${isVer ? 'Подтвержден' : 'На проверке'}
                                                     </span>
                                                 </div>
-                                                <div class="text-[10px] text-slate-400">Владелец: @${u.username} (${u.kunya || ''}) • WA: ${shop.whatsapp}</div>
+                                                <div class="text-[10px] text-slate-400">Владелец: @${u.username} • WA: ${shop.whatsapp}</div>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <button onclick="toggleShopVerification('${u.uid}')" class="px-3 py-1.5 rounded-xl font-bold text-xs shadow transition-all ${isVerified ? 'bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/30' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}">
-                                                ${isVerified ? 'Снять верификацию' : 'Верифицировать'}
-                                            </button>
-                                        </div>
+                                        <button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all shadow ${isVer ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}">
+                                            ${isVer ? 'Отменить верификацию' : '<i class="fa-solid fa-check"></i> Верифицировать'}
+                                        </button>
                                     </div>
                                 `;
                             }).join('')}
@@ -3375,25 +3295,24 @@
                 `;
             } else if (tab === 'backup') {
                 container.innerHTML = `
-                    <div class="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl">
-                                <i class="fa-solid fa-database"></i>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 space-y-3">
+                            <h4 class="font-extrabold text-white text-xs flex items-center gap-2">
+                                <i class="fa-solid fa-database text-amber-400"></i>
+                                <span>Полный резервный бэкап всей платформы Авито Шам (JSON)</span>
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Позволяет в 1 клик выгрузить полную базу данных всей платформы (все объявления, пользователи, магазины, архив и курсы) в единый JSON-файл или легко восстановить проект из имеющейся копии.
+                            </p>
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <button onclick="exportFullDatabaseJSON()" class="py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
+                                    <i class="fa-solid fa-download"></i> Экспортировать Всю БД (JSON)
+                                </button>
+                                <label class="py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer active:scale-95">
+                                    <i class="fa-solid fa-upload"></i> Импортировать БД (JSON)
+                                    <input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden">
+                                </label>
                             </div>
-                            <div>
-                                <h4 class="font-extrabold text-white text-sm">Полный бэкап платформы (JSON)</h4>
-                                <p class="text-xs text-slate-400">Экспорт и импорт всей базы данных системы (Объявления, Пользователи, Архив, Курсы)</p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                            <button onclick="exportAdminDatabaseJSON()" class="py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
-                                <i class="fa-solid fa-download text-base"></i> Экспортировать всю БД (.json)
-                            </button>
-                            <label class="py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer active:scale-95">
-                                <i class="fa-solid fa-upload text-base"></i> Импортировать БД (.json)
-                                <input type="file" accept=".json" onchange="importAdminDatabaseJSON(event)" class="hidden">
-                            </label>
                         </div>
                     </div>
                 `;
@@ -3419,7 +3338,7 @@
                             ${currentList.length === 0 ? '<div class="text-center py-8 text-slate-500">Список пуст</div>' : currentList.map(a => `
                                 <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-3">
-                                        <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" loading="lazy" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
+                                        <img src="${a.images ? a.images[0] : a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10">
                                         <div>
                                             <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
                                             <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
@@ -3428,7 +3347,7 @@
                                     <div class="flex items-center gap-1.5">
                                         ${a.status === 'ACTIVE' ? `
                                             <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
-                                                Редактировать
+                                                Изменить
                                             </button>
                                             <button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold border border-purple-500/30 text-[11px]">
                                                 В архив
@@ -3449,53 +3368,21 @@
                 `;
             } else if (tab === 'users') {
                 container.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-white text-xs">Управление пользователями (${users.length})</h4>
-                        <button onclick="openModal('modal-admin-create-user')" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow">
-                            <i class="fa-solid fa-user-plus text-xs"></i> <span>Создать пользователя</span>
-                        </button>
-                    </div>
-                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                        ${users.map(u => `
-                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
-                                <div>
-                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
-                                    <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
-                                </div>
-                                <div class="flex items-center gap-1.5">
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-white text-xs">Пользователи (${users.length})</h4>
+                        <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                            ${users.map(u => `
+                                <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                    <div>
+                                        <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
+                                        <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
+                                    </div>
                                     <button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 text-[11px]">
                                         Редактировать
                                     </button>
-                                    <button onclick="adminArchiveUser('${u.uid || ''}', '${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
-                                        В архив
-                                    </button>
                                 </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else if (tab === 'archive') {
-                container.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-white text-xs">Заархивированные аккаунты (${archivedUsers.length})</h4>
-                    </div>
-                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                        ${archivedUsers.length === 0 ? '<div class="text-center py-8 text-slate-500">Архив пуст</div>' : archivedUsers.map(u => `
-                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
-                                <div>
-                                    <div class="font-bold text-slate-300 text-xs">${u.kunya || u.username} (@${u.username})</div>
-                                    <div class="text-[10px] text-slate-500">Роль: ${u.role}</div>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button onclick="restoreUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
-                                        Восстановить
-                                    </button>
-                                    <button onclick="permanentlyDeleteUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
-                                        Удалить
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             } else if (tab === 'rates') {
@@ -3508,9 +3395,6 @@
                                     <i class="fa-solid fa-arrows-rotate"></i> Обновить курс
                                 </button>
                             </div>
-                            <div class="text-[11px] text-slate-300 font-mono bg-black/40 p-3 rounded-xl border border-white/10">
-                                Worker Proxy: https://sp-proxy.mikevasovsky3.workers.dev/
-                            </div>
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <div>
                                     <label class="block text-slate-400 text-[11px] mb-1">Курс SYP за $1 USD</label>
@@ -3521,86 +3405,20 @@
                                     <input type="number" id="rate-try-input" value="${EXCHANGE_RATES.TRY}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300">
                                 </div>
                             </div>
-                            <button onclick="saveManualRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow">
-                                Сохранить изменения курсов
-                            </button>
                         </div>
                     </div>
                 `;
             }
         }
 
-        function saveManualRates() {
-            const sypVal = parseFloat(document.getElementById('rate-syp-input')?.value || EXCHANGE_RATES.SYP);
-            const tryVal = parseFloat(document.getElementById('rate-try-input')?.value || EXCHANGE_RATES.TRY);
-
-            EXCHANGE_RATES.SYP = sypVal;
-            EXCHANGE_RATES.TRY = tryVal;
-
-            if (firebaseDb) {
-                firebaseDb.ref('rates').set(EXCHANGE_RATES);
+        // Window Event Handlers & Dynamic Responsive Pagination Adjuster
+        window.onresize = function() {
+            const newItemsPerPage = (window.innerWidth < 640) ? 4 : 8;
+            if (itemsPerPage !== newItemsPerPage) {
+                itemsPerPage = newItemsPerPage;
+                renderAds();
             }
-
-            updateFooterRatesUI();
-            renderAds();
-            showToast('Курсы валют сохранены вручную!', 'success');
-        }
-
-        function exportAdminDatabaseJSON() {
-            const systemData = {
-                ads,
-                users,
-                archivedUsers,
-                rates: EXCHANGE_RATES,
-                exportedAt: new Date().toISOString()
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `avitosham_full_database_${Date.now()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast('Полный бэкап системы экспортирован!', 'success');
-        }
-
-        function importAdminDatabaseJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if (Array.isArray(imported.ads) && Array.isArray(imported.users)) {
-                        ads = imported.ads;
-                        users = imported.users;
-                        if (Array.isArray(imported.archivedUsers)) archivedUsers = imported.archivedUsers;
-                        if (imported.rates) EXCHANGE_RATES = imported.rates;
-
-                        saveCachedAds();
-
-                        if (firebaseDb) {
-                            firebaseDb.ref('ads').set(ads);
-                            firebaseDb.ref('users').set(users);
-                            firebaseDb.ref('archivedUsers').set(archivedUsers);
-                            firebaseDb.ref('rates').set(EXCHANGE_RATES);
-                        }
-
-                        renderAdminTabContent();
-                        renderAds();
-                        renderCategoryPills();
-                        showToast('Вся база данных успешно восстановлена!', 'success');
-                    } else {
-                        showToast('Ошибка структуры файла бэкапа!', 'error');
-                    }
-                } catch (err) {
-                    showToast('Ошибка чтения JSON файла!', 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
+        };
 
         window.onload = function () {
             loadCachedAds();
@@ -3611,12 +3429,8 @@
             renderAds();
             updateLanguageUI();
 
-            // Always display the rules reminder modal on launch
+            // Rules Modal pops up unconditionally on EVERY launch
             openModal('modal-rules-agreement');
-
-            window.addEventListener('resize', () => {
-                renderAds();
-            });
 
             setInterval(() => {
                 fetchLiveExchangeRates();
