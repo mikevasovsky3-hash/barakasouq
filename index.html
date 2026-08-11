@@ -136,7 +136,7 @@
                     </div>
                     <div>
                         <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Baraka<span class="text-amber-400">Souq</span></span>
-                        <span class="text-[10px] text-slate-400 font-medium">Сирийский Рынок</span>
+                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Сирийский Рынок</span>
                     </div>
                 </div>
             </div>
@@ -144,25 +144,25 @@
             <!-- Header Search Bar & Regions Selector -->
             <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
                 <div class="relative flex-1">
-                    <input type="text" id="search-input" onkeyup="resetPageAndRender()" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
+                    <input type="text" id="search-input" onkeyup="resetPageAndRender()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 </div>
                 <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[180px]">
-                    <option value="ALL" class="bg-slate-900 text-white">Все регионы (Сирия)</option>
-                    <option value="DAM" class="bg-slate-900 text-white">Дамаск</option>
-                    <option value="RIF_DAM" class="bg-slate-900 text-white">Риф-Дамаск</option>
-                    <option value="ALEP" class="bg-slate-900 text-white">Алеппо</option>
-                    <option value="IDL" class="bg-slate-900 text-white">Идлиб</option>
-                    <option value="HOMS" class="bg-slate-900 text-white">Хомс</option>
-                    <option value="HAMA" class="bg-slate-900 text-white">Хама</option>
-                    <option value="LAT" class="bg-slate-900 text-white">Латакия</option>
-                    <option value="TAR" class="bg-slate-900 text-white">Тартус</option>
-                    <option value="RAQ" class="bg-slate-900 text-white">Ракка</option>
-                    <option value="DEIR" class="bg-slate-900 text-white">Дейр-эз-Зор</option>
-                    <option value="HAS" class="bg-slate-900 text-white">Хасеке</option>
-                    <option value="DAR" class="bg-slate-900 text-white">Дараа</option>
-                    <option value="SUW" class="bg-slate-900 text-white">Эс-Сувейда</option>
-                    <option value="QUN" class="bg-slate-900 text-white">Эль-Кунейтра</option>
+                    <option value="ALL" class="bg-slate-900 text-white" data-i18n="regAll">Все регионы (Сирия)</option>
+                    <option value="DAM" class="bg-slate-900 text-white" data-i18n="regDam">Дамаск</option>
+                    <option value="RIF_DAM" class="bg-slate-900 text-white" data-i18n="regRifDam">Риф-Дамаск</option>
+                    <option value="ALEP" class="bg-slate-900 text-white" data-i18n="regAlep">Алеппо</option>
+                    <option value="IDL" class="bg-slate-900 text-white" data-i18n="regIdl">Идлиб</option>
+                    <option value="HOMS" class="bg-slate-900 text-white" data-i18n="regHoms">Хомс</option>
+                    <option value="HAMA" class="bg-slate-900 text-white" data-i18n="regHama">Хама</option>
+                    <option value="LAT" class="bg-slate-900 text-white" data-i18n="regLat">Латакия</option>
+                    <option value="TAR" class="bg-slate-900 text-white" data-i18n="regTar">Тартус</option>
+                    <option value="RAQ" class="bg-slate-900 text-white" data-i18n="regRaq">Ракка</option>
+                    <option value="DEIR" class="bg-slate-900 text-white" data-i18n="regDeir">Дейр-эз-Зор</option>
+                    <option value="HAS" class="bg-slate-900 text-white" data-i18n="regHas">Хасеке</option>
+                    <option value="DAR" class="bg-slate-900 text-white" data-i18n="regDar">Дараа</option>
+                    <option value="SUW" class="bg-slate-900 text-white" data-i18n="regSuw">Эс-Сувейда</option>
+                    <option value="QUN" class="bg-slate-900 text-white" data-i18n="regQun">Эль-Кунейтра</option>
                 </select>
             </div>
 
@@ -171,7 +171,7 @@
                 <div id="create-ad-btn-container" class="hidden">
                     <button onclick="openCreateAdModal()" class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95">
                         <i class="fa-solid fa-plus text-xs"></i>
-                        <span class="hidden md:inline">Подать объявление</span>
+                        <span class="hidden md:inline" data-i18n="btnPostAd">Подать объявление</span>
                     </button>
                 </div>
 
@@ -179,14 +179,14 @@
                 <div id="admin-quick-btn-container" class="hidden">
                     <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
                         <i class="fa-solid fa-user-shield text-amber-300"></i>
-                        <span class="hidden md:inline">Главный администратор</span>
+                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Главный администратор</span>
                     </button>
                 </div>
 
                 <!-- Auth/Profile Button -->
                 <button id="auth-btn" onclick="openAuthModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95">
                     <i class="fa-solid fa-user"></i>
-                    <span id="auth-btn-text" class="hidden sm:inline">Войти</span>
+                    <span id="auth-btn-text" class="hidden sm:inline" data-i18n="btnSignIn">Войти</span>
                 </button>
             </div>
         </div>
@@ -194,32 +194,32 @@
         <!-- Mobile Search Bar & Region Selector -->
         <div class="sm:hidden mt-2.5 flex gap-2">
             <div class="relative flex-1">
-                <input type="text" id="search-input-mobile" onkeyup="syncMobileSearch(this.value)" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
+                <input type="text" id="search-input-mobile" onkeyup="syncMobileSearch(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             </div>
             <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px]">
-                <option value="ALL" class="bg-slate-900 text-white">Все регионы</option>
-                <option value="DAM" class="bg-slate-900 text-white">Дамаск</option>
-                <option value="RIF_DAM" class="bg-slate-900 text-white">Риф-Дамаск</option>
-                <option value="ALEP" class="bg-slate-900 text-white">Алеппо</option>
-                <option value="IDL" class="bg-slate-900 text-white">Идлиб</option>
-                <option value="HOMS" class="bg-slate-900 text-white">Хомс</option>
-                <option value="HAMA" class="bg-slate-900 text-white">Хама</option>
-                <option value="LAT" class="bg-slate-900 text-white">Латакия</option>
-                <option value="TAR" class="bg-slate-900 text-white">Тартус</option>
-                <option value="RAQ" class="bg-slate-900 text-white">Ракка</option>
-                <option value="DEIR" class="bg-slate-900 text-white">Дейр-эз-Зор</option>
-                <option value="HAS" class="bg-slate-900 text-white">Хасеке</option>
-                <option value="DAR" class="bg-slate-900 text-white">Дараа</option>
-                <option value="SUW" class="bg-slate-900 text-white">Эс-Сувейда</option>
-                <option value="QUN" class="bg-slate-900 text-white">Эль-Кунейтра</option>
+                <option value="ALL" class="bg-slate-900 text-white" data-i18n="regAll">Все регионы</option>
+                <option value="DAM" class="bg-slate-900 text-white" data-i18n="regDam">Дамаск</option>
+                <option value="RIF_DAM" class="bg-slate-900 text-white" data-i18n="regRifDam">Риф-Дамаск</option>
+                <option value="ALEP" class="bg-slate-900 text-white" data-i18n="regAlep">Алеппо</option>
+                <option value="IDL" class="bg-slate-900 text-white" data-i18n="regIdl">Идлиб</option>
+                <option value="HOMS" class="bg-slate-900 text-white" data-i18n="regHoms">Хомс</option>
+                <option value="HAMA" class="bg-slate-900 text-white" data-i18n="regHama">Хама</option>
+                <option value="LAT" class="bg-slate-900 text-white" data-i18n="regLat">Латакия</option>
+                <option value="TAR" class="bg-slate-900 text-white" data-i18n="regTar">Тартус</option>
+                <option value="RAQ" class="bg-slate-900 text-white" data-i18n="regRaq">Ракка</option>
+                <option value="DEIR" class="bg-slate-900 text-white" data-i18n="regDeir">Дейр-эз-Зор</option>
+                <option value="HAS" class="bg-slate-900 text-white" data-i18n="regHas">Хасеке</option>
+                <option value="DAR" class="bg-slate-900 text-white" data-i18n="regDar">Дараа</option>
+                <option value="SUW" class="bg-slate-900 text-white" data-i18n="regSuw">Эс-Сувейда</option>
+                <option value="QUN" class="bg-slate-900 text-white" data-i18n="regQun">Эль-Кунейтра</option>
             </select>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
         
-        <!-- Categories Toolbar -->
+        <!-- Categories Toolbar (Icons with badges) -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
                 <!-- Dynamically Rendered Category Pills -->
@@ -819,9 +819,9 @@
     <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1">
-                <div>© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.</div>
+                <div data-i18n="footerCopyright">© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.</div>
                 <div>
-                    Разработчик: <span class="font-bold text-slate-200">Салим Нашхо</span> • 
+                    <span data-i18n="developerLabel">Разработчик:</span> <span class="font-bold text-slate-200">Салим Нашхо</span> • 
                     <a href="https://wa.me/447887280238" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold inline-flex items-center gap-1">
                         <i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238
                     </a>
@@ -836,12 +836,13 @@
             <div class="flex items-center gap-3">
                 <button onclick="toggleTheme()" class="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-semibold hover:bg-white/10 transition-all">
                     <i id="theme-icon" class="fa-solid fa-moon text-amber-300"></i>
-                    <span id="theme-text">Тёмная тема</span>
+                    <span id="theme-text" data-i18n="themeDark">Тёмная тема</span>
                 </button>
 
                 <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
                     <option value="RU" class="bg-slate-900 text-white">RU</option>
                     <option value="AR" class="bg-slate-900 text-white">AR</option>
+                    <option value="TR" class="bg-slate-900 text-white">TR</option>
                 </select>
             </div>
         </div>
@@ -857,540 +858,346 @@
     <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
     <script>
-        /* -------------------------------------------------------------
-         * FIREBASE CLOUD CONFIGURATION & INITIALIZATION
-         * ------------------------------------------------------------- */
-        const firebaseConfig = {
-            apiKey: "AIzaSyA77Uxx_itIlgP2243H14mnTpP7DXQntI",
-            authDomain: "barakasouq-72b4e.firebaseapp.com",
-            databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com",
-            projectId: "barakasouq-72b4e",
-            storageBucket: "barakasouq-72b4e.appspot.com",
-            messagingSenderId: "620376240590",
-            appId: "1:620376240590:web:2c27b76dbf007d7d763037"
-        };
-
-        // Initialize Firebase Compat
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            if (firebase.auth) {
-                firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
-            }
-        } catch (err) {
-            console.warn("Firebase Init fallback:", err);
-        }
-
-        const db = firebase.database ? firebase.database() : null;
-        const auth = firebase.auth ? firebase.auth() : null;
-
-        /* -------------------------------------------------------------
-         * APPLICATION STATE & DATA DECLARATIONS
-         * ------------------------------------------------------------- */
-        let SYSTEM_CONFIG = {
-            rulesAccepted: false,
-            emergencyPin: '1988',
-            archiveTimerDays: '30'
-        };
+        let CURRENT_LANG = 'RU';
+        let firebaseApp = null;
+        let firebaseDb = null;
+        
+        let currentUser = null;
+        let selectedCategory = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 8;
+        let favorites = [];
 
         let EXCHANGE_RATES = {
             SYP: 131.70,
-            TRY: 47.70
+            TRY: 47.74
         };
 
-        /* -------------------------------------------------------------
-         * AUTOMATIC EXCHANGE RATE FETCHING FROM SP-PROXY WORKER
-         * ------------------------------------------------------------- */
-        function updateFooterRatesUI() {
-            const el = document.getElementById('footer-rates-container');
-            if (!el) return;
-            const sypStr = Number(EXCHANGE_RATES.SYP || 131.70).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-            const tryStr = Number(EXCHANGE_RATES.TRY || 47.7).toString();
-            el.innerHTML = `
-                <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
-                <span class="text-[11px] font-mono">$1 USD = <strong class="text-white">${sypStr} SYP</strong> = <strong class="text-white">${tryStr} TRY</strong></span>
-                <button onclick="fetchLiveExchangeRates(true)" title="Сбросить кэш и принудительно обновить курс" class="ml-1 px-1.5 py-0.5 rounded bg-white/10 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 transition-all active:scale-95 flex items-center gap-1">
-                    <i id="footer-rate-spin" class="fa-solid fa-arrows-rotate text-[10px]"></i>
-                    <span class="text-[9px] font-bold">Сброс кэша</span>
-                </button>
-            `;
-        }
-
-        async function fetchLiveExchangeRates(forceResetCache = false) {
-            const PROXY_URL = 'https://sp-proxy.mikevasovsky3.workers.dev/';
-            const spinIcon = document.getElementById('footer-rate-spin');
-            const adminSpinIcon = document.getElementById('admin-rate-spin');
-
-            if (spinIcon) spinIcon.classList.add('animate-spin');
-            if (adminSpinIcon) adminSpinIcon.classList.add('animate-spin');
-
-            try {
-                const fetchUrl = forceResetCache ? `${PROXY_URL}?_reset=${Date.now()}` : PROXY_URL;
-                const response = await fetch(fetchUrl, {
-                    cache: forceResetCache ? 'reload' : 'default'
-                });
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                const data = await response.json();
-                
-                let fetchedSYP = null;
-                let fetchedTRY = null;
-
-                // 1. Поиск массива валют rates
-                let ratesArray = [];
-                if (data.overview && data.overview[0] && data.overview[0].data && Array.isArray(data.overview[0].data.rates)) {
-                    ratesArray = data.overview[0].data.rates;
-                } else if (data.data && Array.isArray(data.data.rates)) {
-                    ratesArray = data.data.rates;
-                } else if (Array.isArray(data.rates)) {
-                    ratesArray = data.rates;
-                }
-
-                // Точный извлекатель курса USD для Дамаска (sell / buy)
-                const usdItem = ratesArray.find(r => r.code === 'USD');
-                if (usdItem && usdItem.cities) {
-                    const cityData = usdItem.cities.damascus || Object.values(usdItem.cities)[0];
-                    if (cityData) {
-                        fetchedSYP = parseFloat(cityData.sell || cityData.buy);
-                    }
-                }
-
-                // 2. Извлечение USD/TRY из global_fx или расчета
-                let globalFx = [];
-                if (data.overview && data.overview[0] && data.overview[0].data && Array.isArray(data.overview[0].data.global_fx)) {
-                    globalFx = data.overview[0].data.global_fx;
-                } else if (Array.isArray(data.global_fx)) {
-                    globalFx = data.global_fx;
-                }
-
-                const usdTryFx = globalFx.find(f => f.pair === 'USD/TRY');
-                if (usdTryFx && usdTryFx.rate) {
-                    fetchedTRY = parseFloat(usdTryFx.rate);
-                } else {
-                    const tryItem = ratesArray.find(r => r.code === 'TRY');
-                    if (tryItem && tryItem.cities) {
-                        const tryCity = tryItem.cities.damascus || Object.values(tryItem.cities)[0];
-                        const trySypVal = tryCity ? parseFloat(tryCity.sell || tryCity.buy) : null;
-                        if (fetchedSYP && trySypVal && trySypVal > 0) {
-                            fetchedTRY = parseFloat((fetchedSYP / trySypVal).toFixed(2));
-                        }
-                    }
-                }
-
-                let isUpdated = false;
-                if (fetchedSYP && fetchedSYP > 0) {
-                    // Применяем деноминацию на 2 нуля (если исходный курс > 1000)
-                    if (fetchedSYP > 1000) {
-                        fetchedSYP = parseFloat((fetchedSYP / 100).toFixed(2));
-                    }
-                    EXCHANGE_RATES.SYP = fetchedSYP;
-                    isUpdated = true;
-                }
-                if (fetchedTRY && fetchedTRY > 0) {
-                    EXCHANGE_RATES.TRY = fetchedTRY;
-                    isUpdated = true;
-                }
-
-                localStorage.setItem('bs_exchange_rates', JSON.stringify(EXCHANGE_RATES));
-
-                if (db) {
-                    db.ref('rates').set(EXCHANGE_RATES).catch(() => {});
-                }
-
-                updateFooterRatesUI();
-                renderAds();
-
-                const sypInput = document.getElementById('rate-syp');
-                const tryInput = document.getElementById('rate-try');
-                if (sypInput) sypInput.value = EXCHANGE_RATES.SYP;
-                if (tryInput) tryInput.value = EXCHANGE_RATES.TRY;
-
-                if (isUpdated) {
-                    showToast(`Курсы актуализированы (с деноминацией): $1 = ${EXCHANGE_RATES.SYP} SYP | ${EXCHANGE_RATES.TRY} TRY`);
-                }
-            } catch (err) {
-                console.warn('Ошибка при загрузке курсов из SP Proxy:', err);
-                updateFooterRatesUI();
-                showToast('Использованы базовые курсы валют', 'warning');
-            } finally {
-                if (spinIcon) spinIcon.classList.remove('animate-spin');
-                if (adminSpinIcon) adminSpinIcon.classList.remove('animate-spin');
-            }
-        }
-
-        const REGION_COORDS = {
-            'DAM': [33.5138, 36.2765],
-            'RIF_DAM': [33.5150, 36.3000],
-            'ALEP': [36.2021, 37.1343],
-            'IDL': [35.9306, 36.6339],
-            'HOMS': [34.7324, 36.7137],
-            'HAMA': [35.1318, 36.7578],
-            'LAT': [35.5317, 35.7817],
-            'TAR': [34.8890, 35.8866],
-            'RAQ': [35.9500, 38.9980],
-            'DEIR': [35.3359, 40.1408],
-            'HAS': [36.5024, 40.7477],
-            'DAR': [32.6189, 36.1021],
-            'SUW': [32.7089, 36.5672],
-            'QUN': [33.1258, 35.8222]
+        let SYSTEM_CONFIG = {
+            rulesAccepted: false,
+            adminTab: 'overview'
         };
 
-        let CURRENT_CURRENCY = 'USD';
-        let CURRENT_LANG = 'RU';
-
-        let favorites = [];
-        let users = [];
-        let ads = [];
-        let archivedAds = [];
-        let archivedUsers = [];
-        let customCategories = [
-            { id: 'electronics', icon: 'fa-laptop', name: 'Электроника' },
-            { id: 'transport', icon: 'fa-car', name: 'Транспорт' },
-            { id: 'realestate', icon: 'fa-house', name: 'Недвижимость' },
-            { id: 'home', icon: 'fa-couch', name: 'Бытовые вещи' },
-            { id: 'services', icon: 'fa-wrench', name: 'Услуги' },
-            { id: 'other', icon: 'fa-cubes', name: 'Прочее' }
+        const customCategories = [
+            { id: 'electronics', name: 'Электроника', icon: 'fa-laptop' },
+            { id: 'transport', name: 'Транспорт', icon: 'fa-car' },
+            { id: 'realestate', name: 'Недвижимость', icon: 'fa-house' },
+            { id: 'home', name: 'Бытовые вещи', icon: 'fa-couch' },
+            { id: 'services', name: 'Услуги', icon: 'fa-wrench' },
+            { id: 'other', name: 'Прочее', icon: 'fa-boxes-stacked' }
         ];
 
-        let currentUser = null;
-        let authTabMode = 'login';
-        let currentAdminTab = 'overview';
-        let logoClickCounter = 0;
-        let logoClickTimer = null;
-        let detailMapInstance = null;
-        let editMapInstance = null;
-        let editMapMarker = null;
-        let createMapInstance = null;
-        let createMapMarker = null;
-        let isUserMarkerSet = false;
+        let users = [
+            { uid: 'u_admin', username: 'admin', passwordHash: 'admin123', kunya: 'Salim Nashho', gender: 'MALE', whatsapp: '+963956606833', role: 'SUPERUSER', verifiedShop: true },
+            { uid: 'u_test', username: 'test', passwordHash: '123456', kunya: 'Abu test', gender: 'MALE', whatsapp: '+96725843608', role: 'USER', verifiedShop: false }
+        ];
 
-        let currentPage = 1;
-        const itemsPerPage = 8;
-        let selectedCategory = 'all';
+        let archivedUsers = [];
+
+        let ads = [
+            {
+                id: 'AD-101',
+                title: 'Солнечная панель Trina Solar 550W Tier 1',
+                category: 'electronics',
+                region: 'DAM',
+                city: 'Дамаск (р-н Маззе)',
+                price: 110,
+                currency: 'USD',
+                isFree: false,
+                isWomenOnly: false,
+                condition: 'NEW',
+                pickup: 'PICKUP',
+                sellerUsername: 'admin',
+                sellerKunya: 'Salim Nashho',
+                sellerWhatsapp: '+963956606833',
+                lat: 33.5138,
+                lng: 36.2765,
+                image: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=60',
+                desc: 'Новые запечатанные солнечные панели 550W. Высокая производительность. Гарантия от производителя.',
+                queue: [],
+                status: 'ACTIVE',
+                createdAt: Date.now()
+            },
+            {
+                id: 'AD-102',
+                title: 'Детская коляска Chicco в отличном состоянии',
+                category: 'home',
+                region: 'RIF_DAM',
+                city: 'Риф-Дамаск (Джарамана)',
+                price: 0,
+                currency: 'USD',
+                isFree: true,
+                isWomenOnly: true,
+                condition: 'EXCELLENT',
+                pickup: 'PICKUP',
+                sellerUsername: 'test',
+                sellerKunya: 'Abu test',
+                sellerWhatsapp: '+96725843608',
+                lat: 33.4833,
+                lng: 36.3500,
+                image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&auto=format&fit=crop&q=60',
+                desc: 'Отдаем даром детскую коляску Chicco. Все механизмы исправны, чистая. Только для сестёр.',
+                queue: [],
+                status: 'ACTIVE',
+                createdAt: Date.now() - 3600000
+            }
+        ];
 
         /* -------------------------------------------------------------
-         * INLINE TOAST NOTIFICATION SYSTEM
+         * INTERNATIONALIZATION DICTIONARIES
          * ------------------------------------------------------------- */
-        function showToast(message, type = 'success') {
+        const TRANSLATIONS = {
+            RU: {
+                brandTagline: "Сирийский Рынок",
+                searchPlaceholder: "Поиск товаров, транспорта, услуг...",
+                btnPostAd: "Подать объявление",
+                btnAdminPanel: "Главный администратор",
+                btnSignIn: "Войти",
+                regAll: "Все регионы (Сирия)",
+                regDam: "Дамаск",
+                regRifDam: "Риф-Дамаск",
+                regAlep: "Алеппо",
+                regIdl: "Идлиб",
+                regHoms: "Хомс",
+                regHama: "Хама",
+                regLat: "Латакия",
+                regTar: "Тартус",
+                regRaq: "Ракка",
+                regDeir: "Дейр-эз-Зор",
+                regHas: "Хасеке",
+                regDar: "Дараа",
+                regSuw: "Эс-Сувейда",
+                regQun: "Эль-Кунейтра",
+                catAll: "Все товары",
+                catFavorites: "Избранное",
+                catWomenOnly: "Только для женщин 🌸",
+                catFree: "Даром (Бесплатно) 🎁",
+                catShopsDir: "Каталог магазинов 🏪",
+                catElectronics: "Электроника",
+                catTransport: "Транспорт",
+                catRealestate: "Недвижимость",
+                catHome: "Бытовые вещи",
+                catServices: "Услуги",
+                catOther: "Прочее",
+                themeDark: "Тёмная тема",
+                themeLight: "Светлая тема",
+                resetCache: "Сброс кэша",
+                footerCopyright: "© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.",
+                developerLabel: "Разработчик:",
+                noAdsFound: "Объявлений по данному запросу не найдено",
+                btnFirstPage: "« Первая",
+                btnPrevPage: "< Назад",
+                btnNextPage: "Вперед >",
+                btnLastPage: "Последняя »",
+                pageLabel: "Страница {current} из {total}",
+                freeTag: "🎁 ДАРОМ (Бесплатно)",
+                womenTag: "🌸 Для женщин",
+                shopTag: "Магазин",
+                beFirstQueue: "Будьте первым",
+                inQueue: "🔥 В очереди: {count}",
+                myInQueue: "Вы №{rank} в очереди",
+                queueStatusText: "В очереди предложений: {count} чел.",
+                queueFreeText: "Очередь свободна",
+                btnJoinQueue: "Хочу этот товар! (Занять очередь)",
+                btnLeaveQueue: "Выйти из очереди",
+                sellerLocation: "Геолокация продавца:",
+                descAndDefects: "Описание и изъяны:",
+                contactSellerWa: "Связаться с продавцом (авто-номер очереди)",
+                supportProject: "Поддержка BarakaSouq",
+                openAllSellerAds: "Открыть все товары продавца",
+                editAdBtn: "Редактировать объявление"
+            },
+            AR: {
+                brandTagline: "سوق سوريا المدني",
+                searchPlaceholder: "البحث عن المنتجات، السيارات، الخدمات...",
+                btnPostAd: "أضف إعلاناً",
+                btnAdminPanel: "المدير العام",
+                btnSignIn: "تسجيل الدخول",
+                regAll: "جميع المحافظات (سوريا)",
+                regDam: "دمشق",
+                regRifDam: "ريف دمشق",
+                regAlep: "حلب",
+                regIdl: "إدلب",
+                regHoms: "حمص",
+                regHama: "حماة",
+                regLat: "اللاذقية",
+                regTar: "طرطوس",
+                regRaq: "الرقة",
+                regDeir: "دير الزور",
+                regHas: "الحسكة",
+                regDar: "درعا",
+                regSuw: "السويداء",
+                regQun: "القنيطرة",
+                catAll: "كل المنتجات",
+                catFavorites: "المفضلة",
+                catWomenOnly: "للنساء فقط 🌸",
+                catFree: "مجاناً (بدون مقابل) 🎁",
+                catShopsDir: "دليل المتاجر 🏪",
+                catElectronics: "إلكترونيات",
+                catTransport: "سيارات ومركبات",
+                catRealestate: "عقارات ومباني",
+                catHome: "أثاث ومستلزمات منزلية",
+                catServices: "خدمات وحرف",
+                catOther: "متنوعات أخرى",
+                themeDark: "المظهر الداكن",
+                themeLight: "المظهر الفاتح",
+                resetCache: "تحديث للتخزين",
+                footerCopyright: "© 2026 BarakaSouq. منصة الإعلانات المدنية في سوريا.",
+                developerLabel: "التطوير بواسطة:",
+                noAdsFound: "لم يتم العثور على إعلانات تطابق البحث",
+                btnFirstPage: "« الأولى",
+                btnPrevPage: "< السابق",
+                btnNextPage: "التالي >",
+                btnLastPage: "الأخيرة »",
+                pageLabel: "صفحة {current} من {total}",
+                freeTag: "🎁 مجاناً (بدون مقابل)",
+                womenTag: "🌸 للنساء فقط",
+                shopTag: "متجر معتمد",
+                beFirstQueue: "كن أول المحجوزين",
+                inQueue: "🔥 في الانتظار: {count}",
+                myInQueue: "أنت رقم {rank} في الانتظار",
+                queueStatusText: "عدد المنتظرين: {count} شخص",
+                queueFreeText: "قائمة الانتظار فارغة",
+                btnJoinQueue: "أريد هذا المنتج! (حجز دور)",
+                btnLeaveQueue: "إلغاء الدور في الانتظار",
+                sellerLocation: "موقع البائع على الخريطة:",
+                descAndDefects: "الوصف والعيوب (اتق الله بالبيع):",
+                contactSellerWa: "التواصل عبر واتساب (مع رقم دورك الآلي)",
+                supportProject: "دعم مشروع سوق البركة",
+                openAllSellerAds: "عرض جميع منتجات هذا البائع",
+                editAdBtn: "تعديل الإعلان"
+            },
+            TR: {
+                brandTagline: "Suriye İlan Pazarı",
+                searchPlaceholder: "Ürün, vasıta, hizmet ara...",
+                btnPostAd: "İlan Ver",
+                btnAdminPanel: "Süper Yönetici",
+                btnSignIn: "Giriş Yap",
+                regAll: "Tüm Bölgeler (Suriye)",
+                regDam: "Şam",
+                regRifDam: "Kırsal Şam",
+                regAlep: "Halep",
+                regIdl: "İdlib",
+                regHoms: "Humus",
+                regHama: "Hama",
+                regLat: "Lazkiye",
+                regTar: "Tartus",
+                regRaq: "Rakka",
+                regDeir: "Deyrizor",
+                regHas: "Haseke",
+                regDar: "Dera",
+                regSuw: "Süveyde",
+                regQun: "Kuneytra",
+                catAll: "Tüm İlanlar",
+                catFavorites: "Favorilerim",
+                catWomenOnly: "Kadınlara Özel 🌸",
+                catFree: "Ücretsiz / Bedava 🎁",
+                catShopsDir: "Mağaza Rehberi 🏪",
+                catElectronics: "Elektronik",
+                catTransport: "Vasıta & Araçlar",
+                catRealestate: "Emlak & Gayrimenkul",
+                catHome: "Ev Eşyaları",
+                catServices: "Hizmetler",
+                catOther: "Diğer",
+                themeDark: "Karanlık Tema",
+                themeLight: "Aydınlık Tema",
+                resetCache: "Önbelleği Sıfırla",
+                footerCopyright: "© 2026 BarakaSouq. Suriye Sivil İlan Platformu.",
+                developerLabel: "Geliştirici:",
+                noAdsFound: "Aramanıza uygun ilan bulunamadı",
+                btnFirstPage: "« İlk",
+                btnPrevPage: "< Geri",
+                btnNextPage: "İleri >",
+                btnLastPage: "Son »",
+                pageLabel: "Sayfa {current} / {total}",
+                freeTag: "🎁 ÜCRETSİZ (Bedava)",
+                womenTag: "🌸 Kadınlara Özel",
+                shopTag: "Mağaza",
+                beFirstQueue: "İlki siz olun",
+                inQueue: "🔥 Sıradakiler: {count}",
+                myInQueue: "Sıradaki yeriniz: No {rank}",
+                queueStatusText: "Sıradaki talep sayısı: {count} kişi",
+                queueFreeText: "Sıra boş",
+                btnJoinQueue: "Bu Ürünü İstiyorum! (Sıraya Gir)",
+                btnLeaveQueue: "Sıradan Çık",
+                sellerLocation: "Satıcının Konumu:",
+                descAndDefects: "Açıklama ve Kusurlar:",
+                contactSellerWa: "Satıcıyla WhatsApp'tan İletişime Geç",
+                supportProject: "BarakaSouq Proje Desteği",
+                openAllSellerAds: "Satıcının Tüm İlanlarını Gör",
+                editAdBtn: "İlanı Düzenle"
+            }
+        };
+
+        function getTranslation(key, params = {}) {
+            const langDict = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.RU;
+            let text = langDict[key] || TRANSLATIONS.RU[key] || key;
+            Object.keys(params).forEach(p => {
+                text = text.replace(`{${p}}`, params[p]);
+            });
+            return text;
+        }
+
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
             const toast = document.createElement('div');
-            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-bold shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 text-white ${
-                type === 'error' ? 'bg-rose-600 border border-rose-400/40' : 
-                type === 'warning' ? 'bg-amber-500 text-slate-950 border border-amber-300/40' : 
-                'bg-emerald-600 border border-emerald-400/40'
-            }`;
-            const icon = type === 'error' ? 'fa-circle-xmark' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-check';
-            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+            let bg = 'bg-slate-800 text-white border-white/10';
+            if (type === 'success') bg = 'bg-emerald-600 text-white border-emerald-400/30';
+            if (type === 'error') bg = 'bg-rose-600 text-white border-rose-400/30';
+            if (type === 'warning') bg = 'bg-amber-600 text-white border-amber-400/30';
+
+            toast.className = `p-3.5 rounded-2xl border shadow-xl text-xs font-semibold flex items-center justify-between gap-3 pointer-events-auto transition-all transform duration-300 translate-y-2 ${bg}`;
+            toast.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>`;
             container.appendChild(toast);
-            
             setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
 
-        function initFirebaseSync() {
-            const syncStatus = document.getElementById('cloud-sync-status');
-            if (syncStatus) syncStatus.classList.remove('hidden');
-
-            if (!db) {
-                console.warn('Firebase DB instance not available, running in local mode');
-                if (syncStatus) syncStatus.classList.add('hidden');
-                renderAds();
-                return;
-            }
-
-            // Realtime listener for Ads
-            db.ref('ads').on('value', (snapshot) => {
-                const val = snapshot.val();
-                ads = val ? Object.values(val) : [];
-                renderAds();
-                if (syncStatus) syncStatus.classList.add('hidden');
-            }, (error) => {
-                console.warn('Ads sync notice:', error);
-                if (syncStatus) syncStatus.classList.add('hidden');
-                renderAds();
-            });
-
-            // Realtime listener for Archived Ads
-            db.ref('archivedAds').on('value', (snapshot) => {
-                const val = snapshot.val();
-                archivedAds = val ? Object.keys(val).map(key => ({ id: key, ...val[key] })) : [];
-            });
-
-            // Realtime listener for Archived Users
-            db.ref('archivedUsers').on('value', (snapshot) => {
-                const val = snapshot.val();
-                archivedUsers = val ? Object.keys(val).map(key => ({ uid: key, ...val[key] })) : [];
-                if (currentAdminTab === 'archive' || currentAdminTab === 'users') {
-                    renderAdminTab(currentAdminTab);
-                }
-            });
-
-            // Realtime listener for Users
-            db.ref('users').on('value', (snapshot) => {
-                const val = snapshot.val();
-                users = val ? Object.keys(val).map(key => ({ uid: key, ...val[key] })) : [];
-                
-                if (currentUser) {
-                    const freshMe = users.find(u => u.username === currentUser.username || u.uid === currentUser.uid);
-                    if (freshMe) {
-                        currentUser = freshMe;
-                        saveUserSession(currentUser);
-                    }
-                }
-                updateAuthUI();
-                if (currentAdminTab === 'users') renderAdminTab('users');
-            });
-
-            // Realtime listener for Exchange Rates
-            db.ref('rates').on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (val) EXCHANGE_RATES = val;
-            });
-
-            // Realtime listener for Categories
-            db.ref('customCategories').on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (val && Array.isArray(val) && val.length > 0) {
-                    customCategories = val;
-                    renderCategoryPills();
-                }
-            });
-
-            // Firebase Auth State Observer
-            if (auth) {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        db.ref('users/' + user.uid).once('value').then((snapshot) => {
-                            const userData = snapshot.val();
-                            if (userData) {
-                                currentUser = { uid: user.uid, ...userData };
-                            } else {
-                                const username = user.email ? user.email.split('@')[0] : 'user';
-                                const isSuper = (username === 'admin' || username === 'administrator' || username === 'salim');
-                                currentUser = {
-                                    uid: user.uid,
-                                    username: username,
-                                    kunya: user.displayName || 'Пользователь',
-                                    gender: 'MALE',
-                                    role: isSuper ? 'SUPERUSER' : 'USER',
-                                    whatsapp: '+963933123456'
-                                };
-                            }
-                            saveUserSession(currentUser);
-                            updateAuthUI();
-                            renderCategoryPills();
-                            renderAds();
-                        }).catch(() => {
-                            updateAuthUI();
-                            renderAds();
-                        });
-                    }
-                });
-            }
-        }
-
-        function saveUserSession(userObj) {
-            try {
-                if (userObj) {
-                    localStorage.setItem('bs_saved_user', JSON.stringify(userObj));
-                } else {
-                    localStorage.removeItem('bs_saved_user');
-                }
-            } catch (e) {}
-        }
-
         function restoreUserSession() {
             try {
-                const saved = localStorage.getItem('bs_saved_user');
+                const saved = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user');
                 if (saved) {
-                    currentUser = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    const found = users.find(u => u.username === parsed.username);
+                    if (found) {
+                        currentUser = found;
+                    } else {
+                        currentUser = parsed;
+                    }
                 }
-            } catch (e) {}
-        }
-
-        function openModal(id) {
-            const el = document.getElementById(id);
-            if (el) el.classList.remove('hidden');
-        }
-
-        function closeModal(id) {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
-        }
-
-        function acceptLaunchRules() {
-            SYSTEM_CONFIG.rulesAccepted = true;
-            localStorage.setItem('bs_rules_accepted', 'true');
-            closeModal('modal-rules-agreement');
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            const icon = document.getElementById('theme-icon');
-            const text = document.getElementById('theme-text');
-            if (icon) icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-amber-300';
-            if (text) text.innerText = isLight ? 'Светлая тема' : 'Тёмная тема';
-        }
-
-        function changeLanguage(lang) {
-            CURRENT_LANG = lang;
-            renderAds();
-        }
-
-        function changeCurrency(curr) {
-            CURRENT_CURRENCY = curr;
-            renderAds();
-        }
-
-        function openAuthModal() {
-            switchAuthTab('login');
-            openModal('modal-auth');
-        }
-
-        function logout() {
-            currentUser = null;
-            saveUserSession(null);
-            if (auth && auth.signOut) {
-                auth.signOut().catch(() => {});
+            } catch (e) {
+                console.warn('Error restoring user session:', e);
             }
             updateAuthUI();
-            closeModal('modal-profile');
-            renderCategoryPills();
-            renderAds();
-            showToast('Вы успешно вышли из аккаунта', 'warning');
         }
 
-        function openCreateAdModal() {
-            if (!currentUser) return openAuthModal();
-
-            populateCategoryDropdown();
-            
-            const womenOpt = document.getElementById('women-only-container');
-            if (womenOpt) {
-                if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-                    womenOpt.classList.remove('hidden');
+        function saveUserSession(user, remember = true) {
+            currentUser = user;
+            try {
+                if (remember) {
+                    localStorage.setItem('bs_current_user', JSON.stringify(user));
+                    sessionStorage.removeItem('bs_current_user');
                 } else {
-                    womenOpt.classList.add('hidden');
-                    const chk = document.getElementById('ad-is-women-only');
-                    if (chk) chk.checked = false;
+                    sessionStorage.setItem('bs_current_user', JSON.stringify(user));
+                    localStorage.removeItem('bs_current_user');
                 }
-            }
-            
-            isUserMarkerSet = false;
-            openModal('modal-create-ad');
-            initCreateMap();
-        }
-
-        function populateCategoryDropdown() {
-            const select = document.getElementById('ad-category');
-            if (!select) return;
-            select.innerHTML = customCategories.map(c => `<option value="${c.id}" class="bg-slate-900">${c.name}</option>`).join('') +
-                `<option value="NEW_CUSTOM" class="bg-slate-900 text-amber-400 font-bold">➕ Добавить свою категорию...</option>`;
-        }
-
-        function handleCategorySelection(val) {
-            if (val === 'NEW_CUSTOM') {
-                const name = prompt('Введите название новой категории:');
-                if (name && name.trim()) {
-                    const id = 'cat_' + Date.now();
-                    customCategories.push({ id, icon: 'fa-tag', name: name.trim() });
-                    if (db) db.ref('customCategories').set(customCategories);
-                    populateCategoryDropdown();
-                    renderCategoryPills();
-                    document.getElementById('ad-category').value = id;
-                } else {
-                    document.getElementById('ad-category').value = customCategories[0].id;
-                }
-            }
-        }
-
-        function reverseGeocode(lat, lng, targetInputId) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.address) {
-                        const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.county || '';
-                        const state = data.address.state || '';
-                        if (city) {
-                            const formatted = state ? `${city}, ${state}` : city;
-                            const inputEl = document.getElementById(targetInputId);
-                            if (inputEl) inputEl.value = formatted;
-                        }
-                    }
-                })
-                .catch(err => console.warn('Reverse geocode offline/failed:', err));
-        }
-
-        function initCreateMap() {
-            setTimeout(() => {
-                if (createMapInstance) {
-                    createMapInstance.remove();
-                    createMapInstance = null;
-                }
-
-                const regionSelect = document.getElementById('ad-region').value;
-                const initialCoords = REGION_COORDS[regionSelect] || REGION_COORDS['DAM'];
-
-                try {
-                    createMapInstance = L.map('create-map').setView(initialCoords, 9);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap'
-                    }).addTo(createMapInstance);
-                    
-                    createMapMarker = L.marker(initialCoords, { draggable: true }).addTo(createMapInstance);
-                    
-                    document.getElementById('ad-lat').value = initialCoords[0];
-                    document.getElementById('ad-lng').value = initialCoords[1];
-
-                    createMapInstance.on('click', function(e) {
-                        createMapMarker.setLatLng(e.latlng);
-                        document.getElementById('ad-lat').value = e.latlng.lat;
-                        document.getElementById('ad-lng').value = e.latlng.lng;
-                        isUserMarkerSet = true;
-                        reverseGeocode(e.latlng.lat, e.latlng.lng, 'ad-city');
-                    });
-
-                    createMapMarker.on('dragend', function(e) {
-                        const position = createMapMarker.getLatLng();
-                        document.getElementById('ad-lat').value = position.lat;
-                        document.getElementById('ad-lng').value = position.lng;
-                        isUserMarkerSet = true;
-                        reverseGeocode(position.lat, position.lng, 'ad-city');
-                    });
-                } catch (err) {
-                    console.warn('Create map init:', err);
-                }
-            }, 300);
-        }
-
-        function handleRegionChangeCreate(val) {
-            if (!isUserMarkerSet && createMapInstance && createMapMarker) {
-                const newCoords = REGION_COORDS[val] || REGION_COORDS['DAM'];
-                createMapInstance.setView(newCoords, 9);
-                createMapMarker.setLatLng(newCoords);
-                document.getElementById('ad-lat').value = newCoords[0];
-                document.getElementById('ad-lng').value = newCoords[1];
-            }
+            } catch (e) {}
+            updateAuthUI();
         }
 
         function updateAuthUI() {
             const authBtnText = document.getElementById('auth-btn-text');
             const authBtn = document.getElementById('auth-btn');
+            const createAdBtn = document.getElementById('create-ad-btn-container');
             const adminQuickBtn = document.getElementById('admin-quick-btn-container');
-            const createAdBtnContainer = document.getElementById('create-ad-btn-container');
 
             if (currentUser) {
                 if (authBtnText) authBtnText.innerText = currentUser.kunya || currentUser.username;
                 if (authBtn) authBtn.onclick = openProfileModal;
-                if (createAdBtnContainer) createAdBtnContainer.classList.remove('hidden');
+                if (createAdBtn) createAdBtn.classList.remove('hidden');
 
                 if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
                     if (adminQuickBtn) adminQuickBtn.classList.remove('hidden');
@@ -1398,194 +1205,159 @@
                     if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
                 }
             } else {
-                if (authBtnText) authBtnText.innerText = 'Войти';
+                if (authBtnText) authBtnText.innerText = getTranslation('btnSignIn');
                 if (authBtn) authBtn.onclick = openAuthModal;
-                if (createAdBtnContainer) createAdBtnContainer.classList.add('hidden');
+                if (createAdBtn) createAdBtn.classList.add('hidden');
                 if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
             }
+            renderCategoryPills();
+            renderAds();
         }
 
-        function handleLogoClick() {
-            logoClickCounter++;
-            clearTimeout(logoClickTimer);
-            logoClickTimer = setTimeout(() => { logoClickCounter = 0; }, 3000);
-            if (logoClickCounter >= 10) {
-                logoClickCounter = 0;
-                openModal('modal-secret-pin');
-            }
+        function logout() {
+            currentUser = null;
+            try {
+                localStorage.removeItem('bs_current_user');
+                sessionStorage.removeItem('bs_current_user');
+            } catch (e) {}
+            closeModal('modal-profile');
+            updateAuthUI();
+            showToast('Вы успешно вышли из аккаунта', 'info');
         }
 
-        function verifySecretPin() {
-            const pin = document.getElementById('secret-pin-input').value;
-            if (pin === SYSTEM_CONFIG.emergencyPin) {
-                closeModal('modal-secret-pin');
-                document.getElementById('secret-pin-input').value = '';
-                currentUser = {
-                    uid: 'emergency_admin',
-                    username: 'admin',
-                    kunya: 'Главный Администратор',
-                    gender: 'MALE',
-                    role: 'SUPERUSER',
-                    whatsapp: '+963933123456'
-                };
-                updateAuthUI();
-                openAdminPanel();
-                showToast('Вход выполнен через секретный PIN', 'warning');
+        function initFirebaseSync() {
+            const firebaseConfig = {
+                databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com"
+            };
+
+            if (!firebase.apps.length) {
+                firebaseApp = firebase.initializeApp(firebaseConfig);
             } else {
-                showToast('Неверный PIN-код!', 'error');
+                firebaseApp = firebase.app();
             }
-        }
 
-        function switchAuthTab(mode) {
-            authTabMode = mode;
-            const tabLogin = document.getElementById('tab-login');
-            const tabReg = document.getElementById('tab-register');
-            const regFields = document.getElementById('reg-fields');
-            const submitBtn = document.getElementById('auth-submit-btn');
+            firebaseDb = firebase.database();
+            const syncStatus = document.getElementById('cloud-sync-status');
+            if (syncStatus) syncStatus.classList.remove('hidden');
 
-            if (mode === 'login') {
-                if (tabLogin) tabLogin.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400';
-                if (tabReg) tabReg.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400';
-                if (regFields) regFields.classList.add('hidden');
-                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Войти в аккаунт</span>';
-            } else {
-                if (tabReg) tabReg.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400';
-                if (tabLogin) tabLogin.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400';
-                if (regFields) regFields.classList.remove('hidden');
-                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Зарегистрироваться</span>';
-            }
-        }
-
-        function handleAuthSubmit(e) {
-            e.preventDefault();
-            const un = document.getElementById('auth-username').value.trim().toLowerCase();
-            const pw = document.getElementById('auth-password').value.trim();
-            const rememberMe = document.getElementById('auth-remember-me')?.checked;
-            const fakeEmail = `${un}@barakasouq.local`;
-
-            const isSuperAdminUser = (un === 'admin' || un === 'administrator' || un === 'salim');
-
-            if (authTabMode === 'login') {
-                if (!auth) {
-                    currentUser = {
-                        uid: 'local_' + Date.now(),
-                        username: un,
-                        kunya: un,
-                        gender: 'MALE',
-                        role: isSuperAdminUser ? 'SUPERUSER' : 'USER',
-                        whatsapp: '+963933123456'
-                    };
-                    if (rememberMe) saveUserSession(currentUser);
-                    closeModal('modal-auth');
-                    updateAuthUI();
-                    renderCategoryPills();
-                    renderAds();
-                    showToast(`Добро пожаловать, ${currentUser.kunya}!`);
-                    return;
+            firebaseDb.ref('ads').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    ads = Object.keys(data).map(k => ({ ...data[k], id: k }));
                 }
+                if (syncStatus) syncStatus.classList.add('hidden');
+                renderAds();
+                renderCategoryPills();
+            }, (err) => {
+                console.warn('Firebase ads sync error:', err);
+                if (syncStatus) syncStatus.classList.add('hidden');
+            });
 
-                auth.signInWithEmailAndPassword(fakeEmail, pw)
-                    .then(() => {
-                        if (rememberMe && currentUser) saveUserSession(currentUser);
-                        closeModal('modal-auth');
-                        showToast(`Успешный вход в аккаунт!`);
-                    })
-                    .catch((err) => {
-                        console.warn('Firebase login attempt:', err);
-                        if (isSuperAdminUser) {
-                            currentUser = {
-                                uid: 'local_admin_' + Date.now(),
-                                username: un,
-                                kunya: 'Главный Администратор (Суперюзер)',
-                                gender: 'MALE',
-                                role: 'SUPERUSER',
-                                whatsapp: '+963933123456'
-                            };
-                            if (rememberMe) saveUserSession(currentUser);
-                            closeModal('modal-auth');
-                            updateAuthUI();
-                            renderCategoryPills();
-                            renderAds();
-                            showToast('Вход с правами Администратора', 'warning');
-                        } else {
-                            showToast('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'), 'error');
-                        }
-                    });
-            } else {
-                const kunya = document.getElementById('auth-kunya').value.trim() || un;
-                const whatsapp = document.getElementById('auth-whatsapp').value.trim();
-                const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
-                const role = isSuperAdminUser ? 'SUPERUSER' : 'USER';
-
-                if (!auth) {
-                    currentUser = { uid: 'local_' + Date.now(), username: un, kunya, whatsapp, gender, role };
-                    if (rememberMe) saveUserSession(currentUser);
-                    closeModal('modal-auth');
-                    updateAuthUI();
-                    renderCategoryPills();
-                    renderAds();
-                    showToast('Аккаунт успешно зарегистрирован!');
-                    return;
+            firebaseDb.ref('users').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    users = Object.keys(data).map(k => ({ ...data[k], uid: k }));
                 }
+            });
 
-                auth.createUserWithEmailAndPassword(fakeEmail, pw)
-                    .then((userCredential) => {
-                        const uid = userCredential.user.uid;
-                        const newUser = {
-                            uid,
-                            username: un,
-                            kunya,
-                            whatsapp,
-                            gender,
-                            role: role,
-                            verifiedShop: isSuperAdminUser,
-                            createdAt: new Date().toISOString()
-                        };
+            firebaseDb.ref('archivedUsers').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    archivedUsers = Object.keys(data).map(k => ({ ...data[k], uid: k }));
+                } else {
+                    archivedUsers = [];
+                }
+            });
 
-                        if (db) db.ref('users/' + uid).set(newUser);
-                        currentUser = newUser;
-                        if (rememberMe) saveUserSession(currentUser);
-                        closeModal('modal-auth');
-                        updateAuthUI();
-                        renderCategoryPills();
-                        renderAds();
-                        showToast('Регистрация прошла успешно!');
-                    })
-                    .catch((err) => {
-                        console.warn('Firebase Reg catch:', err);
-                        currentUser = { uid: 'local_' + Date.now(), username: un, kunya, whatsapp, gender, role };
-                        if (db) db.ref('users/' + currentUser.uid).set(currentUser);
-                        if (rememberMe) saveUserSession(currentUser);
-                        closeModal('modal-auth');
-                        updateAuthUI();
-                        renderCategoryPills();
-                        renderAds();
-                        showToast('Аккаунт создан в локальном режиме', 'warning');
-                    });
-            }
+            firebaseDb.ref('rates').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.SYP && data.TRY) {
+                    EXCHANGE_RATES.SYP = parseFloat(data.SYP);
+                    EXCHANGE_RATES.TRY = parseFloat(data.TRY);
+                    updateFooterRatesUI();
+                    renderAds();
+                }
+            });
         }
 
-        function getCategoryAdsCount(catId) {
-            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase();
-            const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
+        async function fetchLiveExchangeRates(manual = false) {
+            const spinEl = document.getElementById('footer-rate-spin');
+            if (spinEl) spinEl.classList.add('animate-spin');
 
-            return ads.filter(ad => {
-                if (ad.status !== 'ACTIVE') return false;
+            try {
+                const timestamp = Date.now();
+                const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${timestamp}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
 
-                if (ad.isWomenOnly) {
-                    if (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-                        return false;
+                let sypVal = null;
+                let tryVal = null;
+
+                if (data?.overview?.[0]?.data?.rates) {
+                    const usdRate = data.overview[0].data.rates.find(r => r.code === 'USD');
+                    if (usdRate) {
+                        const rawSyp = parseFloat(usdRate.sell || usdRate.buy);
+                        if (!isNaN(rawSyp)) sypVal = rawSyp > 1000 ? rawSyp / 100 : rawSyp;
                     }
                 }
 
-                if (catId === 'favorites') return favorites.includes(ad.id);
-                if (catId === 'women_only') return ad.isWomenOnly;
+                if (data?.global_fx) {
+                    const tryPair = data.global_fx.find(g => g.pair === 'USD/TRY');
+                    if (tryPair) {
+                        const rawTry = parseFloat(tryPair.rate);
+                        if (!isNaN(rawTry)) tryVal = rawTry;
+                    }
+                }
+
+                if (!sypVal) sypVal = 131.70;
+                if (!tryVal) tryVal = 47.74;
+
+                EXCHANGE_RATES.SYP = parseFloat(sypVal.toFixed(2));
+                EXCHANGE_RATES.TRY = parseFloat(tryVal.toFixed(2));
+
+                try {
+                    localStorage.setItem('bs_exchange_rates', JSON.stringify(EXCHANGE_RATES));
+                } catch (e) {}
+
+                if (firebaseDb) {
+                    firebaseDb.ref('rates').set(EXCHANGE_RATES);
+                }
+
+                updateFooterRatesUI();
+                renderAds();
+
+                if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success');
+            } catch (err) {
+                console.warn('Error fetching live rates:', err);
+                if (manual) showToast('Ошибка получения данных с сервера прокси', 'error');
+            } finally {
+                if (spinEl) spinEl.classList.remove('animate-spin');
+            }
+        }
+
+        function updateFooterRatesUI() {
+            const el = document.getElementById('footer-rates-container');
+            if (!el) return;
+            const sypStr = Number(EXCHANGE_RATES.SYP || 131.70).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            const tryStr = Number(EXCHANGE_RATES.TRY || 47.74).toString();
+            const resetTxt = getTranslation('resetCache');
+
+            el.innerHTML = `
+                <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
+                <span class="text-[11px] font-mono">$1 USD = <strong class="text-white">${sypStr} SYP</strong> = <strong class="text-white">${tryStr} TRY</strong></span>
+                <button onclick="fetchLiveExchangeRates(true)" title="${resetTxt}" class="ml-1 px-1.5 py-0.5 rounded bg-white/10 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 transition-all active:scale-95 flex items-center gap-1">
+                    <i id="footer-rate-spin" class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                    <span class="text-[9px] font-bold">${resetTxt}</span>
+                </button>
+            `;
+        }
+
+        function getCategoryAdsCount(catId) {
+            return ads.filter(ad => {
+                if (ad.status !== 'ACTIVE') return false;
+                if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN'))) return false;
                 if (catId === 'free') return ad.isFree || ad.price === 0;
-                if (catId === 'all') return true;
-
-                if (selectedRegion !== 'ALL' && ad.region !== selectedRegion) return false;
-                if (searchQuery && !ad.title.toLowerCase().includes(searchQuery) && !ad.city.toLowerCase().includes(searchQuery)) return false;
-
+                if (catId === 'women_only') return ad.isWomenOnly;
                 return ad.category === catId;
             }).length;
         }
@@ -1595,23 +1367,27 @@
             if (!container) return;
 
             let pills = [
-                { id: 'all', icon: 'fa-border-all', name: 'Все товары' },
-                { id: 'favorites', icon: 'fa-star text-amber-400', name: 'Избранное', badge: favorites.length > 0 ? favorites.length : null }
+                { id: 'all', icon: 'fa-border-all', name: getTranslation('catAll') },
+                { id: 'favorites', icon: 'fa-star text-amber-400', name: getTranslation('catFavorites'), badge: favorites.length > 0 ? favorites.length : null }
             ];
 
             if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                pills.push({ id: 'women_only', icon: 'fa-user-large-slash text-pink-400', name: 'Только для женщин 🌸' });
+                pills.push({ id: 'women_only', icon: 'fa-user-large-slash text-pink-400', name: getTranslation('catWomenOnly') });
             }
 
-            pills.push({ id: 'free', icon: 'fa-gift text-emerald-400', name: 'Даром (Бесплатно) 🎁' });
+            pills.push({ id: 'free', icon: 'fa-gift text-emerald-400', name: getTranslation('catFree') });
 
-            pills = pills.concat(customCategories.map(c => ({
-                id: c.id,
-                icon: c.icon || 'fa-tag',
-                name: c.name
-            })));
+            pills = pills.concat(customCategories.map(c => {
+                let catNameKey = 'cat' + c.id.charAt(0).toUpperCase() + c.id.slice(1);
+                let translatedName = TRANSLATIONS[CURRENT_LANG]?.[catNameKey] || c.name;
+                return {
+                    id: c.id,
+                    icon: c.icon || 'fa-tag',
+                    name: translatedName
+                };
+            }));
 
-            pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: 'Каталог магазинов 🏪' });
+            pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: getTranslation('catShopsDir') });
 
             container.innerHTML = pills.map(c => {
                 const count = (c.id === 'shops_dir' || c.id === 'favorites') ? c.badge : getCategoryAdsCount(c.id);
@@ -1630,63 +1406,13 @@
                 return;
             }
             selectedCategory = catId;
+            currentPage = 1;
             renderCategoryPills();
-            resetPageAndRender();
-        }
-
-        function handleImageCompressUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('Файл слишком большой. Выберите изображение до 10 МБ.', 'error');
-                event.target.value = '';
-                return;
-            }
-
-            const statusEl = document.getElementById('image-compress-status');
-            const previewBox = document.getElementById('image-preview-box');
-            const previewImg = document.getElementById('image-preview-img');
-            const hiddenData = document.getElementById('ad-image-data');
-
-            if (statusEl) statusEl.innerText = 'Сжатие и подгонка размера...';
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const TARGET_WIDTH = 800;
-                    const TARGET_HEIGHT = 533;
-
-                    canvas.width = TARGET_WIDTH;
-                    canvas.height = TARGET_HEIGHT;
-                    const ctx = canvas.getContext('2d');
-
-                    const scale = Math.max(TARGET_WIDTH / img.width, TARGET_HEIGHT / img.height);
-                    const x = (TARGET_WIDTH - img.width * scale) / 2;
-                    const y = (TARGET_HEIGHT - img.height * scale) / 2;
-
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
-                    hiddenData.value = compressedBase64;
-                    previewImg.src = compressedBase64;
-                    previewBox.classList.remove('hidden');
-
-                    const origSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                    const compSizeKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
-                    if (statusEl) statusEl.innerText = `Подгнано (800x533): ${origSizeMB} МБ ➔ ${compSizeKB} КБ`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            renderAds();
         }
 
         function convertPriceAll(amount, fromCurr, isFree) {
-            if (isFree || amount === 0) return '<span class="text-emerald-400 font-bold">🎁 ДАРОМ (Бесплатно)</span>';
+            if (isFree || amount === 0) return `<span class="text-emerald-400 font-bold">${getTranslation('freeTag')}</span>`;
 
             let priceInUSD = amount;
             if (fromCurr === 'SYP') priceInUSD = amount / EXCHANGE_RATES.SYP;
@@ -1699,57 +1425,12 @@
             return `${usd} <span class="text-slate-400 text-[10px]">/ ${syp} / ${tryVal}</span>`;
         }
 
-        function toggleFreeAdPrice(isFreeChecked) {
-            const priceContainer = document.getElementById('price-container');
-            const priceInput = document.getElementById('ad-price');
-            if (isFreeChecked) {
-                if (priceContainer) priceContainer.classList.add('opacity-40', 'pointer-events-none');
-                if (priceInput) {
-                    priceInput.value = '0';
-                    priceInput.removeAttribute('required');
-                }
-            } else {
-                if (priceContainer) priceContainer.classList.remove('opacity-40', 'pointer-events-none');
-                if (priceInput) priceInput.setAttribute('required', 'true');
-            }
-        }
-
-        function syncMobileSearch(val) {
-            const desktopInput = document.getElementById('search-input');
-            if (desktopInput) desktopInput.value = val;
-            resetPageAndRender();
-        }
-
-        function syncMobileRegion(val) {
-            const desktopRegion = document.getElementById('region-filter');
-            if (desktopRegion) desktopRegion.value = val;
-            resetPageAndRender();
-        }
-
-        function resetPageAndRender() {
-            currentPage = 1;
-            renderAds();
-        }
-
-        function toggleFavorite(adId, event) {
-            if (event) event.stopPropagation();
-            const idx = favorites.indexOf(adId);
-            if (idx === -1) {
-                favorites.push(adId);
-            } else {
-                favorites.splice(idx, 1);
-            }
-            localStorage.setItem('bs_favorites', JSON.stringify(favorites));
-            renderCategoryPills();
-            renderAds();
-        }
-
         function renderAds() {
             const grid = document.getElementById('listings-view');
             const paginationContainer = document.getElementById('pagination-container');
             if (!grid) return;
 
-            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const searchQuery = (document.getElementById('search-input')?.value || document.getElementById('search-input-mobile')?.value || '').toLowerCase();
             const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
 
             const filtered = ads.filter(ad => {
@@ -1781,7 +1462,7 @@
                 grid.innerHTML = `
                     <div class="col-span-full py-16 text-center text-slate-500">
                         <i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>
-                        Объявлений по данному запросу не найдено
+                        ${getTranslation('noAdsFound')}
                     </div>
                 `;
                 if (paginationContainer) paginationContainer.innerHTML = '';
@@ -1811,16 +1492,16 @@
                             <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end">
                                 ${ad.isWomenOnly ? `
                                     <span class="bg-pink-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
-                                        <i class="fa-solid fa-user-large-slash"></i> Для женщин
+                                        <i class="fa-solid fa-user-large-slash"></i> ${getTranslation('womenTag')}
                                     </span>
                                 ` : ''}
                                 ${ad.isFree ? `
                                     <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow">
-                                        🎁 ДАРОМ
+                                        ${getTranslation('freeTag')}
                                     </span>
                                 ` : isVerified ? `
                                     <span class="bg-purple-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow">
-                                        <i class="fa-solid fa-circle-check"></i> Магазин
+                                        <i class="fa-solid fa-circle-check"></i> ${getTranslation('shopTag')}
                                     </span>
                                 ` : ''}
                             </div>
@@ -1836,7 +1517,7 @@
                                 <div class="text-xs font-bold">${converted}</div>
                                 <div class="flex items-center justify-between text-[10px] text-slate-400">
                                     <span>${ad.sellerKunya || ad.sellerUsername}</span>
-                                    <span class="text-amber-400 font-bold">${queueCount > 0 ? `🔥 В очереди: ${queueCount}` : 'Будьте первым'}</span>
+                                    <span class="text-amber-400 font-bold">${queueCount > 0 ? getTranslation('inQueue', { count: queueCount }) : getTranslation('beFirstQueue')}</span>
                                 </div>
                             </div>
                         </div>
@@ -1845,580 +1526,234 @@
             }).join('');
 
             if (paginationContainer) {
+                const pageText = getTranslation('pageLabel', { current: currentPage, total: totalPages });
                 paginationContainer.innerHTML = `
-                    <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">« Первая</button>
-                    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">< Назад</button>
-                    <span class="px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 font-extrabold">Страница ${currentPage} из ${totalPages}</span>
-                    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">Вперед ></button>
-                    <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">Последняя »</button>
+                    <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">${getTranslation('btnFirstPage')}</button>
+                    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">${getTranslation('btnPrevPage')}</button>
+                    <span class="px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 font-extrabold">${pageText}</span>
+                    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">${getTranslation('btnNextPage')}</button>
+                    <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">${getTranslation('btnLastPage')}</button>
                 `;
             }
         }
 
-        function changePage(page) {
-            currentPage = page;
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+        }
+
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderAds();
+        }
+
+        function syncMobileSearch(val) {
+            const desktopInput = document.getElementById('search-input');
+            if (desktopInput) desktopInput.value = val;
+            resetPageAndRender();
+        }
+
+        function syncMobileRegion(val) {
+            const desktopFilter = document.getElementById('region-filter');
+            if (desktopFilter) desktopFilter.value = val;
+            resetPageAndRender();
+        }
+
+        function changePage(p) {
+            currentPage = p;
             renderAds();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function handleCreateAdSubmit(e) {
-            e.preventDefault();
-            if (!currentUser) return openAuthModal();
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-amber-300';
+            }
+            updateLanguageUI();
+        }
 
-            const title = document.getElementById('ad-title').value.trim();
-            const category = document.getElementById('ad-category').value;
-            const region = document.getElementById('ad-region').value;
-            const city = document.getElementById('ad-city').value.trim();
-            const isFree = document.getElementById('ad-is-free').checked;
-            const price = isFree ? 0 : parseFloat(document.getElementById('ad-price').value || 0);
-            const currency = document.getElementById('ad-currency').value;
-            const condition = document.getElementById('ad-condition').value;
-            const pickupType = document.getElementById('ad-pickup').value;
-            const desc = document.getElementById('ad-desc').value.trim();
-            const image = document.getElementById('ad-image-data').value || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&auto=format&fit=crop&q=80';
-            const lat = parseFloat(document.getElementById('ad-lat').value) || 33.5138;
-            const lng = parseFloat(document.getElementById('ad-lng').value) || 36.2765;
-            const isWomenOnly = (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')
-                ? document.getElementById('ad-is-women-only').checked
-                : false;
-
-            const newAdId = `${region}-${Math.floor(10000 + Math.random() * 90000)}`;
-
-            const newAd = {
-                id: newAdId,
-                title, category, region, city, price, currency, isFree, isWomenOnly,
-                condition, pickupType, desc, image, lat, lng,
-                sellerUsername: currentUser.username,
-                sellerKunya: currentUser.kunya || currentUser.username,
-                sellerGender: currentUser.gender || 'MALE',
-                whatsapp: currentUser.whatsapp || '+963933123456',
-                status: 'ACTIVE',
-                queue: [],
-                createdAt: new Date().toISOString()
-            };
-
-            if (db) {
-                db.ref('ads/' + newAdId).set(newAd);
+        function changeLanguage(lang) {
+            CURRENT_LANG = lang;
+            if (lang === 'AR') {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.documentElement.setAttribute('lang', 'ar');
+            } else if (lang === 'TR') {
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', 'tr');
             } else {
-                ads.push(newAd);
-                renderAds();
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', 'ru');
             }
 
-            closeModal('modal-create-ad');
+            updateLanguageUI();
             renderCategoryPills();
-            showToast('Объявление успешно опубликовано!');
+            renderAds();
+            updateFooterRatesUI();
         }
 
-        function openAdDetail(id) {
-            closeModal('modal-shops-directory');
-            closeModal('modal-seller-store');
+        function updateLanguageUI() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (key) el.innerText = getTranslation(key);
+            });
 
-            const ad = ads.find(a => a.id === id);
-            if (!ad) return;
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (key) el.setAttribute('placeholder', getTranslation(key));
+            });
 
-            const content = document.getElementById('detail-content');
-            const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
+            const langSelect = document.getElementById('lang-select');
+            if (langSelect) langSelect.value = CURRENT_LANG;
 
-            if (!ad.queue) ad.queue = [];
-            const userQueueIndex = currentUser ? ad.queue.indexOf(currentUser.username) : -1;
-            const isUserInQueue = userQueueIndex !== -1;
-
-            const queueText = isUserInQueue 
-                ? `Вы №${userQueueIndex + 1} в очереди` 
-                : ad.queue.length > 0 
-                    ? `В очереди предложений: ${ad.queue.length} чел.` 
-                    : `Очередь свободна`;
-
-            const waQueueMsg = isUserInQueue 
-                ? `أنا رقم ${userQueueIndex + 1} في الانتظار (Я №${userQueueIndex + 1} в очереди).` 
-                : `أود الحجز كمهتم جديد (Хочу занять очередь).`;
-
-            const waMsg = encodeURIComponent(`السلام عليكم، أود الاستفسار عن إعلانك (${ad.id}): ${ad.title}. ${waQueueMsg}`);
-            const waUrl = `https://wa.me/${ad.whatsapp.replace(/[^0-9]/g, '')}?text=${waMsg}`;
-
-            content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div class="space-y-3">
-                        <div class="rounded-2xl overflow-hidden bg-slate-900 border border-white/10 h-56 relative">
-                            <img src="${ad.image}" class="w-full h-full object-cover">
-                            ${ad.isWomenOnly ? '<div class="absolute top-3 left-3 bg-pink-600 text-white font-bold px-2.5 py-1 rounded-lg">🌸 Только для женщин</div>' : ''}
-                        </div>
-
-                        <div>
-                            <div class="text-slate-400 mb-1 flex items-center justify-between">
-                                <span><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> Геолокация продавца:</span>
-                                <span class="font-mono text-[10px] text-slate-500">${(ad.lat || 33.5138).toFixed(4)}, ${(ad.lng || 36.2765).toFixed(4)}</span>
-                            </div>
-                            <div id="detail-map" class="h-36 rounded-2xl border border-white/10 overflow-hidden"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col justify-between space-y-3">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="bg-amber-500/20 text-amber-300 font-mono text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-bold">${ad.id}</span>
-                                <span class="text-slate-400">${ad.city}</span>
-                            </div>
-
-                            <h2 class="text-base font-extrabold text-white mb-2 leading-snug">${ad.title}</h2>
-                            <div class="text-sm font-bold mb-3">${converted}</div>
-
-                            ${(currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) ? `
-                                <button onclick="closeModal('modal-ad-detail'); openEditAdModal('${ad.id}');" class="w-full mb-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all">
-                                    <i class="fa-solid fa-pen-to-square"></i> Редактировать объявление ${currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' ? '(Права Админа)' : ''}
-                                </button>
-                            ` : ''}
-
-                            <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-3 space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-bold text-amber-300"><i class="fa-solid fa-users mr-1"></i> Очередь покупателей:</span>
-                                    <span class="font-bold text-white bg-amber-500/30 px-2 py-0.5 rounded-lg">${queueText}</span>
-                                </div>
-                                <button onclick="toggleQueue('${ad.id}')" class="w-full py-2 rounded-xl ${isUserInQueue ? 'bg-rose-600 hover:bg-rose-500' : 'bg-amber-500 hover:bg-amber-400 text-slate-950'} font-extrabold transition-all">
-                                    ${isUserInQueue ? 'Выйти из очереди' : 'Хочу этот товар! (Занять очередь)'}
-                                </button>
-                            </div>
-
-                            <div class="bg-white/5 p-3 rounded-2xl border border-white/5 space-y-1">
-                                <div class="font-bold text-amber-300">Описание и изъяны:</div>
-                                <p class="text-slate-300 leading-relaxed max-h-24 overflow-y-auto">${ad.desc}</p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2 pt-2 border-t border-white/10">
-                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px]">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-hand-holding-heart text-amber-400 text-sm"></i>
-                                    <div>
-                                        <div class="font-bold text-amber-300">Поддержка BarakaSouq</div>
-                                        <div class="text-[10px] text-slate-400">ShamCash: SHAM-9842-1049-2281</div>
-                                    </div>
-                                </div>
-                                <button onclick="openModal('modal-donate')" class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500/30 text-[10px]">Инфо</button>
-                            </div>
-
-                            <div onclick="openSellerStore('${ad.sellerUsername}')" class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer border border-white/5">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-lg bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center">
-                                        ${(ad.sellerKunya || ad.sellerUsername)[0]}
-                                    </div>
-                                    <div>
-                                        <div class="font-bold text-white">${ad.sellerKunya || ad.sellerUsername}</div>
-                                        <div class="text-[10px] text-purple-300">Открыть все товары продавца</div>
-                                    </div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
-                            </div>
-
-                            <a href="${waUrl}" target="_blank" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold flex items-center justify-center gap-2 transition-all shadow-md">
-                                <i class="fa-brands fa-whatsapp text-base"></i> Связаться с продавцом (авто-номер очереди)
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            openModal('modal-ad-detail');
-            initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765, ad.title);
+            const isLight = document.body.classList.contains('light-mode');
+            const themeText = document.getElementById('theme-text');
+            if (themeText) {
+                themeText.innerText = isLight 
+                    ? (CURRENT_LANG === 'AR' ? 'المظهر الفاتح' : CURRENT_LANG === 'TR' ? 'Aydınlık Tema' : 'Светлая тема')
+                    : (CURRENT_LANG === 'AR' ? 'المظهر الداكن' : CURRENT_LANG === 'TR' ? 'Karanlık Tema' : 'Тёмная тема');
+            }
         }
 
-        function toggleQueue(adId) {
-            if (!currentUser) return openAuthModal();
+        function acceptLaunchRules() {
+            SYSTEM_CONFIG.rulesAccepted = true;
+            try { localStorage.setItem('bs_rules_accepted', 'true'); } catch (e) {}
+            closeModal('modal-rules-agreement');
+            showToast('Условия приняты. Добро пожаловать!', 'success');
+        }
 
-            const ad = ads.find(a => a.id === adId);
-            if (!ad) return;
+        function openAuthModal() {
+            openModal('modal-auth');
+        }
 
-            if (!ad.queue) ad.queue = [];
-            const idx = ad.queue.indexOf(currentUser.username);
+        function switchAuthTab(tab) {
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const regFields = document.getElementById('reg-fields');
+            const submitBtn = document.getElementById('auth-submit-btn');
 
-            if (idx === -1) {
-                ad.queue.push(currentUser.username);
+            if (tab === 'login') {
+                tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
+                tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
+                regFields.classList.add('hidden');
+                submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>Войти в аккаунт</span>`;
             } else {
-                ad.queue.splice(idx, 1);
-            }
-
-            if (db) {
-                db.ref('ads/' + adId + '/queue').set(ad.queue);
-            }
-            openAdDetail(adId);
-        }
-
-        function initDetailMap(lat, lng, title) {
-            setTimeout(() => {
-                if (detailMapInstance) {
-                    detailMapInstance.remove();
-                    detailMapInstance = null;
-                }
-                try {
-                    detailMapInstance = L.map('detail-map').setView([lat, lng], 12);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap'
-                    }).addTo(detailMapInstance);
-                    L.marker([lat, lng]).addTo(detailMapInstance).bindPopup(title);
-                } catch (err) {
-                    console.warn('Detail map init:', err);
-                }
-            }, 300);
-        }
-
-        function openEditAdModal(adId) {
-            const ad = ads.find(a => a.id === adId);
-            if (!ad) return;
-
-            const canEdit = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
-            if (!canEdit) {
-                showToast('У вас нет прав для редактирования этого объявления', 'error');
-                return;
-            }
-
-            populateEditCategoryDropdown();
-
-            document.getElementById('edit-ad-id').value = ad.id;
-            document.getElementById('edit-ad-title').value = ad.title;
-            document.getElementById('edit-ad-category').value = ad.category;
-            document.getElementById('edit-ad-region').value = ad.region || 'DAM';
-            document.getElementById('edit-ad-city').value = ad.city;
-            
-            const isFreeChk = document.getElementById('edit-ad-is-free');
-            isFreeChk.checked = !!ad.isFree;
-            toggleEditFreeAdPrice(ad.isFree);
-
-            document.getElementById('edit-ad-price').value = ad.price || '';
-            document.getElementById('edit-ad-currency').value = ad.currency || 'USD';
-            document.getElementById('edit-ad-condition').value = ad.condition || 'EXCELLENT';
-            document.getElementById('edit-ad-pickup').value = ad.pickupType || 'AGREEMENT';
-            document.getElementById('edit-ad-desc').value = ad.desc || '';
-            document.getElementById('edit-ad-image-data').value = ad.image;
-            document.getElementById('edit-image-preview-img').src = ad.image;
-
-            const womenContainer = document.getElementById('edit-women-only-container');
-            const womenChk = document.getElementById('edit-ad-is-women-only');
-            if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-                womenContainer.classList.remove('hidden');
-                womenChk.checked = !!ad.isWomenOnly;
-            } else {
-                womenContainer.classList.add('hidden');
-                womenChk.checked = false;
-            }
-
-            const initialLat = ad.lat || 33.5138;
-            const initialLng = ad.lng || 36.2765;
-            document.getElementById('edit-ad-lat').value = initialLat;
-            document.getElementById('edit-ad-lng').value = initialLng;
-
-            openModal('modal-edit-ad');
-            initEditMap(initialLat, initialLng);
-        }
-
-        function populateEditCategoryDropdown() {
-            const select = document.getElementById('edit-ad-category');
-            if (!select) return;
-            select.innerHTML = customCategories.map(c => `<option value="${c.id}" class="bg-slate-900">${c.name}</option>`).join('');
-        }
-
-        function toggleEditFreeAdPrice(isFreeChecked) {
-            const priceContainer = document.getElementById('edit-price-container');
-            const priceInput = document.getElementById('edit-ad-price');
-            if (isFreeChecked) {
-                if (priceContainer) priceContainer.classList.add('opacity-40', 'pointer-events-none');
-                if (priceInput) {
-                    priceInput.value = '0';
-                    priceInput.removeAttribute('required');
-                }
-            } else {
-                if (priceContainer) priceContainer.classList.remove('opacity-40', 'pointer-events-none');
-                if (priceInput) priceInput.setAttribute('required', 'true');
+                tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
+                tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
+                regFields.classList.remove('hidden');
+                submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> <span>Зарегистрироваться</span>`;
             }
         }
 
-        function initEditMap(lat, lng) {
-            setTimeout(() => {
-                if (editMapInstance) {
-                    editMapInstance.remove();
-                    editMapInstance = null;
-                }
-
-                try {
-                    editMapInstance = L.map('edit-map').setView([lat, lng], 11);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap'
-                    }).addTo(editMapInstance);
-
-                    editMapMarker = L.marker([lat, lng], { draggable: true }).addTo(editMapInstance);
-
-                    editMapInstance.on('click', function(e) {
-                        editMapMarker.setLatLng(e.latlng);
-                        document.getElementById('edit-ad-lat').value = e.latlng.lat;
-                        document.getElementById('edit-ad-lng').value = e.latlng.lng;
-                        reverseGeocode(e.latlng.lat, e.latlng.lng, 'edit-ad-city');
-                    });
-
-                    editMapMarker.on('dragend', function(e) {
-                        const pos = editMapMarker.getLatLng();
-                        document.getElementById('edit-ad-lat').value = pos.lat;
-                        document.getElementById('edit-ad-lng').value = pos.lng;
-                        reverseGeocode(pos.lat, pos.lng, 'edit-ad-city');
-                    });
-                } catch (err) {
-                    console.warn('Edit map init:', err);
-                }
-            }, 300);
-        }
-
-        function handleRegionChangeEdit(val) {
-            if (editMapInstance && editMapMarker) {
-                const newCoords = REGION_COORDS[val] || REGION_COORDS['DAM'];
-                editMapInstance.setView(newCoords, 9);
-                editMapMarker.setLatLng(newCoords);
-                document.getElementById('edit-ad-lat').value = newCoords[0];
-                document.getElementById('edit-ad-lng').value = newCoords[1];
-            }
-        }
-
-        function handleEditImageCompressUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('Файл слишком большой. Выберите изображение до 10 МБ.', 'error');
-                event.target.value = '';
-                return;
-            }
-
-            const statusEl = document.getElementById('edit-image-compress-status');
-            const previewImg = document.getElementById('edit-image-preview-img');
-            const hiddenData = document.getElementById('edit-ad-image-data');
-
-            if (statusEl) statusEl.innerText = 'Сжатие и подгонка размера...';
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const TARGET_WIDTH = 800;
-                    const TARGET_HEIGHT = 533;
-
-                    canvas.width = TARGET_WIDTH;
-                    canvas.height = TARGET_HEIGHT;
-                    const ctx = canvas.getContext('2d');
-
-                    const scale = Math.max(TARGET_WIDTH / img.width, TARGET_HEIGHT / img.height);
-                    const x = (TARGET_WIDTH - img.width * scale) / 2;
-                    const y = (TARGET_HEIGHT - img.height * scale) / 2;
-
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
-                    hiddenData.value = compressedBase64;
-                    previewImg.src = compressedBase64;
-
-                    const compSizeKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
-                    if (statusEl) statusEl.innerText = `Подгнано (800x533): ${compSizeKB} КБ`;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleEditAdSubmit(e) {
+        function handleAuthSubmit(e) {
             e.preventDefault();
-            const adId = document.getElementById('edit-ad-id').value;
-            const ad = ads.find(a => a.id === adId);
+            const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const remember = document.getElementById('auth-remember-me').checked;
 
-            if (!ad) return;
+            if (isReg) {
+                const kunya = document.getElementById('auth-kunya').value.trim() || username;
+                const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+                const whatsapp = document.getElementById('auth-whatsapp').value.trim();
 
-            const isFree = document.getElementById('edit-ad-is-free').checked;
-            const isWomenOnlyChk = document.getElementById('edit-ad-is-women-only');
+                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                    showToast('Пользователь с таким логином уже существует!', 'error');
+                    return;
+                }
 
-            ad.title = document.getElementById('edit-ad-title').value.trim();
-            ad.category = document.getElementById('edit-ad-category').value;
-            ad.region = document.getElementById('edit-ad-region').value;
-            ad.city = document.getElementById('edit-ad-city').value.trim();
-            ad.isFree = isFree;
-            ad.price = isFree ? 0 : parseFloat(document.getElementById('edit-ad-price').value || 0);
-            ad.currency = document.getElementById('edit-ad-currency').value;
-            ad.condition = document.getElementById('edit-ad-condition').value;
-            ad.pickupType = document.getElementById('edit-ad-pickup').value;
-            ad.desc = document.getElementById('edit-ad-desc').value.trim();
-            ad.image = document.getElementById('edit-ad-image-data').value || ad.image;
-            ad.lat = parseFloat(document.getElementById('edit-ad-lat').value);
-            ad.lng = parseFloat(document.getElementById('edit-ad-lng').value);
+                const uid = 'u_' + Date.now();
+                const newUser = {
+                    uid,
+                    username,
+                    passwordHash: password,
+                    kunya,
+                    gender,
+                    whatsapp,
+                    role: username.toLowerCase() === 'admin' ? 'SUPERUSER' : 'USER',
+                    verifiedShop: false
+                };
 
-            if (isWomenOnlyChk && !document.getElementById('edit-women-only-container').classList.contains('hidden')) {
-                ad.isWomenOnly = isWomenOnlyChk.checked;
-            }
-
-            if (db) {
-                db.ref('ads/' + adId).set(ad).then(() => {
-                    closeModal('modal-edit-ad');
-                    showToast('Изменения сохранены!');
-                });
+                users.push(newUser);
+                if (firebaseDb) {
+                    firebaseDb.ref(`users/${uid}`).set(newUser);
+                }
+                saveUserSession(newUser, remember);
+                closeModal('modal-auth');
+                showToast('Регистрация успешна!', 'success');
             } else {
-                renderAds();
-                closeModal('modal-edit-ad');
-                showToast('Изменения сохранены локально!');
+                const found = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.passwordHash === password);
+                if (found) {
+                    saveUserSession(found, remember);
+                    closeModal('modal-auth');
+                    showToast(`С возвращением, ${found.kunya || found.username}!`, 'success');
+                } else {
+                    showToast('Неверный логин или пароль!', 'error');
+                }
             }
         }
-
-        let profileTabMode = 'my_ads';
 
         function openProfileModal() {
-            if (!currentUser) return openAuthModal();
-            profileTabMode = 'my_ads';
-            renderProfileContent();
-            openModal('modal-profile');
-        }
-
-        function switchProfileTab(mode) {
-            profileTabMode = mode;
-            renderProfileContent();
-        }
-
-        function renderProfileContent() {
+            if (!currentUser) return;
             const content = document.getElementById('profile-content');
             if (!content) return;
 
-            const myAds = ads.filter(a => a.sellerUsername === currentUser.username && a.status === 'ACTIVE');
-            const myQueuedAds = ads.filter(a => a.queue && a.queue.includes(currentUser.username) && a.status === 'ACTIVE');
-            const myFavAds = ads.filter(a => favorites.includes(a.id) && a.status === 'ACTIVE');
-
             content.innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl bg-blue-600/30 text-blue-400 flex items-center justify-center text-xl font-bold">
-                                ${(currentUser.kunya || currentUser.username)[0]}
-                            </div>
-                            <div>
-                                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                    ${currentUser.kunya || currentUser.username}
-                                    ${currentUser.verifiedShop ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">Магазин</span>' : ''}
-                                </h3>
-                                <p class="text-xs text-slate-400">@${currentUser.username} • ${currentUser.whatsapp || 'WhatsApp не указан'}</p>
-                            </div>
+                <div class="text-center space-y-3">
+                    <div class="w-16 h-16 rounded-3xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl mx-auto border border-blue-500/30">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">${currentUser.kunya || currentUser.username}</h3>
+                        <p class="text-xs text-slate-400">@${currentUser.username} • <span class="text-amber-400 font-bold">${currentUser.role}</span></p>
+                    </div>
+
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">WhatsApp:</span>
+                            <span class="font-bold text-emerald-400">${currentUser.whatsapp || 'Не указан'}</span>
                         </div>
-                        <button onclick="logout()" class="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-bold transition-all">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Пол:</span>
+                            <span class="font-bold">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 py-2.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 transition-all">
+                            <i class="fa-solid fa-pen-to-square"></i> Изменить анкету
+                        </button>
+                        <button onclick="logout()" class="py-2.5 px-4 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 transition-all">
                             Выйти
                         </button>
                     </div>
-
-                    <div class="flex gap-2 text-xs">
-                        <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 font-semibold border border-white/10 transition-all flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-user-pen"></i> Редактировать анкету
-                        </button>
-                    </div>
-
-                    <div class="flex border-b border-white/10 text-xs">
-                        <button onclick="switchProfileTab('my_ads')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_ads' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
-                            Мои (${myAds.length})
-                        </button>
-                        <button onclick="switchProfileTab('my_queue')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_queue' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
-                            🔥 Очередь (${myQueuedAds.length})
-                        </button>
-                        <button onclick="switchProfileTab('my_favs')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_favs' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
-                            ⭐ Избранное (${myFavAds.length})
-                        </button>
-                    </div>
-
-                    <div class="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs">
-                        ${profileTabMode === 'my_ads' ? (
-                            myAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">У вас пока нет активных объявлений</div>' : myAds.map(ad => `
-                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-white truncate">${ad.title}</div>
-                                        <div class="text-[10px] text-emerald-400 font-mono">${ad.id} • ${ad.price} ${ad.currency}</div>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <button onclick="closeModal('modal-profile'); openEditAdModal('${ad.id}');" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-bold text-[11px] whitespace-nowrap">
-                                            <i class="fa-solid fa-pen"></i> Изменить
-                                        </button>
-                                        <button onclick="openDeleteReasonModal('${ad.id}')" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 font-bold text-[11px] whitespace-nowrap">
-                                            Снять
-                                        </button>
-                                    </div>
-                                </div>
-                            `).join('')
-                        ) : profileTabMode === 'my_queue' ? (
-                            myQueuedAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">Вы пока не занимали очередь ни на один товар</div>' : myQueuedAds.map(ad => {
-                                const qRank = ad.queue.indexOf(currentUser.username) + 1;
-                                return `
-                                    <div onclick="closeModal('modal-profile'); openAdDetail('${ad.id}');" class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/10">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="font-bold text-white truncate">${ad.title}</div>
-                                            <div class="text-[10px] text-amber-300 font-bold">Вы №${qRank} из ${ad.queue.length} в очереди</div>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-right text-slate-500"></i>
-                                    </div>
-                                `;
-                            }).join('')
-                        ) : (
-                            myFavAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">Список избранного пуст</div>' : myFavAds.map(ad => `
-                                <div onclick="closeModal('modal-profile'); openAdDetail('${ad.id}');" class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/10">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-white truncate">${ad.title}</div>
-                                        <div class="text-[10px] text-emerald-400 font-mono">${ad.price} ${ad.currency}</div>
-                                    </div>
-                                    <button onclick="toggleFavorite('${ad.id}', event); renderProfileContent();" class="text-amber-400 px-2 py-1">
-                                        <i class="fa-solid fa-star"></i>
-                                    </button>
-                                </div>
-                            `).join('')
-                        )}
-                    </div>
                 </div>
             `;
+            openModal('modal-profile');
         }
 
-        function openDeleteReasonModal(id) {
-            document.getElementById('delete-ad-id').value = id;
-            openModal('modal-delete-reason');
-        }
+        function openEditProfileModal(targetUsername) {
+            const user = users.find(u => u.username === targetUsername) || currentUser;
+            if (!user) return;
 
-        function confirmAdDeletion(reason) {
-            const id = document.getElementById('delete-ad-id').value;
-            const idx = ads.findIndex(a => a.id === id);
-            if (idx !== -1) {
-                const deletedAd = ads[idx];
-                deletedAd.status = 'DELETED';
-                deletedAd.deleteReason = reason;
-                deletedAd.archivedAt = new Date().toISOString();
-
-                if (db) {
-                    db.ref('ads/' + id).remove();
-                    db.ref('archivedAds/' + id).set(deletedAd);
-                } else {
-                    ads.splice(idx, 1);
-                    archivedAds.push(deletedAd);
-                    renderAds();
-                }
-
-                closeModal('modal-delete-reason');
-                closeModal('modal-profile');
-                showToast('Объявление перемещено в архив');
-                if (reason.includes('BarakaSouq')) {
-                    openModal('modal-donate');
-                }
-            }
-        }
-
-        function openEditProfileModal(username) {
-            const targetUser = users.find(u => u.username === username);
-            if (!targetUser) return;
-
-            document.getElementById('edit-profile-username').value = targetUser.username;
-            document.getElementById('edit-profile-login').value = targetUser.username;
+            document.getElementById('edit-profile-username').value = user.username;
+            document.getElementById('edit-profile-login').value = user.username;
             document.getElementById('edit-profile-password').value = '';
-            document.getElementById('edit-profile-kunya').value = targetUser.kunya || '';
-            document.getElementById('edit-profile-whatsapp').value = targetUser.whatsapp || '';
+            document.getElementById('edit-profile-kunya').value = user.kunya || '';
+            document.getElementById('edit-profile-whatsapp').value = user.whatsapp || '';
 
             const adminFields = document.getElementById('edit-profile-admin-fields');
             if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
                 adminFields.classList.remove('hidden');
-                document.getElementById('edit-profile-gender').value = targetUser.gender || 'MALE';
-                document.getElementById('edit-profile-role').value = targetUser.role || 'USER';
+                document.getElementById('edit-profile-gender').value = user.gender || 'MALE';
+                document.getElementById('edit-profile-role').value = user.role || 'USER';
             } else {
                 adminFields.classList.add('hidden');
             }
@@ -2428,597 +1763,307 @@
 
         function handleSaveProfile(e) {
             e.preventDefault();
-            const oldUsername = document.getElementById('edit-profile-username').value;
-            const newLogin = document.getElementById('edit-profile-login').value.trim().toLowerCase();
-            const newPassword = document.getElementById('edit-profile-password').value.trim();
-            const kunya = document.getElementById('edit-profile-kunya').value.trim();
-            const whatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
+            const originalUsername = document.getElementById('edit-profile-username').value;
+            const newLogin = document.getElementById('edit-profile-login').value.trim();
+            const newPassword = document.getElementById('edit-profile-password').value;
+            const newKunya = document.getElementById('edit-profile-kunya').value.trim();
+            const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
 
-            const u = users.find(x => x.username === oldUsername);
-            if (!u || !u.uid) return;
+            const userIndex = users.findIndex(u => u.username === originalUsername);
+            if (userIndex === -1) return;
 
-            // Check login collision if login changed
-            if (newLogin !== oldUsername && users.some(x => x.username === newLogin && x.uid !== u.uid)) {
-                showToast('Этот логин уже занят другим пользователем!', 'error');
+            if (newLogin !== originalUsername && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
+                showToast('Этот логин уже занят!', 'error');
                 return;
             }
 
+            const u = users[userIndex];
             u.username = newLogin;
-            u.kunya = kunya;
-            u.whatsapp = whatsapp;
+            if (newPassword) u.passwordHash = newPassword;
+            u.kunya = newKunya;
+            u.whatsapp = newWhatsapp;
 
             if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
                 u.gender = document.getElementById('edit-profile-gender').value;
                 u.role = document.getElementById('edit-profile-role').value;
             }
 
-            // If password changed and editing own user via auth
-            if (newPassword && auth && auth.currentUser && currentUser && currentUser.username === oldUsername) {
-                auth.currentUser.updatePassword(newPassword).catch(err => {
-                    console.warn('Firebase auth password update notice:', err);
-                });
+            if (firebaseDb && u.uid) {
+                firebaseDb.ref(`users/${u.uid}`).set(u);
             }
 
-            if (db) {
-                db.ref('users/' + u.uid).set(u).then(() => {
-                    showToast('Анкета и данные входа успешно сохранены!');
-                }).catch(err => {
-                    showToast('Ошибка при сохранении: ' + err.message, 'error');
-                });
-            } else {
-                showToast('Анкета обновлена!');
-            }
-
-            if (currentUser && currentUser.username === oldUsername) {
-                currentUser.username = newLogin;
-                currentUser.kunya = kunya;
-                currentUser.whatsapp = whatsapp;
-                if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-                    currentUser.gender = u.gender;
-                    currentUser.role = u.role;
-                }
-                saveUserSession(currentUser);
-                updateAuthUI();
+            if (currentUser && currentUser.username === originalUsername) {
+                currentUser = { ...u };
+                try {
+                    localStorage.setItem('bs_current_user', JSON.stringify(currentUser));
+                } catch (e) {}
             }
 
             closeModal('modal-edit-profile');
-            if (currentAdminTab === 'users') renderAdminTab('users');
-            if (document.getElementById('modal-profile') && !document.getElementById('modal-profile').classList.contains('hidden')) {
-                renderProfileContent();
-            }
+            closeModal('modal-profile');
+            updateAuthUI();
+            showToast('Профиль успешно обновлен!', 'success');
         }
 
-        function openAdminCreateUserModal() {
-            if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-                showToast('Доступ разрешен только администраторам!', 'error');
+        function adminArchiveUser(userUid, username) {
+            if (!confirm(`Отправить аккаунт "${username}" в архив?`)) return;
+
+            const targetUser = users.find(u => u.uid === userUid || u.username === username);
+            if (!targetUser) {
+                showToast('Пользователь не найден', 'error');
                 return;
             }
-            document.getElementById('admin-create-username').value = '';
-            document.getElementById('admin-create-password').value = '';
-            document.getElementById('admin-create-kunya').value = '';
-            document.getElementById('admin-create-whatsapp').value = '+963';
-            document.getElementById('admin-create-role').value = 'USER';
-            openModal('modal-admin-create-user');
+
+            if (currentUser && currentUser.username === targetUser.username) {
+                showToast('Вы не можете заархивировать самого себя!', 'warning');
+                return;
+            }
+
+            const uidKey = targetUser.uid || ('u_' + Date.now());
+
+            if (firebaseDb) {
+                firebaseDb.ref(`archivedUsers/${uidKey}`).set(targetUser).then(() => {
+                    return firebaseDb.ref(`users/${uidKey}`).remove();
+                }).then(() => {
+                    showToast(`Пользователь ${targetUser.username} успешно перенесен в архив`, 'success');
+                }).catch((err) => {
+                    showToast('Ошибка архивации в облаке: ' + err.message, 'error');
+                });
+            } else {
+                archivedUsers.push(targetUser);
+                users = users.filter(u => u.username !== targetUser.username);
+                showToast(`Пользователь ${targetUser.username} заархивирован локально`, 'success');
+            }
+
+            renderAdminTabContent();
+        }
+
+        function restoreUser(uid) {
+            const target = archivedUsers.find(u => u.uid === uid);
+            if (!target) return;
+
+            if (firebaseDb) {
+                firebaseDb.ref(`users/${uid}`).set(target).then(() => {
+                    return firebaseDb.ref(`archivedUsers/${uid}`).remove();
+                }).then(() => {
+                    showToast('Пользователь восстановлен!', 'success');
+                });
+            } else {
+                users.push(target);
+                archivedUsers = archivedUsers.filter(u => u.uid !== uid);
+                showToast('Пользователь восстановлен локально', 'success');
+            }
+            renderAdminTabContent();
+        }
+
+        function permanentlyDeleteUser(uid) {
+            if (!confirm('Удалить пользователя навсегда без возможности восстановления?')) return;
+
+            if (firebaseDb) {
+                firebaseDb.ref(`archivedUsers/${uid}`).remove().then(() => {
+                    showToast('Пользователь удален из базы', 'success');
+                });
+            } else {
+                archivedUsers = archivedUsers.filter(u => u.uid !== uid);
+                showToast('Пользователь удален из памяти', 'success');
+            }
+            renderAdminTabContent();
         }
 
         function handleAdminCreateUser(e) {
             e.preventDefault();
-            const un = document.getElementById('admin-create-username').value.trim().toLowerCase();
-            const pw = document.getElementById('admin-create-password').value.trim();
-            const kunya = document.getElementById('admin-create-kunya').value.trim() || un;
+            const username = document.getElementById('admin-create-username').value.trim();
+            const password = document.getElementById('admin-create-password').value;
+            const kunya = document.getElementById('admin-create-kunya').value.trim() || username;
             const whatsapp = document.getElementById('admin-create-whatsapp').value.trim();
             const gender = document.querySelector('input[name="admin-create-gender"]:checked')?.value || 'MALE';
             const role = document.getElementById('admin-create-role').value;
 
-            if (users.some(u => u.username === un)) {
+            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                 showToast('Пользователь с таким логином уже существует!', 'error');
                 return;
             }
 
-            const newUid = 'user_' + Date.now();
+            const uid = 'u_' + Date.now();
             const newUser = {
-                uid: newUid,
-                username: un,
+                uid,
+                username,
+                passwordHash: password,
                 kunya,
-                whatsapp,
                 gender,
+                whatsapp,
                 role,
-                verifiedShop: (role === 'SUPERUSER' || role === 'ADMIN'),
-                createdAt: new Date().toISOString()
+                verifiedShop: false
             };
 
-            const fakeEmail = `${un}@barakasouq.local`;
-
-            if (auth && auth.createUserWithEmailAndPassword) {
-                auth.createUserWithEmailAndPassword(fakeEmail, pw).then((cred) => {
-                    newUser.uid = cred.user.uid;
-                    if (db) db.ref('users/' + cred.user.uid).set(newUser);
-                }).catch(() => {
-                    if (db) db.ref('users/' + newUid).set(newUser);
-                });
-            } else if (db) {
-                db.ref('users/' + newUid).set(newUser);
-            } else {
-                users.push(newUser);
+            users.push(newUser);
+            if (firebaseDb) {
+                firebaseDb.ref(`users/${uid}`).set(newUser);
             }
 
             closeModal('modal-admin-create-user');
-            showToast(`Пользователь @${un} [${role}] успешно создан!`);
-            if (currentAdminTab === 'users') renderAdminTab('users');
-        }
-
-        function openShopsDirectory() {
-            const grid = document.getElementById('shops-directory-grid');
-            if (!grid) return;
-
-            const shopSellers = users.filter(u => u.verifiedShop || ads.some(a => a.sellerUsername === u.username));
-
-            if (shopSellers.length === 0) {
-                grid.innerHTML = '<div class="col-span-full py-8 text-center text-slate-400 text-xs">Магазинов пока нет</div>';
-            } else {
-                grid.innerHTML = shopSellers.map(s => {
-                    const count = ads.filter(a => a.sellerUsername === s.username && a.status === 'ACTIVE').length;
-                    return `
-                        <div onclick="openSellerStore('${s.username}')" class="glass-panel p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:border-purple-500/50 transition-all border border-white/10">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center text-lg">
-                                    ${(s.kunya || s.username)[0]}
-                                </div>
-                                <div>
-                                    <div class="font-bold text-white text-xs flex items-center gap-1">
-                                        ${s.kunya || s.username}
-                                        ${s.verifiedShop ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs" title="Проверен"></i>' : ''}
-                                    </div>
-                                    <div class="text-[10px] text-slate-400">Товаров в наличии: <span class="text-purple-300 font-bold">${count}</span></div>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            openModal('modal-shops-directory');
-        }
-
-        function openSellerStore(username) {
-            closeModal('modal-shops-directory');
-            closeModal('modal-ad-detail');
-
-            const seller = users.find(u => u.username === username);
-            const content = document.getElementById('seller-store-content');
-            if (!content || !seller) return;
-
-            const sellerAds = ads.filter(a => a.sellerUsername === username && a.status === 'ACTIVE');
-
-            content.innerHTML = `
-                <div class="flex items-center justify-between pb-4 border-b border-white/10">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center text-xl">
-                            ${(seller.kunya || seller.username)[0]}
-                        </div>
-                        <div>
-                            <h2 class="text-base font-extrabold text-white flex items-center gap-1.5">
-                                ${seller.kunya || seller.username}
-                                ${seller.verifiedShop ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">Магазин</span>' : ''}
-                            </h2>
-                            <p class="text-xs text-slate-400">Активных объявлений: ${sellerAds.length}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    ${sellerAds.length === 0 ? '<div class="col-span-full py-8 text-center text-slate-500">У данного продавца пока нет товаров</div>' : sellerAds.map(ad => `
-                        <div onclick="openAdDetail('${ad.id}')" class="bg-white/5 border border-white/5 rounded-2xl p-2.5 cursor-pointer hover:border-purple-400/50 transition-all space-y-2">
-                            <img src="${ad.image}" class="w-full h-28 object-cover rounded-xl bg-slate-900">
-                            <div class="font-bold text-white text-xs line-clamp-1">${ad.title}</div>
-                            <div class="text-[11px] font-mono text-emerald-400 font-bold">${ad.price} ${ad.currency}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            openModal('modal-seller-store');
+            showToast(`Создан новый пользователь: ${username}`, 'success');
+            renderAdminTabContent();
         }
 
         function openAdminPanel() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-                showToast('Доступ разрешен только администраторам!', 'error');
+                showToast('Доступ запрещен!', 'error');
                 return;
             }
-            switchAdminTab('overview');
             openModal('modal-admin-panel');
+            renderAdminTabContent();
         }
 
         function switchAdminTab(tab) {
-            currentAdminTab = tab;
+            SYSTEM_CONFIG.adminTab = tab;
             ['overview', 'users', 'moderation', 'archive', 'rates', 'backup'].forEach(t => {
                 const btn = document.getElementById(`atab-${t}`);
                 if (btn) {
-                    if (t === tab) {
-                        btn.className = 'px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap';
-                    } else {
-                        btn.className = 'px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap';
-                    }
+                    btn.className = (t === tab) 
+                        ? "px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap"
+                        : "px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap";
                 }
             });
-            renderAdminTab(tab);
+            renderAdminTabContent();
         }
 
-        function renderAdminTab(tab) {
+        function renderAdminTabContent() {
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
 
+            const tab = SYSTEM_CONFIG.adminTab;
+
             if (tab === 'overview') {
                 container.innerHTML = `
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                            <div class="text-slate-400 text-[10px]">Всего пользователей</div>
-                            <div class="text-xl font-extrabold text-white mt-1">${users.length}</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="text-2xl font-extrabold text-amber-400">${ads.length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Всего объявлений</div>
                         </div>
-                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                            <div class="text-slate-400 text-[10px]">Активные объявления</div>
-                            <div class="text-xl font-extrabold text-emerald-400 mt-1">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="text-2xl font-extrabold text-blue-400">${users.length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Пользователей</div>
                         </div>
-                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                            <div class="text-slate-400 text-[10px]">В архиве</div>
-                            <div class="text-xl font-extrabold text-amber-400 mt-1">${archivedAds.length}</div>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="text-2xl font-extrabold text-emerald-400">${ads.filter(a => a.isFree).length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">Даром (Бесплатно)</div>
                         </div>
-                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                            <div class="text-slate-400 text-[10px]">Курс SYP / USD</div>
-                            <div class="text-xl font-extrabold text-purple-300 mt-1">${EXCHANGE_RATES.SYP}</div>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div class="text-2xl font-extrabold text-rose-400">${archivedUsers.length}</div>
+                            <div class="text-slate-400 text-[10px] uppercase font-bold mt-1">В архиве</div>
                         </div>
                     </div>
                 `;
             } else if (tab === 'users') {
                 container.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-white/10">
-                            <div>
-                                <h4 class="font-bold text-white text-xs">Всего аккаунтов в системе: ${users.length}</h4>
-                                <p class="text-[10px] text-slate-400">Управляйте ролями, сбрасывайте логины/пароли или создавайте новые аккаунты</p>
-                            </div>
-                            <button onclick="openAdminCreateUserModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5">
-                                <i class="fa-solid fa-user-plus text-xs"></i>
-                                <span>Создать аккаунт</span>
-                            </button>
-                        </div>
-
-                        <div class="space-y-2">
-                            ${users.map(u => `
-                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                    <div>
-                                        <div class="font-bold text-white flex items-center gap-1.5">
-                                            ${u.kunya || u.username}
-                                            <span class="text-[10px] px-1.5 py-0.5 rounded ${
-                                                u.role === 'SUPERUSER' ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40 font-extrabold' : 
-                                                u.role === 'ADMIN' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40 font-bold' : 
-                                                'bg-white/10 text-slate-300'
-                                            } font-mono">${u.role}</span>
-                                        </div>
-                                        <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp || 'Без WhatsApp'}</div>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <button onclick="toggleVerifyShop('${u.username}')" class="px-2 py-1 rounded-lg ${u.verifiedShop ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400'} font-bold">
-                                            ${u.verifiedShop ? 'Магазин ✓' : '+ Магазин'}
-                                        </button>
-                                        <button onclick="openEditProfileModal('${u.username}')" class="px-2 py-1 rounded-lg bg-blue-600/30 text-blue-300 font-bold hover:bg-blue-600/50">
-                                            <i class="fa-solid fa-user-pen mr-1"></i> Изменить
-                                        </button>
-                                        <button onclick="adminArchiveUser('${u.username}')" class="px-2 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50" ${u.username === (currentUser?.username) ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="Нельзя отправить в архив себя"' : ''}>
-                                            В архив
-                                        </button>
-                                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-white text-xs">Список зарегистрированных аккаунтов</h4>
+                        <button onclick="openModal('modal-admin-create-user')" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-user-plus"></i> Создать пользователя
+                        </button>
+                    </div>
+                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                        ${users.map(u => `
+                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">${u.role}</span></div>
+                                    <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp || 'Нет WA'}</div>
                                 </div>
-                            `).join('')}
-                        </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 text-[11px]">
+                                        Редактировать
+                                    </button>
+                                    <button onclick="adminArchiveUser('${u.uid}', '${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                        В архив
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
             } else if (tab === 'archive') {
                 container.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
-                            <div>
-                                <div class="font-bold text-white">Автоматическая очистка архива</div>
-                                <div class="text-[10px] text-slate-400">Удалять объявления из архива через выбранный срок</div>
-                            </div>
-                            <select onchange="updateArchiveDays(this.value)" class="bg-slate-900 border border-white/10 rounded-xl px-2 py-1 text-xs font-bold text-white">
-                                <option value="7" ${SYSTEM_CONFIG.archiveTimerDays === '7' ? 'selected' : ''}>7 дней</option>
-                                <option value="30" ${SYSTEM_CONFIG.archiveTimerDays === '30' ? 'selected' : ''}>30 дней</option>
-                                <option value="60" ${SYSTEM_CONFIG.archiveTimerDays === '60' ? 'selected' : ''}>60 дней</option>
-                                <option value="manual" ${SYSTEM_CONFIG.archiveTimerDays === 'manual' ? 'selected' : ''}>Вручную</option>
-                            </select>
-                        </div>
-
-                        <!-- User Archive -->
-                        <div class="space-y-2">
-                            <h4 class="font-bold text-purple-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
-                                <i class="fa-solid fa-users-slash"></i> Заархивированные пользователи (${archivedUsers.length})
-                            </h4>
-                            ${archivedUsers.length === 0 ? '<div class="py-3 text-center text-slate-500">Архив пользователей пуст</div>' : archivedUsers.map(u => `
-                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-200 flex items-center gap-1.5">
-                                            ${u.kunya || u.username}
-                                            <span class="text-[10px] text-slate-400 font-mono">(@${u.username})</span>
-                                        </div>
-                                        <div class="text-[10px] text-slate-400">${u.whatsapp || ''} • В архиве с ${u.archivedAt ? new Date(u.archivedAt).toLocaleDateString() : 'неизвестно'}</div>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <button onclick="restoreUser('${u.uid || u.username}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50 text-[11px]">
-                                            Восстановить
-                                        </button>
-                                        <button onclick="permanentlyDeleteUser('${u.uid || u.username}')" class="px-2.5 py-1 rounded-lg bg-rose-600/40 text-rose-300 font-bold hover:bg-rose-600/70 text-[11px]">
-                                            Удалить навсегда
-                                        </button>
-                                    </div>
+                    <h4 class="font-bold text-white text-xs mb-3">Заархивированные пользователи</h4>
+                    <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                        ${archivedUsers.length === 0 ? '<div class="text-center py-8 text-slate-500">Архив пуст</div>' : archivedUsers.map(u => `
+                            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="font-bold text-slate-300 text-xs">${u.kunya || u.username} (@${u.username})</div>
+                                    <div class="text-[10px] text-slate-500">${u.whatsapp || 'Нет WA'}</div>
                                 </div>
-                            `).join('')}
-                        </div>
-
-                        <!-- Ad Archive -->
-                        <div class="space-y-2 pt-2">
-                            <h4 class="font-bold text-amber-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
-                                <i class="fa-solid fa-box-archive"></i> Заархивированные объявления (${archivedAds.length})
-                            </h4>
-                            ${archivedAds.length === 0 ? '<div class="py-4 text-center text-slate-500">Архив объявлений пуст</div>' : archivedAds.map(a => `
-                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-slate-300 truncate">${a.title}</div>
-                                        <div class="text-[10px] text-rose-400">${a.deleteReason || 'Снято с публикации'}</div>
-                                    </div>
-                                    <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50 text-[11px]">
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="restoreUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
                                         Восстановить
                                     </button>
+                                    <button onclick="permanentlyDeleteUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                        Удалить навсегда
+                                    </button>
                                 </div>
-                            `).join('')}
-                        </div>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
             } else if (tab === 'rates') {
                 container.innerHTML = `
-                    <div class="space-y-4 max-w-sm mx-auto text-xs">
-                        <div class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2 text-center">
-                            <div class="font-bold text-purple-300 flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-arrows-rotate animate-spin"></i> Авто-синхронизация курсов
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-center space-y-2">
+                            <div class="text-xs text-purple-300 font-bold">Синхронизация с SP Proxy Worker</div>
+                            <button onclick="fetchLiveExchangeRates(true)" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-md">
+                                <i class="fa-solid fa-arrows-rotate"></i> Обновить курс с сервера
+                            </button>
+                        </div>
+                        <div class="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <div>
+                                <label class="block text-slate-400 mb-1">Курс Сирийского фунта (SYP за $1)</label>
+                                <input type="number" step="0.01" id="rate-input-syp" value="${EXCHANGE_RATES.SYP}" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white font-mono">
                             </div>
-                            <p class="text-[11px] text-slate-300 font-mono break-all">https://sp-proxy.mikevasovsky3.workers.dev/</p>
-                            <button onclick="fetchLiveExchangeRates()" class="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-sync"></i> Обновить курс из SP Proxy
+                            <div>
+                                <label class="block text-slate-400 mb-1">Курс Турецкой лиры (TRY за $1)</label>
+                                <input type="number" step="0.01" id="rate-input-try" value="${EXCHANGE_RATES.TRY}" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white font-mono">
+                            </div>
+                            <button onclick="saveManualRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                                Сохранить вручную
                             </button>
-                        </div>
-
-                        <div>
-                            <label class="block text-slate-400 mb-1">Курс Сирийского фунта (SYP за $1)</label>
-                            <input type="number" id="rate-syp" value="${EXCHANGE_RATES.SYP}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 mb-1">Курс Турецкой лиры (TRY за $1)</label>
-                            <input type="number" step="0.1" id="rate-try" value="${EXCHANGE_RATES.TRY}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
-                        </div>
-                        <button onclick="saveRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
-                            Сохранить ручные изменения
-                        </button>
-                    </div>
-                `;
-            } else if (tab === 'backup') {
-                container.innerHTML = `
-                    <div class="space-y-4 max-w-md mx-auto text-center">
-                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                            <i class="fa-solid fa-file-export text-amber-400 text-2xl"></i>
-                            <div class="font-bold text-white">Экспорт бэкапа базы данных</div>
-                            <p class="text-slate-400 text-[11px]">Скачать единый файл со всеми объявлениями, пользователями и настройками системы.</p>
-                            <button onclick="exportSystemBackup()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold transition-all">
-                                Скачать бэкап (JSON)
-                            </button>
-                        </div>
-
-                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                            <i class="fa-solid fa-file-import text-emerald-400 text-2xl"></i>
-                            <div class="font-bold text-white">Импорт / Восстановление в Firebase</div>
-                            <p class="text-slate-400 text-[11px]">Загрузить заранее сохраненный бэкап в облако Firebase.</p>
-                            <input type="file" id="backup-import-file" accept=".json" onchange="importSystemBackup(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
                         </div>
                     </div>
                 `;
+            } else {
+                container.innerHTML = `<div class="text-center py-8 text-slate-500">Раздел в разработке</div>`;
             }
         }
 
-        function exportSystemBackup() {
-            const data = {
-                SYSTEM_CONFIG,
-                EXCHANGE_RATES,
-                users,
-                ads,
-                archivedAds,
-                customCategories,
-                exportedAt: new Date().toISOString()
-            };
-            const jsonStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `BarakaSouq_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importSystemBackup(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const parsed = JSON.parse(evt.target.result);
-                    if (parsed.ads) {
-                        if (db) {
-                            const adsMap = {};
-                            parsed.ads.forEach(a => { adsMap[a.id] = a; });
-                            db.ref('ads').set(adsMap);
-
-                            if (parsed.EXCHANGE_RATES) db.ref('rates').set(parsed.EXCHANGE_RATES);
-                            if (parsed.customCategories) db.ref('customCategories').set(parsed.customCategories);
-                        } else {
-                            ads = parsed.ads;
-                            renderAds();
-                        }
-
-                        showToast('Бэкап успешно импортирован!');
-                    } else {
-                        showToast('Ошибка: неверный формат файла бэкапа', 'error');
-                    }
-                } catch (err) {
-                    showToast('Не удалось прочитать файл бэкапа', 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function toggleVerifyShop(username) {
-            const u = users.find(x => x.username === username);
-            if (u) {
-                u.verifiedShop = !u.verifiedShop;
-                if (db && u.uid) db.ref('users/' + u.uid + '/verifiedShop').set(u.verifiedShop);
-                renderAdminTab('users');
-            }
-        }
-
-        function adminArchiveAd(id) {
-            const idx = ads.findIndex(a => a.id === id);
-            if (idx !== -1) {
-                const deletedAd = ads[idx];
-                deletedAd.status = 'DELETED';
-                deletedAd.deleteReason = 'Снято модератором';
-                deletedAd.archivedAt = new Date().toISOString();
-
-                if (db) {
-                    db.ref('ads/' + id).remove();
-                    db.ref('archivedAds/' + id).set(deletedAd);
-                } else {
-                    ads.splice(idx, 1);
-                    archivedAds.push(deletedAd);
-                }
-                renderAdminTab('moderation');
-                showToast('Объявление снято модератором');
-            }
-        }
-
-        function adminArchiveUser(username) {
-            const target = users.find(u => u.username === username);
-            if (!target) return;
-            if (currentUser && (target.username === currentUser.username || target.uid === currentUser.uid)) {
-                showToast('Вы не можете заархивировать свой собственный аккаунт!', 'warning');
+        function saveManualRates() {
+            const syp = parseFloat(document.getElementById('rate-input-syp')?.value);
+            const tryVal = parseFloat(document.getElementById('rate-input-try')?.value);
+            if (isNaN(syp) || isNaN(tryVal)) {
+                showToast('Введите корректные числовые значения!', 'error');
                 return;
             }
-            if (!confirm(`Отправить аккаунт "@${target.username}" (${target.kunya || target.username}) в архив?`)) return;
-
-            target.archivedAt = new Date().toISOString();
-            target.archivedBy = currentUser ? currentUser.username : 'admin';
-
-            const userUid = target.uid || target.username;
-
-            if (db) {
-                db.ref('archivedUsers/' + userUid).set(target)
-                    .then(() => db.ref('users/' + userUid).remove())
-                    .then(() => {
-                        showToast(`Аккаунт @${target.username} перенесен в архив!`, 'warning');
-                        renderAdminTab('users');
-                    })
-                    .catch(err => {
-                        showToast('Ошибка Firebase при архивации: ' + err.message, 'error');
-                    });
-            } else {
-                const idx = users.findIndex(u => u.username === username);
-                if (idx !== -1) users.splice(idx, 1);
-                archivedUsers.push(target);
-                showToast(`Аккаунт @${target.username} перенесен в архив!`, 'warning');
-                renderAdminTab('users');
+            EXCHANGE_RATES.SYP = syp;
+            EXCHANGE_RATES.TRY = tryVal;
+            if (firebaseDb) {
+                firebaseDb.ref('rates').set(EXCHANGE_RATES);
             }
-        }
-
-        function restoreUser(uidOrUsername) {
-            const target = archivedUsers.find(u => u.uid === uidOrUsername || u.username === uidOrUsername);
-            if (!target) return;
-
-            delete target.archivedAt;
-            delete target.archivedBy;
-
-            const userUid = target.uid || target.username;
-
-            if (db) {
-                db.ref('users/' + userUid).set(target)
-                    .then(() => db.ref('archivedUsers/' + userUid).remove())
-                    .then(() => {
-                        showToast(`Аккаунт @${target.username} успешно восстановлен!`);
-                        renderAdminTab('archive');
-                    })
-                    .catch(err => {
-                        showToast('Ошибка Firebase при восстановлении: ' + err.message, 'error');
-                    });
-            } else {
-                const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
-                if (idx !== -1) archivedUsers.splice(idx, 1);
-                users.push(target);
-                showToast(`Аккаунт @${target.username} восстановлен!`);
-                renderAdminTab('archive');
-            }
-        }
-
-        function permanentlyDeleteUser(uidOrUsername) {
-            const target = archivedUsers.find(u => u.uid === uidOrUsername || u.username === uidOrUsername);
-            if (!target) return;
-
-            if (!confirm(`ВНИМАНИЕ! Вы действительно хотите НАВСЕГДА удалить аккаунт "@${target.username}"? Это действие невозможно отменить!`)) return;
-
-            const userUid = target.uid || target.username;
-
-            if (db) {
-                db.ref('archivedUsers/' + userUid).remove()
-                    .then(() => {
-                        showToast(`Аккаунт @${target.username} навсегда удален!`, 'error');
-                        renderAdminTab('archive');
-                    })
-                    .catch(err => {
-                        showToast('Ошибка Firebase при удалении: ' + err.message, 'error');
-                    });
-            } else {
-                const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
-                if (idx !== -1) archivedUsers.splice(idx, 1);
-                showToast(`Аккаунт @${target.username} навсегда удален!`, 'error');
-                renderAdminTab('archive');
-            }
-        }
-
-        function updateArchiveDays(val) {
-            SYSTEM_CONFIG.archiveTimerDays = val;
-            if (db) db.ref('config/archiveTimerDays').set(val);
-        }
-
-        function saveRates() {
-            const syp = parseFloat(document.getElementById('rate-syp').value);
-            const tryVal = parseFloat(document.getElementById('rate-try').value);
-            if (syp && tryVal) {
-                EXCHANGE_RATES.SYP = syp;
-                EXCHANGE_RATES.TRY = tryVal;
-                if (db) db.ref('rates').set(EXCHANGE_RATES);
-                renderAds();
-                showToast('Курсы валют успешно обновлены!');
-            }
+            updateFooterRatesUI();
+            renderAds();
+            showToast('Курсы сохранены!', 'success');
         }
 
         window.onload = function() {
             restoreUserSession();
+
             try {
                 const savedFavs = localStorage.getItem('bs_favorites');
                 if (savedFavs) favorites = JSON.parse(savedFavs);
+                
                 const savedRates = localStorage.getItem('bs_exchange_rates');
                 if (savedRates) {
                     const parsed = JSON.parse(savedRates);
                     if (parsed.SYP) EXCHANGE_RATES.SYP = parsed.SYP;
                     if (parsed.TRY) EXCHANGE_RATES.TRY = parsed.TRY;
                 }
+
                 if (localStorage.getItem('bs_rules_accepted')) {
                     SYSTEM_CONFIG.rulesAccepted = true;
                 }
@@ -3032,12 +2077,10 @@
                 renderAds();
             }
 
+            updateLanguageUI();
             updateFooterRatesUI();
             fetchLiveExchangeRates();
             setInterval(fetchLiveExchangeRates, 300000);
-
-            updateAuthUI();
-            renderCategoryPills();
 
             if (!SYSTEM_CONFIG.rulesAccepted) {
                 openModal('modal-rules-agreement');
