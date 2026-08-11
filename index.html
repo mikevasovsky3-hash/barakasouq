@@ -2522,7 +2522,7 @@
         function adminArchiveUser(username) {
             const target = users.find(u => u.username === username);
             if (!target) return;
-            if (currentUser && target.username === currentUser.username) {
+            if (currentUser && (target.username === currentUser.username || target.uid === currentUser.uid)) {
                 alert('Вы не можете заархивировать свой собственный аккаунт!');
                 return;
             }
@@ -2531,19 +2531,25 @@
             target.archivedAt = new Date().toISOString();
             target.archivedBy = currentUser ? currentUser.username : 'admin';
 
-            // Находим точный узел ключ
             const userUid = target.uid || target.username;
 
             if (db) {
-                // Удаляем узел напрямую из ветки users и пишем в archivedUsers
-                db.ref('users/' + userUid).remove();
-                db.ref('archivedUsers/' + userUid).set(target);
+                // Переносим в archivedUsers, затем удаляем из users
+                db.ref('archivedUsers/' + userUid).set(target)
+                    .then(() => db.ref('users/' + userUid).remove())
+                    .then(() => {
+                        alert(`Аккаунт @${target.username} перенесен в архив!`);
+                        renderAdminTab('users');
+                    })
+                    .catch(err => {
+                        alert('Ошибка Firebase при архивации: ' + err.message + '\n\nПроверьте вкладку Rules в Firebase Console!');
+                    });
             } else {
                 const idx = users.findIndex(u => u.username === username);
                 if (idx !== -1) users.splice(idx, 1);
                 archivedUsers.push(target);
+                renderAdminTab('users');
             }
-            renderAdminTab('users');
         }
 
         function restoreUser(uidOrUsername) {
@@ -2556,14 +2562,21 @@
             const userUid = target.uid || target.username;
 
             if (db) {
-                db.ref('archivedUsers/' + userUid).remove();
-                db.ref('users/' + userUid).set(target);
+                db.ref('users/' + userUid).set(target)
+                    .then(() => db.ref('archivedUsers/' + userUid).remove())
+                    .then(() => {
+                        alert(`Аккаунт @${target.username} успешно восстановлен!`);
+                        renderAdminTab('archive');
+                    })
+                    .catch(err => {
+                        alert('Ошибка Firebase при восстановлении: ' + err.message);
+                    });
             } else {
                 const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
                 if (idx !== -1) archivedUsers.splice(idx, 1);
                 users.push(target);
+                renderAdminTab('archive');
             }
-            renderAdminTab('archive');
         }
 
         function permanentlyDeleteUser(uidOrUsername) {
@@ -2575,28 +2588,17 @@
             const userUid = target.uid || target.username;
 
             if (db) {
-                db.ref('archivedUsers/' + userUid).remove();
+                db.ref('archivedUsers/' + userUid).remove()
+                    .then(() => {
+                        alert(`Аккаунт @${target.username} навсегда удален из базы!`);
+                        renderAdminTab('archive');
+                    })
+                    .catch(err => {
+                        alert('Ошибка Firebase при удалении: ' + err.message);
+                    });
             } else {
                 const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
                 if (idx !== -1) archivedUsers.splice(idx, 1);
-            }
-            renderAdminTab('archive');
-        }
-
-        function restoreAd(id) {
-            const idx = archivedAds.findIndex(a => a.id === id);
-            if (idx !== -1) {
-                const restored = archivedAds[idx];
-                restored.status = 'ACTIVE';
-                delete restored.deleteReason;
-
-                if (db) {
-                    db.ref('archivedAds/' + id).remove();
-                    db.ref('ads/' + id).set(restored);
-                } else {
-                    archivedAds.splice(idx, 1);
-                    ads.push(restored);
-                }
                 renderAdminTab('archive');
             }
         }
