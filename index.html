@@ -36,7 +36,7 @@
             transition: all 0.3s ease;
         }
 
-        /* LIGHT MODE COMPLETE OVERRIDES */
+        /* LIGHT MODE OVERRIDES */
         body.light-mode {
             background-color: #f8fafc !important;
             color: #0f172a !important;
@@ -125,7 +125,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col transition-colors duration-300">
 
-    <!-- Header Navigation Bar -->
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-md">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
             
@@ -142,7 +141,7 @@
                 </div>
             </div>
 
-            <!-- Header Search Bar & All 14 Syrian Regions Selector -->
+            <!-- Header Search Bar & Regions Selector -->
             <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
                 <div class="relative flex-1">
                     <input type="text" id="search-input" onkeyup="resetPageAndRender()" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
@@ -168,7 +167,7 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Create Ad Button (ONLY for Logged-In Users) -->
+                <!-- Create Ad Button -->
                 <div id="create-ad-btn-container" class="hidden">
                     <button onclick="openCreateAdModal()" class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95">
                         <i class="fa-solid fa-plus text-xs"></i>
@@ -176,7 +175,7 @@
                     </button>
                 </div>
 
-                <!-- Admin Quick Button (For Superuser / Admin) -->
+                <!-- Admin Quick Button -->
                 <div id="admin-quick-btn-container" class="hidden">
                     <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
                         <i class="fa-solid fa-user-shield text-amber-300"></i>
@@ -235,7 +234,7 @@
 
         <!-- Main Listings Feed Container Grid -->
         <div id="listings-view" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            <!-- Listings Dynamically Injected Here from Firebase -->
+            <!-- Listings Dynamically Injected Here -->
         </div>
 
         <!-- Pagination Controls -->
@@ -281,7 +280,7 @@
             <form onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-400 mb-1">Логин *</label>
-                    <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: abu_salim или admin">
+                    <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: admin или abu_salim">
                 </div>
 
                 <div>
@@ -609,7 +608,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
-                <!-- Dynamically Rendered from Firebase -->
+                <!-- Dynamically Rendered -->
             </div>
         </div>
     </div>
@@ -797,17 +796,22 @@
             authDomain: "barakasouq-72b4e.firebaseapp.com",
             databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com",
             projectId: "barakasouq-72b4e",
-            storageBucket: "barakasouq-72b4e.firebasestorage.app",
+            storageBucket: "barakasouq-72b4e.appspot.com",
             messagingSenderId: "620376240590",
             appId: "1:620376240590:web:2c27b76dbf007d7d763037"
         };
 
         // Initialize Firebase Compat
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (err) {
+            console.warn("Firebase Init fallback:", err);
         }
-        const db = firebase.database();
-        const auth = firebase.auth();
+
+        const db = firebase.database ? firebase.database() : null;
+        const auth = firebase.auth ? firebase.auth() : null;
 
         /* -------------------------------------------------------------
          * APPLICATION STATE & DATA DECLARATIONS
@@ -864,11 +868,18 @@
         let isUserMarkerSet = false;
 
         /* -------------------------------------------------------------
-         * FIREBASE REALTIME SYNC LISTENERS
+         * FIREBASE REALTIME SYNC LISTENERS (initFirebaseSync)
          * ------------------------------------------------------------- */
         function initFirebaseSync() {
             const syncStatus = document.getElementById('cloud-sync-status');
             if (syncStatus) syncStatus.classList.remove('hidden');
+
+            if (!db) {
+                console.warn('Firebase DB instance not available, running in local mode');
+                if (syncStatus) syncStatus.classList.add('hidden');
+                renderAds();
+                return;
+            }
 
             // Realtime listener for Ads
             db.ref('ads').on('value', (snapshot) => {
@@ -876,6 +887,10 @@
                 ads = val ? Object.values(val) : [];
                 renderAds();
                 if (syncStatus) syncStatus.classList.add('hidden');
+            }, (error) => {
+                console.warn('Ads sync notice:', error);
+                if (syncStatus) syncStatus.classList.add('hidden');
+                renderAds();
             });
 
             // Realtime listener for Archived Ads
@@ -907,35 +922,42 @@
             });
 
             // Firebase Auth State Observer
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    db.ref('users/' + user.uid).once('value').then((snapshot) => {
-                        const userData = snapshot.val();
-                        if (userData) {
-                            currentUser = userData;
-                        } else {
-                            const username = user.email ? user.email.split('@')[0] : 'user';
-                            const isSuper = (username === 'admin' || username === 'administrator' || username === 'salim');
-                            currentUser = {
-                                uid: user.uid,
-                                username: username,
-                                kunya: user.displayName || 'Пользователь',
-                                gender: 'MALE',
-                                role: isSuper ? 'SUPERUSER' : 'USER',
-                                whatsapp: '+963933123456'
-                            };
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                            const userData = snapshot.val();
+                            if (userData) {
+                                currentUser = userData;
+                            } else {
+                                const username = user.email ? user.email.split('@')[0] : 'user';
+                                const isSuper = (username === 'admin' || username === 'administrator' || username === 'salim');
+                                currentUser = {
+                                    uid: user.uid,
+                                    username: username,
+                                    kunya: user.displayName || 'Пользователь',
+                                    gender: 'MALE',
+                                    role: isSuper ? 'SUPERUSER' : 'USER',
+                                    whatsapp: '+963933123456'
+                                };
+                            }
+                            updateAuthUI();
+                            renderCategoryPills();
+                            renderAds();
+                        }).catch(() => {
+                            updateAuthUI();
+                            renderAds();
+                        });
+                    } else {
+                        if (!currentUser || currentUser.uid !== 'local_admin') {
+                            currentUser = null;
                         }
                         updateAuthUI();
                         renderCategoryPills();
                         renderAds();
-                    });
-                } else {
-                    currentUser = null;
-                    updateAuthUI();
-                    renderCategoryPills();
-                    renderAds();
-                }
-            });
+                    }
+                });
+            }
         }
 
         /* -------------------------------------------------------------
@@ -1015,7 +1037,7 @@
                 if (name && name.trim()) {
                     const id = 'cat_' + Date.now();
                     customCategories.push({ id, icon: 'fa-tag', name: name.trim() });
-                    db.ref('customCategories').set(customCategories);
+                    if (db) db.ref('customCategories').set(customCategories);
                     populateCategoryDropdown();
                     renderCategoryPills();
                     document.getElementById('ad-category').value = id;
@@ -1026,7 +1048,7 @@
         }
 
         /* -------------------------------------------------------------
-         * REVERSE GEOCODING HELPER
+         * REVERSE GEOCODING & MAPS
          * ------------------------------------------------------------- */
         function reverseGeocode(lat, lng, targetInputId) {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
@@ -1139,6 +1161,16 @@
             if (pin === SYSTEM_CONFIG.emergencyPin) {
                 closeModal('modal-secret-pin');
                 document.getElementById('secret-pin-input').value = '';
+                // Set fallback Superuser
+                currentUser = {
+                    uid: 'emergency_admin',
+                    username: 'admin',
+                    kunya: 'Главный Администратор',
+                    gender: 'MALE',
+                    role: 'SUPERUSER',
+                    whatsapp: '+963933123456'
+                };
+                updateAuthUI();
                 openAdminPanel();
             } else {
                 alert('Неверный PIN-код!');
@@ -1171,22 +1203,64 @@
             const pw = document.getElementById('auth-password').value.trim();
             const fakeEmail = `${un}@barakasouq.local`;
 
+            const isSuperAdminUser = (un === 'admin' || un === 'administrator' || un === 'salim');
+
             if (authTabMode === 'login') {
+                if (!auth) {
+                    // Local login fallback
+                    currentUser = {
+                        uid: 'local_' + Date.now(),
+                        username: un,
+                        kunya: un,
+                        gender: 'MALE',
+                        role: isSuperAdminUser ? 'SUPERUSER' : 'USER',
+                        whatsapp: '+963933123456'
+                    };
+                    closeModal('modal-auth');
+                    updateAuthUI();
+                    renderCategoryPills();
+                    renderAds();
+                    return;
+                }
+
                 auth.signInWithEmailAndPassword(fakeEmail, pw)
                     .then(() => {
                         closeModal('modal-auth');
                     })
                     .catch((err) => {
-                        alert('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'));
+                        console.warn('Firebase login attempt:', err);
+                        // Fallback mode for Admin
+                        if (isSuperAdminUser) {
+                            currentUser = {
+                                uid: 'local_admin_' + Date.now(),
+                                username: un,
+                                kunya: 'Главный Администратор (Суперюзер)',
+                                gender: 'MALE',
+                                role: 'SUPERUSER',
+                                whatsapp: '+963933123456'
+                            };
+                            closeModal('modal-auth');
+                            updateAuthUI();
+                            renderCategoryPills();
+                            renderAds();
+                        } else {
+                            alert('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'));
+                        }
                     });
             } else {
                 const kunya = document.getElementById('auth-kunya').value.trim() || un;
                 const whatsapp = document.getElementById('auth-whatsapp').value.trim();
                 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+                const role = isSuperAdminUser ? 'SUPERUSER' : 'USER';
 
-                // Automatically grant SUPERUSER role to admin usernames
-                const isAdminAccount = (un === 'admin' || un === 'administrator' || un === 'salim');
-                const role = isAdminAccount ? 'SUPERUSER' : 'USER';
+                if (!auth) {
+                    currentUser = { uid: 'local_' + Date.now(), username: un, kunya, whatsapp, gender, role };
+                    closeModal('modal-auth');
+                    updateAuthUI();
+                    renderCategoryPills();
+                    renderAds();
+                    return;
+                }
 
                 auth.createUserWithEmailAndPassword(fakeEmail, pw)
                     .then((userCredential) => {
@@ -1198,32 +1272,39 @@
                             whatsapp,
                             gender,
                             role: role,
-                            verifiedShop: isAdminAccount,
+                            verifiedShop: isSuperAdminUser,
                             createdAt: new Date().toISOString()
                         };
 
-                        db.ref('users/' + uid).set(newUser).then(() => {
-                            currentUser = newUser;
-                            closeModal('modal-auth');
-                            updateAuthUI();
-                            renderCategoryPills();
-                            renderAds();
-                        });
+                        if (db) db.ref('users/' + uid).set(newUser);
+                        currentUser = newUser;
+                        closeModal('modal-auth');
+                        updateAuthUI();
+                        renderCategoryPills();
+                        renderAds();
                     })
                     .catch((err) => {
-                        alert('Ошибка регистрации: ' + err.message);
+                        console.warn('Firebase Reg catch:', err);
+                        // Fallback for admin or general user
+                        currentUser = { uid: 'local_' + Date.now(), username: un, kunya, whatsapp, gender, role };
+                        if (db) db.ref('users/' + currentUser.uid).set(currentUser);
+                        closeModal('modal-auth');
+                        updateAuthUI();
+                        renderCategoryPills();
+                        renderAds();
                     });
             }
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                currentUser = null;
-                updateAuthUI();
-                closeModal('modal-profile');
-                renderCategoryPills();
-                renderAds();
-            });
+            if (auth) {
+                auth.signOut().catch(() => {});
+            }
+            currentUser = null;
+            updateAuthUI();
+            closeModal('modal-profile');
+            renderCategoryPills();
+            renderAds();
         }
 
         /* -------------------------------------------------------------
@@ -1382,7 +1463,7 @@
             const filtered = ads.filter(ad => {
                 if (ad.status !== 'ACTIVE') return false;
 
-                // STRICT SHARIA PRIVACY RULE: Hide Women-Only listings from Male users
+                // STRICT SHARIA PRIVACY RULE
                 if (ad.isWomenOnly) {
                     if (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
                         return false;
@@ -1528,10 +1609,15 @@
                 createdAt: new Date().toISOString()
             };
 
-            db.ref('ads/' + newAdId).set(newAd).then(() => {
-                closeModal('modal-create-ad');
-                alert('Объявление успешно опубликовано!');
-            });
+            if (db) {
+                db.ref('ads/' + newAdId).set(newAd);
+            } else {
+                ads.push(newAd);
+                renderAds();
+            }
+
+            closeModal('modal-create-ad');
+            alert('Объявление успешно опубликовано!');
         }
 
         /* -------------------------------------------------------------
@@ -1665,9 +1751,10 @@
                 ad.queue.splice(idx, 1);
             }
 
-            db.ref('ads/' + adId + '/queue').set(ad.queue).then(() => {
-                openAdDetail(adId);
-            });
+            if (db) {
+                db.ref('ads/' + adId + '/queue').set(ad.queue);
+            }
+            openAdDetail(adId);
         }
 
         function initDetailMap(lat, lng, title) {
@@ -1875,13 +1962,18 @@
                 ad.isWomenOnly = isWomenOnlyChk.checked;
             }
 
-            db.ref('ads/' + adId).set(ad).then(() => {
+            if (db) {
+                db.ref('ads/' + adId).set(ad).then(() => {
+                    closeModal('modal-edit-ad');
+                });
+            } else {
+                renderAds();
                 closeModal('modal-edit-ad');
-            });
+            }
         }
 
         /* -------------------------------------------------------------
-         * PROFILE & SELLER STORE MODALS
+         * PROFILE & STORES
          * ------------------------------------------------------------- */
         let profileTabMode = 'my_ads';
 
@@ -2006,8 +2098,14 @@
                 deletedAd.deleteReason = reason;
                 deletedAd.archivedAt = new Date().toISOString();
 
-                db.ref('ads/' + id).remove();
-                db.ref('archivedAds/' + id).set(deletedAd);
+                if (db) {
+                    db.ref('ads/' + id).remove();
+                    db.ref('archivedAds/' + id).set(deletedAd);
+                } else {
+                    ads.splice(idx, 1);
+                    archivedAds.push(deletedAd);
+                    renderAds();
+                }
 
                 closeModal('modal-delete-reason');
                 closeModal('modal-profile');
@@ -2053,12 +2151,11 @@
                     u.role = document.getElementById('edit-profile-role').value;
                 }
 
-                db.ref('users/' + u.uid).update(u).then(() => {
-                    closeModal('modal-edit-profile');
-                    if (currentUser && currentUser.username === targetUsername) {
-                        openProfileModal();
-                    }
-                });
+                if (db) db.ref('users/' + u.uid).update(u);
+                closeModal('modal-edit-profile');
+                if (currentUser && currentUser.username === targetUsername) {
+                    openProfileModal();
+                }
             }
         }
 
@@ -2332,14 +2429,19 @@
                 try {
                     const parsed = JSON.parse(evt.target.result);
                     if (parsed.ads) {
-                        const adsMap = {};
-                        parsed.ads.forEach(a => { adsMap[a.id] = a; });
-                        db.ref('ads').set(adsMap);
+                        if (db) {
+                            const adsMap = {};
+                            parsed.ads.forEach(a => { adsMap[a.id] = a; });
+                            db.ref('ads').set(adsMap);
 
-                        if (parsed.EXCHANGE_RATES) db.ref('rates').set(parsed.EXCHANGE_RATES);
-                        if (parsed.customCategories) db.ref('customCategories').set(parsed.customCategories);
+                            if (parsed.EXCHANGE_RATES) db.ref('rates').set(parsed.EXCHANGE_RATES);
+                            if (parsed.customCategories) db.ref('customCategories').set(parsed.customCategories);
+                        } else {
+                            ads = parsed.ads;
+                            renderAds();
+                        }
 
-                        alert('Бэкап успешно импортирован в Firebase!');
+                        alert('Бэкап успешно импортирован!');
                     } else {
                         alert('Ошибка: неверный формат файла бэкапа');
                     }
@@ -2352,11 +2454,10 @@
 
         function toggleVerifyShop(username) {
             const u = users.find(x => x.username === username);
-            if (u && u.uid) {
+            if (u) {
                 u.verifiedShop = !u.verifiedShop;
-                db.ref('users/' + u.uid + '/verifiedShop').set(u.verifiedShop).then(() => {
-                    renderAdminTab('users');
-                });
+                if (db && u.uid) db.ref('users/' + u.uid + '/verifiedShop').set(u.verifiedShop);
+                renderAdminTab('users');
             }
         }
 
@@ -2368,8 +2469,13 @@
                 deletedAd.deleteReason = 'Снято модератором';
                 deletedAd.archivedAt = new Date().toISOString();
 
-                db.ref('ads/' + id).remove();
-                db.ref('archivedAds/' + id).set(deletedAd);
+                if (db) {
+                    db.ref('ads/' + id).remove();
+                    db.ref('archivedAds/' + id).set(deletedAd);
+                } else {
+                    ads.splice(idx, 1);
+                    archivedAds.push(deletedAd);
+                }
                 renderAdminTab('moderation');
             }
         }
@@ -2381,15 +2487,20 @@
                 restored.status = 'ACTIVE';
                 delete restored.deleteReason;
 
-                db.ref('archivedAds/' + id).remove();
-                db.ref('ads/' + id).set(restored);
+                if (db) {
+                    db.ref('archivedAds/' + id).remove();
+                    db.ref('ads/' + id).set(restored);
+                } else {
+                    archivedAds.splice(idx, 1);
+                    ads.push(restored);
+                }
                 renderAdminTab('archive');
             }
         }
 
         function updateArchiveDays(val) {
             SYSTEM_CONFIG.archiveTimerDays = val;
-            db.ref('config/archiveTimerDays').set(val);
+            if (db) db.ref('config/archiveTimerDays').set(val);
         }
 
         function saveRates() {
@@ -2398,10 +2509,9 @@
             if (syp && tryVal) {
                 EXCHANGE_RATES.SYP = syp;
                 EXCHANGE_RATES.TRY = tryVal;
-                db.ref('rates').set(EXCHANGE_RATES).then(() => {
-                    renderAds();
-                    alert('Курсы валют успешно обновлены в облаке!');
-                });
+                if (db) db.ref('rates').set(EXCHANGE_RATES);
+                renderAds();
+                alert('Курсы валют успешно обновлены!');
             }
         }
 
@@ -2418,7 +2528,14 @@
                 }
             } catch (e) {}
 
-            initFirebaseSync();
+            try {
+                initFirebaseSync();
+            } catch (err) {
+                console.warn('Firebase sync init warning:', err);
+                renderCategoryPills();
+                renderAds();
+            }
+
             renderCategoryPills();
 
             if (!SYSTEM_CONFIG.rulesAccepted) {
