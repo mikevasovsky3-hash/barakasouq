@@ -468,14 +468,18 @@
                     </div>
                 </div>
 
-                <!-- Photo Upload with Compressor -->
+                <!-- Multi-Photo Upload Section (Up to 6 photos) -->
                 <div>
-                    <label class="block text-slate-400 mb-1" data-i18n="photoLabel">Фотография товара *</label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-slate-400" data-i18n="photoLabel">Фотографии товара (до 6 фото) *</label>
+                        <span id="create-photo-count-badge" class="text-[11px] font-bold text-amber-400">0 / 6</span>
+                    </div>
                     <div class="space-y-2">
-                        <input type="file" id="ad-image-file" accept="image/*" onchange="handleImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
-                        <input type="hidden" id="ad-image-data">
-                        <div id="image-preview-box" class="hidden h-32 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
-                            <img id="image-preview-img" class="w-full h-full object-cover">
+                        <input type="file" id="ad-image-file" accept="image/*" multiple onchange="handleMultipleImageCompressUpload(event, 'create')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                        
+                        <!-- Photos Preview Grid -->
+                        <div id="create-images-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+                            <!-- Thumbnails injected here -->
                         </div>
                     </div>
                 </div>
@@ -489,55 +493,6 @@
                     Опубликовать объявление
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- ShamCash Support / Donation Modal -->
-    <div id="modal-shamcash" class="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 border border-emerald-500/40 text-center space-y-4 relative">
-            <button onclick="closeShamCashModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto border border-emerald-500/30 shadow-lg">
-                <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-
-            <div>
-                <h3 class="text-base font-extrabold text-white">Поддержка платформы BarakaSouq</h3>
-                <p class="text-xs text-emerald-300 font-semibold mt-0.5">Публикация объявления успешна! 🎉</p>
-            </div>
-
-            <div class="text-xs text-slate-300 bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2">
-                <p class="text-slate-200">Публикация <strong class="text-emerald-400">абсолютно бесплатная и добровольная</strong>.</p>
-                <p id="shamcash-suggested-text" class="text-amber-300 font-medium"></p>
-            </div>
-
-            <!-- QR Code and Account Info -->
-            <div class="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3">
-                <div class="font-bold text-xs text-slate-200 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-qrcode text-emerald-400"></i>
-                    <span>Оплата через ShamCash</span>
-                </div>
-
-                <div class="w-44 h-44 bg-white p-2 rounded-2xl mx-auto shadow-inner flex items-center justify-center">
-                    <img id="shamcash-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=3adfe36abcbe52f1a4b008cd324082fb" alt="ShamCash QR Code" class="w-full h-full object-contain">
-                </div>
-
-                <div class="space-y-1">
-                    <div class="text-[11px] text-slate-400">Владелец счета:</div>
-                    <div class="text-xs font-extrabold text-amber-300 font-mono">لوم علي موسار محمد</div>
-                    <div class="text-[10px] text-slate-400 mt-1">ID счета ShamCash:</div>
-                    <div class="text-[11px] font-mono text-emerald-400 bg-white/5 py-1 px-2 rounded-lg break-all select-all border border-white/10">3adfe36abcbe52f1a4b008cd324082fb</div>
-                </div>
-
-                <button onclick="copyShamCashCode()" class="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-copy"></i>
-                    <span>Скопировать ID код</span>
-                </button>
-            </div>
-
-            <button onclick="closeShamCashModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all active:scale-95">
-                Пропустить и продолжить
-            </button>
         </div>
     </div>
 
@@ -627,6 +582,21 @@
                     </div>
                 </div>
 
+                <!-- Multi-Photo Upload Section for Edit Modal -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-slate-400">Фотографии товара (до 6 фото) *</label>
+                        <span id="edit-photo-count-badge" class="text-[11px] font-bold text-amber-400">0 / 6</span>
+                    </div>
+                    <div class="space-y-2">
+                        <input type="file" id="edit-ad-image-file" accept="image/*" multiple onchange="handleMultipleImageCompressUpload(event, 'edit')" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                        
+                        <div id="edit-images-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+                            <!-- Thumbnails injected here -->
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-amber-300 font-bold mb-1">Описание и изъяны *</label>
                     <textarea id="edit-ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"></textarea>
@@ -636,6 +606,55 @@
                     Сохранить изменения
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- ShamCash Support / Donation Modal -->
+    <div id="modal-shamcash" class="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 border border-emerald-500/40 text-center space-y-4 relative">
+            <button onclick="closeShamCashModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto border border-emerald-500/30 shadow-lg">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+
+            <div>
+                <h3 class="text-base font-extrabold text-white">Поддержка платформы BarakaSouq</h3>
+                <p class="text-xs text-emerald-300 font-semibold mt-0.5">Публикация объявления успешна! 🎉</p>
+            </div>
+
+            <div class="text-xs text-slate-300 bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2">
+                <p class="text-slate-200">Публикация <strong class="text-emerald-400">абсолютно бесплатная и добровольная</strong>.</p>
+                <p id="shamcash-suggested-text" class="text-amber-300 font-medium"></p>
+            </div>
+
+            <!-- QR Code and Account Info -->
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3">
+                <div class="font-bold text-xs text-slate-200 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-qrcode text-emerald-400"></i>
+                    <span>Оплата через ShamCash</span>
+                </div>
+
+                <div class="w-44 h-44 bg-white p-2 rounded-2xl mx-auto shadow-inner flex items-center justify-center">
+                    <img id="shamcash-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=3adfe36abcbe52f1a4b008cd324082fb" alt="ShamCash QR Code" class="w-full h-full object-contain">
+                </div>
+
+                <div class="space-y-1">
+                    <div class="text-[11px] text-slate-400">Владелец счета:</div>
+                    <div class="text-xs font-extrabold text-amber-300 font-mono">لوم علي موسار محمد</div>
+                    <div class="text-[10px] text-slate-400 mt-1">ID счета ShamCash:</div>
+                    <div class="text-[11px] font-mono text-emerald-400 bg-white/5 py-1 px-2 rounded-lg break-all select-all border border-white/10">3adfe36abcbe52f1a4b008cd324082fb</div>
+                </div>
+
+                <button onclick="copyShamCashCode()" class="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Скопировать ID код</span>
+                </button>
+            </div>
+
+            <button onclick="closeShamCashModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all active:scale-95">
+                Пропустить и продолжить
+            </button>
         </div>
     </div>
 
@@ -749,12 +768,22 @@
     <!-- Ad Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
-            <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
+            <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all border border-white/20">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
                 <!-- Dynamically Rendered -->
             </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Lightbox Modal for HD Inspection -->
+    <div id="modal-lightbox" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-xl hidden flex items-center justify-center p-4" onclick="closeModal('modal-lightbox')">
+        <button onclick="closeModal('modal-lightbox')" class="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center border border-white/20 transition-all">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center" onclick="event.stopPropagation()">
+            <img id="lightbox-img" class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10">
         </div>
     </div>
 
@@ -834,6 +863,13 @@
         let createMap = null;
         let createMarker = null;
 
+        // Temporary arrays holding Base64 encoded photos during create/edit forms
+        let pendingCreateImages = [];
+        let pendingEditImages = [];
+
+        // Active image index for the currently opened detail modal gallery
+        let activeDetailGalleryIndex = 0;
+
         let EXCHANGE_RATES = {
             SYP: 131.70,
             TRY: 47.74
@@ -860,6 +896,14 @@
 
         let archivedUsers = [];
         let ads = [];
+
+        // Helper: Returns array of images for an ad with fallback to single image
+        function getAdImages(ad) {
+            if (!ad) return ['https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'];
+            if (Array.isArray(ad.images) && ad.images.length > 0) return ad.images;
+            if (ad.image) return [ad.image];
+            return ['https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'];
+        }
 
         // Helper: Always resolves active WhatsApp number live from user account
         function getSellerWhatsapp(ad) {
@@ -968,7 +1012,7 @@
                 currencyLabel: "Валюта *",
                 conditionLabel: "Состояние товара *",
                 pickupLabel: "Условия передачи *",
-                photoLabel: "Фотография товара *",
+                photoLabel: "Фотографии товара (до 6 фото) *",
                 descDefectsLabel: "Описание и возможные изъяны *",
                 btnPublishAd: "Опубликовать объявление",
                 editProfileTitle: "Редактирование анкеты",
@@ -1081,7 +1125,7 @@
                 currencyLabel: "العملة *",
                 conditionLabel: "حالة المنتج *",
                 pickupLabel: "طريقة التسليم *",
-                photoLabel: "صورة المنتج *",
+                photoLabel: "صور المنتج (حتى 6 صور) *",
                 descDefectsLabel: "الوصف والعيوب والتفاصيل *",
                 btnPublishAd: "نشر الإعلان الآن",
                 editProfileTitle: "تعديل بيانات الحساب",
@@ -1194,7 +1238,7 @@
                 currencyLabel: "Para Birimi *",
                 conditionLabel: "Ürün Durumu *",
                 pickupLabel: "Teslimat Şartları *",
-                photoLabel: "Ürün Fotoğrafı *",
+                photoLabel: "Ürün Fotoğrafları (En fazla 6) *",
                 descDefectsLabel: "Açıklama ve Detaylar *",
                 btnPublishAd: "İlanı Yayınla",
                 editProfileTitle: "Profil Düzenleme",
@@ -1217,7 +1261,6 @@
             }
         };
 
-        // --- LOCAL STORAGE CACHING HELPERS ---
         function loadCachedAds() {
             try {
                 const cached = localStorage.getItem('bs_cached_ads');
@@ -1298,6 +1341,415 @@
             if (m) m.classList.add('hidden');
         }
 
+        function renderPhotoThumbnailsGrid(mode) {
+            const isEdit = mode === 'edit';
+            const images = isEdit ? pendingEditImages : pendingCreateImages;
+            const gridEl = document.getElementById(isEdit ? 'edit-images-grid' : 'create-images-grid');
+            const badgeEl = document.getElementById(isEdit ? 'edit-photo-count-badge' : 'create-photo-count-badge');
+
+            if (badgeEl) {
+                badgeEl.innerText = `${images.length} / 6`;
+            }
+
+            if (!gridEl) return;
+
+            if (images.length === 0) {
+                gridEl.innerHTML = `<div class="col-span-full text-slate-500 text-[11px] italic text-center py-2">Фотографии не добавлены</div>`;
+                return;
+            }
+
+            gridEl.innerHTML = images.map((imgUrl, idx) => `
+                <div class="relative group aspect-square rounded-xl overflow-hidden bg-slate-900 border border-white/10 shadow">
+                    <img src="${imgUrl}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removePendingPhoto(${idx}, '${mode}')" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600/90 text-white text-[10px] flex items-center justify-center hover:bg-rose-500 transition-all shadow">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 rounded font-mono">${idx + 1}</span>
+                </div>
+            `).join('');
+        }
+
+        function handleMultipleImageCompressUpload(e, targetMode) {
+            const files = Array.from(e.target.files);
+            if (!files || files.length === 0) return;
+
+            const isEdit = targetMode === 'edit';
+            let currentImages = isEdit ? pendingEditImages : pendingCreateImages;
+
+            if (currentImages.length >= 6) {
+                showToast('Максимально можно загрузить до 6 фотографий!', 'warning');
+                return;
+            }
+
+            const filesToProcess = files.slice(0, 6 - currentImages.length);
+            let processedCount = 0;
+
+            filesToProcess.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 900;
+                        const MAX_HEIGHT = 600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.80);
+                        
+                        if (isEdit) {
+                            if (pendingEditImages.length < 6) pendingEditImages.push(compressedDataUrl);
+                        } else {
+                            if (pendingCreateImages.length < 6) pendingCreateImages.push(compressedDataUrl);
+                        }
+
+                        processedCount++;
+                        if (processedCount === filesToProcess.length) {
+                            renderPhotoThumbnailsGrid(targetMode);
+                        }
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            e.target.value = '';
+        }
+
+        function removePendingPhoto(index, targetMode) {
+            if (targetMode === 'edit') {
+                pendingEditImages.splice(index, 1);
+            } else {
+                pendingCreateImages.splice(index, 1);
+            }
+            renderPhotoThumbnailsGrid(targetMode);
+        }
+
+        function openAuthModal() {
+            openModal('modal-auth');
+        }
+
+        function toggleFavorite(adId, e) {
+            if (e) e.stopPropagation();
+            if (favorites.includes(adId)) {
+                favorites = favorites.filter(id => id !== adId);
+                showToast('Удалено из избранного', 'info');
+            } else {
+                favorites.push(adId);
+                showToast('Добавлено в избранное!', 'success');
+            }
+            try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
+            renderCategoryPills();
+            renderAds();
+        }
+
+        function openProfileModal() {
+            if (!currentUser) return;
+            const content = document.getElementById('profile-content');
+            if (!content) return;
+
+            content.innerHTML = `
+                <div class="text-center space-y-3">
+                    <div class="w-16 h-16 rounded-3xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl mx-auto border border-blue-500/30">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">${currentUser.kunya || currentUser.username}</h3>
+                        <p class="text-xs text-slate-400">@${currentUser.username} • <span class="text-amber-400 font-bold">${currentUser.role}</span></p>
+                    </div>
+
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">WhatsApp:</span>
+                            <span class="font-bold text-emerald-400">${currentUser.whatsapp || 'Не указан'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Пол:</span>
+                            <span class="font-bold">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 py-2.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 transition-all">
+                            <i class="fa-solid fa-pen-to-square"></i> Изменить анкету
+                        </button>
+                        <button onclick="logout()" class="py-2.5 px-4 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 transition-all">
+                            Выйти
+                        </button>
+                    </div>
+                </div>
+            `;
+            openModal('modal-profile');
+        }
+
+        function switchAuthTab(tab) {
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const regFields = document.getElementById('reg-fields');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            if (tab === 'login') {
+                if (tabLogin) tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
+                if (tabRegister) tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
+                if (regFields) regFields.classList.add('hidden');
+                if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>${getTranslation('tabSignIn')}</span>`;
+            } else {
+                if (tabRegister) tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
+                if (tabLogin) tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
+                if (regFields) regFields.classList.remove('hidden');
+                if (submitBtn) submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> <span>${getTranslation('tabSignUp')}</span>`;
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const isReg = !document.getElementById('reg-fields')?.classList.contains('hidden');
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const remember = document.getElementById('auth-remember-me').checked;
+
+            if (isReg) {
+                const kunya = document.getElementById('auth-kunya').value.trim() || username;
+                const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+                const whatsapp = document.getElementById('auth-whatsapp').value.trim();
+
+                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                    showToast('Пользователь с таким логином уже существует!', 'error');
+                    return;
+                }
+
+                const uid = 'u_' + Date.now();
+                const newUser = {
+                    uid,
+                    username,
+                    passwordHash: password,
+                    kunya,
+                    gender,
+                    whatsapp,
+                    role: (username.toLowerCase() === 'admin' || username.toLowerCase() === 'salimnashho') ? 'SUPERUSER' : 'USER',
+                    verifiedShop: false
+                };
+
+                users.push(newUser);
+                if (firebaseDb) {
+                    firebaseDb.ref(`users/${uid}`).set(newUser);
+                }
+                saveUserSession(newUser, remember);
+                closeModal('modal-auth');
+                showToast('Регистрация успешна!', 'success');
+            } else {
+                const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+                
+                if (found) {
+                    const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
+
+                    if (isPasswordValid) {
+                        found.passwordHash = password;
+                        if (firebaseDb && found.uid) {
+                            firebaseDb.ref(`users/${found.uid}/passwordHash`).set(password);
+                        }
+
+                        saveUserSession(found, remember);
+                        closeModal('modal-auth');
+                        showToast(`С возвращением, ${found.kunya || found.username}!`, 'success');
+                        return;
+                    }
+                }
+                showToast('Неверный логин или пароль!', 'error');
+            }
+        }
+
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderAds();
+        }
+
+        function syncMobileSearch(val) {
+            const desktopInput = document.getElementById('search-input');
+            if (desktopInput) desktopInput.value = val;
+            resetPageAndRender();
+        }
+
+        function syncMobileRegion(val) {
+            const desktopFilter = document.getElementById('region-filter');
+            if (desktopFilter) desktopFilter.value = val;
+            resetPageAndRender();
+        }
+
+        function changePage(p) {
+            currentPage = p;
+            renderAds();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-amber-300';
+            }
+            updateLanguageUI();
+        }
+
+        function changeLanguage(lang) {
+            CURRENT_LANG = lang;
+            if (lang === 'AR') {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.documentElement.setAttribute('lang', 'ar');
+            } else if (lang === 'TR') {
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', 'tr');
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', 'ru');
+            }
+
+            updateLanguageUI();
+            renderCategoryPills();
+            renderAds();
+            updateFooterRatesUI();
+        }
+
+        function updateLanguageUI() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (key) el.innerText = getTranslation(key);
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (key) el.setAttribute('placeholder', getTranslation(key));
+            });
+
+            const langSelect = document.getElementById('lang-select');
+            if (langSelect) langSelect.value = CURRENT_LANG;
+
+            const isLight = document.body.classList.contains('light-mode');
+            const themeText = document.getElementById('theme-text');
+            if (themeText) {
+                themeText.innerText = isLight 
+                    ? (CURRENT_LANG === 'AR' ? 'المظهر الفاتح' : CURRENT_LANG === 'TR' ? 'Aydınlık Tema' : 'Светлая тема')
+                    : (CURRENT_LANG === 'AR' ? 'المظهر الداكن' : CURRENT_LANG === 'TR' ? 'Karanlık Tema' : 'Тёмная тема');
+            }
+        }
+
+        function acceptLaunchRules() {
+            SYSTEM_CONFIG.rulesAccepted = true;
+            try { localStorage.setItem('bs_rules_accepted', 'true'); } catch (e) {}
+            closeModal('modal-rules-agreement');
+            showToast('Условия приняты. Добро пожаловать!', 'success');
+        }
+
+        function openEditProfileModal(targetUsername) {
+            const user = users.find(u => u.username === targetUsername) || currentUser;
+            if (!user) return;
+
+            document.getElementById('edit-profile-username').value = user.username;
+            document.getElementById('edit-profile-login').value = user.username;
+            document.getElementById('edit-profile-password').value = '';
+            document.getElementById('edit-profile-kunya').value = user.kunya || '';
+            document.getElementById('edit-profile-whatsapp').value = user.whatsapp || '';
+
+            const adminFields = document.getElementById('edit-profile-admin-fields');
+            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                adminFields.classList.remove('hidden');
+                document.getElementById('edit-profile-gender').value = user.gender || 'MALE';
+                document.getElementById('edit-profile-role').value = user.role || 'USER';
+            } else {
+                adminFields.classList.add('hidden');
+            }
+
+            openModal('modal-edit-profile');
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            const originalUsername = document.getElementById('edit-profile-username').value;
+            const newLogin = document.getElementById('edit-profile-login').value.trim();
+            const newPassword = document.getElementById('edit-profile-password').value;
+            const newKunya = document.getElementById('edit-profile-kunya').value.trim();
+            const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
+
+            const userIndex = users.findIndex(u => u.username && u.username.toLowerCase() === originalUsername.toLowerCase());
+            if (userIndex === -1) {
+                showToast('Пользователь не найден!', 'error');
+                return;
+            }
+
+            if (newLogin.toLowerCase() !== originalUsername.toLowerCase() && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
+                showToast('Этот логин уже занят!', 'error');
+                return;
+            }
+
+            const u = users[userIndex];
+            u.username = newLogin;
+            if (newPassword && newPassword.trim() !== '') {
+                u.passwordHash = newPassword.trim();
+            }
+            u.kunya = newKunya;
+            u.whatsapp = newWhatsapp;
+
+            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                const genderEl = document.getElementById('edit-profile-gender');
+                const roleEl = document.getElementById('edit-profile-role');
+                if (genderEl) u.gender = genderEl.value;
+                if (roleEl) u.role = roleEl.value;
+            }
+
+            if (firebaseDb && u.uid) {
+                firebaseDb.ref(`users/${u.uid}`).set(u);
+            }
+
+            ads.forEach(ad => {
+                if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === originalUsername.toLowerCase()) {
+                    ad.sellerUsername = newLogin;
+                    ad.sellerKunya = newKunya;
+                    ad.sellerWhatsapp = newWhatsapp;
+                    if (firebaseDb && ad.id) {
+                        firebaseDb.ref(`ads/${ad.id}`).update({
+                            sellerUsername: newLogin,
+                            sellerKunya: newKunya,
+                            sellerWhatsapp: newWhatsapp
+                        });
+                    }
+                }
+            });
+            saveCachedAds();
+
+            if (currentUser && currentUser.username.toLowerCase() === originalUsername.toLowerCase()) {
+                currentUser = { ...u };
+                saveUserSession(currentUser, true);
+            }
+
+            closeModal('modal-edit-profile');
+            closeModal('modal-profile');
+            updateAuthUI();
+
+            if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
+                renderAdminTabContent();
+            }
+
+            showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
+        }
+
         function restoreUserSession() {
             try {
                 const saved = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user');
@@ -1367,13 +1819,15 @@
             showToast('Вы успешно вышли из аккаунта', 'info');
         }
 
-        // --- AD CREATION & MAP FUNCTIONS ---
         function openCreateAdModal() {
             if (!currentUser) {
                 openAuthModal();
                 showToast(getTranslation('btnSignIn'), 'warning');
                 return;
             }
+
+            pendingCreateImages = [];
+            renderPhotoThumbnailsGrid('create');
 
             const catSelect = document.getElementById('ad-category');
             if (catSelect) {
@@ -1481,55 +1935,14 @@
             }
         }
 
-        function handleImageCompressUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const img = new Image();
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 533;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-                    document.getElementById('ad-image-data').value = compressedDataUrl;
-
-                    const previewBox = document.getElementById('image-preview-box');
-                    const previewImg = document.getElementById('image-preview-img');
-                    if (previewBox && previewImg) {
-                        previewImg.src = compressedDataUrl;
-                        previewBox.classList.remove('hidden');
-                    }
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
         function handleCreateAdSubmit(e) {
             e.preventDefault();
             if (!currentUser) return;
+
+            if (pendingCreateImages.length === 0) {
+                showToast('Загрузите хотя бы 1 фотографию товара!', 'warning');
+                return;
+            }
 
             const title = document.getElementById('ad-title').value.trim();
             const category = document.getElementById('ad-category').value;
@@ -1540,7 +1953,6 @@
             const price = isFree ? 0 : parseFloat(document.getElementById('ad-price').value || 0);
             const currency = document.getElementById('ad-currency').value;
             const desc = document.getElementById('ad-desc').value.trim();
-            const image = document.getElementById('ad-image-data').value || 'https://placehold.co/800x533/1e293b/fff?text=BarakaSouq';
             const lat = parseFloat(document.getElementById('ad-lat').value || 33.5138);
             const lng = parseFloat(document.getElementById('ad-lng').value || 36.2765);
 
@@ -1559,7 +1971,8 @@
                 price,
                 currency,
                 desc,
-                image,
+                images: [...pendingCreateImages],
+                image: pendingCreateImages[0], // backward compatibility
                 lat,
                 lng,
                 sellerUsername: currentUser.username,
@@ -1622,7 +2035,6 @@
             showToast('ID код скопирован в буфер обмена!', 'success');
         }
 
-        // --- DIFFERENTIAL CLOUD SYNC LOGIC ---
         function initFirebaseSync() {
             const firebaseConfig = {
                 databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com"
@@ -1910,20 +2322,37 @@
                 const queueCount = (ad.queue || []).length;
                 const isFav = favorites.includes(ad.id);
 
+                const adImages = getAdImages(ad);
+                const coverImage = adImages[0];
+                const totalPhotos = adImages.length;
+
                 return `
                     <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
-                        <div class="relative h-44 bg-slate-900 overflow-hidden">
-                            <img src="${ad.image}" alt="${ad.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
+                        <!-- Full Image Aspect Container with Blurred Background Fill -->
+                        <div class="relative h-48 bg-slate-950 overflow-hidden flex items-center justify-center">
+                            <!-- Background Blurred Layer for Aesthetics -->
+                            <img src="${coverImage}" class="absolute inset-0 w-full h-full object-cover blur-md opacity-30 scale-110 pointer-events-none" aria-hidden="true" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
                             
-                            <div class="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
+                            <!-- Main Foreground Fully Visible Image -->
+                            <img src="${coverImage}" alt="${ad.title}" class="relative z-0 max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
+                            
+                            <!-- Ad ID Badge -->
+                            <div class="absolute top-2.5 left-2.5 z-10 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
                                 ${ad.id}
                             </div>
 
+                            <!-- Photo Counter Badge -->
+                            <div class="absolute bottom-2.5 right-2.5 z-10 bg-black/75 backdrop-blur-md text-slate-200 px-2 py-0.5 rounded-md text-[10px] font-bold border border-white/10 flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-camera text-amber-400 text-[10px]"></i>
+                                <span>${totalPhotos}</span>
+                            </div>
+
+                            <!-- Favorite Button -->
                             <button onclick="toggleFavorite('${ad.id}', event)" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
                                 <i class="fa-solid fa-star ${isFav ? 'text-amber-400' : 'text-slate-400'}"></i>
                             </button>
 
-                            <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end">
+                            <div class="absolute bottom-2.5 left-2.5 z-10 flex flex-wrap gap-1 items-end">
                                 ${ad.isWomenOnly ? `
                                     <span class="bg-pink-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
                                         <i class="fa-solid fa-user-large-slash"></i> ${getTranslation('womenTag')}
@@ -1971,338 +2400,97 @@
             }
         }
 
-        function resetPageAndRender() {
-            currentPage = 1;
-            renderAds();
-        }
-
-        function syncMobileSearch(val) {
-            const desktopInput = document.getElementById('search-input');
-            if (desktopInput) desktopInput.value = val;
-            resetPageAndRender();
-        }
-
-        function syncMobileRegion(val) {
-            const desktopFilter = document.getElementById('region-filter');
-            if (desktopFilter) desktopFilter.value = val;
-            resetPageAndRender();
-        }
-
-        function changePage(p) {
-            currentPage = p;
-            renderAds();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            const icon = document.getElementById('theme-icon');
-            if (icon) {
-                icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-amber-300';
-            }
-            updateLanguageUI();
-        }
-
-        function changeLanguage(lang) {
-            CURRENT_LANG = lang;
-            if (lang === 'AR') {
-                document.documentElement.setAttribute('dir', 'rtl');
-                document.documentElement.setAttribute('lang', 'ar');
-            } else if (lang === 'TR') {
-                document.documentElement.setAttribute('dir', 'ltr');
-                document.documentElement.setAttribute('lang', 'tr');
-            } else {
-                document.documentElement.setAttribute('dir', 'ltr');
-                document.documentElement.setAttribute('lang', 'ru');
-            }
-
-            updateLanguageUI();
-            renderCategoryPills();
-            renderAds();
-            updateFooterRatesUI();
-        }
-
-        function updateLanguageUI() {
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (key) el.innerText = getTranslation(key);
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (key) el.setAttribute('placeholder', getTranslation(key));
-            });
-
-            const langSelect = document.getElementById('lang-select');
-            if (langSelect) langSelect.value = CURRENT_LANG;
-
-            const isLight = document.body.classList.contains('light-mode');
-            const themeText = document.getElementById('theme-text');
-            if (themeText) {
-                themeText.innerText = isLight 
-                    ? (CURRENT_LANG === 'AR' ? 'المظهر الفاتح' : CURRENT_LANG === 'TR' ? 'Aydınlık Tema' : 'Светлая тема')
-                    : (CURRENT_LANG === 'AR' ? 'المظهر الداكن' : CURRENT_LANG === 'TR' ? 'Karanlık Tema' : 'Тёмная тема');
-            }
-        }
-
-        function acceptLaunchRules() {
-            SYSTEM_CONFIG.rulesAccepted = true;
-            try { localStorage.setItem('bs_rules_accepted', 'true'); } catch (e) {}
-            closeModal('modal-rules-agreement');
-            showToast('Условия приняты. Добро пожаловать!', 'success');
-        }
-
-        function toggleFavorite(adId, e) {
-            if (e) e.stopPropagation();
-            if (favorites.includes(adId)) {
-                favorites = favorites.filter(id => id !== adId);
-                showToast('Удалено из избранного', 'info');
-            } else {
-                favorites.push(adId);
-                showToast('Добавлено в избранное!', 'success');
-            }
-            try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
-            renderCategoryPills();
-            renderAds();
-        }
-
-        function openAuthModal() {
-            openModal('modal-auth');
-        }
-
-        function switchAuthTab(tab) {
-            const tabLogin = document.getElementById('tab-login');
-            const tabRegister = document.getElementById('tab-register');
-            const regFields = document.getElementById('reg-fields');
-            const submitBtn = document.getElementById('auth-submit-btn');
-
-            if (tab === 'login') {
-                tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
-                tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
-                regFields.classList.add('hidden');
-                submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>${getTranslation('tabSignIn')}</span>`;
-            } else {
-                tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
-                tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
-                regFields.classList.remove('hidden');
-                submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> <span>${getTranslation('tabSignUp')}</span>`;
-            }
-        }
-
-        function handleAuthSubmit(e) {
-            e.preventDefault();
-            const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            const remember = document.getElementById('auth-remember-me').checked;
-
-            if (isReg) {
-                const kunya = document.getElementById('auth-kunya').value.trim() || username;
-                const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
-                const whatsapp = document.getElementById('auth-whatsapp').value.trim();
-
-                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                    showToast('Пользователь с таким логином уже существует!', 'error');
-                    return;
-                }
-
-                const uid = 'u_' + Date.now();
-                const newUser = {
-                    uid,
-                    username,
-                    passwordHash: password,
-                    kunya,
-                    gender,
-                    whatsapp,
-                    role: (username.toLowerCase() === 'admin' || username.toLowerCase() === 'salimnashho') ? 'SUPERUSER' : 'USER',
-                    verifiedShop: false
-                };
-
-                users.push(newUser);
-                if (firebaseDb) {
-                    firebaseDb.ref(`users/${uid}`).set(newUser);
-                }
-                saveUserSession(newUser, remember);
-                closeModal('modal-auth');
-                showToast('Регистрация успешна!', 'success');
-            } else {
-                const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-                
-                if (found) {
-                    const isPasswordValid = !found.passwordHash || found.passwordHash === password || found.role === 'SUPERUSER' || found.role === 'ADMIN';
-
-                    if (isPasswordValid) {
-                        found.passwordHash = password;
-                        if (firebaseDb && found.uid) {
-                            firebaseDb.ref(`users/${found.uid}/passwordHash`).set(password);
-                        }
-
-                        saveUserSession(found, remember);
-                        closeModal('modal-auth');
-                        showToast(`С возвращением, ${found.kunya || found.username}!`, 'success');
-                        return;
-                    }
-                }
-                showToast('Неверный логин или пароль!', 'error');
-            }
-        }
-
-        function openProfileModal() {
-            if (!currentUser) return;
-            const content = document.getElementById('profile-content');
-            if (!content) return;
-
-            content.innerHTML = `
-                <div class="text-center space-y-3">
-                    <div class="w-16 h-16 rounded-3xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl mx-auto border border-blue-500/30">
-                        <i class="fa-solid fa-user-gear"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-extrabold text-white">${currentUser.kunya || currentUser.username}</h3>
-                        <p class="text-xs text-slate-400">@${currentUser.username} • <span class="text-amber-400 font-bold">${currentUser.role}</span></p>
-                    </div>
-
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">WhatsApp:</span>
-                            <span class="font-bold text-emerald-400">${currentUser.whatsapp || 'Не указан'}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Пол:</span>
-                            <span class="font-bold">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 pt-2">
-                        <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 py-2.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 transition-all">
-                            <i class="fa-solid fa-pen-to-square"></i> Изменить анкету
-                        </button>
-                        <button onclick="logout()" class="py-2.5 px-4 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 transition-all">
-                            Выйти
-                        </button>
-                    </div>
-                </div>
-            `;
-            openModal('modal-profile');
-        }
-
-        function openEditProfileModal(targetUsername) {
-            const user = users.find(u => u.username === targetUsername) || currentUser;
-            if (!user) return;
-
-            document.getElementById('edit-profile-username').value = user.username;
-            document.getElementById('edit-profile-login').value = user.username;
-            document.getElementById('edit-profile-password').value = '';
-            document.getElementById('edit-profile-kunya').value = user.kunya || '';
-            document.getElementById('edit-profile-whatsapp').value = user.whatsapp || '';
-
-            const adminFields = document.getElementById('edit-profile-admin-fields');
-            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                adminFields.classList.remove('hidden');
-                document.getElementById('edit-profile-gender').value = user.gender || 'MALE';
-                document.getElementById('edit-profile-role').value = user.role || 'USER';
-            } else {
-                adminFields.classList.add('hidden');
-            }
-
-            openModal('modal-edit-profile');
-        }
-
-        function handleSaveProfile(e) {
-            e.preventDefault();
-            const originalUsername = document.getElementById('edit-profile-username').value;
-            const newLogin = document.getElementById('edit-profile-login').value.trim();
-            const newPassword = document.getElementById('edit-profile-password').value;
-            const newKunya = document.getElementById('edit-profile-kunya').value.trim();
-            const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
-
-            const userIndex = users.findIndex(u => u.username && u.username.toLowerCase() === originalUsername.toLowerCase());
-            if (userIndex === -1) {
-                showToast('Пользователь не найден!', 'error');
-                return;
-            }
-
-            if (newLogin.toLowerCase() !== originalUsername.toLowerCase() && users.some(u => u.username.toLowerCase() === newLogin.toLowerCase())) {
-                showToast('Этот логин уже занят!', 'error');
-                return;
-            }
-
-            const u = users[userIndex];
-            u.username = newLogin;
-            if (newPassword && newPassword.trim() !== '') {
-                u.passwordHash = newPassword.trim();
-            }
-            u.kunya = newKunya;
-            u.whatsapp = newWhatsapp;
-
-            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                const genderEl = document.getElementById('edit-profile-gender');
-                const roleEl = document.getElementById('edit-profile-role');
-                if (genderEl) u.gender = genderEl.value;
-                if (roleEl) u.role = roleEl.value;
-            }
-
-            if (firebaseDb && u.uid) {
-                firebaseDb.ref(`users/${u.uid}`).set(u);
-            }
-
-            ads.forEach(ad => {
-                if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === originalUsername.toLowerCase()) {
-                    ad.sellerUsername = newLogin;
-                    ad.sellerKunya = newKunya;
-                    ad.sellerWhatsapp = newWhatsapp;
-                    if (firebaseDb && ad.id) {
-                        firebaseDb.ref(`ads/${ad.id}`).update({
-                            sellerUsername: newLogin,
-                            sellerKunya: newKunya,
-                            sellerWhatsapp: newWhatsapp
-                        });
-                    }
-                }
-            });
-            saveCachedAds();
-
-            if (currentUser && currentUser.username.toLowerCase() === originalUsername.toLowerCase()) {
-                currentUser = { ...u };
-                saveUserSession(currentUser, true);
-            }
-
-            closeModal('modal-edit-profile');
-            closeModal('modal-profile');
-            updateAuthUI();
-
-            if (document.getElementById('modal-admin-panel') && !document.getElementById('modal-admin-panel').classList.contains('hidden')) {
-                renderAdminTabContent();
-            }
-
-            showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
-        }
-
         function openAdDetail(adId) {
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
 
+            activeDetailGalleryIndex = 0;
+            const content = document.getElementById('detail-content');
+            if (!content) return;
+
+            renderDetailModalView(ad);
+            openModal('modal-ad-detail');
+        }
+
+        function switchDetailGalleryPhoto(adId, newIndex) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+            const images = getAdImages(ad);
+            if (newIndex < 0) newIndex = images.length - 1;
+            if (newIndex >= images.length) newIndex = 0;
+
+            activeDetailGalleryIndex = newIndex;
+            renderDetailModalView(ad);
+        }
+
+        function openLightbox(imgUrl) {
+            const lbImg = document.getElementById('lightbox-img');
+            if (lbImg) lbImg.src = imgUrl;
+            openModal('modal-lightbox');
+        }
+
+        function renderDetailModalView(ad) {
             const content = document.getElementById('detail-content');
             if (!content) return;
 
             const activeWhatsapp = getSellerWhatsapp(ad);
             const activeKunya = getSellerKunya(ad);
-
             const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
             const queueList = ad.queue || [];
             const isUserInQueue = currentUser && queueList.some(q => q.username === currentUser.username);
             const userQueueRank = isUserInQueue ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0;
             const isOwner = currentUser && (currentUser.username.toLowerCase() === ad.sellerUsername.toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
 
+            const images = getAdImages(ad);
+            if (activeDetailGalleryIndex >= images.length) activeDetailGalleryIndex = 0;
+            const currentPhoto = images[activeDetailGalleryIndex];
+
             content.innerHTML = `
                 <div class="space-y-4">
-                    <div class="relative h-64 sm:h-80 rounded-2xl bg-slate-900 overflow-hidden border border-white/10">
-                        <img src="${ad.image}" alt="${ad.title}" class="w-full h-full object-cover">
-                        <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10">
+                    <!-- Gallery View Box with Blurred Backdrop & Full Frame Image -->
+                    <div class="relative h-72 sm:h-96 rounded-2xl bg-slate-950 overflow-hidden border border-white/10 flex items-center justify-center group">
+                        <!-- Blurred Background Fill -->
+                        <img src="${currentPhoto}" class="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none" aria-hidden="true">
+                        
+                        <!-- Main Full-View Image -->
+                        <img src="${currentPhoto}" alt="${ad.title}" onclick="openLightbox('${currentPhoto}')" class="relative z-10 max-w-full max-h-full object-contain cursor-zoom-in hover:scale-[1.01] transition-transform">
+                        
+                        <div class="absolute top-3 left-3 z-20 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10">
                             ${ad.id}
                         </div>
+
+                        <!-- Fullscreen Hint Badge -->
+                        <button onclick="openLightbox('${currentPhoto}')" class="absolute top-3 right-14 z-20 bg-black/60 hover:bg-black/80 text-white px-2.5 py-1 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-expand text-amber-400"></i>
+                            <span class="hidden sm:inline">На весь экран</span>
+                        </button>
+
+                        ${images.length > 1 ? `
+                            <!-- Gallery Prev/Next Navigation Controls -->
+                            <button onclick="switchDetailGalleryPhoto('${ad.id}', ${activeDetailGalleryIndex - 1})" class="absolute left-3 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 transition-all shadow-lg active:scale-90">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button onclick="switchDetailGalleryPhoto('${ad.id}', ${activeDetailGalleryIndex + 1})" class="absolute right-3 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 transition-all shadow-lg active:scale-90">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                            
+                            <!-- Counter Badge -->
+                            <div class="absolute bottom-3 right-3 z-20 bg-black/70 backdrop-blur-md text-amber-300 font-mono text-xs px-2.5 py-1 rounded-xl border border-white/10 font-bold">
+                                ${activeDetailGalleryIndex + 1} / ${images.length}
+                            </div>
+                        ` : ''}
                     </div>
+
+                    <!-- Gallery Thumbnails Bar -->
+                    ${images.length > 1 ? `
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                            ${images.map((imgUrl, idx) => `
+                                <button onclick="switchDetailGalleryPhoto('${ad.id}', ${idx})" class="relative shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-slate-900 border-2 ${idx === activeDetailGalleryIndex ? 'border-amber-400 scale-105 shadow-md' : 'border-white/10 opacity-60 hover:opacity-100'} transition-all">
+                                    <img src="${imgUrl}" class="w-full h-full object-cover">
+                                </button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
 
                     <div class="space-y-2">
                         <div class="flex items-start justify-between gap-2">
@@ -2358,7 +2546,6 @@
                     ` : ''}
                 </div>
             `;
-            openModal('modal-ad-detail');
         }
 
         function openEditAdModal(adId) {
@@ -2370,6 +2557,9 @@
                 showToast('У вас нет прав для редактирования этого объявления!', 'error');
                 return;
             }
+
+            pendingEditImages = [...getAdImages(ad)];
+            renderPhotoThumbnailsGrid('edit');
 
             const catSelect = document.getElementById('edit-ad-category');
             if (catSelect) {
@@ -2399,6 +2589,11 @@
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
 
+            if (pendingEditImages.length === 0) {
+                showToast('Загрузите хотя бы 1 фотографию!', 'warning');
+                return;
+            }
+
             ad.title = document.getElementById('edit-ad-title').value.trim();
             ad.category = document.getElementById('edit-ad-category').value;
             ad.region = document.getElementById('edit-ad-region').value;
@@ -2408,6 +2603,9 @@
             ad.price = ad.isFree ? 0 : parseFloat(document.getElementById('edit-ad-price').value || 0);
             ad.currency = document.getElementById('edit-ad-currency').value;
             ad.desc = document.getElementById('edit-ad-desc').value.trim();
+
+            ad.images = [...pendingEditImages];
+            ad.image = pendingEditImages[0];
 
             saveCachedAds();
 
@@ -2694,34 +2892,37 @@
                         </div>
 
                         <div class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
-                            ${currentList.length === 0 ? '<div class="text-center py-8 text-slate-500">Список пуст</div>' : currentList.map(a => `
-                                <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <img src="${a.image}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
-                                        <div>
-                                            <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
-                                            <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
+                            ${currentList.length === 0 ? '<div class="text-center py-8 text-slate-500">Список пуст</div>' : currentList.map(a => {
+                                const cover = getAdImages(a)[0];
+                                return `
+                                    <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-3">
+                                            <img src="${cover}" class="w-10 h-10 rounded-xl object-cover border border-white/10" onerror="this.src='https://placehold.co/100/1e293b/fff?text=AD'">
+                                            <div>
+                                                <div class="font-bold text-white text-xs">${a.title} <span class="text-[10px] text-amber-400 font-mono">(${a.id})</span></div>
+                                                <div class="text-[10px] text-slate-400">${a.city} • Автор: @${a.sellerUsername}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            ${a.status === 'ACTIVE' ? `
+                                                <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
+                                                    Редактировать
+                                                </button>
+                                                <button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold border border-purple-500/30 text-[11px]">
+                                                    В архив
+                                                </button>
+                                            ` : `
+                                                <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
+                                                    Восстановить
+                                                </button>
+                                            `}
+                                            <button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
+                                                Удалить
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        ${a.status === 'ACTIVE' ? `
-                                            <button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/50 text-amber-300 font-bold border border-amber-500/30 text-[11px]">
-                                                Редактировать
-                                            </button>
-                                            <button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold border border-purple-500/30 text-[11px]">
-                                                В архив
-                                            </button>
-                                        ` : `
-                                            <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold border border-emerald-500/30 text-[11px]">
-                                                Восстановить
-                                            </button>
-                                        `}
-                                        <button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold border border-rose-500/30 text-[11px]">
-                                            Удалить
-                                        </button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
