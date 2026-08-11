@@ -168,7 +168,7 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Shop Management Header Button (Dynamically toggles: Create Store or My Store) -->
+                <!-- Shop Management Header Button -->
                 <div id="shop-header-btn-container" class="hidden">
                     <button id="shop-header-btn" onclick="handleHeaderShopAction()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
                         <i id="shop-header-btn-icon" class="fa-solid fa-store text-amber-300"></i>
@@ -194,7 +194,10 @@
 
                 <!-- Auth/Profile Button -->
                 <button id="auth-btn" onclick="openAuthModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95">
-                    <i class="fa-solid fa-user"></i>
+                    <div id="auth-btn-avatar" class="w-5 h-5 rounded-full overflow-hidden bg-slate-900 hidden flex items-center justify-center border border-white/20">
+                        <img id="auth-btn-avatar-img" class="w-full h-full object-cover">
+                    </div>
+                    <i id="auth-btn-default-icon" class="fa-solid fa-user"></i>
                     <span id="auth-btn-text" class="hidden sm:inline" data-i18n="btnSignIn">Войти</span>
                 </button>
             </div>
@@ -228,7 +231,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
 
-        <!-- Categories Toolbar (Compact Wrap on Mobile so Badges are Never Clipped) -->
+        <!-- Categories Toolbar -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex flex-wrap justify-center sm:flex-nowrap sm:justify-start gap-2 text-xs w-full pt-2.5 pb-2 px-1">
                 <!-- Dynamically Rendered Category Icon Pills -->
@@ -286,11 +289,11 @@
         </div>
     </div>
 
-    <!-- Create Shop Modal -->
+    <!-- Create / Edit Shop Modal -->
     <div id="modal-create-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
-                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                <h3 id="shop-modal-title" class="text-sm font-extrabold text-white flex items-center gap-2">
                     <i class="fa-solid fa-store text-amber-400"></i>
                     <span>Открытие нового магазина в Авито Шам</span>
                 </h3>
@@ -321,7 +324,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Регион базирования *</label>
+                        <label class="block text-slate-400 mb-1">Регион базирования (Гео) *</label>
                         <select id="shop-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
@@ -331,6 +334,12 @@
                             <option value="HAMA" class="bg-slate-900">Хама</option>
                             <option value="LAT" class="bg-slate-900">Латакия</option>
                             <option value="TAR" class="bg-slate-900">Тартус</option>
+                            <option value="RAQ" class="bg-slate-900">Ракка</option>
+                            <option value="DEIR" class="bg-slate-900">Дейр-эз-Зор</option>
+                            <option value="HAS" class="bg-slate-900">Хасеке</option>
+                            <option value="DAR" class="bg-slate-900">Дараа</option>
+                            <option value="SUW" class="bg-slate-900">Эс-Сувейда</option>
+                            <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
                         </select>
                     </div>
                 </div>
@@ -358,14 +367,14 @@
                     <i class="fa-solid fa-circle-info"></i> Магазин будет зарегистрирован в системе и автоматически отправлен на проверку администратору.
                 </div>
 
-                <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg transition-all active:scale-95">
-                    Создать магазин
+                <button type="submit" id="shop-submit-btn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg transition-all active:scale-95">
+                    Сохранить магазин
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- My Shop Dashboard & Backup Modal -->
+    <!-- My Shop Dashboard Modal -->
     <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
             <button onclick="closeModal('modal-my-shop')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -401,9 +410,9 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
+    <!-- Auth Modal (With Avatar Upload) -->
     <div id="modal-auth" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4">
+        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4 max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             
             <div class="flex border-b border-white/10 mb-2">
@@ -433,6 +442,15 @@
                     <div>
                         <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
                         <input type="text" id="auth-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Абу Салим">
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 mb-1">Аватар / Фото профиля (опционально)</label>
+                        <input type="file" id="auth-avatar-file" accept="image/*" onchange="processAvatarUpload(event, 'auth')" class="w-full text-slate-400 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                        <input type="hidden" id="auth-avatar-data">
+                        <div id="auth-avatar-preview-box" class="hidden mt-2 w-16 h-16 rounded-2xl bg-slate-900 overflow-hidden relative border border-blue-500/40">
+                            <img id="auth-avatar-preview-img" class="w-full h-full object-cover">
+                        </div>
                     </div>
 
                     <div>
@@ -487,7 +505,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1" data-i18n="adRegionLabel">Регион *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="adRegionLabel">Регион / Провинция *</label>
                         <select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
@@ -518,7 +536,6 @@
                     <input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
                 </div>
 
-                <!-- Personal Store Category Selection (If Seller Has Store) -->
                 <div id="ad-store-cat-container" class="hidden">
                     <label class="block text-purple-300 font-bold mb-1"><i class="fa-solid fa-tags"></i> Личная категория Вашего магазина</label>
                     <select id="ad-store-category" class="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs focus:outline-none text-purple-200">
@@ -566,7 +583,7 @@
                     </div>
                 </div>
 
-                <!-- Multi-Photo Upload Area (up to 6 photos) -->
+                <!-- Multi-Photo Upload Area -->
                 <div>
                     <div class="flex items-center justify-between mb-1">
                         <label class="block text-slate-400 font-bold" data-i18n="photoLabel">Фотографии товара (до 6 шт.) *</label>
@@ -617,7 +634,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Регион *</label>
+                        <label class="block text-slate-400 mb-1">Регион / Провинция *</label>
                         <select id="edit-ad-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
@@ -702,7 +719,7 @@
         </div>
     </div>
 
-    <!-- Ad Detail Modal (With Multi-Photo Carousel Viewer & Lightbox) -->
+    <!-- Ad Detail Modal (With Map Preview & Location Details) -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
@@ -724,7 +741,7 @@
         </div>
     </div>
 
-    <!-- Edit User Profile Modal -->
+    <!-- Edit User Profile Modal (With Full Password, Username & Avatar Control) -->
     <div id="modal-edit-profile" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 relative space-y-3 text-xs">
             <button onclick="closeModal('modal-edit-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -742,6 +759,14 @@
                 <div>
                     <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
                     <input type="text" id="edit-profile-kunya" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Аватар / Фото профиля</label>
+                    <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="processAvatarUpload(event, 'edit')" class="w-full text-slate-400 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                    <input type="hidden" id="edit-profile-avatar-data">
+                    <div id="edit-profile-avatar-preview-box" class="mt-2 w-16 h-16 rounded-2xl bg-slate-900 overflow-hidden relative border border-blue-500/40">
+                        <img id="edit-profile-avatar-preview-img" class="w-full h-full object-cover">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-slate-400 mb-1" data-i18n="labelWhatsapp">WhatsApp *</label>
@@ -856,6 +881,8 @@
 
         let createMap = null;
         let createMarker = null;
+        let detailMap = null;
+        let detailMarker = null;
 
         let pendingCreateImages = [];
         let pendingEditImages = [];
@@ -868,6 +895,23 @@
         let SYSTEM_CONFIG = {
             rulesAccepted: false,
             adminTab: 'overview'
+        };
+
+        const REGION_NAMES = {
+            'DAM': 'Дамаск',
+            'RIF_DAM': 'Риф-Дамаск',
+            'ALEP': 'Алеппо',
+            'IDL': 'Идлиб',
+            'HOMS': 'Хомс',
+            'HAMA': 'Хама',
+            'LAT': 'Латакия',
+            'TAR': 'Тартус',
+            'RAQ': 'Ракка',
+            'DEIR': 'Дейр-эз-Зор',
+            'HAS': 'Хасеке',
+            'DAR': 'Дараа',
+            'SUW': 'Эс-Сувейда',
+            'QUN': 'Эль-Кунейтра'
         };
 
         const customCategories = [
@@ -887,18 +931,22 @@
         let archivedUsers = [];
         let ads = [];
 
-        // Helper: Always resolves active WhatsApp number live from user account
         function getSellerWhatsapp(ad) {
             if (!ad) return '';
             const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
             return (seller && seller.whatsapp) ? seller.whatsapp : (ad.sellerWhatsapp || '');
         }
 
-        // Helper: Always resolves active Kunya/Name live from user account
         function getSellerKunya(ad) {
             if (!ad) return '';
             const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
             return (seller && seller.kunya) ? seller.kunya : (ad.sellerKunya || ad.sellerUsername || '');
+        }
+
+        function getSellerAvatar(ad) {
+            if (!ad) return null;
+            const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+            return seller?.avatar || null;
         }
 
         const TRANSLATIONS = {
@@ -1234,7 +1282,6 @@
             }
         };
 
-        // --- LOCAL STORAGE CACHING HELPERS ---
         function loadCachedAds() {
             try {
                 const cached = localStorage.getItem('bs_cached_ads');
@@ -1350,6 +1397,9 @@
         function updateAuthUI() {
             const authBtnText = document.getElementById('auth-btn-text');
             const authBtn = document.getElementById('auth-btn');
+            const authAvatarBox = document.getElementById('auth-btn-avatar');
+            const authAvatarImg = document.getElementById('auth-btn-avatar-img');
+            const authDefaultIcon = document.getElementById('auth-btn-default-icon');
             const createAdBtn = document.getElementById('create-ad-btn-container');
             const adminQuickBtn = document.getElementById('admin-quick-btn-container');
             const shopHeaderContainer = document.getElementById('shop-header-btn-container');
@@ -1360,6 +1410,15 @@
                 if (authBtnText) authBtnText.innerText = currentUser.kunya || currentUser.username;
                 if (authBtn) authBtn.onclick = openProfileModal;
                 if (createAdBtn) createAdBtn.classList.remove('hidden');
+
+                if (currentUser.avatar && authAvatarBox && authAvatarImg && authDefaultIcon) {
+                    authAvatarImg.src = currentUser.avatar;
+                    authAvatarBox.classList.remove('hidden');
+                    authDefaultIcon.classList.add('hidden');
+                } else if (authAvatarBox && authDefaultIcon) {
+                    authAvatarBox.classList.add('hidden');
+                    authDefaultIcon.classList.remove('hidden');
+                }
 
                 if (shopHeaderContainer) shopHeaderContainer.classList.remove('hidden');
                 if (currentUser.shop) {
@@ -1381,6 +1440,10 @@
                 if (createAdBtn) createAdBtn.classList.add('hidden');
                 if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
                 if (shopHeaderContainer) shopHeaderContainer.classList.add('hidden');
+                if (authAvatarBox && authDefaultIcon) {
+                    authAvatarBox.classList.add('hidden');
+                    authDefaultIcon.classList.remove('hidden');
+                }
             }
             renderCategoryPills();
             renderAds();
@@ -1396,7 +1459,7 @@
             if (currentUser.shop) {
                 openMyShopModal();
             } else {
-                openModal('modal-create-shop');
+                openCreateShopModal();
             }
         }
 
@@ -1411,8 +1474,7 @@
             showToast('Вы успешно вышли из аккаунта', 'info');
         }
 
-        // --- MULTI-PHOTO UPLOAD WITH CANVAS COMPRESSION & WEBP (Up to 6 Photos) ---
-        function compressSingleImageFile(file) {
+        function compressSingleImageFile(file, maxDim = 650, quality = 0.65) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onerror = () => reject(new Error("File read error"));
@@ -1421,19 +1483,18 @@
                     img.onerror = () => reject(new Error("Image load error"));
                     img.onload = function () {
                         const canvas = document.createElement('canvas');
-                        const MAX_DIM = 650;
                         let width = img.width;
                         let height = img.height;
 
                         if (width > height) {
-                            if (width > MAX_DIM) {
-                                height = Math.round(height * (MAX_DIM / width));
-                                width = MAX_DIM;
+                            if (width > maxDim) {
+                                height = Math.round(height * (maxDim / width));
+                                width = maxDim;
                             }
                         } else {
-                            if (height > MAX_DIM) {
-                                width = Math.round(width * (MAX_DIM / height));
-                                height = MAX_DIM;
+                            if (height > maxDim) {
+                                width = Math.round(width * (maxDim / height));
+                                height = maxDim;
                             }
                         }
 
@@ -1442,9 +1503,9 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        let compressedDataUrl = canvas.toDataURL('image/webp', 0.65);
+                        let compressedDataUrl = canvas.toDataURL('image/webp', quality);
                         if (!compressedDataUrl.startsWith('data:image/webp')) {
-                            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                            compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                         }
                         resolve(compressedDataUrl);
                     };
@@ -1452,6 +1513,63 @@
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        function processSquareImageCrop(file, size = 300) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+
+                        const minDim = Math.min(img.width, img.height);
+                        const sx = (img.width - minDim) / 2;
+                        const sy = (img.height - minDim) / 2;
+
+                        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+
+                        let compressed = canvas.toDataURL('image/webp', 0.75);
+                        if (!compressed.startsWith('data:image/webp')) {
+                            compressed = canvas.toDataURL('image/jpeg', 0.75);
+                        }
+                        resolve(compressed);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function processAvatarUpload(e, mode = 'auth') {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const compressedAvatar = await processSquareImageCrop(file, 250);
+                if (mode === 'auth') {
+                    document.getElementById('auth-avatar-data').value = compressedAvatar;
+                    const previewBox = document.getElementById('auth-avatar-preview-box');
+                    const previewImg = document.getElementById('auth-avatar-preview-img');
+                    if (previewBox && previewImg) {
+                        previewImg.src = compressedAvatar;
+                        previewBox.classList.remove('hidden');
+                    }
+                } else if (mode === 'edit') {
+                    document.getElementById('edit-profile-avatar-data').value = compressedAvatar;
+                    const previewBox = document.getElementById('edit-profile-avatar-preview-box');
+                    const previewImg = document.getElementById('edit-profile-avatar-preview-img');
+                    if (previewBox && previewImg) {
+                        previewImg.src = compressedAvatar;
+                        previewBox.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                console.warn('Error processing avatar photo:', err);
+            }
         }
 
         async function handleMultiImageCompressUpload(e, mode = 'create') {
@@ -1472,7 +1590,7 @@
 
             for (const file of filesToProcess) {
                 try {
-                    const compressed = await compressSingleImageFile(file);
+                    const compressed = await compressSingleImageFile(file, 650, 0.65);
                     targetArr.push(compressed);
                     renderPhotoThumbnailsGrid(mode);
                 } catch (err) {
@@ -1510,43 +1628,25 @@
             renderPhotoThumbnailsGrid(mode);
         }
 
-        // --- STORE LOGO PROCESSOR (AUTO 1:1 SQUARE CROP & FIT) ---
-        function processShopLogoUpload(e) {
+        async function processShopLogoUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const img = new Image();
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const SIZE = 300;
-                    canvas.width = SIZE;
-                    canvas.height = SIZE;
-                    const ctx = canvas.getContext('2d');
+            try {
+                const compressedLogo = await processSquareImageCrop(file, 300);
+                document.getElementById('shop-logo-data').value = compressedLogo;
 
-                    const minDim = Math.min(img.width, img.height);
-                    const sx = (img.width - minDim) / 2;
-                    const sy = (img.height - minDim) / 2;
-
-                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, SIZE, SIZE);
-
-                    const compressedLogo = canvas.toDataURL('image/jpeg', 0.80);
-                    document.getElementById('shop-logo-data').value = compressedLogo;
-
-                    const previewBox = document.getElementById('shop-logo-preview-box');
-                    const previewImg = document.getElementById('shop-logo-preview-img');
-                    if (previewBox && previewImg) {
-                        previewImg.src = compressedLogo;
-                        previewBox.classList.remove('hidden');
-                    }
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+                const previewBox = document.getElementById('shop-logo-preview-box');
+                const previewImg = document.getElementById('shop-logo-preview-img');
+                if (previewBox && previewImg) {
+                    previewImg.src = compressedLogo;
+                    previewBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.warn('Error processing shop logo:', err);
+            }
         }
 
-        // --- AD CREATION & MAP FUNCTIONS ---
         function openCreateAdModal() {
             if (!currentUser) {
                 openAuthModal();
@@ -1566,7 +1666,6 @@
                 }).join('');
             }
 
-            // Populate store custom categories if seller has a store
             const storeCatContainer = document.getElementById('ad-store-cat-container');
             const storeCatSelect = document.getElementById('ad-store-category');
             if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) {
@@ -1751,7 +1850,55 @@
             showToast('ID код ShamCash скопирован в буфер обмена!', 'success');
         }
 
-        // --- STORE MANAGEMENT LOGIC ---
+        function openCreateShopModal() {
+            if (!currentUser) {
+                openAuthModal();
+                showToast('Войдите в аккаунт для создания магазина', 'warning');
+                return;
+            }
+
+            const titleEl = document.getElementById('shop-modal-title');
+            const submitBtn = document.getElementById('shop-submit-btn');
+
+            if (currentUser.shop) {
+                if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-store text-amber-400"></i> <span>Редактирование Вашего магазина</span>`;
+                if (submitBtn) submitBtn.innerText = "Сохранить изменения магазина";
+
+                document.getElementById('shop-name').value = currentUser.shop.name || '';
+                document.getElementById('shop-slogan').value = currentUser.shop.slogan || '';
+                document.getElementById('shop-category').value = currentUser.shop.category || 'electronics';
+                document.getElementById('shop-region').value = currentUser.shop.region || 'DAM';
+                document.getElementById('shop-whatsapp').value = currentUser.shop.whatsapp || currentUser.whatsapp || '';
+                document.getElementById('shop-desc').value = currentUser.shop.desc || '';
+                document.getElementById('shop-logo-data').value = currentUser.shop.logo || '';
+
+                if (currentUser.shop.logo) {
+                    const previewBox = document.getElementById('shop-logo-preview-box');
+                    const previewImg = document.getElementById('shop-logo-preview-img');
+                    if (previewBox && previewImg) {
+                        previewImg.src = currentUser.shop.logo;
+                        previewBox.classList.remove('hidden');
+                    }
+                }
+            } else {
+                if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-store text-amber-400"></i> <span>Открытие нового магазина в Авито Шам</span>`;
+                if (submitBtn) submitBtn.innerText = "Создать магазин";
+
+                document.getElementById('shop-name').value = '';
+                document.getElementById('shop-slogan').value = '';
+                document.getElementById('shop-category').value = 'electronics';
+                document.getElementById('shop-region').value = 'DAM';
+                document.getElementById('shop-whatsapp').value = currentUser.whatsapp || '';
+                document.getElementById('shop-desc').value = '';
+                document.getElementById('shop-logo-data').value = '';
+
+                const previewBox = document.getElementById('shop-logo-preview-box');
+                if (previewBox) previewBox.classList.add('hidden');
+            }
+
+            openModal('modal-create-shop');
+        }
+
         function handleCreateShopSubmit(e) {
             e.preventDefault();
             if (!currentUser) {
@@ -1767,8 +1914,10 @@
             const desc = document.getElementById('shop-desc').value.trim();
             const logo = document.getElementById('shop-logo-data').value || 'https://placehold.co/300/6366f1/fff?text=SHOP';
 
+            const isEditing = !!currentUser.shop;
+
             const shopData = {
-                id: 'SHOP-' + Date.now(),
+                id: isEditing ? currentUser.shop.id : ('SHOP-' + Date.now()),
                 name,
                 slogan,
                 category,
@@ -1776,13 +1925,12 @@
                 whatsapp,
                 desc,
                 logo,
-                customCategories: [],
-                isVerified: false,
-                createdAt: Date.now()
+                customCategories: isEditing ? (currentUser.shop.customCategories || []) : [],
+                isVerified: isEditing ? (currentUser.verifiedShop || currentUser.shop.isVerified) : false,
+                createdAt: isEditing ? (currentUser.shop.createdAt || Date.now()) : Date.now()
             };
 
             currentUser.shop = shopData;
-            currentUser.verifiedShop = false;
 
             const userIndex = users.findIndex(u => 
                 (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
@@ -1804,7 +1952,7 @@
 
             saveUserSession(currentUser, true);
             closeModal('modal-create-shop');
-            showToast(`Магазин "${name}" успешно создан! Он станет публичным сразу после проверки администратором.`, 'info');
+            showToast(`Магазин "${name}" сохранен!`, 'success');
             updateAuthUI();
         }
 
@@ -1859,6 +2007,8 @@
             const showcaseContent = document.getElementById('shop-showcase-content');
             if (!showcaseContent) return;
 
+            const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия';
+
             showcaseContent.innerHTML = `
                 <div class="space-y-4">
                     <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1872,7 +2022,12 @@
                                     <i class="fa-solid fa-circle-check text-emerald-400 text-sm" title="Подтвержденный магазин"></i>
                                 </h3>
                                 <p class="text-xs text-purple-300 font-medium">${shop.slogan || 'Официальный магазин'}</p>
-                                <p class="text-[11px] text-slate-400 mt-1">${shop.desc || ''}</p>
+                                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
+                                    <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${regionName}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-solid fa-boxes-stacked text-purple-400"></i> ${shopAds.length} товаров</span>
+                                </div>
+                                <p class="text-[11px] text-slate-300 mt-1 leading-snug">${shop.desc || ''}</p>
                             </div>
                         </div>
                         <a href="https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all shrink-0 flex items-center gap-1.5">
@@ -1927,6 +2082,7 @@
 
             const isVerified = currentUser.verifiedShop || shop.isVerified;
             const customCats = shop.customCategories || [];
+            const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия';
 
             content.innerHTML = `
                 <div class="space-y-4">
@@ -1938,12 +2094,18 @@
                             <div>
                                 <h3 class="text-base font-extrabold text-white leading-snug">${shop.name}</h3>
                                 <p class="text-xs text-purple-300 font-medium mt-0.5">${shop.slogan || 'Официальный магазин'}</p>
+                                <div class="text-[10px] text-slate-400 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${regionName}</div>
                             </div>
                         </div>
-                        <span class="${isVerified ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'} px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 shrink-0">
-                            <i class="fa-solid ${isVerified ? 'fa-circle-check text-emerald-400' : 'fa-hourglass-half text-amber-400'}"></i>
-                            <span>${isVerified ? 'Подтвержден' : 'На проверке админа'}</span>
-                        </span>
+                        <div class="flex flex-col items-end gap-1.5">
+                            <span class="${isVerified ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'} px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid ${isVerified ? 'fa-circle-check text-emerald-400' : 'fa-hourglass-half text-amber-400'}"></i>
+                                <span>${isVerified ? 'Подтвержден' : 'На проверке'}</span>
+                            </span>
+                            <button onclick="openCreateShopModal()" class="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold transition-all">
+                                <i class="fa-solid fa-gear"></i> Редактировать настройки
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -2087,7 +2249,6 @@
             reader.readAsText(file);
         }
 
-        // --- FULL ADMIN DATABASE BACKUP (JSON EXPORT/IMPORT) ---
         function exportFullDatabaseJSON() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
 
@@ -2155,7 +2316,6 @@
             });
         }
 
-        // --- FIREBASE REALTIME SYNC ---
         function initFirebaseSync() {
             const firebaseConfig = {
                 databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com"
@@ -2360,7 +2520,6 @@
                         return true;
                     }).length;
                 } else if (c.id === 'shops_dir') {
-                    // Count only VERIFIED shops for directory
                     count = users.filter(u => u.shop && (u.verifiedShop || u.shop.isVerified)).length;
                 } else {
                     count = getCategoryAdsCount(c.id);
@@ -2437,6 +2596,8 @@
                 grid.innerHTML = verifiedShops.map(u => {
                     const shop = u.shop;
                     const shopAdsCount = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === u.username.toLowerCase() && a.status === 'ACTIVE').length;
+                    const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия';
+
                     return `
                         <div class="glass-panel rounded-2xl p-4 border border-purple-500/30 hover:border-purple-400 transition-all flex flex-col justify-between group shadow-lg">
                             <div class="space-y-3">
@@ -2450,6 +2611,7 @@
                                             <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0" title="Подтвержденный магазин"></i>
                                         </div>
                                         <div class="text-[11px] text-purple-300 font-medium truncate mt-0.5">${shop.slogan || 'Официальный магазин'}</div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${regionName}</div>
                                     </div>
                                 </div>
                                 <p class="text-xs text-slate-300 line-clamp-2 bg-white/5 p-2.5 rounded-xl border border-white/5">${shop.desc || 'Официальный магазин платформы Авито Шам.'}</p>
@@ -2514,11 +2676,12 @@
                 const isFav = favorites.includes(ad.id);
                 const imgList = (ad.images && ad.images.length > 0) ? ad.images : [ad.image || 'https://placehold.co/800x533/1e293b/fff?text=Avito+Sham'];
                 const photoCount = imgList.length;
+                const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия';
 
                 return `
                     <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
                         <div class="relative h-44 bg-slate-900 overflow-hidden">
-                            <!-- Background Blurred Backdrop for Perfect Aspect Containment -->
+                            <!-- Background Blurred Backdrop -->
                             <div class="absolute inset-0 bg-cover bg-center blur-md opacity-30 scale-110" style="background-image: url('${imgList[0]}');"></div>
                             
                             <img src="${imgList[0]}" alt="${ad.title}" loading="lazy" class="relative w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 z-0">
@@ -2533,6 +2696,9 @@
                             </button>
 
                             <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end z-10">
+                                <span class="bg-slate-900/80 backdrop-blur-md text-amber-300 px-2 py-0.5 rounded-md text-[10px] font-extrabold border border-amber-500/30 shadow flex items-center gap-1">
+                                    <i class="fa-solid fa-location-dot"></i> ${regionName}
+                                </span>
                                 ${ad.isWomenOnly ? `
                                     <span class="bg-pink-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
                                         <i class="fa-solid fa-user-large-slash"></i> ${getTranslation('womenTag')}
@@ -2703,6 +2869,7 @@
                 const kunya = document.getElementById('auth-kunya').value.trim() || username;
                 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
                 const whatsapp = document.getElementById('auth-whatsapp').value.trim();
+                const avatar = document.getElementById('auth-avatar-data')?.value || null;
 
                 if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
                     showToast('Пользователь с таким логином уже существует!', 'error');
@@ -2717,6 +2884,7 @@
                     kunya,
                     gender,
                     whatsapp,
+                    avatar,
                     role: (username.toLowerCase() === 'admin' || username.toLowerCase() === 'salimnashho') ? 'SUPERUSER' : 'USER',
                     verifiedShop: false
                 };
@@ -2757,8 +2925,8 @@
 
             content.innerHTML = `
                 <div class="text-center space-y-3">
-                    <div class="w-16 h-16 rounded-3xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl mx-auto border border-blue-500/30">
-                        <i class="fa-solid fa-user-gear"></i>
+                    <div class="w-20 h-20 rounded-3xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl mx-auto border border-blue-500/30 overflow-hidden shadow-lg">
+                        ${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user-gear"></i>`}
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-white">${currentUser.kunya || currentUser.username}</h3>
@@ -2798,6 +2966,16 @@
             document.getElementById('edit-profile-password').value = '';
             document.getElementById('edit-profile-kunya').value = user.kunya || '';
             document.getElementById('edit-profile-whatsapp').value = user.whatsapp || '';
+            document.getElementById('edit-profile-avatar-data').value = user.avatar || '';
+
+            const previewBox = document.getElementById('edit-profile-avatar-preview-box');
+            const previewImg = document.getElementById('edit-profile-avatar-preview-img');
+            if (user.avatar && previewBox && previewImg) {
+                previewImg.src = user.avatar;
+                previewBox.classList.remove('hidden');
+            } else if (previewBox) {
+                previewBox.classList.add('hidden');
+            }
 
             const adminFields = document.getElementById('edit-profile-admin-fields');
             if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
@@ -2818,6 +2996,7 @@
             const newPassword = document.getElementById('edit-profile-password').value;
             const newKunya = document.getElementById('edit-profile-kunya').value.trim();
             const newWhatsapp = document.getElementById('edit-profile-whatsapp').value.trim();
+            const newAvatar = document.getElementById('edit-profile-avatar-data').value || null;
 
             const userIndex = users.findIndex(u => u.username && u.username.toLowerCase() === originalUsername.toLowerCase());
             if (userIndex === -1) {
@@ -2837,6 +3016,7 @@
             }
             u.kunya = newKunya;
             u.whatsapp = newWhatsapp;
+            u.avatar = newAvatar;
 
             if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
                 const genderEl = document.getElementById('edit-profile-gender');
@@ -2877,7 +3057,6 @@
             showToast(`Данные аккаунта "${newLogin}" успешно обновлены!`, 'success');
         }
 
-        // --- AD DETAIL MODAL WITH MULTI-PHOTO CAROUSEL & LIGHTBOX ---
         let currentDetailPhotoIndex = 0;
         function openAdDetail(adId) {
             const ad = ads.find(a => a.id === adId);
@@ -2891,6 +3070,8 @@
 
             const activeWhatsapp = getSellerWhatsapp(ad);
             const activeKunya = getSellerKunya(ad);
+            const sellerAvatar = getSellerAvatar(ad);
+            const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия';
 
             const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
             const queueList = ad.queue || [];
@@ -2922,7 +3103,6 @@
                         ` : ''}
                     </div>
 
-                    <!-- Photo Thumbnails Carousel Bar -->
                     ${imgList.length > 1 ? `
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                             ${imgList.map((img, idx) => `
@@ -2941,11 +3121,21 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                            <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${ad.city}</span>
-                            <span>•</span>
-                            <span><i class="fa-solid fa-user text-blue-400"></i> ${activeKunya}</span>
+                        <div class="flex items-center gap-3 bg-white/5 p-2.5 rounded-2xl border border-white/5">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-500/30 overflow-hidden shrink-0 flex items-center justify-center text-blue-400 font-bold">
+                                ${sellerAvatar ? `<img src="${sellerAvatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user"></i>`}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-xs text-white">${activeKunya}</div>
+                                <div class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot text-amber-400"></i> ${regionName} • ${ad.city}</div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Location Map Details -->
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-white text-xs flex items-center gap-1.5"><i class="fa-solid fa-map-location-dot text-amber-400"></i> Местоположение продавца на карте:</h4>
+                        <div id="detail-map" class="h-36 rounded-2xl border border-white/10 overflow-hidden bg-slate-900 z-0"></div>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
@@ -2988,6 +3178,28 @@
                 </div>
             `;
             openModal('modal-ad-detail');
+
+            setTimeout(() => {
+                initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765);
+            }, 200);
+        }
+
+        function initDetailMap(lat, lng) {
+            const mapEl = document.getElementById('detail-map');
+            if (!mapEl || typeof L === 'undefined') return;
+
+            if (detailMap) {
+                detailMap.remove();
+                detailMap = null;
+            }
+
+            detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap'
+            }).addTo(detailMap);
+
+            L.marker([lat, lng]).addTo(detailMap);
         }
 
         function changeDetailPhoto(adId, dir) {
@@ -3182,7 +3394,6 @@
             showToast('Вы вышли из очереди', 'info');
         }
 
-        // --- ADMIN PANEL LOGIC ---
         function openAdminPanel() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
                 showToast('Доступ запрещен!', 'error');
@@ -3268,6 +3479,8 @@
                             ${shopsList.length === 0 ? '<div class="text-center py-8 text-slate-500">Зарегистрированных магазинов пока нет</div>' : shopsList.map(u => {
                                 const shop = u.shop;
                                 const isVer = u.verifiedShop || shop.isVerified;
+                                const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия';
+
                                 return `
                                     <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-3">
@@ -3281,7 +3494,7 @@
                                                         ${isVer ? 'Подтвержден' : 'На проверке'}
                                                     </span>
                                                 </div>
-                                                <div class="text-[10px] text-slate-400">Владелец: @${u.username} • WA: ${shop.whatsapp}</div>
+                                                <div class="text-[10px] text-slate-400">Владелец: @${u.username} • Регион: ${regionName} • WA: ${shop.whatsapp}</div>
                                             </div>
                                         </div>
                                         <button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all shadow ${isVer ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}">
@@ -3373,9 +3586,14 @@
                         <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                             ${users.map(u => `
                                 <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
-                                    <div>
-                                        <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
-                                        <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 overflow-hidden shrink-0 flex items-center justify-center font-bold text-xs">
+                                            ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user"></i>`}
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-white text-xs">${u.kunya || u.username} <span class="text-[10px] text-slate-400 font-normal">(@${u.username})</span></div>
+                                            <div class="text-[10px] text-slate-400">Роль: <span class="text-amber-400 font-bold">${u.role}</span> • WA: ${u.whatsapp || '—'}</div>
+                                        </div>
                                     </div>
                                     <button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold border border-blue-500/30 text-[11px]">
                                         Редактировать
@@ -3411,7 +3629,6 @@
             }
         }
 
-        // Window Event Handlers & Dynamic Responsive Pagination Adjuster
         window.onresize = function() {
             const newItemsPerPage = (window.innerWidth < 640) ? 4 : 8;
             if (itemsPerPage !== newItemsPerPage) {
