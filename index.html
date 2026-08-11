@@ -244,7 +244,6 @@
 
     </main>
 
-    <!-- Rules Modal -->
     <div id="modal-rules-agreement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-amber-500/30 space-y-4 max-h-[90vh] flex flex-col justify-between">
             <div class="text-center space-y-2">
@@ -267,7 +266,6 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
     <div id="modal-auth" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4">
             <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -322,7 +320,6 @@
         </div>
     </div>
 
-    <!-- Create Ad Modal -->
     <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -440,7 +437,7 @@
 
                 <!-- Photo Upload with In-Browser Canvas 800x533 Compressor -->
                 <div>
-                    <label class="block text-slate-400 mb-1">Фотография товара *</label>
+                    <label class="block text-slate-400 mb-1">Фотография товара (Макс. 10 МБ до сжатия) *</label>
                     <div class="space-y-2">
                         <input type="file" id="ad-image-file" accept="image/*" onchange="handleImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
                         <input type="hidden" id="ad-image-data">
@@ -463,7 +460,6 @@
         </div>
     </div>
 
-    <!-- Edit Ad Modal -->
     <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -601,7 +597,6 @@
         </div>
     </div>
 
-    <!-- Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
@@ -613,7 +608,6 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
     <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
             <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -696,7 +690,6 @@
         </div>
     </div>
 
-    <!-- Donate & Support Modal -->
     <div id="modal-donate" class="fixed inset-0 z-[65] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-amber-500/30 space-y-3 text-xs text-center relative">
             <button onclick="closeModal('modal-donate')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -748,7 +741,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1">
@@ -867,9 +859,6 @@
         let createMapMarker = null;
         let isUserMarkerSet = false;
 
-        /* -------------------------------------------------------------
-         * FIREBASE REALTIME SYNC LISTENERS (initFirebaseSync)
-         * ------------------------------------------------------------- */
         function initFirebaseSync() {
             const syncStatus = document.getElementById('cloud-sync-status');
             if (syncStatus) syncStatus.classList.remove('hidden');
@@ -960,9 +949,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * MODAL & UI HELPERS
-         * ------------------------------------------------------------- */
         function openModal(id) {
             const el = document.getElementById(id);
             if (el) el.classList.remove('hidden');
@@ -1047,9 +1033,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * REVERSE GEOCODING & MAPS
-         * ------------------------------------------------------------- */
         function reverseGeocode(lat, lng, targetInputId) {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
                 .then(res => res.json())
@@ -1119,9 +1102,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * AUTHENTICATION HANDLERS
-         * ------------------------------------------------------------- */
         function updateAuthUI() {
             const authBtnText = document.getElementById('auth-btn-text');
             const authBtn = document.getElementById('auth-btn');
@@ -1207,7 +1187,6 @@
 
             if (authTabMode === 'login') {
                 if (!auth) {
-                    // Local login fallback
                     currentUser = {
                         uid: 'local_' + Date.now(),
                         username: un,
@@ -1229,7 +1208,6 @@
                     })
                     .catch((err) => {
                         console.warn('Firebase login attempt:', err);
-                        // Fallback mode for Admin
                         if (isSuperAdminUser) {
                             currentUser = {
                                 uid: 'local_admin_' + Date.now(),
@@ -1285,7 +1263,6 @@
                     })
                     .catch((err) => {
                         console.warn('Firebase Reg catch:', err);
-                        // Fallback for admin or general user
                         currentUser = { uid: 'local_' + Date.now(), username: un, kunya, whatsapp, gender, role };
                         if (db) db.ref('users/' + currentUser.uid).set(currentUser);
                         closeModal('modal-auth');
@@ -1307,12 +1284,15 @@
             renderAds();
         }
 
-        /* -------------------------------------------------------------
-         * IMAGE CANVAS 800x533 COMPRESSOR
-         * ------------------------------------------------------------- */
         function handleImageCompressUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Файл слишком большой. Пожалуйста, выберите изображение до 10 МБ.');
+                event.target.value = '';
+                return;
+            }
 
             const statusEl = document.getElementById('image-compress-status');
             const previewBox = document.getElementById('image-preview-box');
@@ -1414,9 +1394,6 @@
             renderAds();
         }
 
-        /* -------------------------------------------------------------
-         * CATEGORIES & FEED RENDERING
-         * ------------------------------------------------------------- */
         function renderCategoryPills() {
             const container = document.getElementById('categories-container');
             if (!container) return;
@@ -1570,9 +1547,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        /* -------------------------------------------------------------
-         * AD CREATION HANDLER
-         * ------------------------------------------------------------- */
         function handleCreateAdSubmit(e) {
             e.preventDefault();
             if (!currentUser) return openAuthModal();
@@ -1620,9 +1594,6 @@
             alert('Объявление успешно опубликовано!');
         }
 
-        /* -------------------------------------------------------------
-         * AD DETAIL & QUEUE HANDLER
-         * ------------------------------------------------------------- */
         function openAdDetail(id) {
             closeModal('modal-shops-directory');
             closeModal('modal-seller-store');
@@ -1775,9 +1746,6 @@
             }, 300);
         }
 
-        /* -------------------------------------------------------------
-         * EDIT LISTING HANDLERS
-         * ------------------------------------------------------------- */
         function openEditAdModal(adId) {
             const ad = ads.find(a => a.id === adId);
             if (!ad) return;
@@ -1896,6 +1864,12 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Файл слишком большой. Пожалуйста, выберите изображение до 10 МБ.');
+                event.target.value = '';
+                return;
+            }
+
             const statusEl = document.getElementById('edit-image-compress-status');
             const previewImg = document.getElementById('edit-image-preview-img');
             const hiddenData = document.getElementById('edit-ad-image-data');
@@ -1972,9 +1946,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * PROFILE & STORES
-         * ------------------------------------------------------------- */
         let profileTabMode = 'my_ads';
 
         function openProfileModal() {
@@ -2233,9 +2204,6 @@
             openModal('modal-seller-store');
         }
 
-        /* -------------------------------------------------------------
-         * ADMIN & SUPERUSER CONTROL PANEL
-         * ------------------------------------------------------------- */
         function openAdminPanel() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
                 alert('Доступ разрешен только администраторам!');
@@ -2515,9 +2483,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * INITIALIZATION ON PAGE LOAD
-         * ------------------------------------------------------------- */
         window.onload = function() {
             try {
                 if (localStorage.getItem('bs_favorites')) {
