@@ -36,7 +36,7 @@
             transition: all 0.3s ease;
         }
 
-        /* LIGHT MODE COMPLETE OVERRIDES - High Contrast Legibility */
+        /* LIGHT MODE COMPLETE OVERRIDES */
         body.light-mode {
             background-color: #f8fafc !important;
             color: #0f172a !important;
@@ -245,6 +245,7 @@
 
     </main>
 
+    <!-- Rules Modal -->
     <div id="modal-rules-agreement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-amber-500/30 space-y-4 max-h-[90vh] flex flex-col justify-between">
             <div class="text-center space-y-2">
@@ -267,6 +268,7 @@
         </div>
     </div>
 
+    <!-- Auth Modal -->
     <div id="modal-auth" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4">
             <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -279,7 +281,7 @@
             <form onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-400 mb-1">Логин *</label>
-                    <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: abu_salim">
+                    <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: abu_salim или admin">
                 </div>
 
                 <div>
@@ -321,6 +323,7 @@
         </div>
     </div>
 
+    <!-- Create Ad Modal -->
     <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -364,7 +367,7 @@
                     </div>
                 </div>
 
-                <!-- Women Only Checkbox (ONLY for females & superusers) -->
+                <!-- Women Only Checkbox -->
                 <div id="women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
@@ -461,6 +464,7 @@
         </div>
     </div>
 
+    <!-- Edit Ad Modal -->
     <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -505,7 +509,6 @@
                     </div>
                 </div>
 
-                <!-- Women Only Checkbox -->
                 <div id="edit-women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
@@ -530,7 +533,6 @@
                     <input type="hidden" id="edit-ad-lng">
                 </div>
 
-                <!-- Free Toggle -->
                 <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
@@ -600,6 +602,7 @@
         </div>
     </div>
 
+    <!-- Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
@@ -611,6 +614,7 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
     <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
             <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -680,6 +684,7 @@
         </div>
     </div>
 
+    <!-- Delete Reason Modal -->
     <div id="modal-delete-reason" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 space-y-3 text-xs text-center">
             <h3 class="font-bold text-white text-sm">Укажите причину снятия</h3>
@@ -744,6 +749,7 @@
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1">
@@ -796,7 +802,7 @@
             appId: "1:620376240590:web:2c27b76dbf007d7d763037"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase Compat
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -864,38 +870,34 @@
             const syncStatus = document.getElementById('cloud-sync-status');
             if (syncStatus) syncStatus.classList.remove('hidden');
 
-            // Listen to Ads Realtime Updates
+            // Realtime listener for Ads
             db.ref('ads').on('value', (snapshot) => {
                 const val = snapshot.val();
-                if (val) {
-                    ads = Object.values(val);
-                } else {
-                    ads = [];
-                }
+                ads = val ? Object.values(val) : [];
                 renderAds();
                 if (syncStatus) syncStatus.classList.add('hidden');
             });
 
-            // Listen to Archived Ads Updates
+            // Realtime listener for Archived Ads
             db.ref('archivedAds').on('value', (snapshot) => {
                 const val = snapshot.val();
                 archivedAds = val ? Object.values(val) : [];
             });
 
-            // Listen to Users Database
+            // Realtime listener for Users
             db.ref('users').on('value', (snapshot) => {
                 const val = snapshot.val();
                 users = val ? Object.values(val) : [];
                 updateAuthUI();
             });
 
-            // Listen to Exchange Rates
+            // Realtime listener for Exchange Rates
             db.ref('rates').on('value', (snapshot) => {
                 const val = snapshot.val();
                 if (val) EXCHANGE_RATES = val;
             });
 
-            // Listen to Custom Categories
+            // Realtime listener for Categories
             db.ref('customCategories').on('value', (snapshot) => {
                 const val = snapshot.val();
                 if (val && Array.isArray(val) && val.length > 0) {
@@ -907,18 +909,19 @@
             // Firebase Auth State Observer
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // Fetch user profile from database
                     db.ref('users/' + user.uid).once('value').then((snapshot) => {
                         const userData = snapshot.val();
                         if (userData) {
                             currentUser = userData;
                         } else {
+                            const username = user.email ? user.email.split('@')[0] : 'user';
+                            const isSuper = (username === 'admin' || username === 'administrator' || username === 'salim');
                             currentUser = {
                                 uid: user.uid,
-                                username: user.email ? user.email.split('@')[0] : 'user',
+                                username: username,
                                 kunya: user.displayName || 'Пользователь',
                                 gender: 'MALE',
-                                role: 'USER',
+                                role: isSuper ? 'SUPERUSER' : 'USER',
                                 whatsapp: '+963933123456'
                             };
                         }
@@ -936,7 +939,7 @@
         }
 
         /* -------------------------------------------------------------
-         * MODAL & DIALOG NAVIGATION HELPERS
+         * MODAL & UI HELPERS
          * ------------------------------------------------------------- */
         function openModal(id) {
             const el = document.getElementById(id);
@@ -1023,7 +1026,7 @@
         }
 
         /* -------------------------------------------------------------
-         * REVERSE GEOCODING HELPER (nominatim)
+         * REVERSE GEOCODING HELPER
          * ------------------------------------------------------------- */
         function reverseGeocode(lat, lng, targetInputId) {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
@@ -1095,7 +1098,7 @@
         }
 
         /* -------------------------------------------------------------
-         * AUTHENTICATION & FIREBASE AUTH HANDLERS
+         * AUTHENTICATION HANDLERS
          * ------------------------------------------------------------- */
         function updateAuthUI() {
             const authBtnText = document.getElementById('auth-btn-text');
@@ -1181,7 +1184,7 @@
                 const whatsapp = document.getElementById('auth-whatsapp').value.trim();
                 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
 
-                // Automatically set SUPERUSER role for admin accounts
+                // Automatically grant SUPERUSER role to admin usernames
                 const isAdminAccount = (un === 'admin' || un === 'administrator' || un === 'salim');
                 const role = isAdminAccount ? 'SUPERUSER' : 'USER';
 
@@ -1199,7 +1202,6 @@
                             createdAt: new Date().toISOString()
                         };
 
-                        // Save profile to Realtime Database
                         db.ref('users/' + uid).set(newUser).then(() => {
                             currentUser = newUser;
                             closeModal('modal-auth');
@@ -1526,10 +1528,9 @@
                 createdAt: new Date().toISOString()
             };
 
-            // Push to Firebase Realtime Database
             db.ref('ads/' + newAdId).set(newAd).then(() => {
                 closeModal('modal-create-ad');
-                alert('Объявление успешно опубликовано в облаке!');
+                alert('Объявление успешно опубликовано!');
             });
         }
 
@@ -1596,7 +1597,6 @@
                                 </button>
                             ` : ''}
 
-                            <!-- Queue Status Widget -->
                             <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-3 space-y-2">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-amber-300"><i class="fa-solid fa-users mr-1"></i> Очередь покупателей:</span>
@@ -1614,7 +1614,6 @@
                         </div>
 
                         <div class="space-y-2 pt-2 border-t border-white/10">
-                            <!-- Non-intrusive ShamCash Support Banner -->
                             <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px]">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-hand-holding-heart text-amber-400 text-sm"></i>
@@ -1932,7 +1931,6 @@
                         </button>
                     </div>
 
-                    <!-- Profile Tabs Navigation -->
                     <div class="flex border-b border-white/10 text-xs">
                         <button onclick="switchProfileTab('my_ads')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_ads' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
                             Мои (${myAds.length})
@@ -2008,7 +2006,6 @@
                 deletedAd.deleteReason = reason;
                 deletedAd.archivedAt = new Date().toISOString();
 
-                // Delete from active ads & move to archived
                 db.ref('ads/' + id).remove();
                 db.ref('archivedAds/' + id).set(deletedAd);
 
@@ -2412,7 +2409,6 @@
          * INITIALIZATION ON PAGE LOAD
          * ------------------------------------------------------------- */
         window.onload = function() {
-            // Load local favorites
             try {
                 if (localStorage.getItem('bs_favorites')) {
                     favorites = JSON.parse(localStorage.getItem('bs_favorites'));
@@ -2422,7 +2418,6 @@
                 }
             } catch (e) {}
 
-            // Start Firebase Listeners
             initFirebaseSync();
             renderCategoryPills();
 
