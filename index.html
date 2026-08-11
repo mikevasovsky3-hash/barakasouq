@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarakaSouq — Сирийская Платформа Объявлений</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS & JS for Interactive Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase SDK Compat Libraries (App, Auth, Database) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Glass Panel Styling for Dark Mode Default */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* LIGHT MODE COMPLETE OVERRIDES - High Contrast Legibility */
+        body.light-mode {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        body.light-mode .glass-panel,
+        body.light-mode .modal-card {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        body.light-mode header,
+        body.light-mode footer {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        body.light-mode .text-white,
+        body.light-mode .text-slate-100,
+        body.light-mode .text-slate-200,
+        body.light-mode .text-slate-300 {
+            color: #0f172a !important;
+        }
+
+        body.light-mode .text-slate-400,
+        body.light-mode .text-slate-500 {
+            color: #475569 !important;
+        }
+
+        body.light-mode input,
+        body.light-mode select,
+        body.light-mode textarea {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        body.light-mode input::placeholder,
+        body.light-mode textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        body.light-mode .bg-slate-900,
+        body.light-mode .bg-slate-800,
+        body.light-mode .bg-white\/5,
+        body.light-mode .bg-white\/10 {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        body.light-mode .border-white\/5,
+        body.light-mode .border-white\/10 {
+            border-color: #cbd5e1 !important;
+        }
+
+        body.light-mode .bg-black\/60,
+        body.light-mode .bg-black\/70 {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            color: #0f172a !important;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 9999px;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-full flex flex-col transition-colors duration-300">
+
+    <!-- Header Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            
+            <!-- Logo & Brand Identifier -->
+            <div class="flex items-center gap-3 shrink-0">
+                <div onclick="handleLogoClick()" class="cursor-pointer flex items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg group-hover:scale-105 transition-transform">
+                        ب
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Baraka<span class="text-amber-400">Souq</span></span>
+                        <span class="text-[10px] text-slate-400 font-medium">Сирийский Рынок</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Search Bar & All 14 Syrian Regions Selector -->
+            <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
+                <div class="relative flex-1">
+                    <input type="text" id="search-input" onkeyup="resetPageAndRender()" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+                <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[180px]">
+                    <option value="ALL" class="bg-slate-900 text-white">Все регионы (Сирия)</option>
+                    <option value="DAM" class="bg-slate-900 text-white">Дамаск</option>
+                    <option value="RIF_DAM" class="bg-slate-900 text-white">Риф-Дамаск</option>
+                    <option value="ALEP" class="bg-slate-900 text-white">Алеппо</option>
+                    <option value="IDL" class="bg-slate-900 text-white">Идлиб</option>
+                    <option value="HOMS" class="bg-slate-900 text-white">Хомс</option>
+                    <option value="HAMA" class="bg-slate-900 text-white">Хама</option>
+                    <option value="LAT" class="bg-slate-900 text-white">Латакия</option>
+                    <option value="TAR" class="bg-slate-900 text-white">Тартус</option>
+                    <option value="RAQ" class="bg-slate-900 text-white">Ракка</option>
+                    <option value="DEIR" class="bg-slate-900 text-white">Дейр-эз-Зор</option>
+                    <option value="HAS" class="bg-slate-900 text-white">Хасеке</option>
+                    <option value="DAR" class="bg-slate-900 text-white">Дараа</option>
+                    <option value="SUW" class="bg-slate-900 text-white">Эс-Сувейда</option>
+                    <option value="QUN" class="bg-slate-900 text-white">Эль-Кунейтра</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- Create Ad Button (ONLY for Logged-In Users) -->
+                <div id="create-ad-btn-container" class="hidden">
+                    <button onclick="openCreateAdModal()" class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span class="hidden md:inline">Подать объявление</span>
+                    </button>
+                </div>
+
+                <!-- Admin Quick Button (For Superuser / Admin) -->
+                <div id="admin-quick-btn-container" class="hidden">
+                    <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
+                        <i class="fa-solid fa-user-shield text-amber-300"></i>
+                        <span class="hidden md:inline">Главный администратор</span>
+                    </button>
+                </div>
+
+                <!-- Auth/Profile Button -->
+                <button id="auth-btn" onclick="openAuthModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95">
+                    <i class="fa-solid fa-user"></i>
+                    <span id="auth-btn-text" class="hidden sm:inline">Войти</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Search Bar & Region Selector -->
+        <div class="sm:hidden mt-2.5 flex gap-2">
+            <div class="relative flex-1">
+                <input type="text" id="search-input-mobile" onkeyup="syncMobileSearch(this.value)" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            </div>
+            <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px]">
+                <option value="ALL" class="bg-slate-900 text-white">Все регионы</option>
+                <option value="DAM" class="bg-slate-900 text-white">Дамаск</option>
+                <option value="RIF_DAM" class="bg-slate-900 text-white">Риф-Дамаск</option>
+                <option value="ALEP" class="bg-slate-900 text-white">Алеппо</option>
+                <option value="IDL" class="bg-slate-900 text-white">Идлиб</option>
+                <option value="HOMS" class="bg-slate-900 text-white">Хомс</option>
+                <option value="HAMA" class="bg-slate-900 text-white">Хама</option>
+                <option value="LAT" class="bg-slate-900 text-white">Латакия</option>
+                <option value="TAR" class="bg-slate-900 text-white">Тартус</option>
+                <option value="RAQ" class="bg-slate-900 text-white">Ракка</option>
+                <option value="DEIR" class="bg-slate-900 text-white">Дейр-эз-Зор</option>
+                <option value="HAS" class="bg-slate-900 text-white">Хасеке</option>
+                <option value="DAR" class="bg-slate-900 text-white">Дараа</option>
+                <option value="SUW" class="bg-slate-900 text-white">Эс-Сувейда</option>
+                <option value="QUN" class="bg-slate-900 text-white">Эль-Кунейтра</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
+        
+        <!-- Categories Toolbar -->
+        <div class="flex items-center justify-between">
+            <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
+                <!-- Dynamically Rendered Category Pills -->
+            </div>
+        </div>
+
+        <!-- Cloud Sync Loader Indicator -->
+        <div id="cloud-sync-status" class="text-center text-[11px] text-amber-400 font-mono hidden flex items-center justify-center gap-2 py-1 bg-amber-500/10 rounded-xl border border-amber-500/20">
+            <i class="fa-solid fa-arrows-rotate animate-spin"></i>
+            <span>Синхронизация с облаком Firebase...</span>
+        </div>
+
+        <!-- Main Listings Feed Container Grid -->
+        <div id="listings-view" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Listings Dynamically Injected Here from Firebase -->
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="pagination-container" class="pt-6 pb-2 flex items-center justify-center gap-2 flex-wrap text-xs">
+            <!-- Dynamically Injected Pagination Buttons -->
+        </div>
+
+    </main>
+
+    <div id="modal-rules-agreement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-amber-500/30 space-y-4 max-h-[90vh] flex flex-col justify-between">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto border border-amber-500/30">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <h2 class="text-lg font-extrabold text-white">Правила платформы BarakaSouq</h2>
+                <p class="text-xs text-amber-300 font-bold">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
+            </div>
+
+            <div class="text-xs space-y-3 text-slate-300 overflow-y-auto pr-1 leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5">
+                <p>1. <strong>Честность и прозрачность:</strong> Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.</p>
+                <p>2. <strong>Запрещенные товары:</strong> Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.</p>
+                <p>3. <strong>Гражданский ресурс:</strong> Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.</p>
+            </div>
+
+            <button onclick="acceptLaunchRules()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                Я подтверждаю и принимаю условия
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-auth" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4">
+            <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="flex border-b border-white/10 mb-2">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400">Вход</button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400">Регистрация</button>
+            </div>
+
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Логин *</label>
+                    <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: abu_salim">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Пароль *</label>
+                    <input type="password" id="auth-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                </div>
+
+                <div id="reg-fields" class="hidden space-y-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
+                        <input type="text" id="auth-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Абу Салим">
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 mb-1">Пол (Шариатский выбор) *</label>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                                <input type="radio" name="auth-gender" value="MALE" checked class="accent-blue-500">
+                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user text-blue-400"></i> Мужчина</span>
+                            </label>
+                            <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                                <input type="radio" name="auth-gender" value="FEMALE" class="accent-pink-500">
+                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-large-slash text-pink-400"></i> Женщина</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 mb-1">WhatsApp номер *</label>
+                        <input type="text" id="auth-whatsapp" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="+963 933 123 456">
+                    </div>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Войти в аккаунт</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-emerald-400"></i> Подача нового объявления
+                </h3>
+                <button onclick="closeModal('modal-create-ad')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="handleCreateAdSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <div>
+                    <label class="block text-slate-400 mb-1">Заголовок объявления *</label>
+                    <input type="text" id="ad-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Например: Солнечная панель 550W">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Категория *</label>
+                        <select id="ad-category" onchange="handleCategorySelection(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Регион *</label>
+                        <select id="ad-region" onchange="handleRegionChangeCreate(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                            <option value="DAM" class="bg-slate-900">Дамаск</option>
+                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
+                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
+                            <option value="IDL" class="bg-slate-900">Идлиб</option>
+                            <option value="HOMS" class="bg-slate-900">Хомс</option>
+                            <option value="HAMA" class="bg-slate-900">Хама</option>
+                            <option value="LAT" class="bg-slate-900">Латакия</option>
+                            <option value="TAR" class="bg-slate-900">Тартус</option>
+                            <option value="RAQ" class="bg-slate-900">Ракка</option>
+                            <option value="DEIR" class="bg-slate-900">Дейр-эз-Зор</option>
+                            <option value="HAS" class="bg-slate-900">Хасеке</option>
+                            <option value="DAR" class="bg-slate-900">Дараа</option>
+                            <option value="SUW" class="bg-slate-900">Эс-Сувейда</option>
+                            <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Women Only Checkbox (ONLY for females & superusers) -->
+                <div id="women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-pink-300">Только для женщин 🌸</div>
+                            <div class="text-[10px] text-slate-400">Объявление будет видно исключительно женщинам</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Город / Населенный пункт *</label>
+                    <input type="text" id="ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: р-н Маззе, Дамаск">
+                </div>
+
+                <!-- Interactive Map Pin Picker -->
+                <div>
+                    <label class="block text-slate-400 mb-1">Местоположение на карте *</label>
+                    <div class="text-[10px] text-amber-300 mb-1">Кликните на карту или перетащите маркер (название города определится автоматически).</div>
+                    <div id="create-map" class="h-36 rounded-xl border border-white/10 overflow-hidden relative z-0 bg-slate-900"></div>
+                    <input type="hidden" id="ad-lat" value="33.5138">
+                    <input type="hidden" id="ad-lng" value="36.2765">
+                </div>
+
+                <!-- Free Toggle -->
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-emerald-300">Отдать даром (Бесплатно)</div>
+                            <div class="text-[10px] text-slate-400">Отдаете вещь безвозмездно нуждающимся</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="ad-is-free" onchange="toggleFreeAdPrice(this.checked)" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
+                </div>
+
+                <div id="price-container" class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Цена *</label>
+                        <input type="number" id="ad-price" step="0.01" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="100">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Валюта *</label>
+                        <select id="ad-currency" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="USD" class="bg-slate-900">USD ($)</option>
+                            <option value="SYP" class="bg-slate-900">SYP (ل.س)</option>
+                            <option value="TRY" class="bg-slate-900">TRY (₺)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Состояние товара *</label>
+                        <select id="ad-condition" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="NEW" class="bg-slate-900">Новый (Запечатан)</option>
+                            <option value="EXCELLENT" class="bg-slate-900">Отличное Б/У</option>
+                            <option value="WITH_DEFECTS" class="bg-slate-900">Есть дефекты / нюансы</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Условия передачи *</label>
+                        <select id="ad-pickup" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="PICKUP" class="bg-slate-900">Самовывоз</option>
+                            <option value="DELIVERY" class="bg-slate-900">Доставка продавцом</option>
+                            <option value="AGREEMENT" class="bg-slate-900">По договоренности</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Photo Upload with In-Browser Canvas 800x533 Compressor -->
+                <div>
+                    <label class="block text-slate-400 mb-1">Фотография товара *</label>
+                    <div class="space-y-2">
+                        <input type="file" id="ad-image-file" accept="image/*" onchange="handleImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                        <input type="hidden" id="ad-image-data">
+                        <div id="image-preview-box" class="hidden h-32 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
+                            <img id="image-preview-img" class="w-full h-full object-cover">
+                            <div id="image-compress-status" class="absolute bottom-2 left-2 bg-black/70 text-[10px] text-emerald-400 px-2 py-0.5 rounded font-mono"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-amber-300 font-bold mb-1">Описание и возможные изъяны (Бойтесь Аллаха, укажите все дефекты) *</label>
+                    <textarea id="ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500" placeholder="Подробно опишите товар, сколы, царапины или комплектацию..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                    Опубликовать объявление
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-400"></i> Редактирование объявления
+                </h3>
+                <button onclick="closeModal('modal-edit-ad')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form onsubmit="handleEditAdSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <input type="hidden" id="edit-ad-id">
+                <div>
+                    <label class="block text-slate-400 mb-1">Заголовок объявления *</label>
+                    <input type="text" id="edit-ad-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Категория *</label>
+                        <select id="edit-ad-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Регион *</label>
+                        <select id="edit-ad-region" onchange="handleRegionChangeEdit(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                            <option value="DAM" class="bg-slate-900">Дамаск</option>
+                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
+                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
+                            <option value="IDL" class="bg-slate-900">Идлиб</option>
+                            <option value="HOMS" class="bg-slate-900">Хомс</option>
+                            <option value="HAMA" class="bg-slate-900">Хама</option>
+                            <option value="LAT" class="bg-slate-900">Латакия</option>
+                            <option value="TAR" class="bg-slate-900">Тартус</option>
+                            <option value="RAQ" class="bg-slate-900">Ракка</option>
+                            <option value="DEIR" class="bg-slate-900">Дейр-эз-Зор</option>
+                            <option value="HAS" class="bg-slate-900">Хасеке</option>
+                            <option value="DAR" class="bg-slate-900">Дараа</option>
+                            <option value="SUW" class="bg-slate-900">Эс-Сувейда</option>
+                            <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Women Only Checkbox -->
+                <div id="edit-women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-pink-300">Только для женщин 🌸</div>
+                            <div class="text-[10px] text-slate-400">Объявление будет видно исключительно женщинам</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="edit-ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Город / Населенный пункт *</label>
+                    <input type="text" id="edit-ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Местоположение на карте *</label>
+                    <div class="text-[10px] text-amber-300 mb-1">Кликните на карту или перетащите маркер для изменения локации.</div>
+                    <div id="edit-map" class="h-36 rounded-xl border border-white/10 overflow-hidden relative z-0 bg-slate-900"></div>
+                    <input type="hidden" id="edit-ad-lat">
+                    <input type="hidden" id="edit-ad-lng">
+                </div>
+
+                <!-- Free Toggle -->
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-emerald-300">Отдать даром (Бесплатно)</div>
+                            <div class="text-[10px] text-slate-400">Отдаете вещь безвозмездно нуждающимся</div>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="edit-ad-is-free" onchange="toggleEditFreeAdPrice(this.checked)" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
+                </div>
+
+                <div id="edit-price-container" class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Цена *</label>
+                        <input type="number" id="edit-ad-price" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Валюта *</label>
+                        <select id="edit-ad-currency" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="USD" class="bg-slate-900">USD ($)</option>
+                            <option value="SYP" class="bg-slate-900">SYP (ل.س)</option>
+                            <option value="TRY" class="bg-slate-900">TRY (₺)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Состояние товара *</label>
+                        <select id="edit-ad-condition" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="NEW" class="bg-slate-900">Новый (Запечатан)</option>
+                            <option value="EXCELLENT" class="bg-slate-900">Отличное Б/У</option>
+                            <option value="WITH_DEFECTS" class="bg-slate-900">Есть дефекты / нюансы</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Условия передачи *</label>
+                        <select id="edit-ad-pickup" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                            <option value="PICKUP" class="bg-slate-900">Самовывоз</option>
+                            <option value="DELIVERY" class="bg-slate-900">Доставка продавцом</option>
+                            <option value="AGREEMENT" class="bg-slate-900">По договоренности</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Фотография товара (Загрузите новую, если хотите заменить)</label>
+                    <div class="space-y-2">
+                        <input type="file" id="edit-ad-image-file" accept="image/*" onchange="handleEditImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer">
+                        <input type="hidden" id="edit-ad-image-data">
+                        <div id="edit-image-preview-box" class="h-32 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
+                            <img id="edit-image-preview-img" class="w-full h-full object-cover">
+                            <div id="edit-image-compress-status" class="absolute bottom-2 left-2 bg-black/70 text-[10px] text-amber-400 px-2 py-0.5 rounded font-mono">Сохранено</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-amber-300 font-bold mb-1">Описание и изъяны *</label>
+                    <textarea id="edit-ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                    Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
+            <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
+                <!-- Dynamically Rendered from Firebase -->
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <div id="profile-content" class="overflow-y-auto flex-1">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Profile Modal -->
+    <div id="modal-edit-profile" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 relative space-y-3 text-xs">
+            <button onclick="closeModal('modal-edit-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-bold text-sm text-white">Редактирование анкеты</h3>
+            <form onsubmit="handleSaveProfile(event)" class="space-y-3">
+                <input type="hidden" id="edit-profile-username">
+                <div>
+                    <label class="block text-slate-400 mb-1">Имя / Кунья</label>
+                    <input type="text" id="edit-profile-kunya" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">WhatsApp</label>
+                    <input type="text" id="edit-profile-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                </div>
+                <div id="edit-profile-admin-fields" class="space-y-3 pt-2 border-t border-white/10 hidden">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Пол (Шариатский выбор)</label>
+                        <select id="edit-profile-gender" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                            <option value="MALE" class="bg-slate-900">Мужчина</option>
+                            <option value="FEMALE" class="bg-slate-900">Женщина 🌸</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Роль в системе</label>
+                        <select id="edit-profile-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                            <option value="USER" class="bg-slate-900">Пользователь</option>
+                            <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
+                            <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition-all">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Shops Directory Modal -->
+    <div id="modal-shops-directory" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative p-6">
+            <button onclick="closeModal('modal-shops-directory')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-sm font-extrabold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-store text-purple-400"></i> Каталог магазинов и маркетов
+            </h3>
+            <div id="shops-directory-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto max-h-[70vh]">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Seller Storefront Modal -->
+    <div id="modal-seller-store" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative p-6">
+            <button onclick="closeModal('modal-seller-store')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <div id="seller-store-content" class="overflow-y-auto space-y-4">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-delete-reason" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 space-y-3 text-xs text-center">
+            <h3 class="font-bold text-white text-sm">Укажите причину снятия</h3>
+            <input type="hidden" id="delete-ad-id">
+            <div class="space-y-2">
+                <button onclick="confirmAdDeletion('Продано через BarakaSouq')" class="w-full py-2.5 rounded-xl bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold hover:bg-emerald-600/50">Продано через BarakaSouq 🎁</button>
+                <button onclick="confirmAdDeletion('Продано в другом месте')" class="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">Продано в другом месте</button>
+                <button onclick="confirmAdDeletion('Передумал продавать')" class="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">Передумал продавать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donate & Support Modal -->
+    <div id="modal-donate" class="fixed inset-0 z-[65] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-amber-500/30 space-y-3 text-xs text-center relative">
+            <button onclick="closeModal('modal-donate')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mx-auto border border-amber-500/30">
+                <i class="fa-solid fa-hand-holding-heart"></i>
+            </div>
+            <h3 class="font-bold text-white text-sm">Поддержка проекта BarakaSouq</h3>
+            <p class="text-slate-300 leading-relaxed">Поздравляем с успешной сделкой! По желанию вы можете поддержать развитие бесплатной гражданской платформы.</p>
+            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 text-left space-y-1 font-mono text-[11px]">
+                <div class="text-amber-400 font-bold">ShamCash (ШамКэш):</div>
+                <div class="text-slate-300 select-all font-bold">SHAM-9842-1049-2281</div>
+            </div>
+            <button onclick="closeModal('modal-donate')" class="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Superuser Admin Panel Modal -->
+    <div id="modal-admin-panel" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-4xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-400 text-lg"></i>
+                    <h3 class="text-sm font-extrabold text-white">Панель управления Главного Администратора</h3>
+                </div>
+                <button onclick="closeModal('modal-admin-panel')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="flex border-b border-white/10 bg-white/5 overflow-x-auto text-xs shrink-0 no-scrollbar">
+                <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap">Обзор</button>
+                <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Пользователи и Роли</button>
+                <button onclick="switchAdminTab('moderation')" id="atab-moderation" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Модерация</button>
+                <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Архив и Очистка</button>
+                <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Курсы валют</button>
+                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Бэкап и Данные</button>
+            </div>
+
+            <div id="admin-tab-content" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Secret PIN Modal -->
+    <div id="modal-secret-pin" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-xs rounded-3xl p-6 border border-purple-500/30 text-center space-y-3">
+            <h3 class="font-bold text-white text-sm">Введите секретный PIN</h3>
+            <input type="password" id="secret-pin-input" maxlength="6" class="w-full text-center bg-white/5 border border-white/10 rounded-xl py-2.5 text-lg font-mono text-purple-400 focus:outline-none" placeholder="••••">
+            <button onclick="verifySecretPin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">Войти</button>
+        </div>
+    </div>
+
+    <footer class="mt-auto border-t border-white/10 bg-slate-900/80 backdrop-blur-md py-4 px-4 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="text-slate-400 text-[11px] text-center md:text-left space-y-1">
+                <div>© 2026 BarakaSouq. Гражданская платформа объявлений Сирии.</div>
+                <div>
+                    Разработчик: <span class="font-bold text-slate-200">Салим Нашхо</span> • 
+                    <a href="https://wa.me/447887280238" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold inline-flex items-center gap-1">
+                        <i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-semibold hover:bg-white/10 transition-all">
+                    <i id="theme-icon" class="fa-solid fa-moon text-amber-300"></i>
+                    <span id="theme-text">Тёмная тема</span>
+                </button>
+
+                <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
+                    <option value="RU" class="bg-slate-900 text-white">RU</option>
+                    <option value="AR" class="bg-slate-900 text-white">AR</option>
+                </select>
+
+                <select id="currency-select" onchange="changeCurrency(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
+                    <option value="USD" class="bg-slate-900 text-white">$ USD</option>
+                    <option value="SYP" class="bg-slate-900 text-white">SYP (ل.س)</option>
+                    <option value="TRY" class="bg-slate-900 text-white">TRY (₺)</option>
+                </select>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Offline Detection Toast -->
+    <div id="offline-toast" class="fixed bottom-4 right-4 z-50 bg-rose-600 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl hidden flex items-center gap-2 border border-rose-400/30">
+        <i class="fa-solid fa-wifi"></i>
+        <span>Нет подключения к интернету. Просмотр из кэша.</span>
+    </div>
+
+    <script>
+        /* -------------------------------------------------------------
+         * FIREBASE CLOUD CONFIGURATION & INITIALIZATION
+         * ------------------------------------------------------------- */
+        const firebaseConfig = {
+            apiKey: "AIzaSyA77Uxx_itIlgP2243H14mnTpP7DXQntI",
+            authDomain: "barakasouq-72b4e.firebaseapp.com",
+            databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com",
+            projectId: "barakasouq-72b4e",
+            storageBucket: "barakasouq-72b4e.firebasestorage.app",
+            messagingSenderId: "620376240590",
+            appId: "1:620376240590:web:2c27b76dbf007d7d763037"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        /* -------------------------------------------------------------
+         * APPLICATION STATE & DATA DECLARATIONS
+         * ------------------------------------------------------------- */
+        let SYSTEM_CONFIG = {
+            rulesAccepted: false,
+            emergencyPin: '1988',
+            archiveTimerDays: '30'
+        };
+
+        let EXCHANGE_RATES = {
+            SYP: 13100,
+            TRY: 32.50
+        };
+
+        let CURRENT_CURRENCY = 'USD';
+        let CURRENT_LANG = 'RU';
+
+        let favorites = [];
+        let users = [];
+        let ads = [];
+        let archivedAds = [];
+        let customCategories = [
+            { id: 'electronics', icon: 'fa-laptop', name: 'Электроника' },
+            { id: 'transport', icon: 'fa-car', name: 'Транспорт' },
+            { id: 'realestate', icon: 'fa-house', name: 'Недвижимость' },
+            { id: 'home', icon: 'fa-couch', name: 'Бытовые вещи' },
+            { id: 'services', icon: 'fa-wrench', name: 'Услуги' },
+            { id: 'other', icon: 'fa-cubes', name: 'Прочее' }
+        ];
+
+        let currentUser = null;
+        let authTabMode = 'login';
+        let currentAdminTab = 'overview';
+        let logoClickCounter = 0;
+        let logoClickTimer = null;
+        let detailMapInstance = null;
+        let editMapInstance = null;
+        let editMapMarker = null;
+
+        let currentPage = 1;
+        const itemsPerPage = 8;
+        let selectedCategory = 'all';
+        
+        const REGION_COORDS = {
+            'DAM': [33.5138, 36.2765], 'RIF_DAM': [33.5000, 36.5000], 'ALEP': [36.2021, 37.1343],
+            'IDL': [35.9306, 36.6339], 'HOMS': [34.7297, 36.7136], 'HAMA': [35.1318, 36.7578],
+            'LAT': [35.5179, 35.7779], 'TAR': [34.8890, 35.8866], 'RAQ': [35.9501, 39.0142],
+            'DEIR': [35.3333, 40.1500], 'HAS': [36.5024, 40.7466], 'DAR': [32.6186, 36.1040],
+            'SUW': [32.7090, 36.5695], 'QUN': [33.1257, 35.8208]
+        };
+        let createMapInstance = null;
+        let createMapMarker = null;
+        let isUserMarkerSet = false;
+
+        /* -------------------------------------------------------------
+         * FIREBASE REALTIME SYNC LISTENERS
+         * ------------------------------------------------------------- */
+        function initFirebaseSync() {
+            const syncStatus = document.getElementById('cloud-sync-status');
+            if (syncStatus) syncStatus.classList.remove('hidden');
+
+            // Listen to Ads Realtime Updates
+            db.ref('ads').on('value', (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    ads = Object.values(val);
+                } else {
+                    ads = [];
+                }
+                renderAds();
+                if (syncStatus) syncStatus.classList.add('hidden');
+            });
+
+            // Listen to Archived Ads Updates
+            db.ref('archivedAds').on('value', (snapshot) => {
+                const val = snapshot.val();
+                archivedAds = val ? Object.values(val) : [];
+            });
+
+            // Listen to Users Database
+            db.ref('users').on('value', (snapshot) => {
+                const val = snapshot.val();
+                users = val ? Object.values(val) : [];
+                updateAuthUI();
+            });
+
+            // Listen to Exchange Rates
+            db.ref('rates').on('value', (snapshot) => {
+                const val = snapshot.val();
+                if (val) EXCHANGE_RATES = val;
+            });
+
+            // Listen to Custom Categories
+            db.ref('customCategories').on('value', (snapshot) => {
+                const val = snapshot.val();
+                if (val && Array.isArray(val) && val.length > 0) {
+                    customCategories = val;
+                    renderCategoryPills();
+                }
+            });
+
+            // Firebase Auth State Observer
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Fetch user profile from database
+                    db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                        const userData = snapshot.val();
+                        if (userData) {
+                            currentUser = userData;
+                        } else {
+                            currentUser = {
+                                uid: user.uid,
+                                username: user.email ? user.email.split('@')[0] : 'user',
+                                kunya: user.displayName || 'Пользователь',
+                                gender: 'MALE',
+                                role: 'USER',
+                                whatsapp: '+963933123456'
+                            };
+                        }
+                        updateAuthUI();
+                        renderCategoryPills();
+                        renderAds();
+                    });
+                } else {
+                    currentUser = null;
+                    updateAuthUI();
+                    renderCategoryPills();
+                    renderAds();
+                }
+            });
+        }
+
+        /* -------------------------------------------------------------
+         * MODAL & DIALOG NAVIGATION HELPERS
+         * ------------------------------------------------------------- */
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        }
+
+        function acceptLaunchRules() {
+            SYSTEM_CONFIG.rulesAccepted = true;
+            localStorage.setItem('bs_rules_accepted', 'true');
+            closeModal('modal-rules-agreement');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (icon) icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-amber-300';
+            if (text) text.innerText = isLight ? 'Светлая тема' : 'Тёмная тема';
+        }
+
+        function changeLanguage(lang) {
+            CURRENT_LANG = lang;
+            renderAds();
+        }
+
+        function changeCurrency(curr) {
+            CURRENT_CURRENCY = curr;
+            renderAds();
+        }
+
+        function openAuthModal() {
+            switchAuthTab('login');
+            openModal('modal-auth');
+        }
+
+        function openCreateAdModal() {
+            if (!currentUser) return openAuthModal();
+
+            populateCategoryDropdown();
+            
+            const womenOpt = document.getElementById('women-only-container');
+            if (womenOpt) {
+                if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+                    womenOpt.classList.remove('hidden');
+                } else {
+                    womenOpt.classList.add('hidden');
+                    const chk = document.getElementById('ad-is-women-only');
+                    if (chk) chk.checked = false;
+                }
+            }
+            
+            isUserMarkerSet = false;
+            openModal('modal-create-ad');
+            initCreateMap();
+        }
+
+        function populateCategoryDropdown() {
+            const select = document.getElementById('ad-category');
+            if (!select) return;
+            select.innerHTML = customCategories.map(c => `<option value="${c.id}" class="bg-slate-900">${c.name}</option>`).join('') +
+                `<option value="NEW_CUSTOM" class="bg-slate-900 text-amber-400 font-bold">➕ Добавить свою категорию...</option>`;
+        }
+
+        function handleCategorySelection(val) {
+            if (val === 'NEW_CUSTOM') {
+                const name = prompt('Введите название новой категории:');
+                if (name && name.trim()) {
+                    const id = 'cat_' + Date.now();
+                    customCategories.push({ id, icon: 'fa-tag', name: name.trim() });
+                    db.ref('customCategories').set(customCategories);
+                    populateCategoryDropdown();
+                    renderCategoryPills();
+                    document.getElementById('ad-category').value = id;
+                } else {
+                    document.getElementById('ad-category').value = customCategories[0].id;
+                }
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * REVERSE GEOCODING HELPER (nominatim)
+         * ------------------------------------------------------------- */
+        function reverseGeocode(lat, lng, targetInputId) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.address) {
+                        const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.county || '';
+                        const state = data.address.state || '';
+                        if (city) {
+                            const formatted = state ? `${city}, ${state}` : city;
+                            const inputEl = document.getElementById(targetInputId);
+                            if (inputEl) inputEl.value = formatted;
+                        }
+                    }
+                })
+                .catch(err => console.warn('Reverse geocode offline/failed:', err));
+        }
+
+        function initCreateMap() {
+            setTimeout(() => {
+                if (createMapInstance) {
+                    createMapInstance.remove();
+                    createMapInstance = null;
+                }
+
+                const regionSelect = document.getElementById('ad-region').value;
+                const initialCoords = REGION_COORDS[regionSelect] || REGION_COORDS['DAM'];
+
+                try {
+                    createMapInstance = L.map('create-map').setView(initialCoords, 9);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(createMapInstance);
+                    
+                    createMapMarker = L.marker(initialCoords, { draggable: true }).addTo(createMapInstance);
+                    
+                    document.getElementById('ad-lat').value = initialCoords[0];
+                    document.getElementById('ad-lng').value = initialCoords[1];
+
+                    createMapInstance.on('click', function(e) {
+                        createMapMarker.setLatLng(e.latlng);
+                        document.getElementById('ad-lat').value = e.latlng.lat;
+                        document.getElementById('ad-lng').value = e.latlng.lng;
+                        isUserMarkerSet = true;
+                        reverseGeocode(e.latlng.lat, e.latlng.lng, 'ad-city');
+                    });
+
+                    createMapMarker.on('dragend', function(e) {
+                        const position = createMapMarker.getLatLng();
+                        document.getElementById('ad-lat').value = position.lat;
+                        document.getElementById('ad-lng').value = position.lng;
+                        isUserMarkerSet = true;
+                        reverseGeocode(position.lat, position.lng, 'ad-city');
+                    });
+                } catch (err) {
+                    console.warn('Create map init:', err);
+                }
+            }, 300);
+        }
+
+        function handleRegionChangeCreate(val) {
+            if (!isUserMarkerSet && createMapInstance && createMapMarker) {
+                const newCoords = REGION_COORDS[val] || REGION_COORDS['DAM'];
+                createMapInstance.setView(newCoords, 9);
+                createMapMarker.setLatLng(newCoords);
+                document.getElementById('ad-lat').value = newCoords[0];
+                document.getElementById('ad-lng').value = newCoords[1];
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * AUTHENTICATION & FIREBASE AUTH HANDLERS
+         * ------------------------------------------------------------- */
+        function updateAuthUI() {
+            const authBtnText = document.getElementById('auth-btn-text');
+            const authBtn = document.getElementById('auth-btn');
+            const adminQuickBtn = document.getElementById('admin-quick-btn-container');
+            const createAdBtnContainer = document.getElementById('create-ad-btn-container');
+
+            if (currentUser) {
+                if (authBtnText) authBtnText.innerText = currentUser.kunya || currentUser.username;
+                if (authBtn) authBtn.onclick = openProfileModal;
+                if (createAdBtnContainer) createAdBtnContainer.classList.remove('hidden');
+
+                if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+                    if (adminQuickBtn) adminQuickBtn.classList.remove('hidden');
+                } else {
+                    if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
+                }
+            } else {
+                if (authBtnText) authBtnText.innerText = 'Войти';
+                if (authBtn) authBtn.onclick = openAuthModal;
+                if (createAdBtnContainer) createAdBtnContainer.classList.add('hidden');
+                if (adminQuickBtn) adminQuickBtn.classList.add('hidden');
+            }
+        }
+
+        function handleLogoClick() {
+            logoClickCounter++;
+            clearTimeout(logoClickTimer);
+            logoClickTimer = setTimeout(() => { logoClickCounter = 0; }, 3000);
+            if (logoClickCounter >= 10) {
+                logoClickCounter = 0;
+                openModal('modal-secret-pin');
+            }
+        }
+
+        function verifySecretPin() {
+            const pin = document.getElementById('secret-pin-input').value;
+            if (pin === SYSTEM_CONFIG.emergencyPin) {
+                closeModal('modal-secret-pin');
+                document.getElementById('secret-pin-input').value = '';
+                openAdminPanel();
+            } else {
+                alert('Неверный PIN-код!');
+            }
+        }
+
+        function switchAuthTab(mode) {
+            authTabMode = mode;
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+            const regFields = document.getElementById('reg-fields');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            if (mode === 'login') {
+                if (tabLogin) tabLogin.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400';
+                if (tabReg) tabReg.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400';
+                if (regFields) regFields.classList.add('hidden');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Войти в аккаунт</span>';
+            } else {
+                if (tabReg) tabReg.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400';
+                if (tabLogin) tabLogin.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400';
+                if (regFields) regFields.classList.remove('hidden');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Зарегистрироваться</span>';
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const un = document.getElementById('auth-username').value.trim().toLowerCase();
+            const pw = document.getElementById('auth-password').value.trim();
+            const fakeEmail = `${un}@barakasouq.local`;
+
+            if (authTabMode === 'login') {
+                auth.signInWithEmailAndPassword(fakeEmail, pw)
+                    .then(() => {
+                        closeModal('modal-auth');
+                    })
+                    .catch((err) => {
+                        alert('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'));
+                    });
+            } else {
+                const kunya = document.getElementById('auth-kunya').value.trim() || un;
+                const whatsapp = document.getElementById('auth-whatsapp').value.trim();
+                const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+
+                auth.createUserWithEmailAndPassword(fakeEmail, pw)
+                    .then((userCredential) => {
+                        const uid = userCredential.user.uid;
+                        const newUser = {
+                            uid,
+                            username: un,
+                            kunya,
+                            whatsapp,
+                            gender,
+                            role: un === 'admin' ? 'SUPERUSER' : 'USER',
+                            verifiedShop: false,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        // Save profile to Realtime Database
+                        db.ref('users/' + uid).set(newUser).then(() => {
+                            currentUser = newUser;
+                            closeModal('modal-auth');
+                            updateAuthUI();
+                            renderCategoryPills();
+                            renderAds();
+                        });
+                    })
+                    .catch((err) => {
+                        alert('Ошибка регистрации: ' + err.message);
+                    });
+            }
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                currentUser = null;
+                updateAuthUI();
+                closeModal('modal-profile');
+                renderCategoryPills();
+                renderAds();
+            });
+        }
+
+        /* -------------------------------------------------------------
+         * IMAGE CANVAS 800x533 COMPRESSOR
+         * ------------------------------------------------------------- */
+        function handleImageCompressUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('image-compress-status');
+            const previewBox = document.getElementById('image-preview-box');
+            const previewImg = document.getElementById('image-preview-img');
+            const hiddenData = document.getElementById('ad-image-data');
+
+            if (statusEl) statusEl.innerText = 'Сжатие и подгонка размера...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const TARGET_WIDTH = 800;
+                    const TARGET_HEIGHT = 533;
+
+                    canvas.width = TARGET_WIDTH;
+                    canvas.height = TARGET_HEIGHT;
+                    const ctx = canvas.getContext('2d');
+
+                    const scale = Math.max(TARGET_WIDTH / img.width, TARGET_HEIGHT / img.height);
+                    const x = (TARGET_WIDTH - img.width * scale) / 2;
+                    const y = (TARGET_HEIGHT - img.height * scale) / 2;
+
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
+                    hiddenData.value = compressedBase64;
+                    previewImg.src = compressedBase64;
+                    previewBox.classList.remove('hidden');
+
+                    const origSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    const compSizeKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
+                    if (statusEl) statusEl.innerText = `Подгнано (800x533): ${origSizeMB} МБ ➔ ${compSizeKB} КБ`;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertPriceAll(amount, fromCurr, isFree) {
+            if (isFree || amount === 0) return '<span class="text-emerald-400 font-bold">🎁 ДАРОМ (Бесплатно)</span>';
+
+            let priceInUSD = amount;
+            if (fromCurr === 'SYP') priceInUSD = amount / EXCHANGE_RATES.SYP;
+            if (fromCurr === 'TRY') priceInUSD = amount / EXCHANGE_RATES.TRY;
+
+            const usd = `$${priceInUSD.toFixed(2)}`;
+            const syp = `${Math.round(priceInUSD * EXCHANGE_RATES.SYP).toLocaleString()} SYP`;
+            const tryVal = `${(priceInUSD * EXCHANGE_RATES.TRY).toFixed(1)} TRY`;
+
+            return `${usd} <span class="text-slate-400 text-[10px]">/ ${syp} / ${tryVal}</span>`;
+        }
+
+        function toggleFreeAdPrice(isFreeChecked) {
+            const priceContainer = document.getElementById('price-container');
+            const priceInput = document.getElementById('ad-price');
+            if (isFreeChecked) {
+                if (priceContainer) priceContainer.classList.add('opacity-40', 'pointer-events-none');
+                if (priceInput) {
+                    priceInput.value = '0';
+                    priceInput.removeAttribute('required');
+                }
+            } else {
+                if (priceContainer) priceContainer.classList.remove('opacity-40', 'pointer-events-none');
+                if (priceInput) priceInput.setAttribute('required', 'true');
+            }
+        }
+
+        function syncMobileSearch(val) {
+            const desktopInput = document.getElementById('search-input');
+            if (desktopInput) desktopInput.value = val;
+            resetPageAndRender();
+        }
+
+        function syncMobileRegion(val) {
+            const desktopRegion = document.getElementById('region-filter');
+            if (desktopRegion) desktopRegion.value = val;
+            resetPageAndRender();
+        }
+
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderAds();
+        }
+
+        function toggleFavorite(adId, event) {
+            if (event) event.stopPropagation();
+            const idx = favorites.indexOf(adId);
+            if (idx === -1) {
+                favorites.push(adId);
+            } else {
+                favorites.splice(idx, 1);
+            }
+            localStorage.setItem('bs_favorites', JSON.stringify(favorites));
+            renderCategoryPills();
+            renderAds();
+        }
+
+        /* -------------------------------------------------------------
+         * CATEGORIES & FEED RENDERING
+         * ------------------------------------------------------------- */
+        function renderCategoryPills() {
+            const container = document.getElementById('categories-container');
+            if (!container) return;
+
+            let pills = [
+                { id: 'all', icon: 'fa-border-all', name: 'Все' },
+                { id: 'favorites', icon: 'fa-star text-amber-400', name: `⭐ Избранное (${favorites.length})` }
+            ];
+
+            if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                pills.push({ id: 'women_only', icon: 'fa-user-large-slash text-pink-400', name: '🌸 Только для женщин' });
+            }
+
+            pills.push({ id: 'free', icon: 'fa-gift text-emerald-400', name: '🎁 Даром' });
+            pills = pills.concat(customCategories);
+            pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: '🏪 Магазины' });
+
+            container.innerHTML = pills.map(c => `
+                <button onclick="handleCategoryClick('${c.id}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300' : 'border-white/10 bg-white/5 hover:bg-white/10'} transition-all whitespace-nowrap shrink-0">
+                    <i class="fa-solid ${c.icon}"></i>
+                    <span>${c.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function handleCategoryClick(catId) {
+            if (catId === 'shops_dir') {
+                openShopsDirectory();
+                return;
+            }
+            selectedCategory = catId;
+            renderCategoryPills();
+            resetPageAndRender();
+        }
+
+        function renderAds() {
+            const grid = document.getElementById('listings-view');
+            const paginationContainer = document.getElementById('pagination-container');
+            if (!grid) return;
+
+            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
+
+            const filtered = ads.filter(ad => {
+                if (ad.status !== 'ACTIVE') return false;
+
+                // STRICT SHARIA PRIVACY RULE: Hide Women-Only listings from Male users
+                if (ad.isWomenOnly) {
+                    if (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+                        return false;
+                    }
+                }
+
+                if (selectedCategory === 'favorites' && !favorites.includes(ad.id)) return false;
+                if (selectedCategory === 'women_only' && !ad.isWomenOnly) return false;
+                if (selectedCategory === 'free' && (!ad.isFree && ad.price > 0)) return false;
+                if (selectedCategory !== 'all' && selectedCategory !== 'favorites' && selectedCategory !== 'free' && selectedCategory !== 'women_only' && ad.category !== selectedCategory) return false;
+                if (selectedRegion !== 'ALL' && ad.region !== selectedRegion) return false;
+                if (searchQuery && !ad.title.toLowerCase().includes(searchQuery) && !ad.city.toLowerCase().includes(searchQuery)) return false;
+                
+                return true;
+            });
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageAds = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            if (pageAds.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-500">
+                        <i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>
+                        Объявлений по данному запросу не найдено
+                    </div>
+                `;
+                if (paginationContainer) paginationContainer.innerHTML = '';
+                return;
+            }
+
+            grid.innerHTML = pageAds.map(ad => {
+                const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
+                const seller = users.find(u => u.username === ad.sellerUsername);
+                const isVerified = seller?.verifiedShop;
+                const queueCount = (ad.queue || []).length;
+                const isFav = favorites.includes(ad.id);
+
+                return `
+                    <div class="glass-panel rounded-2xl overflow-hidden hover:border-amber-400/50 transition-all flex flex-col group cursor-pointer shadow-lg relative" onclick="openAdDetail('${ad.id}')">
+                        <div class="relative h-44 bg-slate-900 overflow-hidden">
+                            <img src="${ad.image}" alt="${ad.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/800x533/1e293b/fff?text=BarakaSouq'">
+                            
+                            <div class="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-amber-400 border border-white/10">
+                                ${ad.id}
+                            </div>
+
+                            <button onclick="toggleFavorite('${ad.id}', event)" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all z-10 border border-white/10">
+                                <i class="fa-solid fa-star ${isFav ? 'text-amber-400' : 'text-slate-400'}"></i>
+                            </button>
+
+                            <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1 items-end">
+                                ${ad.isWomenOnly ? `
+                                    <span class="bg-pink-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow flex items-center gap-1">
+                                        <i class="fa-solid fa-user-large-slash"></i> Для женщин
+                                    </span>
+                                ` : ''}
+                                ${ad.isFree ? `
+                                    <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow">
+                                        🎁 ДАРОМ
+                                    </span>
+                                ` : isVerified ? `
+                                    <span class="bg-purple-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow">
+                                        <i class="fa-solid fa-circle-check"></i> Магазин
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+                            <div>
+                                <h3 class="font-bold text-xs text-white line-clamp-2 leading-snug">${ad.title}</h3>
+                                <div class="text-[11px] font-medium text-slate-400 mt-1">${ad.city}</div>
+                            </div>
+
+                            <div class="pt-2 border-t border-white/5 space-y-1">
+                                <div class="text-xs font-bold">${converted}</div>
+                                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                    <span>${ad.sellerKunya || ad.sellerUsername}</span>
+                                    <span class="text-amber-400 font-bold">${queueCount > 0 ? `🔥 В очереди: ${queueCount}` : 'Будьте первым'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (paginationContainer) {
+                paginationContainer.innerHTML = `
+                    <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">« Первая</button>
+                    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">< Назад</button>
+                    <span class="px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 font-extrabold">Страница ${currentPage} из ${totalPages}</span>
+                    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">Вперед ></button>
+                    <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold">Последняя »</button>
+                `;
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderAds();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* -------------------------------------------------------------
+         * AD CREATION HANDLER
+         * ------------------------------------------------------------- */
+        function handleCreateAdSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) return openAuthModal();
+
+            const title = document.getElementById('ad-title').value.trim();
+            const category = document.getElementById('ad-category').value;
+            const region = document.getElementById('ad-region').value;
+            const city = document.getElementById('ad-city').value.trim();
+            const isFree = document.getElementById('ad-is-free').checked;
+            const price = isFree ? 0 : parseFloat(document.getElementById('ad-price').value || 0);
+            const currency = document.getElementById('ad-currency').value;
+            const condition = document.getElementById('ad-condition').value;
+            const pickupType = document.getElementById('ad-pickup').value;
+            const desc = document.getElementById('ad-desc').value.trim();
+            const image = document.getElementById('ad-image-data').value || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&auto=format&fit=crop&q=80';
+            const lat = parseFloat(document.getElementById('ad-lat').value) || 33.5138;
+            const lng = parseFloat(document.getElementById('ad-lng').value) || 36.2765;
+            const isWomenOnly = (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')
+                ? document.getElementById('ad-is-women-only').checked
+                : false;
+
+            const newAdId = `${region}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+            const newAd = {
+                id: newAdId,
+                title, category, region, city, price, currency, isFree, isWomenOnly,
+                condition, pickupType, desc, image, lat, lng,
+                sellerUsername: currentUser.username,
+                sellerKunya: currentUser.kunya || currentUser.username,
+                sellerGender: currentUser.gender || 'MALE',
+                whatsapp: currentUser.whatsapp || '+963933123456',
+                status: 'ACTIVE',
+                queue: [],
+                createdAt: new Date().toISOString()
+            };
+
+            // Push to Firebase Realtime Database
+            db.ref('ads/' + newAdId).set(newAd).then(() => {
+                closeModal('modal-create-ad');
+                alert('Объявление успешно опубликовано в облаке!');
+            });
+        }
+
+        /* -------------------------------------------------------------
+         * AD DETAIL & QUEUE HANDLER
+         * ------------------------------------------------------------- */
+        function openAdDetail(id) {
+            closeModal('modal-shops-directory');
+            closeModal('modal-seller-store');
+
+            const ad = ads.find(a => a.id === id);
+            if (!ad) return;
+
+            const content = document.getElementById('detail-content');
+            const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
+
+            if (!ad.queue) ad.queue = [];
+            const userQueueIndex = currentUser ? ad.queue.indexOf(currentUser.username) : -1;
+            const isUserInQueue = userQueueIndex !== -1;
+
+            const queueText = isUserInQueue 
+                ? `Вы №${userQueueIndex + 1} в очереди` 
+                : ad.queue.length > 0 
+                    ? `В очереди предложений: ${ad.queue.length} чел.` 
+                    : `Очередь свободна`;
+
+            const waQueueMsg = isUserInQueue 
+                ? `أنا رقم ${userQueueIndex + 1} في الانتظار (Я №${userQueueIndex + 1} в очереди).` 
+                : `أود الحجز كمهتم جديد (Хочу занять очередь).`;
+
+            const waMsg = encodeURIComponent(`السلام عليكم، أود الاستفسار عن إعلانك (${ad.id}): ${ad.title}. ${waQueueMsg}`);
+            const waUrl = `https://wa.me/${ad.whatsapp.replace(/[^0-9]/g, '')}?text=${waMsg}`;
+
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-3">
+                        <div class="rounded-2xl overflow-hidden bg-slate-900 border border-white/10 h-56 relative">
+                            <img src="${ad.image}" class="w-full h-full object-cover">
+                            ${ad.isWomenOnly ? '<div class="absolute top-3 left-3 bg-pink-600 text-white font-bold px-2.5 py-1 rounded-lg">🌸 Только для женщин</div>' : ''}
+                        </div>
+
+                        <div>
+                            <div class="text-slate-400 mb-1 flex items-center justify-between">
+                                <span><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> Геолокация продавца:</span>
+                                <span class="font-mono text-[10px] text-slate-500">${(ad.lat || 33.5138).toFixed(4)}, ${(ad.lng || 36.2765).toFixed(4)}</span>
+                            </div>
+                            <div id="detail-map" class="h-36 rounded-2xl border border-white/10 overflow-hidden"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-amber-500/20 text-amber-300 font-mono text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-bold">${ad.id}</span>
+                                <span class="text-slate-400">${ad.city}</span>
+                            </div>
+
+                            <h2 class="text-base font-extrabold text-white mb-2 leading-snug">${ad.title}</h2>
+                            <div class="text-sm font-bold mb-3">${converted}</div>
+
+                            ${(currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) ? `
+                                <button onclick="closeModal('modal-ad-detail'); openEditAdModal('${ad.id}');" class="w-full mb-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                    <i class="fa-solid fa-pen-to-square"></i> Редактировать объявление ${currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' ? '(Права Админа)' : ''}
+                                </button>
+                            ` : ''}
+
+                            <!-- Queue Status Widget -->
+                            <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-3 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-amber-300"><i class="fa-solid fa-users mr-1"></i> Очередь покупателей:</span>
+                                    <span class="font-bold text-white bg-amber-500/30 px-2 py-0.5 rounded-lg">${queueText}</span>
+                                </div>
+                                <button onclick="toggleQueue('${ad.id}')" class="w-full py-2 rounded-xl ${isUserInQueue ? 'bg-rose-600 hover:bg-rose-500' : 'bg-amber-500 hover:bg-amber-400 text-slate-950'} font-extrabold transition-all">
+                                    ${isUserInQueue ? 'Выйти из очереди' : 'Хочу этот товар! (Занять очередь)'}
+                                </button>
+                            </div>
+
+                            <div class="bg-white/5 p-3 rounded-2xl border border-white/5 space-y-1">
+                                <div class="font-bold text-amber-300">Описание и изъяны:</div>
+                                <p class="text-slate-300 leading-relaxed max-h-24 overflow-y-auto">${ad.desc}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 pt-2 border-t border-white/10">
+                            <!-- Non-intrusive ShamCash Support Banner -->
+                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px]">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-hand-holding-heart text-amber-400 text-sm"></i>
+                                    <div>
+                                        <div class="font-bold text-amber-300">Поддержка BarakaSouq</div>
+                                        <div class="text-[10px] text-slate-400">ShamCash: SHAM-9842-1049-2281</div>
+                                    </div>
+                                </div>
+                                <button onclick="openModal('modal-donate')" class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500/30 text-[10px]">Инфо</button>
+                            </div>
+
+                            <div onclick="openSellerStore('${ad.sellerUsername}')" class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer border border-white/5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center">
+                                        ${(ad.sellerKunya || ad.sellerUsername)[0]}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-white">${ad.sellerKunya || ad.sellerUsername}</div>
+                                        <div class="text-[10px] text-purple-300">Открыть все товары продавца</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                            </div>
+
+                            <a href="${waUrl}" target="_blank" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold flex items-center justify-center gap-2 transition-all shadow-md">
+                                <i class="fa-brands fa-whatsapp text-base"></i> Связаться с продавцом (авто-номер очереди)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            openModal('modal-ad-detail');
+            initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765, ad.title);
+        }
+
+        function toggleQueue(adId) {
+            if (!currentUser) return openAuthModal();
+
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            if (!ad.queue) ad.queue = [];
+            const idx = ad.queue.indexOf(currentUser.username);
+
+            if (idx === -1) {
+                ad.queue.push(currentUser.username);
+            } else {
+                ad.queue.splice(idx, 1);
+            }
+
+            db.ref('ads/' + adId + '/queue').set(ad.queue).then(() => {
+                openAdDetail(adId);
+            });
+        }
+
+        function initDetailMap(lat, lng, title) {
+            setTimeout(() => {
+                if (detailMapInstance) {
+                    detailMapInstance.remove();
+                    detailMapInstance = null;
+                }
+                try {
+                    detailMapInstance = L.map('detail-map').setView([lat, lng], 12);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(detailMapInstance);
+                    L.marker([lat, lng]).addTo(detailMapInstance).bindPopup(title);
+                } catch (err) {
+                    console.warn('Detail map init:', err);
+                }
+            }, 300);
+        }
+
+        /* -------------------------------------------------------------
+         * EDIT LISTING HANDLERS
+         * ------------------------------------------------------------- */
+        function openEditAdModal(adId) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            const canEdit = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+            if (!canEdit) {
+                alert('У вас нет прав для редактирования этого объявления');
+                return;
+            }
+
+            populateEditCategoryDropdown();
+
+            document.getElementById('edit-ad-id').value = ad.id;
+            document.getElementById('edit-ad-title').value = ad.title;
+            document.getElementById('edit-ad-category').value = ad.category;
+            document.getElementById('edit-ad-region').value = ad.region || 'DAM';
+            document.getElementById('edit-ad-city').value = ad.city;
+            
+            const isFreeChk = document.getElementById('edit-ad-is-free');
+            isFreeChk.checked = !!ad.isFree;
+            toggleEditFreeAdPrice(ad.isFree);
+
+            document.getElementById('edit-ad-price').value = ad.price || '';
+            document.getElementById('edit-ad-currency').value = ad.currency || 'USD';
+            document.getElementById('edit-ad-condition').value = ad.condition || 'EXCELLENT';
+            document.getElementById('edit-ad-pickup').value = ad.pickupType || 'AGREEMENT';
+            document.getElementById('edit-ad-desc').value = ad.desc || '';
+            document.getElementById('edit-ad-image-data').value = ad.image;
+            document.getElementById('edit-image-preview-img').src = ad.image;
+
+            const womenContainer = document.getElementById('edit-women-only-container');
+            const womenChk = document.getElementById('edit-ad-is-women-only');
+            if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+                womenContainer.classList.remove('hidden');
+                womenChk.checked = !!ad.isWomenOnly;
+            } else {
+                womenContainer.classList.add('hidden');
+                womenChk.checked = false;
+            }
+
+            const initialLat = ad.lat || 33.5138;
+            const initialLng = ad.lng || 36.2765;
+            document.getElementById('edit-ad-lat').value = initialLat;
+            document.getElementById('edit-ad-lng').value = initialLng;
+
+            openModal('modal-edit-ad');
+            initEditMap(initialLat, initialLng);
+        }
+
+        function populateEditCategoryDropdown() {
+            const select = document.getElementById('edit-ad-category');
+            if (!select) return;
+            select.innerHTML = customCategories.map(c => `<option value="${c.id}" class="bg-slate-900">${c.name}</option>`).join('');
+        }
+
+        function toggleEditFreeAdPrice(isFreeChecked) {
+            const priceContainer = document.getElementById('edit-price-container');
+            const priceInput = document.getElementById('edit-ad-price');
+            if (isFreeChecked) {
+                if (priceContainer) priceContainer.classList.add('opacity-40', 'pointer-events-none');
+                if (priceInput) {
+                    priceInput.value = '0';
+                    priceInput.removeAttribute('required');
+                }
+            } else {
+                if (priceContainer) priceContainer.classList.remove('opacity-40', 'pointer-events-none');
+                if (priceInput) priceInput.setAttribute('required', 'true');
+            }
+        }
+
+        function initEditMap(lat, lng) {
+            setTimeout(() => {
+                if (editMapInstance) {
+                    editMapInstance.remove();
+                    editMapInstance = null;
+                }
+
+                try {
+                    editMapInstance = L.map('edit-map').setView([lat, lng], 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(editMapInstance);
+
+                    editMapMarker = L.marker([lat, lng], { draggable: true }).addTo(editMapInstance);
+
+                    editMapInstance.on('click', function(e) {
+                        editMapMarker.setLatLng(e.latlng);
+                        document.getElementById('edit-ad-lat').value = e.latlng.lat;
+                        document.getElementById('edit-ad-lng').value = e.latlng.lng;
+                        reverseGeocode(e.latlng.lat, e.latlng.lng, 'edit-ad-city');
+                    });
+
+                    editMapMarker.on('dragend', function(e) {
+                        const pos = editMapMarker.getLatLng();
+                        document.getElementById('edit-ad-lat').value = pos.lat;
+                        document.getElementById('edit-ad-lng').value = pos.lng;
+                        reverseGeocode(pos.lat, pos.lng, 'edit-ad-city');
+                    });
+                } catch (err) {
+                    console.warn('Edit map init:', err);
+                }
+            }, 300);
+        }
+
+        function handleRegionChangeEdit(val) {
+            if (editMapInstance && editMapMarker) {
+                const newCoords = REGION_COORDS[val] || REGION_COORDS['DAM'];
+                editMapInstance.setView(newCoords, 9);
+                editMapMarker.setLatLng(newCoords);
+                document.getElementById('edit-ad-lat').value = newCoords[0];
+                document.getElementById('edit-ad-lng').value = newCoords[1];
+            }
+        }
+
+        function handleEditImageCompressUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('edit-image-compress-status');
+            const previewImg = document.getElementById('edit-image-preview-img');
+            const hiddenData = document.getElementById('edit-ad-image-data');
+
+            if (statusEl) statusEl.innerText = 'Сжатие и подгонка размера...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const TARGET_WIDTH = 800;
+                    const TARGET_HEIGHT = 533;
+
+                    canvas.width = TARGET_WIDTH;
+                    canvas.height = TARGET_HEIGHT;
+                    const ctx = canvas.getContext('2d');
+
+                    const scale = Math.max(TARGET_WIDTH / img.width, TARGET_HEIGHT / img.height);
+                    const x = (TARGET_WIDTH - img.width * scale) / 2;
+                    const y = (TARGET_HEIGHT - img.height * scale) / 2;
+
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
+                    hiddenData.value = compressedBase64;
+                    previewImg.src = compressedBase64;
+
+                    const compSizeKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
+                    if (statusEl) statusEl.innerText = `Подгнано (800x533): ${compSizeKB} КБ`;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleEditAdSubmit(e) {
+            e.preventDefault();
+            const adId = document.getElementById('edit-ad-id').value;
+            const ad = ads.find(a => a.id === adId);
+
+            if (!ad) return;
+
+            const isFree = document.getElementById('edit-ad-is-free').checked;
+            const isWomenOnlyChk = document.getElementById('edit-ad-is-women-only');
+
+            ad.title = document.getElementById('edit-ad-title').value.trim();
+            ad.category = document.getElementById('edit-ad-category').value;
+            ad.region = document.getElementById('edit-ad-region').value;
+            ad.city = document.getElementById('edit-ad-city').value.trim();
+            ad.isFree = isFree;
+            ad.price = isFree ? 0 : parseFloat(document.getElementById('edit-ad-price').value || 0);
+            ad.currency = document.getElementById('edit-ad-currency').value;
+            ad.condition = document.getElementById('edit-ad-condition').value;
+            ad.pickupType = document.getElementById('edit-ad-pickup').value;
+            ad.desc = document.getElementById('edit-ad-desc').value.trim();
+            ad.image = document.getElementById('edit-ad-image-data').value || ad.image;
+            ad.lat = parseFloat(document.getElementById('edit-ad-lat').value);
+            ad.lng = parseFloat(document.getElementById('edit-ad-lng').value);
+
+            if (isWomenOnlyChk && !document.getElementById('edit-women-only-container').classList.contains('hidden')) {
+                ad.isWomenOnly = isWomenOnlyChk.checked;
+            }
+
+            db.ref('ads/' + adId).set(ad).then(() => {
+                closeModal('modal-edit-ad');
+            });
+        }
+
+        /* -------------------------------------------------------------
+         * PROFILE & SELLER STORE MODALS
+         * ------------------------------------------------------------- */
+        let profileTabMode = 'my_ads';
+
+        function openProfileModal() {
+            if (!currentUser) return openAuthModal();
+            profileTabMode = 'my_ads';
+            renderProfileContent();
+            openModal('modal-profile');
+        }
+
+        function switchProfileTab(mode) {
+            profileTabMode = mode;
+            renderProfileContent();
+        }
+
+        function renderProfileContent() {
+            const content = document.getElementById('profile-content');
+            if (!content) return;
+
+            const myAds = ads.filter(a => a.sellerUsername === currentUser.username && a.status === 'ACTIVE');
+            const myQueuedAds = ads.filter(a => a.queue && a.queue.includes(currentUser.username) && a.status === 'ACTIVE');
+            const myFavAds = ads.filter(a => favorites.includes(a.id) && a.status === 'ACTIVE');
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-600/30 text-blue-400 flex items-center justify-center text-xl font-bold">
+                                ${(currentUser.kunya || currentUser.username)[0]}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    ${currentUser.kunya || currentUser.username}
+                                    ${currentUser.verifiedShop ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">Магазин</span>' : ''}
+                                </h3>
+                                <p class="text-xs text-slate-400">@${currentUser.username} • ${currentUser.whatsapp || 'WhatsApp не указан'}</p>
+                            </div>
+                        </div>
+                        <button onclick="logout()" class="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-bold transition-all">
+                            Выйти
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 text-xs">
+                        <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 font-semibold border border-white/10 transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-user-pen"></i> Редактировать анкету
+                        </button>
+                    </div>
+
+                    <!-- Profile Tabs Navigation -->
+                    <div class="flex border-b border-white/10 text-xs">
+                        <button onclick="switchProfileTab('my_ads')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_ads' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
+                            Мои (${myAds.length})
+                        </button>
+                        <button onclick="switchProfileTab('my_queue')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_queue' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
+                            🔥 Очередь (${myQueuedAds.length})
+                        </button>
+                        <button onclick="switchProfileTab('my_favs')" class="flex-1 py-2 font-bold border-b-2 ${profileTabMode === 'my_favs' ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400'}">
+                            ⭐ Избранное (${myFavAds.length})
+                        </button>
+                    </div>
+
+                    <div class="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs">
+                        ${profileTabMode === 'my_ads' ? (
+                            myAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">У вас пока нет активных объявлений</div>' : myAds.map(ad => `
+                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-bold text-white truncate">${ad.title}</div>
+                                        <div class="text-[10px] text-emerald-400 font-mono">${ad.id} • ${ad.price} ${ad.currency}</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button onclick="closeModal('modal-profile'); openEditAdModal('${ad.id}');" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-bold text-[11px] whitespace-nowrap">
+                                            <i class="fa-solid fa-pen"></i> Изменить
+                                        </button>
+                                        <button onclick="openDeleteReasonModal('${ad.id}')" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 font-bold text-[11px] whitespace-nowrap">
+                                            Снять
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')
+                        ) : profileTabMode === 'my_queue' ? (
+                            myQueuedAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">Вы пока не занимали очередь ни на один товар</div>' : myQueuedAds.map(ad => {
+                                const qRank = ad.queue.indexOf(currentUser.username) + 1;
+                                return `
+                                    <div onclick="closeModal('modal-profile'); openAdDetail('${ad.id}');" class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/10">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-bold text-white truncate">${ad.title}</div>
+                                            <div class="text-[10px] text-amber-300 font-bold">Вы №${qRank} из ${ad.queue.length} в очереди</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-500"></i>
+                                    </div>
+                                `;
+                            }).join('')
+                        ) : (
+                            myFavAds.length === 0 ? '<div class="text-slate-500 py-4 text-center">Список избранного пуст</div>' : myFavAds.map(ad => `
+                                <div onclick="closeModal('modal-profile'); openAdDetail('${ad.id}');" class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/10">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-bold text-white truncate">${ad.title}</div>
+                                        <div class="text-[10px] text-emerald-400 font-mono">${ad.price} ${ad.currency}</div>
+                                    </div>
+                                    <button onclick="toggleFavorite('${ad.id}', event); renderProfileContent();" class="text-amber-400 px-2 py-1">
+                                        <i class="fa-solid fa-star"></i>
+                                    </button>
+                                </div>
+                            `).join('')
+                        )}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openDeleteReasonModal(id) {
+            document.getElementById('delete-ad-id').value = id;
+            openModal('modal-delete-reason');
+        }
+
+        function confirmAdDeletion(reason) {
+            const id = document.getElementById('delete-ad-id').value;
+            const idx = ads.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                const deletedAd = ads[idx];
+                deletedAd.status = 'DELETED';
+                deletedAd.deleteReason = reason;
+                deletedAd.archivedAt = new Date().toISOString();
+
+                // Delete from active ads & move to archived
+                db.ref('ads/' + id).remove();
+                db.ref('archivedAds/' + id).set(deletedAd);
+
+                closeModal('modal-delete-reason');
+                closeModal('modal-profile');
+                if (reason.includes('BarakaSouq')) {
+                    openModal('modal-donate');
+                }
+            }
+        }
+
+        function openEditProfileModal(username) {
+            const targetUser = users.find(u => u.username === username);
+            if (!targetUser) return;
+
+            document.getElementById('edit-profile-username').value = targetUser.username;
+            document.getElementById('edit-profile-kunya').value = targetUser.kunya || '';
+            document.getElementById('edit-profile-whatsapp').value = targetUser.whatsapp || '';
+
+            const adminFields = document.getElementById('edit-profile-admin-fields');
+            if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                adminFields.classList.remove('hidden');
+                document.getElementById('edit-profile-gender').value = targetUser.gender || 'MALE';
+                document.getElementById('edit-profile-role').value = targetUser.role || 'USER';
+            } else {
+                adminFields.classList.add('hidden');
+            }
+
+            openModal('modal-edit-profile');
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            const targetUsername = document.getElementById('edit-profile-username').value;
+            const kunya = document.getElementById('edit-profile-kunya').value;
+            const whatsapp = document.getElementById('edit-profile-whatsapp').value;
+
+            const u = users.find(x => x.username === targetUsername);
+            if (u && u.uid) {
+                u.kunya = kunya;
+                u.whatsapp = whatsapp;
+
+                if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                    u.gender = document.getElementById('edit-profile-gender').value;
+                    u.role = document.getElementById('edit-profile-role').value;
+                }
+
+                db.ref('users/' + u.uid).update(u).then(() => {
+                    closeModal('modal-edit-profile');
+                    if (currentUser && currentUser.username === targetUsername) {
+                        openProfileModal();
+                    }
+                });
+            }
+        }
+
+        function openShopsDirectory() {
+            const grid = document.getElementById('shops-directory-grid');
+            if (!grid) return;
+
+            const shopSellers = users.filter(u => u.verifiedShop || ads.some(a => a.sellerUsername === u.username));
+
+            if (shopSellers.length === 0) {
+                grid.innerHTML = '<div class="col-span-full py-8 text-center text-slate-400 text-xs">Магазинов пока нет</div>';
+            } else {
+                grid.innerHTML = shopSellers.map(s => {
+                    const count = ads.filter(a => a.sellerUsername === s.username && a.status === 'ACTIVE').length;
+                    return `
+                        <div onclick="openSellerStore('${s.username}')" class="glass-panel p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:border-purple-500/50 transition-all border border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center text-lg">
+                                    ${(s.kunya || s.username)[0]}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white text-xs flex items-center gap-1">
+                                        ${s.kunya || s.username}
+                                        ${s.verifiedShop ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs" title="Проверен"></i>' : ''}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">Товаров в наличии: <span class="text-purple-300 font-bold">${count}</span></div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            openModal('modal-shops-directory');
+        }
+
+        function openSellerStore(username) {
+            closeModal('modal-shops-directory');
+            closeModal('modal-ad-detail');
+
+            const seller = users.find(u => u.username === username);
+            const content = document.getElementById('seller-store-content');
+            if (!content || !seller) return;
+
+            const sellerAds = ads.filter(a => a.sellerUsername === username && a.status === 'ACTIVE');
+
+            content.innerHTML = `
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-600/30 text-purple-300 font-bold flex items-center justify-center text-xl">
+                            ${(seller.kunya || seller.username)[0]}
+                        </div>
+                        <div>
+                            <h2 class="text-base font-extrabold text-white flex items-center gap-1.5">
+                                ${seller.kunya || seller.username}
+                                ${seller.verifiedShop ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">Магазин</span>' : ''}
+                            </h2>
+                            <p class="text-xs text-slate-400">Активных объявлений: ${sellerAds.length}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    ${sellerAds.length === 0 ? '<div class="col-span-full py-8 text-center text-slate-500">У данного продавца пока нет товаров</div>' : sellerAds.map(ad => `
+                        <div onclick="openAdDetail('${ad.id}')" class="bg-white/5 border border-white/5 rounded-2xl p-2.5 cursor-pointer hover:border-purple-400/50 transition-all space-y-2">
+                            <img src="${ad.image}" class="w-full h-28 object-cover rounded-xl bg-slate-900">
+                            <div class="font-bold text-white text-xs line-clamp-1">${ad.title}</div>
+                            <div class="text-[11px] font-mono text-emerald-400 font-bold">${ad.price} ${ad.currency}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            openModal('modal-seller-store');
+        }
+
+        /* -------------------------------------------------------------
+         * ADMIN & SUPERUSER CONTROL PANEL
+         * ------------------------------------------------------------- */
+        function openAdminPanel() {
+            if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+                alert('Доступ разрешен только администраторам!');
+                return;
+            }
+            switchAdminTab('overview');
+            openModal('modal-admin-panel');
+        }
+
+        function switchAdminTab(tab) {
+            currentAdminTab = tab;
+            ['overview', 'users', 'moderation', 'archive', 'rates', 'backup'].forEach(t => {
+                const btn = document.getElementById(`atab-${t}`);
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = 'px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap';
+                    } else {
+                        btn.className = 'px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap';
+                    }
+                }
+            });
+            renderAdminTab(tab);
+        }
+
+        function renderAdminTab(tab) {
+            const container = document.getElementById('admin-tab-content');
+            if (!container) return;
+
+            if (tab === 'overview') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                            <div class="text-slate-400 text-[10px]">Всего пользователей</div>
+                            <div class="text-xl font-extrabold text-white mt-1">${users.length}</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                            <div class="text-slate-400 text-[10px]">Активные объявления</div>
+                            <div class="text-xl font-extrabold text-emerald-400 mt-1">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                            <div class="text-slate-400 text-[10px]">В архиве</div>
+                            <div class="text-xl font-extrabold text-amber-400 mt-1">${archivedAds.length}</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                            <div class="text-slate-400 text-[10px]">Курс SYP / USD</div>
+                            <div class="text-xl font-extrabold text-purple-300 mt-1">${EXCHANGE_RATES.SYP}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'users') {
+                container.innerHTML = `
+                    <div class="space-y-2">
+                        ${users.map(u => `
+                            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="font-bold text-white flex items-center gap-1.5">
+                                        ${u.kunya || u.username}
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">${u.role}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">@${u.username} • ${u.whatsapp}</div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="toggleVerifyShop('${u.username}')" class="px-2 py-1 rounded-lg ${u.verifiedShop ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400'} font-bold">
+                                        ${u.verifiedShop ? 'Магазин ✓' : '+ Магазин'}
+                                    </button>
+                                    <button onclick="openEditProfileModal('${u.username}')" class="px-2 py-1 rounded-lg bg-blue-600/30 text-blue-300 font-bold">
+                                        Редактировать
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (tab === 'moderation') {
+                container.innerHTML = `
+                    <div class="space-y-2">
+                        ${ads.filter(a => a.status === 'ACTIVE').map(a => `
+                            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-white truncate">${a.title}</div>
+                                    <div class="text-[10px] text-slate-400">${a.id} • ${a.sellerKunya || a.sellerUsername}</div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="closeModal('modal-admin-panel'); openEditAdModal('${a.id}');" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500/30">
+                                        Изменить
+                                    </button>
+                                    <button onclick="adminArchiveAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-rose-600/30 text-rose-300 font-bold hover:bg-rose-600/50">
+                                        В архив
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (tab === 'archive') {
+                container.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                            <div>
+                                <div class="font-bold text-white">Автоматическая очистка архива</div>
+                                <div class="text-[10px] text-slate-400">Удалять объявления из архива через выбранный срок</div>
+                            </div>
+                            <select onchange="updateArchiveDays(this.value)" class="bg-slate-900 border border-white/10 rounded-xl px-2 py-1 text-xs font-bold text-white">
+                                <option value="7" ${SYSTEM_CONFIG.archiveTimerDays === '7' ? 'selected' : ''}>7 дней</option>
+                                <option value="30" ${SYSTEM_CONFIG.archiveTimerDays === '30' ? 'selected' : ''}>30 дней</option>
+                                <option value="60" ${SYSTEM_CONFIG.archiveTimerDays === '60' ? 'selected' : ''}>60 дней</option>
+                                <option value="manual" ${SYSTEM_CONFIG.archiveTimerDays === 'manual' ? 'selected' : ''}>Вручную</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            ${archivedAds.length === 0 ? '<div class="py-6 text-center text-slate-500">Архив пуст</div>' : archivedAds.map(a => `
+                                <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-bold text-slate-300 truncate">${a.title}</div>
+                                        <div class="text-[10px] text-rose-400">${a.deleteReason || 'Снято с публикации'}</div>
+                                    </div>
+                                    <button onclick="restoreAd('${a.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 text-emerald-300 font-bold hover:bg-emerald-600/50">
+                                        Восстановить
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'rates') {
+                container.innerHTML = `
+                    <div class="space-y-3 max-w-sm mx-auto">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Курс Сирийского фунта (SYP за $1)</label>
+                            <input type="number" id="rate-syp" value="${EXCHANGE_RATES.SYP}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Курс Турецкой лиры (TRY за $1)</label>
+                            <input type="number" step="0.1" id="rate-try" value="${EXCHANGE_RATES.TRY}" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none">
+                        </div>
+                        <button onclick="saveRates()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all">
+                            Сохранить новые курсы
+                        </button>
+                    </div>
+                `;
+            } else if (tab === 'backup') {
+                container.innerHTML = `
+                    <div class="space-y-4 max-w-md mx-auto text-center">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                            <i class="fa-solid fa-file-export text-amber-400 text-2xl"></i>
+                            <div class="font-bold text-white">Экспорт бэкапа базы данных</div>
+                            <p class="text-slate-400 text-[11px]">Скачать единый файл со всеми объявлениями, пользователями и настройками системы.</p>
+                            <button onclick="exportSystemBackup()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold transition-all">
+                                Скачать бэкап (JSON)
+                            </button>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                            <i class="fa-solid fa-file-import text-emerald-400 text-2xl"></i>
+                            <div class="font-bold text-white">Импорт / Восстановление в Firebase</div>
+                            <p class="text-slate-400 text-[11px]">Загрузить заранее сохраненный бэкап в облако Firebase.</p>
+                            <input type="file" id="backup-import-file" accept=".json" onchange="importSystemBackup(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function exportSystemBackup() {
+            const data = {
+                SYSTEM_CONFIG,
+                EXCHANGE_RATES,
+                users,
+                ads,
+                archivedAds,
+                customCategories,
+                exportedAt: new Date().toISOString()
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `BarakaSouq_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importSystemBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.ads) {
+                        const adsMap = {};
+                        parsed.ads.forEach(a => { adsMap[a.id] = a; });
+                        db.ref('ads').set(adsMap);
+
+                        if (parsed.EXCHANGE_RATES) db.ref('rates').set(parsed.EXCHANGE_RATES);
+                        if (parsed.customCategories) db.ref('customCategories').set(parsed.customCategories);
+
+                        alert('Бэкап успешно импортирован в Firebase!');
+                    } else {
+                        alert('Ошибка: неверный формат файла бэкапа');
+                    }
+                } catch (err) {
+                    alert('Не удалось прочитать файл бэкапа');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleVerifyShop(username) {
+            const u = users.find(x => x.username === username);
+            if (u && u.uid) {
+                u.verifiedShop = !u.verifiedShop;
+                db.ref('users/' + u.uid + '/verifiedShop').set(u.verifiedShop).then(() => {
+                    renderAdminTab('users');
+                });
+            }
+        }
+
+        function adminArchiveAd(id) {
+            const idx = ads.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                const deletedAd = ads[idx];
+                deletedAd.status = 'DELETED';
+                deletedAd.deleteReason = 'Снято модератором';
+                deletedAd.archivedAt = new Date().toISOString();
+
+                db.ref('ads/' + id).remove();
+                db.ref('archivedAds/' + id).set(deletedAd);
+                renderAdminTab('moderation');
+            }
+        }
+
+        function restoreAd(id) {
+            const idx = archivedAds.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                const restored = archivedAds[idx];
+                restored.status = 'ACTIVE';
+                delete restored.deleteReason;
+
+                db.ref('archivedAds/' + id).remove();
+                db.ref('ads/' + id).set(restored);
+                renderAdminTab('archive');
+            }
+        }
+
+        function updateArchiveDays(val) {
+            SYSTEM_CONFIG.archiveTimerDays = val;
+            db.ref('config/archiveTimerDays').set(val);
+        }
+
+        function saveRates() {
+            const syp = parseFloat(document.getElementById('rate-syp').value);
+            const tryVal = parseFloat(document.getElementById('rate-try').value);
+            if (syp && tryVal) {
+                EXCHANGE_RATES.SYP = syp;
+                EXCHANGE_RATES.TRY = tryVal;
+                db.ref('rates').set(EXCHANGE_RATES).then(() => {
+                    renderAds();
+                    alert('Курсы валют успешно обновлены в облаке!');
+                });
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * INITIALIZATION ON PAGE LOAD
+         * ------------------------------------------------------------- */
+        window.onload = function() {
+            // Load local favorites
+            try {
+                if (localStorage.getItem('bs_favorites')) {
+                    favorites = JSON.parse(localStorage.getItem('bs_favorites'));
+                }
+                if (localStorage.getItem('bs_rules_accepted')) {
+                    SYSTEM_CONFIG.rulesAccepted = true;
+                }
+            } catch (e) {}
+
+            // Start Firebase Listeners
+            initFirebaseSync();
+            renderCategoryPills();
+
+            if (!SYSTEM_CONFIG.rulesAccepted) {
+                openModal('modal-rules-agreement');
+            }
+
+            window.addEventListener('offline', () => {
+                const toast = document.getElementById('offline-toast');
+                if (toast) toast.classList.remove('hidden');
+            });
+            window.addEventListener('online', () => {
+                const toast = document.getElementById('offline-toast');
+                if (toast) toast.classList.add('hidden');
+            });
+        };
+    </script>
+</body>
+</html>
