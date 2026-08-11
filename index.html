@@ -244,6 +244,7 @@
 
     </main>
 
+    <!-- Rules Modal -->
     <div id="modal-rules-agreement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-amber-500/30 space-y-4 max-h-[90vh] flex flex-col justify-between">
             <div class="text-center space-y-2">
@@ -266,6 +267,7 @@
         </div>
     </div>
 
+    <!-- Auth Modal -->
     <div id="modal-auth" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/10 space-y-4">
             <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -286,7 +288,7 @@
                     <input type="password" id="auth-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="••••••••">
                 </div>
 
-                <!-- Чекбокс запоминания сессии -->
+                <!-- Remember session checkbox -->
                 <div class="flex items-center justify-between pt-1">
                     <label class="flex items-center gap-2 cursor-pointer text-slate-300">
                         <input type="checkbox" id="auth-remember-me" checked class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
@@ -328,6 +330,7 @@
         </div>
     </div>
 
+    <!-- Create Ad Modal -->
     <div id="modal-create-ad" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -468,6 +471,7 @@
         </div>
     </div>
 
+    <!-- Edit Ad Modal -->
     <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -605,6 +609,7 @@
         </div>
     </div>
 
+    <!-- Ad Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
@@ -616,6 +621,7 @@
         </div>
     </div>
 
+    <!-- User Profile Modal -->
     <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
             <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -698,6 +704,7 @@
         </div>
     </div>
 
+    <!-- Donate Modal -->
     <div id="modal-donate" class="fixed inset-0 z-[65] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-amber-500/30 space-y-3 text-xs text-center relative">
             <button onclick="closeModal('modal-donate')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -787,6 +794,9 @@
         <span>Нет подключения к интернету. Просмотр из кэша.</span>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+
     <script>
         /* -------------------------------------------------------------
          * FIREBASE CLOUD CONFIGURATION & INITIALIZATION
@@ -830,6 +840,23 @@
             TRY: 32.50
         };
 
+        const REGION_COORDS = {
+            'DAM': [33.5138, 36.2765],
+            'RIF_DAM': [33.5150, 36.3000],
+            'ALEP': [36.2021, 37.1343],
+            'IDL': [35.9306, 36.6339],
+            'HOMS': [34.7324, 36.7137],
+            'HAMA': [35.1318, 36.7578],
+            'LAT': [35.5317, 35.7817],
+            'TAR': [34.8890, 35.8866],
+            'RAQ': [35.9500, 38.9980],
+            'DEIR': [35.3359, 40.1408],
+            'HAS': [36.5024, 40.7477],
+            'DAR': [32.6189, 36.1021],
+            'SUW': [32.7089, 36.5672],
+            'QUN': [33.1258, 35.8222]
+        };
+
         let CURRENT_CURRENCY = 'USD';
         let CURRENT_LANG = 'RU';
 
@@ -855,21 +882,39 @@
         let detailMapInstance = null;
         let editMapInstance = null;
         let editMapMarker = null;
+        let createMapInstance = null;
+        let createMapMarker = null;
+        let isUserMarkerSet = false;
 
         let currentPage = 1;
         const itemsPerPage = 8;
         let selectedCategory = 'all';
-        
-        const REGION_COORDS = {
-            'DAM': [33.5138, 36.2765], 'RIF_DAM': [33.5000, 36.5000], 'ALEP': [36.2021, 37.1343],
-            'IDL': [35.9306, 36.6339], 'HOMS': [34.7297, 36.7136], 'HAMA': [35.1318, 36.7578],
-            'LAT': [35.5179, 35.7779], 'TAR': [34.8890, 35.8866], 'RAQ': [35.9501, 39.0142],
-            'DEIR': [35.3333, 40.1500], 'HAS': [36.5024, 40.7466], 'DAR': [32.6186, 36.1040],
-            'SUW': [32.7090, 36.5695], 'QUN': [33.1257, 35.8208]
-        };
-        let createMapInstance = null;
-        let createMapMarker = null;
-        let isUserMarkerSet = false;
+
+        /* -------------------------------------------------------------
+         * INLINE TOAST NOTIFICATION SYSTEM
+         * ------------------------------------------------------------- */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-bold shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 text-white ${
+                type === 'error' ? 'bg-rose-600 border border-rose-400/40' : 
+                type === 'warning' ? 'bg-amber-500 text-slate-950 border border-amber-300/40' : 
+                'bg-emerald-600 border border-emerald-400/40'
+            }`;
+            const icon = type === 'error' ? 'fa-circle-xmark' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-check';
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
 
         function initFirebaseSync() {
             const syncStatus = document.getElementById('cloud-sync-status');
@@ -900,7 +945,7 @@
                 archivedAds = val ? Object.keys(val).map(key => ({ id: key, ...val[key] })) : [];
             });
 
-            // Realtime listener for Archived Users (Точное сохранение ключа uid)
+            // Realtime listener for Archived Users
             db.ref('archivedUsers').on('value', (snapshot) => {
                 const val = snapshot.val();
                 archivedUsers = val ? Object.keys(val).map(key => ({ uid: key, ...val[key] })) : [];
@@ -909,12 +954,11 @@
                 }
             });
 
-            // Realtime listener for Users (Точное сохранение ключа uid)
+            // Realtime listener for Users
             db.ref('users').on('value', (snapshot) => {
                 const val = snapshot.val();
                 users = val ? Object.keys(val).map(key => ({ uid: key, ...val[key] })) : [];
                 
-                // Если наш текущий пользователь изменился в базе - обновляем его локальный профиль
                 if (currentUser) {
                     const freshMe = users.find(u => u.username === currentUser.username || u.uid === currentUser.uid);
                     if (freshMe) {
@@ -974,7 +1018,6 @@
             }
         }
 
-        // Сохранение сессии в браузер
         function saveUserSession(userObj) {
             try {
                 if (userObj) {
@@ -1032,6 +1075,19 @@
         function openAuthModal() {
             switchAuthTab('login');
             openModal('modal-auth');
+        }
+
+        function logout() {
+            currentUser = null;
+            saveUserSession(null);
+            if (auth && auth.signOut) {
+                auth.signOut().catch(() => {});
+            }
+            updateAuthUI();
+            closeModal('modal-profile');
+            renderCategoryPills();
+            renderAds();
+            showToast('Вы успешно вышли из аккаунта', 'warning');
         }
 
         function openCreateAdModal() {
@@ -1186,7 +1242,6 @@
             if (pin === SYSTEM_CONFIG.emergencyPin) {
                 closeModal('modal-secret-pin');
                 document.getElementById('secret-pin-input').value = '';
-                // Set fallback Superuser
                 currentUser = {
                     uid: 'emergency_admin',
                     username: 'admin',
@@ -1197,8 +1252,9 @@
                 };
                 updateAuthUI();
                 openAdminPanel();
+                showToast('Вход выполнен через секретный PIN', 'warning');
             } else {
-                alert('Неверный PIN-код!');
+                showToast('Неверный PIN-код!', 'error');
             }
         }
 
@@ -1246,6 +1302,7 @@
                     updateAuthUI();
                     renderCategoryPills();
                     renderAds();
+                    showToast(`Добро пожаловать, ${currentUser.kunya}!`);
                     return;
                 }
 
@@ -1253,6 +1310,7 @@
                     .then(() => {
                         if (rememberMe && currentUser) saveUserSession(currentUser);
                         closeModal('modal-auth');
+                        showToast(`Успешный вход в аккаунт!`);
                     })
                     .catch((err) => {
                         console.warn('Firebase login attempt:', err);
@@ -1270,8 +1328,9 @@
                             updateAuthUI();
                             renderCategoryPills();
                             renderAds();
+                            showToast('Вход с правами Администратора', 'warning');
                         } else {
-                            alert('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'));
+                            showToast('Ошибка входа: ' + (err.message.includes('user-not-found') ? 'Пользователь не найден' : 'Неверный логин или пароль'), 'error');
                         }
                     });
             } else {
@@ -1287,6 +1346,7 @@
                     updateAuthUI();
                     renderCategoryPills();
                     renderAds();
+                    showToast('Аккаунт успешно зарегистрирован!');
                     return;
                 }
 
@@ -1311,6 +1371,7 @@
                         updateAuthUI();
                         renderCategoryPills();
                         renderAds();
+                        showToast('Регистрация прошла успешно!');
                     })
                     .catch((err) => {
                         console.warn('Firebase Reg catch:', err);
@@ -1321,20 +1382,78 @@
                         updateAuthUI();
                         renderCategoryPills();
                         renderAds();
+                        showToast('Аккаунт создан в локальном режиме', 'warning');
                     });
             }
         }
 
-        function logout() {
-            if (auth) {
-                auth.signOut().catch(() => {});
+        function getCategoryAdsCount(catId) {
+            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const selectedRegion = document.getElementById('region-filter')?.value || 'ALL';
+
+            return ads.filter(ad => {
+                if (ad.status !== 'ACTIVE') return false;
+
+                if (ad.isWomenOnly) {
+                    if (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+                        return false;
+                    }
+                }
+
+                if (catId === 'favorites') return favorites.includes(ad.id);
+                if (catId === 'women_only') return ad.isWomenOnly;
+                if (catId === 'free') return ad.isFree || ad.price === 0;
+                if (catId === 'all') return true;
+
+                if (selectedRegion !== 'ALL' && ad.region !== selectedRegion) return false;
+                if (searchQuery && !ad.title.toLowerCase().includes(searchQuery) && !ad.city.toLowerCase().includes(searchQuery)) return false;
+
+                return ad.category === catId;
+            }).length;
+        }
+
+        function renderCategoryPills() {
+            const container = document.getElementById('categories-container');
+            if (!container) return;
+
+            let pills = [
+                { id: 'all', icon: 'fa-border-all', name: 'Все товары' },
+                { id: 'favorites', icon: 'fa-star text-amber-400', name: 'Избранное', badge: favorites.length > 0 ? favorites.length : null }
+            ];
+
+            if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+                pills.push({ id: 'women_only', icon: 'fa-user-large-slash text-pink-400', name: 'Только для женщин 🌸' });
             }
-            currentUser = null;
-            saveUserSession(null);
-            updateAuthUI();
-            closeModal('modal-profile');
+
+            pills.push({ id: 'free', icon: 'fa-gift text-emerald-400', name: 'Даром (Бесплатно) 🎁' });
+
+            pills = pills.concat(customCategories.map(c => ({
+                id: c.id,
+                icon: c.icon || 'fa-tag',
+                name: c.name
+            })));
+
+            pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: 'Каталог магазинов 🏪' });
+
+            container.innerHTML = pills.map(c => {
+                const count = (c.id === 'shops_dir' || c.id === 'favorites') ? c.badge : getCategoryAdsCount(c.id);
+                return `
+                    <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95">
+                        <i class="fa-solid ${c.icon} text-base sm:text-lg"></i>
+                        ${count && count > 0 ? `<span class="absolute -top-1.5 -right-1.5 text-[9px] bg-rose-600 text-white font-extrabold px-1.5 py-0.2 rounded-full border border-slate-950 shadow-md animate-pulse">${count}</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function handleCategoryClick(catId) {
+            if (catId === 'shops_dir') {
+                openShopsDirectory();
+                return;
+            }
+            selectedCategory = catId;
             renderCategoryPills();
-            renderAds();
+            resetPageAndRender();
         }
 
         function handleImageCompressUpload(event) {
@@ -1342,7 +1461,7 @@
             if (!file) return;
 
             if (file.size > 10 * 1024 * 1024) {
-                alert('Файл слишком большой. Пожалуйста, выберите изображение до 10 МБ.');
+                showToast('Файл слишком большой. Выберите изображение до 10 МБ.', 'error');
                 event.target.value = '';
                 return;
             }
@@ -1447,47 +1566,6 @@
             renderAds();
         }
 
-        function renderCategoryPills() {
-            const container = document.getElementById('categories-container');
-            if (!container) return;
-
-            let pills = [
-                { id: 'all', icon: 'fa-border-all', name: 'Все товары' },
-                { id: 'favorites', icon: 'fa-star text-amber-400', name: 'Избранное', badge: favorites.length > 0 ? favorites.length : null }
-            ];
-
-            if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-                pills.push({ id: 'women_only', icon: 'fa-user-large-slash text-pink-400', name: 'Только для женщин 🌸' });
-            }
-
-            pills.push({ id: 'free', icon: 'fa-gift text-emerald-400', name: 'Даром (Бесплатно) 🎁' });
-
-            pills = pills.concat(customCategories.map(c => ({
-                id: c.id,
-                icon: c.icon || 'fa-tag',
-                name: c.name
-            })));
-
-            pills.push({ id: 'shops_dir', icon: 'fa-store text-purple-400', name: 'Каталог магазинов 🏪' });
-
-            container.innerHTML = pills.map(c => `
-                <button onclick="handleCategoryClick('${c.id}')" title="${c.name}" class="relative flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95">
-                    <i class="fa-solid ${c.icon} text-base sm:text-lg"></i>
-                    ${c.badge ? `<span class="absolute -top-1 -right-1 text-[9px] bg-amber-400 text-slate-950 font-extrabold px-1.5 py-0.2 rounded-full border border-slate-950 shadow">${c.badge}</span>` : ''}
-                </button>
-            `).join('');
-        }
-
-        function handleCategoryClick(catId) {
-            if (catId === 'shops_dir') {
-                openShopsDirectory();
-                return;
-            }
-            selectedCategory = catId;
-            renderCategoryPills();
-            resetPageAndRender();
-        }
-
         function renderAds() {
             const grid = document.getElementById('listings-view');
             const paginationContainer = document.getElementById('pagination-container');
@@ -1499,7 +1577,6 @@
             const filtered = ads.filter(ad => {
                 if (ad.status !== 'ACTIVE') return false;
 
-                // STRICT SHARIA PRIVACY RULE
                 if (ad.isWomenOnly) {
                     if (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
                         return false;
@@ -1650,7 +1727,8 @@
             }
 
             closeModal('modal-create-ad');
-            alert('Объявление успешно опубликовано!');
+            renderCategoryPills();
+            showToast('Объявление успешно опубликовано!');
         }
 
         function openAdDetail(id) {
@@ -1811,7 +1889,7 @@
 
             const canEdit = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
             if (!canEdit) {
-                alert('У вас нет прав для редактирования этого объявления');
+                showToast('У вас нет прав для редактирования этого объявления', 'error');
                 return;
             }
 
@@ -1924,7 +2002,7 @@
             if (!file) return;
 
             if (file.size > 10 * 1024 * 1024) {
-                alert('Файл слишком большой. Пожалуйста, выберите изображение до 10 МБ.');
+                showToast('Файл слишком большой. Выберите изображение до 10 МБ.', 'error');
                 event.target.value = '';
                 return;
             }
@@ -1998,10 +2076,12 @@
             if (db) {
                 db.ref('ads/' + adId).set(ad).then(() => {
                     closeModal('modal-edit-ad');
+                    showToast('Изменения сохранены!');
                 });
             } else {
                 renderAds();
                 closeModal('modal-edit-ad');
+                showToast('Изменения сохранены локально!');
             }
         }
 
@@ -2139,6 +2219,7 @@
 
                 closeModal('modal-delete-reason');
                 closeModal('modal-profile');
+                showToast('Объявление перемещено в архив');
                 if (reason.includes('BarakaSouq')) {
                     openModal('modal-donate');
                 }
@@ -2183,6 +2264,7 @@
 
                 if (db) db.ref('users/' + u.uid).update(u);
                 closeModal('modal-edit-profile');
+                showToast('Анкета успешно обновлена!');
                 if (currentUser && currentUser.username === targetUsername) {
                     openProfileModal();
                 }
@@ -2265,7 +2347,7 @@
 
         function openAdminPanel() {
             if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-                alert('Доступ разрешен только администраторам!');
+                showToast('Доступ разрешен только администраторам!', 'error');
                 return;
             }
             switchAdminTab('overview');
@@ -2355,7 +2437,7 @@
                             </select>
                         </div>
 
-                        <!-- Архив Пользователей -->
+                        <!-- User Archive -->
                         <div class="space-y-2">
                             <h4 class="font-bold text-purple-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
                                 <i class="fa-solid fa-users-slash"></i> Заархивированные пользователи (${archivedUsers.length})
@@ -2381,7 +2463,7 @@
                             `).join('')}
                         </div>
 
-                        <!-- Архив Объявлений -->
+                        <!-- Ad Archive -->
                         <div class="space-y-2 pt-2">
                             <h4 class="font-bold text-amber-300 text-xs flex items-center gap-1.5 border-b border-white/10 pb-1">
                                 <i class="fa-solid fa-box-archive"></i> Заархивированные объявления (${archivedAds.length})
@@ -2480,12 +2562,12 @@
                             renderAds();
                         }
 
-                        alert('Бэкап успешно импортирован!');
+                        showToast('Бэкап успешно импортирован!');
                     } else {
-                        alert('Ошибка: неверный формат файла бэкапа');
+                        showToast('Ошибка: неверный формат файла бэкапа', 'error');
                     }
                 } catch (err) {
-                    alert('Не удалось прочитать файл бэкапа');
+                    showToast('Не удалось прочитать файл бэкапа', 'error');
                 }
             };
             reader.readAsText(file);
@@ -2516,6 +2598,7 @@
                     archivedAds.push(deletedAd);
                 }
                 renderAdminTab('moderation');
+                showToast('Объявление снято модератором');
             }
         }
 
@@ -2523,7 +2606,7 @@
             const target = users.find(u => u.username === username);
             if (!target) return;
             if (currentUser && (target.username === currentUser.username || target.uid === currentUser.uid)) {
-                alert('Вы не можете заархивировать свой собственный аккаунт!');
+                showToast('Вы не можете заархивировать свой собственный аккаунт!', 'warning');
                 return;
             }
             if (!confirm(`Отправить аккаунт "@${target.username}" (${target.kunya || target.username}) в архив?`)) return;
@@ -2534,20 +2617,20 @@
             const userUid = target.uid || target.username;
 
             if (db) {
-                // Переносим в archivedUsers, затем удаляем из users
                 db.ref('archivedUsers/' + userUid).set(target)
                     .then(() => db.ref('users/' + userUid).remove())
                     .then(() => {
-                        alert(`Аккаунт @${target.username} перенесен в архив!`);
+                        showToast(`Аккаунт @${target.username} перенесен в архив!`, 'warning');
                         renderAdminTab('users');
                     })
                     .catch(err => {
-                        alert('Ошибка Firebase при архивации: ' + err.message + '\n\nПроверьте вкладку Rules в Firebase Console!');
+                        showToast('Ошибка Firebase при архивации: ' + err.message, 'error');
                     });
             } else {
                 const idx = users.findIndex(u => u.username === username);
                 if (idx !== -1) users.splice(idx, 1);
                 archivedUsers.push(target);
+                showToast(`Аккаунт @${target.username} перенесен в архив!`, 'warning');
                 renderAdminTab('users');
             }
         }
@@ -2565,16 +2648,17 @@
                 db.ref('users/' + userUid).set(target)
                     .then(() => db.ref('archivedUsers/' + userUid).remove())
                     .then(() => {
-                        alert(`Аккаунт @${target.username} успешно восстановлен!`);
+                        showToast(`Аккаунт @${target.username} успешно восстановлен!`);
                         renderAdminTab('archive');
                     })
                     .catch(err => {
-                        alert('Ошибка Firebase при восстановлении: ' + err.message);
+                        showToast('Ошибка Firebase при восстановлении: ' + err.message, 'error');
                     });
             } else {
                 const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
                 if (idx !== -1) archivedUsers.splice(idx, 1);
                 users.push(target);
+                showToast(`Аккаунт @${target.username} восстановлен!`);
                 renderAdminTab('archive');
             }
         }
@@ -2590,15 +2674,16 @@
             if (db) {
                 db.ref('archivedUsers/' + userUid).remove()
                     .then(() => {
-                        alert(`Аккаунт @${target.username} навсегда удален из базы!`);
+                        showToast(`Аккаунт @${target.username} навсегда удален!`, 'error');
                         renderAdminTab('archive');
                     })
                     .catch(err => {
-                        alert('Ошибка Firebase при удалении: ' + err.message);
+                        showToast('Ошибка Firebase при удалении: ' + err.message, 'error');
                     });
             } else {
                 const idx = archivedUsers.findIndex(u => u.uid === uidOrUsername || u.username === uidOrUsername);
                 if (idx !== -1) archivedUsers.splice(idx, 1);
+                showToast(`Аккаунт @${target.username} навсегда удален!`, 'error');
                 renderAdminTab('archive');
             }
         }
@@ -2616,18 +2701,15 @@
                 EXCHANGE_RATES.TRY = tryVal;
                 if (db) db.ref('rates').set(EXCHANGE_RATES);
                 renderAds();
-                alert('Курсы валют успешно обновлены!');
+                showToast('Курсы валют успешно обновлены!');
             }
         }
 
         window.onload = function() {
-            // Мгновенное восстановление сохраненной сессии (чтобы не слетал вход при F5)
             restoreUserSession();
-
             try {
-                if (localStorage.getItem('bs_favorites')) {
-                    favorites = JSON.parse(localStorage.getItem('bs_favorites'));
-                }
+                const savedFavs = localStorage.getItem('bs_favorites');
+                if (savedFavs) favorites = JSON.parse(savedFavs);
                 if (localStorage.getItem('bs_rules_accepted')) {
                     SYSTEM_CONFIG.rulesAccepted = true;
                 }
