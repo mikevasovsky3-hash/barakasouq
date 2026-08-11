@@ -843,12 +843,6 @@
                     <option value="RU" class="bg-slate-900 text-white">RU</option>
                     <option value="AR" class="bg-slate-900 text-white">AR</option>
                 </select>
-
-                <select id="currency-select" onchange="changeCurrency(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
-                    <option value="USD" class="bg-slate-900 text-white">$ USD</option>
-                    <option value="SYP" class="bg-slate-900 text-white">SYP (ل.س)</option>
-                    <option value="TRY" class="bg-slate-900 text-white">TRY (₺)</option>
-                </select>
             </div>
         </div>
     </footer>
@@ -901,8 +895,8 @@
         };
 
         let EXCHANGE_RATES = {
-            SYP: 13100,
-            TRY: 32.50
+            SYP: 131.70,
+            TRY: 47.70
         };
 
         /* -------------------------------------------------------------
@@ -911,8 +905,8 @@
         function updateFooterRatesUI() {
             const el = document.getElementById('footer-rates-container');
             if (!el) return;
-            const sypStr = Number(EXCHANGE_RATES.SYP || 13100).toLocaleString();
-            const tryStr = Number(EXCHANGE_RATES.TRY || 32.5).toString();
+            const sypStr = Number(EXCHANGE_RATES.SYP || 131.70).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            const tryStr = Number(EXCHANGE_RATES.TRY || 47.7).toString();
             el.innerHTML = `
                 <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
                 <span class="text-[11px] font-mono">$1 USD = <strong class="text-white">${sypStr} SYP</strong> = <strong class="text-white">${tryStr} TRY</strong></span>
@@ -942,29 +936,53 @@
                 let fetchedSYP = null;
                 let fetchedTRY = null;
 
-                // Recursive search for SYP and TRY values
-                function findRates(obj) {
-                    if (!obj || typeof obj !== 'object') return;
-                    for (const [key, val] of Object.entries(obj)) {
-                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
-                            const num = parseFloat(val);
-                            if (num > 0) {
-                                const k = key.toUpperCase();
-                                if (k.includes('SYP') || k.includes('SYRIA') || k === 'USD_SYP' || k === 'SYP_USD') {
-                                    fetchedSYP = num;
-                                } else if (k.includes('TRY') || k.includes('TURK') || k === 'USD_TRY' || k === 'TRY_USD') {
-                                    fetchedTRY = num;
-                                }
-                            }
-                        } else if (typeof val === 'object') {
-                            findRates(val);
+                // 1. Поиск массива валют rates
+                let ratesArray = [];
+                if (data.overview && data.overview[0] && data.overview[0].data && Array.isArray(data.overview[0].data.rates)) {
+                    ratesArray = data.overview[0].data.rates;
+                } else if (data.data && Array.isArray(data.data.rates)) {
+                    ratesArray = data.data.rates;
+                } else if (Array.isArray(data.rates)) {
+                    ratesArray = data.rates;
+                }
+
+                // Точный извлекатель курса USD для Дамаска (sell / buy)
+                const usdItem = ratesArray.find(r => r.code === 'USD');
+                if (usdItem && usdItem.cities) {
+                    const cityData = usdItem.cities.damascus || Object.values(usdItem.cities)[0];
+                    if (cityData) {
+                        fetchedSYP = parseFloat(cityData.sell || cityData.buy);
+                    }
+                }
+
+                // 2. Извлечение USD/TRY из global_fx или расчета
+                let globalFx = [];
+                if (data.overview && data.overview[0] && data.overview[0].data && Array.isArray(data.overview[0].data.global_fx)) {
+                    globalFx = data.overview[0].data.global_fx;
+                } else if (Array.isArray(data.global_fx)) {
+                    globalFx = data.global_fx;
+                }
+
+                const usdTryFx = globalFx.find(f => f.pair === 'USD/TRY');
+                if (usdTryFx && usdTryFx.rate) {
+                    fetchedTRY = parseFloat(usdTryFx.rate);
+                } else {
+                    const tryItem = ratesArray.find(r => r.code === 'TRY');
+                    if (tryItem && tryItem.cities) {
+                        const tryCity = tryItem.cities.damascus || Object.values(tryItem.cities)[0];
+                        const trySypVal = tryCity ? parseFloat(tryCity.sell || tryCity.buy) : null;
+                        if (fetchedSYP && trySypVal && trySypVal > 0) {
+                            fetchedTRY = parseFloat((fetchedSYP / trySypVal).toFixed(2));
                         }
                     }
                 }
-                findRates(data);
 
                 let isUpdated = false;
                 if (fetchedSYP && fetchedSYP > 0) {
+                    // Применяем деноминацию на 2 нуля (если исходный курс > 1000)
+                    if (fetchedSYP > 1000) {
+                        fetchedSYP = parseFloat((fetchedSYP / 100).toFixed(2));
+                    }
                     EXCHANGE_RATES.SYP = fetchedSYP;
                     isUpdated = true;
                 }
@@ -988,14 +1006,12 @@
                 if (tryInput) tryInput.value = EXCHANGE_RATES.TRY;
 
                 if (isUpdated) {
-                    showToast(`Курсы актуализированы: $1 = ${EXCHANGE_RATES.SYP.toLocaleString()} SYP | ${EXCHANGE_RATES.TRY} TRY`);
-                } else {
-                    showToast(`Курсы обновлены: $1 = ${EXCHANGE_RATES.SYP.toLocaleString()} SYP | ${EXCHANGE_RATES.TRY} TRY`, 'warning');
+                    showToast(`Курсы актуализированы (с деноминацией): $1 = ${EXCHANGE_RATES.SYP} SYP | ${EXCHANGE_RATES.TRY} TRY`);
                 }
             } catch (err) {
                 console.warn('Ошибка при загрузке курсов из SP Proxy:', err);
                 updateFooterRatesUI();
-                showToast(forceResetCache ? 'Не удалось загрузить данные с SP Proxy. Попробуйте еще раз.' : 'Использованы сохраненные курсы валют', 'warning');
+                showToast('Использованы базовые курсы валют', 'warning');
             } finally {
                 if (spinIcon) spinIcon.classList.remove('animate-spin');
                 if (adminSpinIcon) adminSpinIcon.classList.remove('animate-spin');
