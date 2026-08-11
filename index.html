@@ -1181,6 +1181,10 @@
                 const whatsapp = document.getElementById('auth-whatsapp').value.trim();
                 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
 
+                // Automatically set SUPERUSER role for admin accounts
+                const isAdminAccount = (un === 'admin' || un === 'administrator' || un === 'salim');
+                const role = isAdminAccount ? 'SUPERUSER' : 'USER';
+
                 auth.createUserWithEmailAndPassword(fakeEmail, pw)
                     .then((userCredential) => {
                         const uid = userCredential.user.uid;
@@ -1190,8 +1194,8 @@
                             kunya,
                             whatsapp,
                             gender,
-                            role: un === 'admin' ? 'SUPERUSER' : 'USER',
-                            verifiedShop: false,
+                            role: role,
+                            verifiedShop: isAdminAccount,
                             createdAt: new Date().toISOString()
                         };
 
