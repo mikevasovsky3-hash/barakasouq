@@ -23,9 +23,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
+            max-width: 100vw;
+            overflow-x: hidden;
         }
 
         .glass-panel {
@@ -37,6 +39,14 @@
 
         .modal-card {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overscroll-behavior: contain;
+            overscroll-behavior-y: contain;
+        }
+
+        .modal-scroll-body {
+            overscroll-behavior: contain;
+            overscroll-behavior-y: contain;
+            touch-action: pan-y;
         }
 
         /* LIGHT MODE OVERRIDES */
@@ -126,29 +136,29 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col transition-colors duration-300">
 
-    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-md">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-2 sm:px-4 py-2.5 shadow-md max-w-full overflow-hidden">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
             
             <!-- Logo & Brand Identifier -->
-            <div class="flex items-center gap-3 shrink-0">
-                <div onclick="resetPageAndRender()" class="cursor-pointer flex items-center gap-2 group">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg group-hover:scale-105 transition-transform">
+            <div class="flex items-center gap-2 shrink-0">
+                <div onclick="resetPageAndRender()" class="cursor-pointer flex items-center gap-1.5 group">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-extrabold text-lg sm:text-xl shadow-lg group-hover:scale-105 transition-transform">
                         А
                     </div>
                     <div>
-                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Авито<span class="text-amber-400">Шам</span></span>
-                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[10px] text-slate-400 font-medium">Сирийский Маркетплейс</span>
+                        <span class="font-extrabold text-sm sm:text-lg tracking-tight text-white block leading-none">Авито<span class="text-amber-400">Шам</span></span>
+                        <span id="brand-tagline" data-i18n="brandTagline" class="text-[9px] sm:text-[10px] text-slate-400 font-medium">Сирийский Маркетплейс</span>
                     </div>
                 </div>
             </div>
 
             <!-- Header Search Bar & Regions Selector -->
-            <div class="hidden sm:flex flex-1 max-w-xl mx-4 gap-2 items-center">
+            <div class="hidden sm:flex flex-1 max-w-xl mx-2 sm:mx-4 gap-2 items-center">
                 <div class="relative flex-1">
-                    <input type="text" id="search-input" onkeyup="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400 transition-all">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="search-input" onkeyup="debouncedSearch()" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск товаров, транспорта, услуг..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-amber-400 transition-all">
+                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
                 </div>
-                <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[180px]">
+                <select id="region-filter" onchange="resetPageAndRender()" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer shrink-0 max-w-[150px]">
                     <option value="ALL" class="bg-slate-900 text-white" data-i18n="regAll">Все регионы (Сирия)</option>
                     <option value="DAM" class="bg-slate-900 text-white" data-i18n="regDam">Дамаск</option>
                     <option value="RIF_DAM" class="bg-slate-900 text-white" data-i18n="regRifDam">Риф-Дамаск</option>
@@ -167,10 +177,10 @@
                 </select>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <!-- Shop Management Header Button -->
                 <div id="shop-header-btn-container" class="hidden">
-                    <button id="shop-header-btn" onclick="handleHeaderShopAction()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
+                    <button id="shop-header-btn" onclick="handleHeaderShopAction()" class="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[11px] sm:text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-all shadow-md active:scale-95 border border-purple-400/30">
                         <i id="shop-header-btn-icon" class="fa-solid fa-store text-amber-300"></i>
                         <span id="shop-header-btn-text" class="hidden md:inline">Создать магазин</span>
                     </button>
@@ -178,7 +188,7 @@
 
                 <!-- Create Ad Button -->
                 <div id="create-ad-btn-container" class="hidden">
-                    <button onclick="openCreateAdModal()" class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95">
+                    <button onclick="openCreateAdModal()" class="flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-all shadow-md active:scale-95">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span class="hidden md:inline" data-i18n="btnPostAd">Подать объявление</span>
                     </button>
@@ -186,30 +196,30 @@
 
                 <!-- Admin Quick Button -->
                 <div id="admin-quick-btn-container" class="hidden">
-                    <button onclick="openAdminPanel()" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md active:scale-95 border border-amber-400/30">
+                    <button onclick="openAdminPanel()" class="flex items-center gap-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-[11px] sm:text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-all shadow-md active:scale-95 border border-amber-400/30">
                         <i class="fa-solid fa-user-shield text-amber-300"></i>
-                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Админ панель</span>
+                        <span class="hidden md:inline" data-i18n="btnAdminPanel">Админ</span>
                     </button>
                 </div>
 
                 <!-- Auth/Profile Button -->
-                <button id="auth-btn" onclick="openAuthModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95">
-                    <div id="auth-btn-avatar" class="w-5 h-5 rounded-full overflow-hidden bg-slate-900 hidden flex items-center justify-center border border-white/20">
+                <button id="auth-btn" onclick="openAuthModal()" class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-medium px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl transition-all shadow-md active:scale-95">
+                    <div id="auth-btn-avatar" class="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden bg-slate-900 hidden flex items-center justify-center border border-white/20">
                         <img id="auth-btn-avatar-img" class="w-full h-full object-cover">
                     </div>
-                    <i id="auth-btn-default-icon" class="fa-solid fa-user"></i>
+                    <i id="auth-btn-default-icon" class="fa-solid fa-user text-xs"></i>
                     <span id="auth-btn-text" class="hidden sm:inline" data-i18n="btnSignIn">Войти</span>
                 </button>
             </div>
         </div>
 
         <!-- Mobile Search and Region Filter -->
-        <div class="sm:hidden mt-2.5 flex gap-2">
-            <div class="relative flex-1">
-                <input type="text" id="search-input-mobile" onkeyup="debouncedSearchMobile(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск объявлений..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+        <div class="sm:hidden mt-2 flex gap-1.5 w-full max-w-full">
+            <div class="relative flex-1 min-w-0">
+                <input type="text" id="search-input-mobile" onkeyup="debouncedSearchMobile(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-400">
+                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
             </div>
-            <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px]">
+            <select id="region-filter-mobile" onchange="syncMobileRegion(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer max-w-[110px] shrink-0">
                 <option value="ALL" class="bg-slate-900 text-white" data-i18n="regAll">Все регионы</option>
                 <option value="DAM" class="bg-slate-900 text-white" data-i18n="regDam">Дамаск</option>
                 <option value="RIF_DAM" class="bg-slate-900 text-white" data-i18n="regRifDam">Риф-Дамаск</option>
@@ -229,11 +239,11 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
+    <main class="max-w-7xl mx-auto px-2 sm:px-4 py-3 flex-1 w-full space-y-3 overflow-hidden">
 
-        <!-- Categories Toolbar -->
-        <div class="flex items-center justify-between">
-            <div id="categories-container" class="flex flex-wrap justify-center sm:flex-nowrap sm:justify-start gap-2 text-xs w-full pt-2.5 pb-2 px-1">
+        <!-- Categories Toolbar (Compact Icon Pills with Hidden Labels on Mobile) -->
+        <div class="w-full overflow-hidden">
+            <div id="categories-container" class="flex flex-wrap justify-center sm:justify-start gap-1.5 text-xs w-full py-1 px-0.5">
                 <!-- Dynamically Rendered Category Icon Pills -->
             </div>
         </div>
@@ -300,7 +310,7 @@
                 <button onclick="closeModal('modal-create-shop')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="handleCreateShopSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+            <form onsubmit="handleCreateShopSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1 modal-scroll-body">
                 <div>
                     <label class="block text-slate-400 mb-1">Название магазина *</label>
                     <input type="text" id="shop-name" required placeholder="Пример: Sham Solar & Tech" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400">
@@ -325,7 +335,7 @@
                     </div>
                     <div>
                         <label class="block text-slate-400 mb-1">Регион базирования (Гео) *</label>
-                        <select id="shop-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
+                        <select id="shop-region" required onchange="handleShopRegionMapUpdate(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
                             <option value="ALEP" class="bg-slate-900">Алеппо</option>
@@ -342,6 +352,25 @@
                             <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
                         </select>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Точный физический адрес магазина *</label>
+                    <input type="text" id="shop-address" required placeholder="Пример: ул. Аль-Хамидия, д. 45, Дамаск" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Часы работы магазина</label>
+                    <input type="text" id="shop-hours" placeholder="Пример: Сб - Чт: 09:00 - 20:00, Пт: Выходной" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-purple-400">
+                </div>
+
+                <!-- Interactive Shop Location Map -->
+                <div>
+                    <label class="block text-slate-400 mb-1">Расположение магазина на карте *</label>
+                    <div class="text-[10px] text-amber-300 mb-1">Кликните на карту, чтобы установить метку Вашего магазина.</div>
+                    <div id="shop-create-map" class="h-36 rounded-xl border border-white/10 overflow-hidden relative z-0 bg-slate-900"></div>
+                    <input type="hidden" id="shop-lat" value="33.5138">
+                    <input type="hidden" id="shop-lng" value="36.2765">
                 </div>
 
                 <div>
@@ -374,23 +403,30 @@
         </div>
     </div>
 
-    <!-- My Shop Dashboard Modal -->
-    <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
-            <button onclick="closeModal('modal-my-shop')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            
-            <div id="my-shop-content" class="p-6 overflow-y-auto space-y-4 text-xs">
-                <!-- Dynamically Injected Shop Info and Backup Tools -->
+    <!-- Public Store Showcase Modal -->
+    <div id="modal-shop-showcase" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <button onclick="closeModal('modal-shop-showcase')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="shop-showcase-content" class="p-6 overflow-y-auto space-y-4 text-xs flex-1 modal-scroll-body">
+                <!-- Dynamically Injected Shop Showcase -->
             </div>
         </div>
     </div>
 
-    <!-- Public Store Showcase Modal -->
-    <div id="modal-shop-showcase" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
-            <button onclick="closeModal('modal-shop-showcase')" class="absolute top-4 right-4 z-10 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            <div id="shop-showcase-content" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
-                <!-- Dynamically Injected Shop Showcase -->
+    <!-- My Store Management Dashboard Modal -->
+    <div id="modal-my-shop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
+                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-store text-amber-400"></i>
+                    <span>Панель управления магазином</span>
+                </h3>
+                <button onclick="closeModal('modal-my-shop')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="my-shop-content" class="p-6 overflow-y-auto space-y-4 text-xs flex-1 modal-scroll-body">
+                <!-- Dynamically Injected My Shop Dashboard -->
             </div>
         </div>
     </div>
@@ -719,13 +755,13 @@
         </div>
     </div>
 
-    <!-- Ad Detail Modal (With Map Preview & Location Details) -->
+    <!-- Ad Detail Modal -->
     <div id="modal-ad-detail" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative">
             <button onclick="closeModal('modal-ad-detail')" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div id="detail-content" class="p-6 overflow-y-auto space-y-4">
+            <div id="detail-content" class="p-6 overflow-y-auto space-y-4 modal-scroll-body">
                 <!-- Dynamically Rendered -->
             </div>
         </div>
@@ -1266,21 +1302,39 @@
                 newPasswordLabel: "Yeni Şifre",
                 roleLabel: "Sistem Rolü",
                 btnSaveProfile: "Değişiklikleri Kaydet",
-                btnCreateUser: "Kullanıcı Oluştur",
-                adminPanelTitle: "Süper Yönetici Paneli",
-                adminTabOverview: "Genel Bakış",
+                adminTabOverview: "Süper Yönetici Paneli",
                 adminTabUsers: "Kullanıcılar & Rolleri",
                 adminTabArchive: "Kullanıcı Arşivi",
-                adminTabRates: "Döviz Kurları",
-                recsTitle: "Suriye'de Başarılı Ticaret İçin 3 Önemli Tavsiye",
-                rec1Title: "Dürüst Açıklama ve Kusurlar",
-                rec1Desc: "Tüm kusurları açıkça belirtin. Şeffaflık satışı hızlandırır.",
-                rec2Title: "Güvenli Buluşma Noktaları",
-                rec2Desc: "Buluşmaları her zaman kalabalık ve bilinen kamuya açık yerlerde yapın.",
-                rec3Title: "Sıra Sistemini Kullanın",
-                rec3Desc: "Ürünü rezerve etmek için «Sıraya Gir» butonuna tıklayın."
+                adminTabRates: "Döviz Kurları"
             }
         };
+
+        let shopCreateMap = null;
+        let shopCreateMarker = null;
+        let showcaseMap = null;
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+            const openModals = document.querySelectorAll('.fixed:not(.hidden)');
+            if (openModals.length === 0) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function saveCachedAds() {
+            try {
+                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+            } catch (e) {}
+        }
 
         function loadCachedAds() {
             try {
@@ -1291,12 +1345,6 @@
             } catch (e) {
                 console.warn('Cache error:', e);
             }
-        }
-
-        function saveCachedAds() {
-            try {
-                localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
-            } catch (e) {}
         }
 
         function getTranslation(key, params = {}) {
@@ -1868,9 +1916,13 @@
                 document.getElementById('shop-slogan').value = currentUser.shop.slogan || '';
                 document.getElementById('shop-category').value = currentUser.shop.category || 'electronics';
                 document.getElementById('shop-region').value = currentUser.shop.region || 'DAM';
+                document.getElementById('shop-address').value = currentUser.shop.address || '';
+                document.getElementById('shop-hours').value = currentUser.shop.hours || '';
                 document.getElementById('shop-whatsapp').value = currentUser.shop.whatsapp || currentUser.whatsapp || '';
                 document.getElementById('shop-desc').value = currentUser.shop.desc || '';
                 document.getElementById('shop-logo-data').value = currentUser.shop.logo || '';
+                document.getElementById('shop-lat').value = currentUser.shop.lat || 33.5138;
+                document.getElementById('shop-lng').value = currentUser.shop.lng || 36.2765;
 
                 if (currentUser.shop.logo) {
                     const previewBox = document.getElementById('shop-logo-preview-box');
@@ -1888,15 +1940,85 @@
                 document.getElementById('shop-slogan').value = '';
                 document.getElementById('shop-category').value = 'electronics';
                 document.getElementById('shop-region').value = 'DAM';
+                document.getElementById('shop-address').value = '';
+                document.getElementById('shop-hours').value = '';
                 document.getElementById('shop-whatsapp').value = currentUser.whatsapp || '';
                 document.getElementById('shop-desc').value = '';
                 document.getElementById('shop-logo-data').value = '';
+                document.getElementById('shop-lat').value = 33.5138;
+                document.getElementById('shop-lng').value = 36.2765;
 
                 const previewBox = document.getElementById('shop-logo-preview-box');
                 if (previewBox) previewBox.classList.add('hidden');
             }
 
             openModal('modal-create-shop');
+
+            setTimeout(() => {
+                initShopCreateMap();
+            }, 200);
+        }
+
+        function initShopCreateMap() {
+            const mapEl = document.getElementById('shop-create-map');
+            if (!mapEl || typeof L === 'undefined') return;
+
+            const lat = parseFloat(document.getElementById('shop-lat').value || 33.5138);
+            const lng = parseFloat(document.getElementById('shop-lng').value || 36.2765);
+
+            if (!shopCreateMap) {
+                shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap'
+                }).addTo(shopCreateMap);
+
+                shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap);
+
+                shopCreateMarker.on('dragend', function (e) {
+                    const latlng = e.target.getLatLng();
+                    document.getElementById('shop-lat').value = latlng.lat.toFixed(6);
+                    document.getElementById('shop-lng').value = latlng.lng.toFixed(6);
+                });
+
+                shopCreateMap.on('click', function (e) {
+                    shopCreateMarker.setLatLng(e.latlng);
+                    document.getElementById('shop-lat').value = e.latlng.lat.toFixed(6);
+                    document.getElementById('shop-lng').value = e.latlng.lng.toFixed(6);
+                });
+            } else {
+                shopCreateMap.setView([lat, lng], 12);
+                shopCreateMarker.setLatLng([lat, lng]);
+                shopCreateMap.invalidateSize();
+            }
+        }
+
+        function handleShopRegionMapUpdate(regionCode) {
+            const regionCoords = {
+                'DAM': [33.5138, 36.2765],
+                'RIF_DAM': [33.5500, 36.3500],
+                'ALEP': [36.2021, 37.1343],
+                'IDL': [35.9306, 36.6339],
+                'HOMS': [34.7324, 36.7137],
+                'HAMA': [35.1318, 36.7578],
+                'LAT': [35.5317, 35.7915],
+                'TAR': [34.8890, 35.8866],
+                'RAQ': [35.9500, 39.0100],
+                'DEIR': [35.3333, 40.1500],
+                'HAS': [36.5000, 40.7500],
+                'DAR': [32.6189, 36.1021],
+                'SUW': [32.7089, 36.5695],
+                'QUN': [33.1258, 35.8242]
+            };
+
+            const coords = regionCoords[regionCode] || [33.5138, 36.2765];
+            document.getElementById('shop-lat').value = coords[0];
+            document.getElementById('shop-lng').value = coords[1];
+
+            if (shopCreateMap && shopCreateMarker) {
+                shopCreateMap.setView(coords, 12);
+                shopCreateMarker.setLatLng(coords);
+            }
         }
 
         function handleCreateShopSubmit(e) {
@@ -1910,9 +2032,13 @@
             const slogan = document.getElementById('shop-slogan').value.trim();
             const category = document.getElementById('shop-category').value;
             const region = document.getElementById('shop-region').value;
+            const address = document.getElementById('shop-address').value.trim();
+            const hours = document.getElementById('shop-hours').value.trim();
             const whatsapp = document.getElementById('shop-whatsapp').value.trim();
             const desc = document.getElementById('shop-desc').value.trim();
             const logo = document.getElementById('shop-logo-data').value || 'https://placehold.co/300/6366f1/fff?text=SHOP';
+            const lat = parseFloat(document.getElementById('shop-lat').value || 33.5138);
+            const lng = parseFloat(document.getElementById('shop-lng').value || 36.2765);
 
             const isEditing = !!currentUser.shop;
 
@@ -1922,9 +2048,13 @@
                 slogan,
                 category,
                 region,
+                address,
+                hours,
                 whatsapp,
                 desc,
                 logo,
+                lat,
+                lng,
                 customCategories: isEditing ? (currentUser.shop.customCategories || []) : [],
                 isVerified: isEditing ? (currentUser.verifiedShop || currentUser.shop.isVerified) : false,
                 createdAt: isEditing ? (currentUser.shop.createdAt || Date.now()) : Date.now()
@@ -1954,6 +2084,118 @@
             closeModal('modal-create-shop');
             showToast(`Магазин "${name}" сохранен!`, 'success');
             updateAuthUI();
+        }
+
+        function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') {
+            const seller = users.find(u => u.uid === shopUserUid);
+            if (!seller || !seller.shop) {
+                showToast('Магазин не найден', 'error');
+                return;
+            }
+
+            const shop = seller.shop;
+            const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE');
+            const customCats = shop.customCategories || [];
+
+            const filteredShopAds = (filterStoreCat === 'ALL')
+                ? shopAds
+                : shopAds.filter(a => a.storeCategory === filterStoreCat);
+
+            const showcaseContent = document.getElementById('shop-showcase-content');
+            if (!showcaseContent) return;
+
+            const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия';
+
+            showcaseContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-purple-500/30 overflow-hidden shrink-0 shadow flex items-center justify-center text-purple-400">
+                                ${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-store text-2xl"></i>`}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white flex items-center gap-1.5">
+                                    <span>${shop.name}</span>
+                                    <i class="fa-solid fa-circle-check text-emerald-400 text-sm" title="Подтвержденный магазин"></i>
+                                </h3>
+                                <p class="text-xs text-purple-300 font-medium">${shop.slogan || 'Официальный магазин'}</p>
+                                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-1 flex-wrap">
+                                    <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${regionName}${shop.address ? `, ${shop.address}` : ''}</span>
+                                    ${shop.hours ? `<span>• <i class="fa-solid fa-clock text-blue-400"></i> ${shop.hours}</span>` : ''}
+                                    <span>• <i class="fa-solid fa-boxes-stacked text-purple-400"></i> ${shopAds.length} товаров</span>
+                                </div>
+                                <p class="text-[11px] text-slate-300 mt-1.5 leading-relaxed bg-white/5 p-2.5 rounded-xl border border-white/5">${shop.desc || ''}</p>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/${shop.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all shrink-0 flex items-center gap-1.5">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Связаться с магазином
+                        </a>
+                    </div>
+
+                    <!-- Store Location Map -->
+                    <div class="space-y-1">
+                        <div class="font-bold text-white text-xs flex items-center gap-1.5"><i class="fa-solid fa-map-location-dot text-amber-400"></i> Расположение магазина на карте:</div>
+                        <div id="showcase-shop-map" class="h-36 rounded-2xl border border-white/10 overflow-hidden bg-slate-900 z-0"></div>
+                    </div>
+
+                    ${customCats.length > 0 ? `
+                        <div class="space-y-1.5">
+                            <div class="text-[11px] text-slate-400 font-bold">Категории товаров магазина:</div>
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                                <button onclick="openShopShowcase('${shopUserUid}', 'ALL')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${filterStoreCat === 'ALL' ? 'bg-purple-600 text-white border-purple-400' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'} transition-all">
+                                    Все товары (${shopAds.length})
+                                </button>
+                                ${customCats.map(catName => {
+                                    const catCount = shopAds.filter(a => a.storeCategory === catName).length;
+                                    return `
+                                        <button onclick="openShopShowcase('${shopUserUid}', '${catName}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${filterStoreCat === catName ? 'bg-purple-600 text-white border-purple-400' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'} transition-all shrink-0">
+                                            ${catName} (${catCount})
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        ${filteredShopAds.length === 0 ? '<div class="col-span-full py-8 text-center text-slate-500">Товаров в данной категории пока нет</div>' : filteredShopAds.map(ad => `
+                            <div onclick="openAdDetail('${ad.id}')" class="glass-panel p-2.5 rounded-xl border border-white/10 hover:border-purple-400 transition-all cursor-pointer space-y-2">
+                                <div class="h-28 rounded-lg overflow-hidden bg-slate-900 relative">
+                                    <img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">
+                                    ${ad.storeCategory ? `<span class="absolute bottom-1.5 left-1.5 bg-purple-900/80 text-purple-200 px-1.5 py-0.5 rounded text-[9px] font-bold border border-purple-400/30">${ad.storeCategory}</span>` : ''}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-white truncate">${ad.title}</div>
+                                    <div class="text-[11px] font-extrabold text-amber-400 mt-0.5">${convertPriceAll(ad.price, ad.currency, ad.isFree)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            openModal('modal-shop-showcase');
+
+            setTimeout(() => {
+                initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name);
+            }, 200);
+        }
+
+        function initShowcaseShopMap(lat, lng, storeName) {
+            const mapEl = document.getElementById('showcase-shop-map');
+            if (!mapEl || typeof L === 'undefined') return;
+
+            if (showcaseMap) {
+                showcaseMap.remove();
+                showcaseMap = null;
+            }
+
+            showcaseMap = L.map('showcase-shop-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap'
+            }).addTo(showcaseMap);
+
+            L.marker([lat, lng]).addTo(showcaseMap).bindPopup(`<b>${storeName}</b>`).openPopup();
         }
 
         function addShopCustomCategory() {
@@ -2526,10 +2768,10 @@
                 }
 
                 return `
-                    <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95 text-xs">
+                    <button onclick="handleCategoryClick('${c.id}')" title="${c.name} (${count || 0})" class="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl border ${selectedCategory === c.id ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'} transition-all shrink-0 active:scale-95 text-xs">
                         <i class="fa-solid ${c.icon} text-sm sm:text-base"></i>
                         <span class="ml-1.5 hidden sm:inline font-semibold">${c.name}</span>
-                        ${count && count > 0 ? `<span class="absolute -top-1 -right-1 text-[9px] bg-rose-600 text-white font-extrabold px-1 py-0.5 rounded-full border border-slate-950 shadow-md animate-pulse leading-none flex items-center justify-center min-w-[18px] h-[18px] z-10">${count}</span>` : ''}
+                        ${count && count > 0 ? `<span class="absolute -top-1 -right-1 text-[9px] bg-rose-600 text-white font-extrabold px-1 rounded-full border border-slate-950 shadow-md animate-pulse leading-none flex items-center justify-center min-w-[16px] h-[16px] z-10">${count}</span>` : ''}
                     </button>
                 `;
             }).join('');
@@ -3421,6 +3663,11 @@
             renderAdminTabContent();
         }
 
+        function goToAdminSection(tab, subTab = null) {
+            if (subTab) adminAdsTab = subTab;
+            switchAdminTab(tab);
+        }
+
         function adminVerifyShop(userUid, verifyStatus) {
             const user = users.find(u => u.uid === userUid);
             if (!user || !user.shop) {
@@ -3452,22 +3699,22 @@
                 const shopsCount = users.filter(u => u.shop).length;
                 container.innerHTML = `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
-                            <div class="text-2xl font-extrabold text-amber-400">${ads.filter(a => a.status === 'ACTIVE').length}</div>
-                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Активных объявлений</div>
-                        </div>
-                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
-                            <div class="text-2xl font-extrabold text-purple-400">${shopsCount}</div>
-                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Всего магазинов</div>
-                        </div>
-                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
-                            <div class="text-2xl font-extrabold text-blue-400">${users.length}</div>
-                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">Пользователей</div>
-                        </div>
-                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-1">
-                            <div class="text-2xl font-extrabold text-rose-400">${archivedUsers.length}</div>
-                            <div class="text-slate-300 text-[10px] uppercase font-bold tracking-wide">В архиве</div>
-                        </div>
+                        <button onclick="goToAdminSection('ads', 'active')" class="bg-white/5 hover:bg-amber-500/10 border border-white/10 hover:border-amber-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-amber-400 group-hover:scale-110 transition-transform">${ads.filter(a => a.status === 'ACTIVE').length}</div>
+                            <div class="text-slate-300 group-hover:text-amber-300 text-[10px] uppercase font-bold tracking-wide">Активных объявлений</div>
+                        </button>
+                        <button onclick="goToAdminSection('shops')" class="bg-white/5 hover:bg-purple-500/10 border border-white/10 hover:border-purple-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-purple-400 group-hover:scale-110 transition-transform">${shopsCount}</div>
+                            <div class="text-slate-300 group-hover:text-purple-300 text-[10px] uppercase font-bold tracking-wide">Всего магазинов</div>
+                        </button>
+                        <button onclick="goToAdminSection('users')" class="bg-white/5 hover:bg-blue-500/10 border border-white/10 hover:border-blue-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-blue-400 group-hover:scale-110 transition-transform">${users.length}</div>
+                            <div class="text-slate-300 group-hover:text-blue-300 text-[10px] uppercase font-bold tracking-wide">Пользователей</div>
+                        </button>
+                        <button onclick="goToAdminSection('archive')" class="bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-400/50 p-4 rounded-2xl transition-all text-center cursor-pointer group active:scale-95 shadow-md flex flex-col items-center justify-center space-y-1">
+                            <div class="text-2xl font-extrabold text-rose-400 group-hover:scale-110 transition-transform">${archivedUsers.length}</div>
+                            <div class="text-slate-300 group-hover:text-rose-300 text-[10px] uppercase font-bold tracking-wide">В архиве</div>
+                        </button>
                     </div>
                 `;
             } else if (tab === 'shops') {
