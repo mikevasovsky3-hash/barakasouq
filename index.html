@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Firebase SDK Compat Libraries (App, Auth, Database) -->
+    <!-- Firebase SDK Compat Libraries -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -28,12 +28,15 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Glass Panel Styling for Dark Mode Default */
         .glass-panel {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+        }
+
+        .modal-card {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         /* LIGHT MODE OVERRIDES */
@@ -96,13 +99,11 @@
             border-color: #cbd5e1 !important;
         }
 
-        body.light-mode .bg-black\/60,
-        body.light-mode .bg-black\/70 {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            color: #0f172a !important;
+        /* RTL Specific Adjustments */
+        html[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+            --tw-space-x-reverse: 1;
         }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -130,7 +131,7 @@
             
             <!-- Logo & Brand Identifier -->
             <div class="flex items-center gap-3 shrink-0">
-                <div onclick="handleLogoClick()" class="cursor-pointer flex items-center gap-2 group">
+                <div onclick="resetPageAndRender()" class="cursor-pointer flex items-center gap-2 group">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg group-hover:scale-105 transition-transform">
                         ب
                     </div>
@@ -191,7 +192,6 @@
             </div>
         </div>
 
-        <!-- Mobile Search Bar & Region Selector -->
         <div class="sm:hidden mt-2.5 flex gap-2">
             <div class="relative flex-1">
                 <input type="text" id="search-input-mobile" onkeyup="syncMobileSearch(this.value)" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск по объявлениям..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-amber-400">
@@ -219,10 +219,10 @@
 
     <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full space-y-4">
         
-        <!-- Categories Toolbar (Icons with badges) -->
+        <!-- Categories Toolbar (Compact Icon Pills) -->
         <div class="flex items-center justify-between">
             <div id="categories-container" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs w-full">
-                <!-- Dynamically Rendered Category Pills -->
+                <!-- Dynamically Rendered Category Icon Pills -->
             </div>
         </div>
 
@@ -251,19 +251,34 @@
                 <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto border border-amber-500/30">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
-                <h2 class="text-lg font-extrabold text-white">Правила платформы BarakaSouq</h2>
-                <p class="text-xs text-amber-300 font-bold">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
+                <h2 class="text-lg font-extrabold text-white" data-i18n="rulesTitle">Правила платформы BarakaSouq</h2>
+                <p class="text-xs text-amber-300 font-bold" data-i18n="rulesAyah">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
             </div>
 
             <div class="text-xs space-y-3 text-slate-300 overflow-y-auto pr-1 leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5">
-                <p>1. <strong>Честность и прозрачность:</strong> Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.</p>
-                <p>2. <strong>Запрещенные товары:</strong> Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.</p>
-                <p>3. <strong>Гражданский ресурс:</strong> Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.</p>
+                <p>1. <strong data-i18n="rule1Title">Честность и прозрачность:</strong> <span data-i18n="rule1Desc">Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.</span></p>
+                <p>2. <strong data-i18n="rule2Title">Запрещенные товары:</strong> <span data-i18n="rule2Desc">Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.</span></p>
+                <p>3. <strong data-i18n="rule3Title">Гражданский ресурс:</strong> <span data-i18n="rule3Desc">Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.</span></p>
             </div>
 
-            <button onclick="acceptLaunchRules()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95">
+            <button onclick="acceptLaunchRules()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95" data-i18n="btnAcceptRules">
                 Я подтверждаю и принимаю условия
             </button>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal (Replaces Browser confirm()) -->
+    <div id="modal-confirm" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-amber-500/30 space-y-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mx-auto border border-amber-500/30">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <h3 id="confirm-modal-title" class="text-sm font-extrabold text-white">Подтверждение действия</h3>
+            <p id="confirm-modal-msg" class="text-xs text-slate-300 leading-relaxed"></p>
+            <div class="flex gap-2 pt-2">
+                <button id="confirm-btn-cancel" class="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs transition-all">Отмена</button>
+                <button id="confirm-btn-ok" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md">Да, выполнить</button>
+            </div>
         </div>
     </div>
 
@@ -273,18 +288,18 @@
             <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             
             <div class="flex border-b border-white/10 mb-2">
-                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400">Вход</button>
-                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400">Регистрация</button>
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400" data-i18n="tabSignIn">Вход</button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400" data-i18n="tabSignUp">Регистрация</button>
             </div>
 
             <form onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-400 mb-1">Логин *</label>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelLogin">Логин *</label>
                     <input type="text" id="auth-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: admin или abu_salim">
                 </div>
 
                 <div>
-                    <label class="block text-slate-400 mb-1">Пароль *</label>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelPassword">Пароль *</label>
                     <input type="password" id="auth-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="••••••••">
                 </div>
 
@@ -292,39 +307,39 @@
                 <div class="flex items-center justify-between pt-1">
                     <label class="flex items-center gap-2 cursor-pointer text-slate-300">
                         <input type="checkbox" id="auth-remember-me" checked class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
-                        <span>Запомнить мой вход на этом устройстве</span>
+                        <span data-i18n="rememberSession">Запомнить мой вход на этом устройстве</span>
                     </label>
                 </div>
 
                 <div id="reg-fields" class="hidden space-y-3">
                     <div>
-                        <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
                         <input type="text" id="auth-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Абу Салим">
                     </div>
 
                     <div>
-                        <label class="block text-slate-400 mb-1">Пол (Шариатский выбор) *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="labelGender">Пол (Шариатский выбор) *</label>
                         <div class="grid grid-cols-2 gap-2 pt-1">
                             <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
                                 <input type="radio" name="auth-gender" value="MALE" checked class="accent-blue-500">
-                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user text-blue-400"></i> Мужчина</span>
+                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user text-blue-400"></i> <span data-i18n="genderMale">Мужчина</span></span>
                             </label>
                             <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
                                 <input type="radio" name="auth-gender" value="FEMALE" class="accent-pink-500">
-                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-large-slash text-pink-400"></i> Женщина</span>
+                                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-large-slash text-pink-400"></i> <span data-i18n="genderFemale">Женщина</span></span>
                             </label>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-slate-400 mb-1">WhatsApp номер *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="labelWhatsapp">WhatsApp номер *</label>
                         <input type="text" id="auth-whatsapp" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="+963 933 123 456">
                     </div>
                 </div>
 
                 <button type="submit" id="auth-submit-btn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-to-bracket"></i>
-                    <span>Войти в аккаунт</span>
+                    <span data-i18n="btnSignIn">Войти в аккаунт</span>
                 </button>
             </form>
         </div>
@@ -335,27 +350,27 @@
         <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
                 <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-plus-circle text-emerald-400"></i> Подача нового объявления
+                    <i class="fa-solid fa-plus-circle text-emerald-400"></i> <span data-i18n="modalCreateTitle">Подача нового объявления</span>
                 </h3>
                 <button onclick="closeModal('modal-create-ad')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form onsubmit="handleCreateAdSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
                 <div>
-                    <label class="block text-slate-400 mb-1">Заголовок объявления *</label>
+                    <label class="block text-slate-400 mb-1" data-i18n="adTitleLabel">Заголовок объявления *</label>
                     <input type="text" id="ad-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Например: Солнечная панель 550W">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 mb-1">Категория *</label>
-                        <select id="ad-category" onchange="handleCategorySelection(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        <label class="block text-slate-400 mb-1" data-i18n="adCatLabel">Категория *</label>
+                        <select id="ad-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
                             <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Регион *</label>
-                        <select id="ad-region" onchange="handleRegionChangeCreate(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        <label class="block text-slate-400 mb-1" data-i18n="adRegionLabel">Регион *</label>
+                        <select id="ad-region" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500">
                             <option value="DAM" class="bg-slate-900">Дамаск</option>
                             <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
                             <option value="ALEP" class="bg-slate-900">Алеппо</option>
@@ -374,51 +389,49 @@
                     </div>
                 </div>
 
-                <!-- Women Only Checkbox -->
                 <div id="women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
                         <div>
-                            <div class="font-bold text-pink-300">Только для женщин 🌸</div>
-                            <div class="text-[10px] text-slate-400">Объявление будет видно исключительно женщинам</div>
+                            <div class="font-bold text-pink-300" data-i18n="catWomenOnly">Только для женщин 🌸</div>
+                            <div class="text-[10px] text-slate-400" data-i18n="womenOnlyNotice">Объявление будет видно исключительно женщинам</div>
                         </div>
                     </div>
                     <input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
                 </div>
 
                 <div>
-                    <label class="block text-slate-400 mb-1">Город / Населенный пункт *</label>
+                    <label class="block text-slate-400 mb-1" data-i18n="adCityLabel">Город / Населенный пункт *</label>
                     <input type="text" id="ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="Пример: р-н Маззе, Дамаск">
                 </div>
 
                 <!-- Interactive Map Pin Picker -->
                 <div>
-                    <label class="block text-slate-400 mb-1">Местоположение на карте *</label>
-                    <div class="text-[10px] text-amber-300 mb-1">Кликните на карту или перетащите маркер (название города определится автоматически).</div>
+                    <label class="block text-slate-400 mb-1" data-i18n="adMapLabel">Местоположение на карте *</label>
+                    <div class="text-[10px] text-amber-300 mb-1" data-i18n="adMapHelp">Кликните на карту или перетащите маркер.</div>
                     <div id="create-map" class="h-36 rounded-xl border border-white/10 overflow-hidden relative z-0 bg-slate-900"></div>
                     <input type="hidden" id="ad-lat" value="33.5138">
                     <input type="hidden" id="ad-lng" value="36.2765">
                 </div>
 
-                <!-- Free Toggle -->
                 <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
                         <div>
-                            <div class="font-bold text-emerald-300">Отдать даром (Бесплатно)</div>
-                            <div class="text-[10px] text-slate-400">Отдаете вещь безвозмездно нуждающимся</div>
+                            <div class="font-bold text-emerald-300" data-i18n="freeGiveaway">Отдать даром (Бесплатно)</div>
+                            <div class="text-[10px] text-slate-400" data-i18n="freeGiveawayDesc">Отдаете вещь безвозмездно нуждающимся</div>
                         </div>
                     </div>
-                    <input type="checkbox" id="ad-is-free" onchange="toggleFreeAdPrice(this.checked)" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
+                    <input type="checkbox" id="ad-is-free" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
                 </div>
 
                 <div id="price-container" class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 mb-1">Цена *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="priceLabel">Цена *</label>
                         <input type="number" id="ad-price" step="0.01" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="100">
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Валюта *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="currencyLabel">Валюта *</label>
                         <select id="ad-currency" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="USD" class="bg-slate-900">USD ($)</option>
                             <option value="SYP" class="bg-slate-900">SYP (ل.س)</option>
@@ -429,7 +442,7 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 mb-1">Состояние товара *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="conditionLabel">Состояние товара *</label>
                         <select id="ad-condition" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="NEW" class="bg-slate-900">Новый (Запечатан)</option>
                             <option value="EXCELLENT" class="bg-slate-900">Отличное Б/У</option>
@@ -437,7 +450,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Условия передачи *</label>
+                        <label class="block text-slate-400 mb-1" data-i18n="pickupLabel">Условия передачи *</label>
                         <select id="ad-pickup" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
                             <option value="PICKUP" class="bg-slate-900">Самовывоз</option>
                             <option value="DELIVERY" class="bg-slate-900">Доставка продавцом</option>
@@ -446,164 +459,132 @@
                     </div>
                 </div>
 
-                <!-- Photo Upload with In-Browser Canvas 800x533 Compressor -->
+                <!-- Photo Upload with Compressor -->
                 <div>
-                    <label class="block text-slate-400 mb-1">Фотография товара (Макс. 10 МБ до сжатия) *</label>
+                    <label class="block text-slate-400 mb-1" data-i18n="photoLabel">Фотография товара *</label>
                     <div class="space-y-2">
                         <input type="file" id="ad-image-file" accept="image/*" onchange="handleImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
                         <input type="hidden" id="ad-image-data">
                         <div id="image-preview-box" class="hidden h-32 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
                             <img id="image-preview-img" class="w-full h-full object-cover">
-                            <div id="image-compress-status" class="absolute bottom-2 left-2 bg-black/70 text-[10px] text-emerald-400 px-2 py-0.5 rounded font-mono"></div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-amber-300 font-bold mb-1">Описание и возможные изъяны (Бойтесь Аллаха, укажите все дефекты) *</label>
+                    <label class="block text-amber-300 font-bold mb-1" data-i18n="descDefectsLabel">Описание и возможные изъяны *</label>
                     <textarea id="ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500" placeholder="Подробно опишите товар, сколы, царапины или комплектацию..."></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-lg active:scale-95">
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-lg active:scale-95" data-i18n="btnPublishAd">
                     Опубликовать объявление
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Edit Ad Modal -->
-    <div id="modal-edit-ad" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
-                <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-amber-400"></i> Редактирование объявления
-                </h3>
-                <button onclick="closeModal('modal-edit-ad')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+    <!-- Profile Modal -->
+    <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <div id="profile-content" class="overflow-y-auto flex-1">
+                <!-- Dynamically Rendered -->
             </div>
+        </div>
+    </div>
 
-            <form onsubmit="handleEditAdSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
-                <input type="hidden" id="edit-ad-id">
+    <!-- Edit User Profile Modal -->
+    <div id="modal-edit-profile" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 relative space-y-3 text-xs">
+            <button onclick="closeModal('modal-edit-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-bold text-sm text-white" data-i18n="editProfileTitle">Редактирование анкеты</h3>
+            <form onsubmit="handleSaveProfile(event)" class="space-y-3">
+                <input type="hidden" id="edit-profile-username">
                 <div>
-                    <label class="block text-slate-400 mb-1">Заголовок объявления *</label>
-                    <input type="text" id="edit-ad-title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                    <label class="block text-slate-400 mb-1" data-i18n="labelLogin">Логин (Имя входа) *</label>
+                    <input type="text" id="edit-profile-login" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400">
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-slate-400 mb-1" data-i18n="newPasswordLabel">Новый пароль</label>
+                    <input type="password" id="edit-profile-password" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400" placeholder="Оставьте пустым, если не меняете">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
+                    <input type="text" id="edit-profile-kunya" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelWhatsapp">WhatsApp *</label>
+                    <input type="text" id="edit-profile-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                </div>
+                <div id="edit-profile-admin-fields" class="space-y-3 pt-2 border-t border-white/10 hidden">
                     <div>
-                        <label class="block text-slate-400 mb-1">Категория *</label>
-                        <select id="edit-ad-category" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-400">
-                            <!-- Populated dynamically -->
+                        <label class="block text-slate-400 mb-1" data-i18n="labelGender">Пол (Шариатский выбор)</label>
+                        <select id="edit-profile-gender" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                            <option value="MALE" class="bg-slate-900" data-i18n="genderMale">Мужчина</option>
+                            <option value="FEMALE" class="bg-slate-900" data-i18n="genderFemale">Женщина 🌸</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Регион *</label>
-                        <select id="edit-ad-region" onchange="handleRegionChangeEdit(this.value)" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-400">
-                            <option value="DAM" class="bg-slate-900">Дамаск</option>
-                            <option value="RIF_DAM" class="bg-slate-900">Риф-Дамаск</option>
-                            <option value="ALEP" class="bg-slate-900">Алеппо</option>
-                            <option value="IDL" class="bg-slate-900">Идлиб</option>
-                            <option value="HOMS" class="bg-slate-900">Хомс</option>
-                            <option value="HAMA" class="bg-slate-900">Хама</option>
-                            <option value="LAT" class="bg-slate-900">Латакия</option>
-                            <option value="TAR" class="bg-slate-900">Тартус</option>
-                            <option value="RAQ" class="bg-slate-900">Ракка</option>
-                            <option value="DEIR" class="bg-slate-900">Дейр-эз-Зор</option>
-                            <option value="HAS" class="bg-slate-900">Хасеке</option>
-                            <option value="DAR" class="bg-slate-900">Дараа</option>
-                            <option value="SUW" class="bg-slate-900">Эс-Сувейда</option>
-                            <option value="QUN" class="bg-slate-900">Эль-Кунейтра</option>
+                        <label class="block text-slate-400 mb-1" data-i18n="roleLabel">Роль / Статус в системе</label>
+                        <select id="edit-profile-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                            <option value="USER" class="bg-slate-900">Пользователь</option>
+                            <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
+                            <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
                         </select>
                     </div>
                 </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition-all" data-i18n="btnSaveProfile">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
 
-                <div id="edit-women-only-container" class="hidden flex items-center justify-between p-3 rounded-2xl bg-pink-500/10 border border-pink-500/20">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-user-large-slash text-pink-400 text-base"></i>
-                        <div>
-                            <div class="font-bold text-pink-300">Только для женщин 🌸</div>
-                            <div class="text-[10px] text-slate-400">Объявление будет видно исключительно женщинам</div>
-                        </div>
-                    </div>
-                    <input type="checkbox" id="edit-ad-is-women-only" class="w-5 h-5 rounded cursor-pointer accent-pink-500">
-                </div>
-
+    <!-- Admin Create User Modal -->
+    <div id="modal-admin-create-user" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-purple-500/30 relative space-y-3 text-xs">
+            <button onclick="closeModal('modal-admin-create-user')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-emerald-400"></i> <span data-i18n="btnCreateUser">Создание нового аккаунта</span>
+            </h3>
+            <form onsubmit="handleAdminCreateUser(event)" class="space-y-3">
                 <div>
-                    <label class="block text-slate-400 mb-1">Город / Населенный пункт *</label>
-                    <input type="text" id="edit-ad-city" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
+                    <label class="block text-slate-400 mb-1" data-i18n="labelLogin">Логин *</label>
+                    <input type="text" id="admin-create-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="Пример: salim_admin">
                 </div>
-
                 <div>
-                    <label class="block text-slate-400 mb-1">Местоположение на карте *</label>
-                    <div class="text-[10px] text-amber-300 mb-1">Кликните на карту или перетащите маркер для изменения локации.</div>
-                    <div id="edit-map" class="h-36 rounded-xl border border-white/10 overflow-hidden relative z-0 bg-slate-900"></div>
-                    <input type="hidden" id="edit-ad-lat">
-                    <input type="hidden" id="edit-ad-lng">
+                    <label class="block text-slate-400 mb-1" data-i18n="labelPassword">Пароль *</label>
+                    <input type="password" id="admin-create-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="••••••••">
                 </div>
-
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-gift text-emerald-400 text-base"></i>
-                        <div>
-                            <div class="font-bold text-emerald-300">Отдать даром (Бесплатно)</div>
-                            <div class="text-[10px] text-slate-400">Отдаете вещь безвозмездно нуждающимся</div>
-                        </div>
-                    </div>
-                    <input type="checkbox" id="edit-ad-is-free" onchange="toggleEditFreeAdPrice(this.checked)" class="w-5 h-5 rounded cursor-pointer accent-emerald-500">
-                </div>
-
-                <div id="edit-price-container" class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Цена *</label>
-                        <input type="number" id="edit-ad-price" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-400">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Валюта *</label>
-                        <select id="edit-ad-currency" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="USD" class="bg-slate-900">USD ($)</option>
-                            <option value="SYP" class="bg-slate-900">SYP (ل.س)</option>
-                            <option value="TRY" class="bg-slate-900">TRY (₺)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Состояние товара *</label>
-                        <select id="edit-ad-condition" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="NEW" class="bg-slate-900">Новый (Запечатан)</option>
-                            <option value="EXCELLENT" class="bg-slate-900">Отличное Б/У</option>
-                            <option value="WITH_DEFECTS" class="bg-slate-900">Есть дефекты / нюансы</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Условия передачи *</label>
-                        <select id="edit-ad-pickup" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none">
-                            <option value="PICKUP" class="bg-slate-900">Самовывоз</option>
-                            <option value="DELIVERY" class="bg-slate-900">Доставка продавцом</option>
-                            <option value="AGREEMENT" class="bg-slate-900">По договоренности</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div>
-                    <label class="block text-slate-400 mb-1">Фотография товара (Загрузите новую, если хотите заменить)</label>
-                    <div class="space-y-2">
-                        <input type="file" id="edit-ad-image-file" accept="image/*" onchange="handleEditImageCompressUpload(event)" class="w-full text-slate-400 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer">
-                        <input type="hidden" id="edit-ad-image-data">
-                        <div id="edit-image-preview-box" class="h-32 rounded-xl bg-slate-900 overflow-hidden relative border border-white/10">
-                            <img id="edit-image-preview-img" class="w-full h-full object-cover">
-                            <div id="edit-image-compress-status" class="absolute bottom-2 left-2 bg-black/70 text-[10px] text-amber-400 px-2 py-0.5 rounded font-mono">Сохранено</div>
-                        </div>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelKunya">Имя / Кунья *</label>
+                    <input type="text" id="admin-create-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" placeholder="Пример: Абу Салим">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelWhatsapp">WhatsApp *</label>
+                    <input type="text" id="admin-create-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" value="+963">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1" data-i18n="labelGender">Пол *</label>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                            <input type="radio" name="admin-create-gender" value="MALE" checked class="accent-blue-500">
+                            <span class="font-bold text-[11px]" data-i18n="genderMale">Мужчина</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
+                            <input type="radio" name="admin-create-gender" value="FEMALE" class="accent-pink-500">
+                            <span class="font-bold text-[11px]" data-i18n="genderFemale">Женщина 🌸</span>
+                        </label>
                     </div>
                 </div>
-
                 <div>
-                    <label class="block text-amber-300 font-bold mb-1">Описание и изъяны *</label>
-                    <textarea id="edit-ad-desc" required rows="3" class="w-full bg-white/5 border border-amber-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500"></textarea>
+                    <label class="block text-slate-400 mb-1" data-i18n="roleLabel">Роль / Статус аккаунта *</label>
+                    <select id="admin-create-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
+                        <option value="USER" class="bg-slate-900">Пользователь</option>
+                        <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
+                        <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
+                    </select>
                 </div>
-
-                <button type="submit" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg active:scale-95">
-                    Сохранить изменения
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-white transition-all shadow-md" data-i18n="btnCreateUser">
+                    Создать пользователя
                 </button>
             </form>
         </div>
@@ -621,198 +602,28 @@
         </div>
     </div>
 
-    <!-- User Profile Modal -->
-    <div id="modal-profile" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-lg rounded-3xl p-6 border border-white/10 relative max-h-[90vh] flex flex-col">
-            <button onclick="closeModal('modal-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <div id="profile-content" class="overflow-y-auto flex-1">
-                <!-- Dynamically Rendered -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit User Profile Modal -->
-    <div id="modal-edit-profile" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 relative space-y-3 text-xs">
-            <button onclick="closeModal('modal-edit-profile')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="font-bold text-sm text-white">Редактирование анкеты</h3>
-            <form onsubmit="handleSaveProfile(event)" class="space-y-3">
-                <input type="hidden" id="edit-profile-username">
-                <div>
-                    <label class="block text-slate-400 mb-1">Логин (Имя входа) *</label>
-                    <input type="text" id="edit-profile-login" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Новый пароль</label>
-                    <input type="password" id="edit-profile-password" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400" placeholder="Оставьте пустым, если не меняете">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
-                    <input type="text" id="edit-profile-kunya" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
-                    <input type="text" id="edit-profile-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                </div>
-                <div id="edit-profile-admin-fields" class="space-y-3 pt-2 border-t border-white/10 hidden">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Пол (Шариатский выбор)</label>
-                        <select id="edit-profile-gender" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                            <option value="MALE" class="bg-slate-900">Мужчина</option>
-                            <option value="FEMALE" class="bg-slate-900">Женщина 🌸</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Роль / Статус в системе</label>
-                        <select id="edit-profile-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                            <option value="USER" class="bg-slate-900">Пользователь</option>
-                            <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
-                            <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition-all">Сохранить изменения</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Admin Create User Modal -->
-    <div id="modal-admin-create-user" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-purple-500/30 relative space-y-3 text-xs">
-            <button onclick="closeModal('modal-admin-create-user')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-emerald-400"></i> Создание нового аккаунта
-            </h3>
-            <form onsubmit="handleAdminCreateUser(event)" class="space-y-3">
-                <div>
-                    <label class="block text-slate-400 mb-1">Логин *</label>
-                    <input type="text" id="admin-create-username" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="Пример: salim_admin">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Пароль *</label>
-                    <input type="password" id="admin-create-password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400" placeholder="••••••••">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Имя / Кунья *</label>
-                    <input type="text" id="admin-create-kunya" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" placeholder="Пример: Абу Салим">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
-                    <input type="text" id="admin-create-whatsapp" required class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none" value="+963">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Пол (Шариатский выбор) *</label>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
-                            <input type="radio" name="admin-create-gender" value="MALE" checked class="accent-blue-500">
-                            <span class="font-bold text-[11px]">Мужчина</span>
-                        </label>
-                        <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
-                            <input type="radio" name="admin-create-gender" value="FEMALE" class="accent-pink-500">
-                            <span class="font-bold text-[11px]">Женщина 🌸</span>
-                        </label>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Роль / Статус аккаунта *</label>
-                    <select id="admin-create-role" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none">
-                        <option value="USER" class="bg-slate-900">Пользователь</option>
-                        <option value="ADMIN" class="bg-slate-900">Модератор / Администратор</option>
-                        <option value="SUPERUSER" class="bg-slate-900">Главный Администратор (Суперюзер)</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-white transition-all shadow-md">
-                    Создать пользователя
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Shops Directory Modal -->
-    <div id="modal-shops-directory" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative p-6">
-            <button onclick="closeModal('modal-shops-directory')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-sm font-extrabold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-store text-purple-400"></i> Каталог магазинов и маркетов
-            </h3>
-            <div id="shops-directory-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto max-h-[70vh]">
-                <!-- Dynamically Rendered -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Seller Storefront Modal -->
-    <div id="modal-seller-store" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-3xl rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] flex flex-col relative p-6">
-            <button onclick="closeModal('modal-seller-store')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <div id="seller-store-content" class="overflow-y-auto space-y-4">
-                <!-- Dynamically Rendered -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Reason Modal -->
-    <div id="modal-delete-reason" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-white/10 space-y-3 text-xs text-center">
-            <h3 class="font-bold text-white text-sm">Укажите причину снятия</h3>
-            <input type="hidden" id="delete-ad-id">
-            <div class="space-y-2">
-                <button onclick="confirmAdDeletion('Продано через BarakaSouq')" class="w-full py-2.5 rounded-xl bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold hover:bg-emerald-600/50">Продано через BarakaSouq 🎁</button>
-                <button onclick="confirmAdDeletion('Продано в другом месте')" class="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">Продано в другом месте</button>
-                <button onclick="confirmAdDeletion('Передумал продавать')" class="w-full py-2.5 rounded-xl bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">Передумал продавать</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Donate Modal -->
-    <div id="modal-donate" class="fixed inset-0 z-[65] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-sm rounded-3xl p-6 border border-amber-500/30 space-y-3 text-xs text-center relative">
-            <button onclick="closeModal('modal-donate')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mx-auto border border-amber-500/30">
-                <i class="fa-solid fa-hand-holding-heart"></i>
-            </div>
-            <h3 class="font-bold text-white text-sm">Поддержка проекта BarakaSouq</h3>
-            <p class="text-slate-300 leading-relaxed">Поздравляем с успешной сделкой! По желанию вы можете поддержать развитие бесплатной гражданской платформы.</p>
-            <div class="bg-white/5 p-3 rounded-2xl border border-white/10 text-left space-y-1 font-mono text-[11px]">
-                <div class="text-amber-400 font-bold">ShamCash (ШамКэш):</div>
-                <div class="text-slate-300 select-all font-bold">SHAM-9842-1049-2281</div>
-            </div>
-            <button onclick="closeModal('modal-donate')" class="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold">Закрыть</button>
-        </div>
-    </div>
-
     <!-- Superuser Admin Panel Modal -->
     <div id="modal-admin-panel" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="modal-card glass-panel w-full max-w-4xl rounded-3xl border border-purple-500/30 overflow-hidden max-h-[92vh] flex flex-col relative">
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-purple-950/40">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-user-shield text-amber-400 text-lg"></i>
-                    <h3 class="text-sm font-extrabold text-white">Панель управления Главного Администратора</h3>
+                    <h3 class="text-sm font-extrabold text-white" data-i18n="adminPanelTitle">Панель управления Главного Администратора</h3>
                 </div>
                 <button onclick="closeModal('modal-admin-panel')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div class="flex border-b border-white/10 bg-white/5 overflow-x-auto text-xs shrink-0 no-scrollbar">
-                <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap">Обзор</button>
-                <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Пользователи и Роли</button>
-                <button onclick="switchAdminTab('moderation')" id="atab-moderation" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Модерация</button>
-                <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Архив и Очистка</button>
-                <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Курсы валют</button>
-                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap">Бэкап и Данные</button>
+                <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-bold border-b-2 border-purple-500 text-purple-300 whitespace-nowrap" data-i18n="adminTabOverview">Обзор</button>
+                <button onclick="switchAdminTab('users')" id="atab-users" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabUsers">Пользователи и Роли</button>
+                <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabArchive">Архив и Очистка</button>
+                <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabRates">Курсы валют</button>
+                <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-i18n="adminTabBackup">Бэкап и Данные</button>
             </div>
 
             <div id="admin-tab-content" class="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
                 <!-- Dynamically Rendered -->
             </div>
-        </div>
-    </div>
-
-    <!-- Secret PIN Modal -->
-    <div id="modal-secret-pin" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="modal-card glass-panel w-full max-w-xs rounded-3xl p-6 border border-purple-500/30 text-center space-y-3">
-            <h3 class="font-bold text-white text-sm">Введите секретный PIN</h3>
-            <input type="password" id="secret-pin-input" maxlength="6" class="w-full text-center bg-white/5 border border-white/10 rounded-xl py-2.5 text-lg font-mono text-purple-400 focus:outline-none" placeholder="••••">
-            <button onclick="verifySecretPin()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">Войти</button>
         </div>
     </div>
 
@@ -839,6 +650,7 @@
                     <span id="theme-text" data-i18n="themeDark">Тёмная тема</span>
                 </button>
 
+                <!-- Language Selector supporting RU, AR, TR -->
                 <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
                     <option value="RU" class="bg-slate-900 text-white">RU</option>
                     <option value="AR" class="bg-slate-900 text-white">AR</option>
@@ -848,13 +660,7 @@
         </div>
     </footer>
 
-    <!-- Offline Detection Toast -->
-    <div id="offline-toast" class="fixed bottom-4 right-4 z-50 bg-rose-600 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl hidden flex items-center gap-2 border border-rose-400/30">
-        <i class="fa-solid fa-wifi"></i>
-        <span>Нет подключения к интернету. Просмотр из кэша.</span>
-    </div>
-
-    <!-- Toast Notification Container -->
+    <!-- Toast Container -->
     <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
     <script>
@@ -943,9 +749,6 @@
             }
         ];
 
-        /* -------------------------------------------------------------
-         * INTERNATIONALIZATION DICTIONARIES
-         * ------------------------------------------------------------- */
         const TRANSLATIONS = {
             RU: {
                 brandTagline: "Сирийский Рынок",
@@ -1002,10 +805,56 @@
                 btnLeaveQueue: "Выйти из очереди",
                 sellerLocation: "Геолокация продавца:",
                 descAndDefects: "Описание и изъяны:",
-                contactSellerWa: "Связаться с продавцом (авто-номер очереди)",
-                supportProject: "Поддержка BarakaSouq",
+                contactSellerWa: "Связаться с продавцом через WhatsApp",
                 openAllSellerAds: "Открыть все товары продавца",
-                editAdBtn: "Редактировать объявление"
+                editAdBtn: "Редактировать объявление",
+                rulesTitle: "Правила платформы BarakaSouq",
+                rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!",
+                rule1Title: "Честность и прозрачность:",
+                rule1Desc: "Категорически запрещено скрывать дефекты, изъяны или повреждения товара. Продавец обязан подробно указать реальное состояние.",
+                rule2Title: "Запрещенные товары:",
+                rule2Desc: "Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.",
+                rule3Title: "Гражданский ресурс:",
+                rule3Desc: "Платформа является исключительно гражданской торговой площадкой. Администрация не несет ответственности за неправомерные действия пользователей.",
+                btnAcceptRules: "Я подтверждаю и принимаю условия",
+                tabSignIn: "Вход",
+                tabSignUp: "Регистрация",
+                labelLogin: "Логин *",
+                labelPassword: "Пароль *",
+                rememberSession: "Запомнить мой вход на этом устройстве",
+                labelKunya: "Имя / Кунья *",
+                labelGender: "Пол (Шариатский выбор) *",
+                genderMale: "Мужчина",
+                genderFemale: "Женщина",
+                labelWhatsapp: "WhatsApp номер *",
+                modalCreateTitle: "Подача нового объявления",
+                adTitleLabel: "Заголовок объявления *",
+                adCatLabel: "Категория *",
+                adRegionLabel: "Регион *",
+                womenOnlyNotice: "Объявление будет видно исключительно женщинам",
+                adCityLabel: "Город / Населенный пункт *",
+                adMapLabel: "Местоположение на карте *",
+                adMapHelp: "Кликните на карту или перетащите маркер.",
+                freeGiveaway: "Отдать даром (Бесплатно)",
+                freeGiveawayDesc: "Отдаете вещь безвозмездно нуждающимся",
+                priceLabel: "Цена *",
+                currencyLabel: "Валюта *",
+                conditionLabel: "Состояние товара *",
+                pickupLabel: "Условия передачи *",
+                photoLabel: "Фотография товара *",
+                descDefectsLabel: "Описание и возможные изъяны *",
+                btnPublishAd: "Опубликовать объявление",
+                editProfileTitle: "Редактирование анкеты",
+                newPasswordLabel: "Новый пароль",
+                roleLabel: "Роль / Статус в системе",
+                btnSaveProfile: "Сохранить изменения",
+                btnCreateUser: "Создать пользователя",
+                adminPanelTitle: "Панель управления Главного Администратора",
+                adminTabOverview: "Обзор",
+                adminTabUsers: "Пользователи и Роли",
+                adminTabArchive: "Архив и Очистка",
+                adminTabRates: "Курсы валют",
+                adminTabBackup: "Бэкап и Данные"
             },
             AR: {
                 brandTagline: "سوق سوريا المدني",
@@ -1031,7 +880,7 @@
                 catAll: "كل المنتجات",
                 catFavorites: "المفضلة",
                 catWomenOnly: "للنساء فقط 🌸",
-                catFree: "مجاناً (بدون مقابل) 🎁",
+                catFree: "مجاناً 🎁",
                 catShopsDir: "دليل المتاجر 🏪",
                 catElectronics: "إلكترونيات",
                 catTransport: "سيارات ومركبات",
@@ -1050,7 +899,7 @@
                 btnNextPage: "التالي >",
                 btnLastPage: "الأخيرة »",
                 pageLabel: "صفحة {current} من {total}",
-                freeTag: "🎁 مجاناً (بدون مقابل)",
+                freeTag: "🎁 مجاناً",
                 womenTag: "🌸 للنساء فقط",
                 shopTag: "متجر معتمد",
                 beFirstQueue: "كن أول المحجوزين",
@@ -1061,11 +910,57 @@
                 btnJoinQueue: "أريد هذا المنتج! (حجز دور)",
                 btnLeaveQueue: "إلغاء الدور في الانتظار",
                 sellerLocation: "موقع البائع على الخريطة:",
-                descAndDefects: "الوصف والعيوب (اتق الله بالبيع):",
-                contactSellerWa: "التواصل عبر واتساب (مع رقم دورك الآلي)",
-                supportProject: "دعم مشروع سوق البركة",
+                descAndDefects: "الوصف والعيوب:",
+                contactSellerWa: "التواصل عبر واتساب",
                 openAllSellerAds: "عرض جميع منتجات هذا البائع",
-                editAdBtn: "تعديل الإعلان"
+                editAdBtn: "تعديل الإعلان",
+                rulesTitle: "قواعد منصة بركة سوق",
+                rulesAyah: "اتَّقُوا اللَّهَ فِي التِّجَارَةِ",
+                rule1Title: "الصدق والشفافية:",
+                rule1Desc: "يمنع كتمان عيوب السلعة أو أضرارها، ويجب بيان الحالة الحقيقية بدقة.",
+                rule2Title: "المنتجات الممنوعة:",
+                rule2Desc: "يمنع منعاً باتاً نشر الأسلحة، الذخائر، أو أي مواد غير قانونية.",
+                rule3Title: "منصة مدنية:",
+                rule3Desc: "هذه المنصة مخصصة للتجارة المدنية فقط، والإدارة غير مسؤولة عن التصرفات المخالفة.",
+                btnAcceptRules: "أوافق على جميع الشروط",
+                tabSignIn: "دخول",
+                tabSignUp: "تسجيل جديد",
+                labelLogin: "اسم المستخدم *",
+                labelPassword: "كلمة المرور *",
+                rememberSession: "تذكر تسجيل دخولي على هذا الجهاز",
+                labelKunya: "الاسم أو الكنية *",
+                labelGender: "الجنس (خيار شرعي) *",
+                genderMale: "رجل",
+                genderFemale: "امرأة",
+                labelWhatsapp: "رقم الواتساب *",
+                modalCreateTitle: "إضافة إعلان جديد",
+                adTitleLabel: "عنوان الإعلان *",
+                adCatLabel: "القسم *",
+                adRegionLabel: "المحافظة *",
+                womenOnlyNotice: "سيكون هذا الإعلان مرئياً للنساء فقط",
+                adCityLabel: "المدينة / المنطقة *",
+                adMapLabel: "الموقع على الخريطة *",
+                adMapHelp: "انقر على الخريطة لتحديد الموقع exact.",
+                freeGiveaway: "لوجه الله (مجاناً)",
+                freeGiveawayDesc: "تقديم السلعة بدون مقابل للمحتاجين",
+                priceLabel: "السعر *",
+                currencyLabel: "العملة *",
+                conditionLabel: "حالة المنتج *",
+                pickupLabel: "طريقة التسليم *",
+                photoLabel: "صورة المنتج *",
+                descDefectsLabel: "الوصف والعيوب والتفاصيل *",
+                btnPublishAd: "نشر الإعلان الآن",
+                editProfileTitle: "تعديل بيانات الحساب",
+                newPasswordLabel: "كلمة مرور جديدة",
+                roleLabel: "الصلاحية في النظام",
+                btnSaveProfile: "حفظ التغييرات",
+                btnCreateUser: "إنشاء حساب جديد",
+                adminPanelTitle: "لوحة تحكم المدير العام",
+                adminTabOverview: "نظرة عامة",
+                adminTabUsers: "المستخدمون والرتب",
+                adminTabArchive: "الأرشيف والتنظيف",
+                adminTabRates: "أسعار الصرف",
+                adminTabBackup: "النسخ الاحتياطي"
             },
             TR: {
                 brandTagline: "Suriye İlan Pazarı",
@@ -1110,7 +1005,7 @@
                 btnNextPage: "İleri >",
                 btnLastPage: "Son »",
                 pageLabel: "Sayfa {current} / {total}",
-                freeTag: "🎁 ÜCRETSİZ (Bedava)",
+                freeTag: "🎁 ÜCRETSİZ",
                 womenTag: "🌸 Kadınlara Özel",
                 shopTag: "Mağaza",
                 beFirstQueue: "İlki siz olun",
@@ -1123,9 +1018,55 @@
                 sellerLocation: "Satıcının Konumu:",
                 descAndDefects: "Açıklama ve Kusurlar:",
                 contactSellerWa: "Satıcıyla WhatsApp'tan İletişime Geç",
-                supportProject: "BarakaSouq Proje Desteği",
                 openAllSellerAds: "Satıcının Tüm İlanlarını Gör",
-                editAdBtn: "İlanı Düzenle"
+                editAdBtn: "İlanı Düzenle",
+                rulesTitle: "BarakaSouq Platform Kuralları",
+                rulesAyah: "Ticarette Allah'tan korkun!",
+                rule1Title: "Dürüstlük ve Şeffaflık:",
+                rule1Desc: "Ürünün kusurlarını gizlemek kesinlikle yasaktır.",
+                rule2Title: "Yasaklı Ürünler:",
+                rule2Desc: "Silah, mühimmat veya yasadışı maddelerin satışı yasaktır.",
+                rule3Title: "Sivil Platform:",
+                rule3Desc: "Platform tamamen sivil ticaret içindir.",
+                btnAcceptRules: "Şartları Onaylıyorum",
+                tabSignIn: "Giriş Yap",
+                tabSignUp: "Kayıt Ol",
+                labelLogin: "Kullanıcı Adı *",
+                labelPassword: "Şifre *",
+                rememberSession: "Beni bu cihazda hatırla",
+                labelKunya: "İsim / Künye *",
+                labelGender: "Cinsiyet *",
+                genderMale: "Erkek",
+                genderFemale: "Kadın",
+                labelWhatsapp: "WhatsApp Numarası *",
+                modalCreateTitle: "Yeni İlan Ekle",
+                adTitleLabel: "İlan Başlığı *",
+                adCatLabel: "Kategori *",
+                adRegionLabel: "Bölge *",
+                womenOnlyNotice: "Bu ilan sadece kadınlar tarafından görülebilir",
+                adCityLabel: "Şehir / İlçe *",
+                adMapLabel: "Harita Konumu *",
+                adMapHelp: "Konumu seçmek için haritaya tıklayın.",
+                freeGiveaway: "Ücretsiz (Bedava)",
+                freeGiveawayDesc: "İhtiyacı olanlara ücretsiz verme",
+                priceLabel: "Fiyat *",
+                currencyLabel: "Para Birimi *",
+                conditionLabel: "Ürün Durumu *",
+                pickupLabel: "Teslimat Şartları *",
+                photoLabel: "Ürün Fotoğrafı *",
+                descDefectsLabel: "Açıklama ve Detaylar *",
+                btnPublishAd: "İlanı Yayınla",
+                editProfileTitle: "Profil Düzenleme",
+                newPasswordLabel: "Yeni Şifre",
+                roleLabel: "Sistem Rolü",
+                btnSaveProfile: "Değişiklikleri Kaydet",
+                btnCreateUser: "Kullanıcı Oluştur",
+                adminPanelTitle: "Süper Yönetici Paneli",
+                adminTabOverview: "Genel Bakış",
+                adminTabUsers: "Kullanıcılar & Rolleri",
+                adminTabArchive: "Arşiv & Temizlik",
+                adminTabRates: "Döviz Kurları",
+                adminTabBackup: "Yedekleme & Veri"
             }
         };
 
@@ -1154,6 +1095,33 @@
                 toast.classList.add('opacity-0', 'translate-y-[-10px]');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        /* Custom Confirmation Modal (No Browser confirm()) */
+        function showConfirmModal(title, msg, onConfirm) {
+            const modal = document.getElementById('modal-confirm');
+            const titleEl = document.getElementById('confirm-modal-title');
+            const msgEl = document.getElementById('confirm-modal-msg');
+            const okBtn = document.getElementById('confirm-btn-ok');
+            const cancelBtn = document.getElementById('confirm-btn-cancel');
+
+            if (!modal || !titleEl || !msgEl || !okBtn || !cancelBtn) return;
+
+            titleEl.innerText = title;
+            msgEl.innerText = msg;
+            modal.classList.remove('hidden');
+
+            const cleanUp = () => {
+                modal.classList.add('hidden');
+                okBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+
+            cancelBtn.onclick = () => cleanUp();
+            okBtn.onclick = () => {
+                cleanUp();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
         }
 
         function restoreUserSession() {
@@ -1297,7 +1265,10 @@
                     const usdRate = data.overview[0].data.rates.find(r => r.code === 'USD');
                     if (usdRate) {
                         const rawSyp = parseFloat(usdRate.sell || usdRate.buy);
-                        if (!isNaN(rawSyp)) sypVal = rawSyp > 1000 ? rawSyp / 100 : rawSyp;
+                        if (!isNaN(rawSyp)) {
+                            /* Automatic de-denomination: shift decimal point 2 places to left if > 1000 */
+                            sypVal = rawSyp > 1000 ? rawSyp / 100 : rawSyp;
+                        }
                     }
                 }
 
@@ -1401,10 +1372,6 @@
         }
 
         function handleCategoryClick(catId) {
-            if (catId === 'shops_dir') {
-                openShopsDirectory();
-                return;
-            }
             selectedCategory = catId;
             currentPage = 1;
             renderCategoryPills();
@@ -1629,6 +1596,20 @@
             showToast('Условия приняты. Добро пожаловать!', 'success');
         }
 
+        function toggleFavorite(adId, e) {
+            if (e) e.stopPropagation();
+            if (favorites.includes(adId)) {
+                favorites = favorites.filter(id => id !== adId);
+                showToast('Удалено из избранного', 'info');
+            } else {
+                favorites.push(adId);
+                showToast('Добавлено в избранное!', 'success');
+            }
+            try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
+            renderCategoryPills();
+            renderAds();
+        }
+
         function openAuthModal() {
             openModal('modal-auth');
         }
@@ -1643,12 +1624,12 @@
                 tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
                 tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
                 regFields.classList.add('hidden');
-                submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>Войти в аккаунт</span>`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>${getTranslation('tabSignIn')}</span>`;
             } else {
                 tabRegister.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-blue-500 text-blue-400";
                 tabLogin.className = "flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-slate-400";
                 regFields.classList.remove('hidden');
-                submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> <span>Зарегистрироваться</span>`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> <span>${getTranslation('tabSignUp')}</span>`;
             }
         }
 
@@ -1805,9 +1786,300 @@
             showToast('Профиль успешно обновлен!', 'success');
         }
 
-        function adminArchiveUser(userUid, username) {
-            if (!confirm(`Отправить аккаунт "${username}" в архив?`)) return;
+        function openCreateAdModal() {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
 
+            const catSelect = document.getElementById('ad-category');
+            if (catSelect) {
+                catSelect.innerHTML = customCategories.map(c => `
+                    <option value="${c.id}" class="bg-slate-900">${c.name}</option>
+                `).join('');
+            }
+
+            const womenContainer = document.getElementById('women-only-container');
+            if (womenContainer) {
+                if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+                    womenContainer.classList.remove('hidden');
+                } else {
+                    womenContainer.classList.add('hidden');
+                }
+            }
+
+            openModal('modal-create-ad');
+            setTimeout(initCreateMap, 300);
+        }
+
+        let createMapInstance = null;
+        let createMapMarker = null;
+
+        function initCreateMap() {
+            const mapContainer = document.getElementById('create-map');
+            if (!mapContainer || createMapInstance) return;
+
+            const defaultLat = 33.5138;
+            const defaultLng = 36.2765;
+
+            createMapInstance = L.map('create-map').setView([defaultLat, defaultLng], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap'
+            }).addTo(createMapInstance);
+
+            createMapMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(createMapInstance);
+
+            const updateMapCoords = (lat, lng) => {
+                document.getElementById('ad-lat').value = lat;
+                document.getElementById('ad-lng').value = lng;
+            };
+
+            createMapInstance.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                createMapMarker.setLatLng([lat, lng]);
+                updateMapCoords(lat, lng);
+            });
+
+            createMapMarker.on('dragend', (e) => {
+                const { lat, lng } = e.target.getLatLng();
+                updateMapCoords(lat, lng);
+            });
+        }
+
+        function handleImageCompressUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Размер файла превышает 10 МБ!', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 533;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    document.getElementById('ad-image-data').value = compressedDataUrl;
+
+                    const previewImg = document.getElementById('image-preview-img');
+                    const previewBox = document.getElementById('image-preview-box');
+                    if (previewImg && previewBox) {
+                        previewImg.src = compressedDataUrl;
+                        previewBox.classList.remove('hidden');
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleCreateAdSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const title = document.getElementById('ad-title').value.trim();
+            const category = document.getElementById('ad-category').value;
+            const region = document.getElementById('ad-region').value;
+            const city = document.getElementById('ad-city').value.trim();
+            const isWomenOnly = document.getElementById('ad-is-women-only')?.checked || false;
+            const isFree = document.getElementById('ad-is-free').checked;
+            const price = isFree ? 0 : parseFloat(document.getElementById('ad-price').value || 0);
+            const currency = document.getElementById('ad-currency').value;
+            const condition = document.getElementById('ad-condition').value;
+            const pickup = document.getElementById('ad-pickup').value;
+            const imageData = document.getElementById('ad-image-data').value || 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=60';
+            const desc = document.getElementById('ad-desc').value.trim();
+            const lat = parseFloat(document.getElementById('ad-lat').value || 33.5138);
+            const lng = parseFloat(document.getElementById('ad-lng').value || 36.2765);
+
+            const adId = 'AD-' + Date.now().toString().slice(-6);
+            const newAd = {
+                id: adId,
+                title,
+                category,
+                region,
+                city,
+                price,
+                currency,
+                isFree,
+                isWomenOnly,
+                condition,
+                pickup,
+                sellerUsername: currentUser.username,
+                sellerKunya: currentUser.kunya || currentUser.username,
+                sellerWhatsapp: currentUser.whatsapp || '',
+                lat,
+                lng,
+                image: imageData,
+                desc,
+                queue: [],
+                status: 'ACTIVE',
+                createdAt: Date.now()
+            };
+
+            ads.unshift(newAd);
+            if (firebaseDb) {
+                firebaseDb.ref(`ads/${adId}`).set(newAd);
+            }
+
+            closeModal('modal-create-ad');
+            renderCategoryPills();
+            renderAds();
+            showToast('Объявление успешно опубликовано!', 'success');
+        }
+
+        function openAdDetail(adId) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            const content = document.getElementById('detail-content');
+            if (!content) return;
+
+            const converted = convertPriceAll(ad.price, ad.currency, ad.isFree);
+            const queueList = ad.queue || [];
+            const isUserInQueue = currentUser && queueList.some(q => q.username === currentUser.username);
+            const userQueueRank = isUserInQueue ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0;
+            const isOwner = currentUser && (currentUser.username === ad.sellerUsername || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="relative h-64 sm:h-80 rounded-2xl bg-slate-900 overflow-hidden border border-white/10">
+                        <img src="${ad.image}" alt="${ad.title}" class="w-full h-full object-cover">
+                        <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-400 border border-white/10">
+                            ${ad.id}
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <h2 class="text-lg font-extrabold text-white leading-snug">${ad.title}</h2>
+                            <div class="text-right shrink-0">
+                                <div class="text-base font-extrabold">${converted}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                            <span><i class="fa-solid fa-location-dot text-amber-400"></i> ${ad.city}</span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-user text-blue-400"></i> ${ad.sellerKunya || ad.sellerUsername}</span>
+                        </div>
+                    </div>
+
+                    <!-- Queue Block -->
+                    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold text-amber-300">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-amber-400"></i> ${getTranslation('queueStatusText', { count: queueList.length })}</span>
+                            ${isUserInQueue ? `<span class="bg-amber-500/30 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/40">${getTranslation('myInQueue', { rank: userQueueRank })}</span>` : ''}
+                        </div>
+
+                        ${currentUser ? `
+                            <button onclick="${isUserInQueue ? `leaveQueue('${ad.id}')` : `joinQueue('${ad.id}')`}" class="w-full py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${isUserInQueue ? 'bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/30' : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 shadow-md'}">
+                                <i class="fa-solid ${isUserInQueue ? 'fa-user-minus' : 'fa-hand'}"></i>
+                                <span>${isUserInQueue ? getTranslation('btnLeaveQueue') : getTranslation('btnJoinQueue')}</span>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-white text-xs">${getTranslation('descAndDefects')}</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-white/5 p-3.5 rounded-2xl border border-white/5 whitespace-pre-line">${ad.desc}</p>
+                    </div>
+
+                    <!-- WhatsApp Seller Action -->
+                    <a href="https://wa.me/${(ad.sellerWhatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>${getTranslation('contactSellerWa')}</span>
+                    </a>
+
+                    ${isOwner ? `
+                        <div class="pt-2 border-t border-white/10 flex gap-2">
+                            <button onclick="deleteAdWithConfirm('${ad.id}')" class="w-full py-2.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 font-bold text-xs border border-rose-500/30 transition-all">
+                                Удалить объявление
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            openModal('modal-ad-detail');
+        }
+
+        function joinQueue(adId) {
+            if (!currentUser) { openAuthModal(); return; }
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+
+            if (!ad.queue) ad.queue = [];
+            if (ad.queue.some(q => q.username === currentUser.username)) return;
+
+            ad.queue.push({
+                username: currentUser.username,
+                kunya: currentUser.kunya || currentUser.username,
+                whatsapp: currentUser.whatsapp || '',
+                timestamp: Date.now()
+            });
+
+            if (firebaseDb) {
+                firebaseDb.ref(`ads/${adId}`).set(ad);
+            }
+
+            openAdDetail(adId);
+            showToast('Вы успешно заняли очередь!', 'success');
+        }
+
+        function leaveQueue(adId) {
+            if (!currentUser) return;
+            const ad = ads.find(a => a.id === adId);
+            if (!ad || !ad.queue) return;
+
+            ad.queue = ad.queue.filter(q => q.username !== currentUser.username);
+
+            if (firebaseDb) {
+                firebaseDb.ref(`ads/${adId}`).set(ad);
+            }
+
+            openAdDetail(adId);
+            showToast('Вы вышли из очереди', 'info');
+        }
+
+        function deleteAdWithConfirm(adId) {
+            showConfirmModal('Удаление объявления', 'Вы уверены, что хотите полностью удалить это объявление?', () => {
+                ads = ads.filter(a => a.id !== adId);
+                if (firebaseDb) {
+                    firebaseDb.ref(`ads/${adId}`).remove();
+                }
+                closeModal('modal-ad-detail');
+                renderAds();
+                renderCategoryPills();
+                showToast('Объявление успешно удалено', 'success');
+            });
+        }
+
+        function adminArchiveUser(userUid, username) {
             const targetUser = users.find(u => u.uid === userUid || u.username === username);
             if (!targetUser) {
                 showToast('Пользователь не найден', 'error');
@@ -1819,23 +2091,25 @@
                 return;
             }
 
-            const uidKey = targetUser.uid || ('u_' + Date.now());
+            showConfirmModal('Архивация аккаунта', `Отправить аккаунт "${targetUser.username}" (${targetUser.kunya || ''}) в архив?`, () => {
+                const uidKey = targetUser.uid || ('u_' + Date.now());
 
-            if (firebaseDb) {
-                firebaseDb.ref(`archivedUsers/${uidKey}`).set(targetUser).then(() => {
-                    return firebaseDb.ref(`users/${uidKey}`).remove();
-                }).then(() => {
-                    showToast(`Пользователь ${targetUser.username} успешно перенесен в архив`, 'success');
-                }).catch((err) => {
-                    showToast('Ошибка архивации в облаке: ' + err.message, 'error');
-                });
-            } else {
-                archivedUsers.push(targetUser);
-                users = users.filter(u => u.username !== targetUser.username);
-                showToast(`Пользователь ${targetUser.username} заархивирован локально`, 'success');
-            }
+                if (firebaseDb) {
+                    firebaseDb.ref(`archivedUsers/${uidKey}`).set(targetUser).then(() => {
+                        return firebaseDb.ref(`users/${uidKey}`).remove();
+                    }).then(() => {
+                        showToast(`Пользователь ${targetUser.username} перенесен в архив`, 'success');
+                    }).catch((err) => {
+                        showToast('Ошибка архивации в облаке: ' + err.message, 'error');
+                    });
+                } else {
+                    archivedUsers.push(targetUser);
+                    users = users.filter(u => u.username !== targetUser.username);
+                    showToast(`Пользователь ${targetUser.username} заархивирован локально`, 'success');
+                }
 
-            renderAdminTabContent();
+                renderAdminTabContent();
+            });
         }
 
         function restoreUser(uid) {
@@ -1857,17 +2131,17 @@
         }
 
         function permanentlyDeleteUser(uid) {
-            if (!confirm('Удалить пользователя навсегда без возможности восстановления?')) return;
-
-            if (firebaseDb) {
-                firebaseDb.ref(`archivedUsers/${uid}`).remove().then(() => {
-                    showToast('Пользователь удален из базы', 'success');
-                });
-            } else {
-                archivedUsers = archivedUsers.filter(u => u.uid !== uid);
-                showToast('Пользователь удален из памяти', 'success');
-            }
-            renderAdminTabContent();
+            showConfirmModal('Окончательное удаление', 'Удалить пользователя навсегда без возможности восстановления?', () => {
+                if (firebaseDb) {
+                    firebaseDb.ref(`archivedUsers/${uid}`).remove().then(() => {
+                        showToast('Пользователь удален из базы', 'success');
+                    });
+                } else {
+                    archivedUsers = archivedUsers.filter(u => u.uid !== uid);
+                    showToast('Пользователь удален из памяти', 'success');
+                }
+                renderAdminTabContent();
+            });
         }
 
         function handleAdminCreateUser(e) {
@@ -1917,7 +2191,7 @@
 
         function switchAdminTab(tab) {
             SYSTEM_CONFIG.adminTab = tab;
-            ['overview', 'users', 'moderation', 'archive', 'rates', 'backup'].forEach(t => {
+            ['overview', 'users', 'archive', 'rates', 'backup'].forEach(t => {
                 const btn = document.getElementById(`atab-${t}`);
                 if (btn) {
                     btn.className = (t === tab) 
@@ -2013,41 +2287,38 @@
                                 <i class="fa-solid fa-arrows-rotate"></i> Обновить курс с сервера
                             </button>
                         </div>
-                        <div class="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/10">
-                            <div>
-                                <label class="block text-slate-400 mb-1">Курс Сирийского фунта (SYP за $1)</label>
-                                <input type="number" step="0.01" id="rate-input-syp" value="${EXCHANGE_RATES.SYP}" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white font-mono">
+                    </div>
+                `;
+            } else if (tab === 'backup') {
+                container.innerHTML = `
+                    <div class="space-y-4 max-w-md mx-auto text-center">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                            <h4 class="font-bold text-white text-xs">Экспорт и Импорт базы данных</h4>
+                            <div class="flex gap-2">
+                                <button onclick="exportBackupData()" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow">
+                                    <i class="fa-solid fa-download"></i> Скачать JSON
+                                </button>
                             </div>
-                            <div>
-                                <label class="block text-slate-400 mb-1">Курс Турецкой лиры (TRY за $1)</label>
-                                <input type="number" step="0.01" id="rate-input-try" value="${EXCHANGE_RATES.TRY}" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white font-mono">
-                            </div>
-                            <button onclick="saveManualRates()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
-                                Сохранить вручную
-                            </button>
                         </div>
                     </div>
                 `;
-            } else {
-                container.innerHTML = `<div class="text-center py-8 text-slate-500">Раздел в разработке</div>`;
             }
         }
 
-        function saveManualRates() {
-            const syp = parseFloat(document.getElementById('rate-input-syp')?.value);
-            const tryVal = parseFloat(document.getElementById('rate-input-try')?.value);
-            if (isNaN(syp) || isNaN(tryVal)) {
-                showToast('Введите корректные числовые значения!', 'error');
-                return;
-            }
-            EXCHANGE_RATES.SYP = syp;
-            EXCHANGE_RATES.TRY = tryVal;
-            if (firebaseDb) {
-                firebaseDb.ref('rates').set(EXCHANGE_RATES);
-            }
-            updateFooterRatesUI();
-            renderAds();
-            showToast('Курсы сохранены!', 'success');
+        function exportBackupData() {
+            const backup = {
+                ads,
+                users,
+                archivedUsers,
+                EXCHANGE_RATES,
+                exportedAt: new Date().toISOString()
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `barakasouq_backup_${Date.now()}.json`);
+            dlAnchorElem.click();
+            showToast('Бэкап базы успешно создан!', 'success');
         }
 
         window.onload = function() {
@@ -2085,15 +2356,6 @@
             if (!SYSTEM_CONFIG.rulesAccepted) {
                 openModal('modal-rules-agreement');
             }
-
-            window.addEventListener('offline', () => {
-                const toast = document.getElementById('offline-toast');
-                if (toast) toast.classList.remove('hidden');
-            });
-            window.addEventListener('online', () => {
-                const toast = document.getElementById('offline-toast');
-                if (toast) toast.classList.add('hidden');
-            });
         };
     </script>
 </body>
