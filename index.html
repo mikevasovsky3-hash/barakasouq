@@ -802,7 +802,29 @@ function initFirebaseSync(){ try{ const cfg={databaseURL:"https://barakasouq-72b
  firebaseDb.ref('users').on('value',snap=>{ const d=snap.val(); if(d){ users=Array.isArray(d)?d.filter(x=>x!=null):Object.keys(d).map(k=>({...d[k],uid:k})); if(currentUser){ const me=users.find(u=>(u.uid&&currentUser.uid&&u.uid===currentUser.uid)||(u.username&&currentUser.username&&u.username.toLowerCase()===currentUser.username.toLowerCase())); if(me){ currentUser=me; saveUserSession(currentUser,true); } } } });
  firebaseDb.ref('archivedUsers').on('value',snap=>{ const d=snap.val(); archivedUsers=d?(Array.isArray(d)?d.filter(x=>x!=null):Object.keys(d).map(k=>({...d[k],uid:k}))):[]; });
  firebaseDb.ref('rates').on('value',snap=>{ const d=snap.val(); if(d&&d.SYP&&d.TRY){ EXCHANGE_RATES.SYP=parseFloat(d.SYP); EXCHANGE_RATES.TRY=parseFloat(d.TRY); renderAds(); } }); }
-async function fetchLiveExchangeRates(manual=false){ try{ const res=await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`); if(!res.ok) throw new Error('HTTP '+res.status); const data=await res.json(); let syp=null,tryv=null; if(data?.overview?.[0]?.data?.rates){ const u=data.overview[0].data.rates.find(r=>r.code==='USD'); if(u){ const raw=parseFloat(u.sell||u.buy); if(!isNaN(raw)) syp=raw>1000?raw/100:raw; } } if(data?.global_fx){ const t=data.global_fx.find(g=>g.pair==='USD/TRY'); if(t) tryv=parseFloat(t.rate); } EXCHANGE_RATES.SYP=parseFloat((syp||131.70).toFixed(2)); EXCHANGE_RATES.TRY=parseFloat((tryv||47.74).toFixed(2)); if(firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES); renderAds(); if(manual) showToast(`Курс: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`,'success'); }catch(e){ if(manual) showToast('Ошибка получения курса','error'); } }
+async function fetchLiveExchangeRates(manual=false){
+  try{
+    const res=await fetch('https://sp-proxy.mikevasovsky3.workers.dev/?_t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    let syp=null, tryv=null;
+    const ov=Array.isArray(data?.overview)?data.overview[0]?.data:(data?.overview?.data||{});
+    const usd=(Array.isArray(ov?.rates)?ov.rates:[]).find(r=>r.code==='USD');
+    if(usd){
+      const c=(usd.cities&&(usd.cities.damascus||Object.values(usd.cities)[0]))||usd;
+      const raw=parseFloat(c.sell||c.buy);
+      if(!isNaN(raw)) syp=raw>1000?raw/100:raw;
+    }
+    const fx=Array.isArray(ov?.global_fx)?ov.global_fx:(Array.isArray(data?.global_fx)?data.global_fx:[]);
+    const t=fx.find(g=>g.pair==='USD/TRY');
+    if(t) tryv=parseFloat(t.rate);
+    EXCHANGE_RATES.SYP=parseFloat((syp||131.70).toFixed(2));
+    EXCHANGE_RATES.TRY=parseFloat((tryv||47.74).toFixed(2));
+    if(firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES);
+    renderAds();
+    if(manual) showToast('Курс: $1 = '+EXCHANGE_RATES.SYP+' SYP / '+EXCHANGE_RATES.TRY+' TRY','success');
+  }catch(e){ if(manual) showToast('Ошибка получения курса','error'); }
+}
 
 /* ================= INIT ================= */
 window.onload=function(){ loadCachedAds(); restoreUserSession(); if(localStorage.getItem('bs_theme')==='dark') document.body.classList.add('ig-dark'); document.documentElement.setAttribute('dir',CURRENT_LANG==='AR'?'rtl':'ltr'); document.getElementById('hd-search-ic').innerHTML=IG.search(); document.getElementById('sb-search-ic').innerHTML=IG.search(); initFirebaseSync(); fetchLiveExchangeRates(); renderRegionChips(); renderCategoryPills(); renderAds(); updateLanguageUI(); updateNavState(); openModal('modal-rules-agreement'); setInterval(()=>fetchLiveExchangeRates(),300000); };
