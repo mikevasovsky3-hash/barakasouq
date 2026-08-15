@@ -62,6 +62,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 #support-qr-box img,#support-qr-box canvas{display:block;margin:0 auto;border-radius:4px}
 .sort-dropdown { animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+/* Scroll Top Button Animation */
+#btn-scroll-top { transition: all 0.3s ease; opacity: 0; pointer-events: none; transform: translateY(20px); }
+#btn-scroll-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 </style>
 </head>
 <body class="min-h-full flex flex-col pb-16 lg:pb-0">
@@ -167,6 +170,12 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="pagination-container" class="flex items-center justify-center gap-2 flex-wrap pt-2 pb-4 text-sm"></div>
 </div>
 </main>
+
+<!-- NEW: Scroll Top Button -->
+<button id="btn-scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-20 right-4 z-40 w-10 h-10 rounded-full bg-field border b-ig t1 shadow-lg flex items-center justify-center hover:bg-ig-hover">
+    <i class="fa-solid fa-arrow-up"></i>
+</button>
+
 <!-- ============ MOBILE BOTTOM NAV (Instagram) ============ -->
 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
 <button id="bn-home" onclick="handleNavClick('home')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
@@ -274,16 +283,25 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button onclick="closeModal('modal-create-ad')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <form onsubmit="handleCreateAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
-<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<!-- Draft Restore Banner -->
+<div id="draft-restore-banner" class="hidden mb-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+    <span class="text-xs text-blue-400 font-semibold"><i class="fa-solid fa-rotate-left"></i> Найден черновик</span>
+    <div class="flex gap-2">
+        <button type="button" onclick="restoreDraft()" class="text-xs text-blue-400 font-bold underline">Восстановить</button>
+        <button type="button" onclick="clearDraft(true)" class="text-xs t2 hover:text-white">Удалить</button>
+    </div>
+</div>
+
+<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
 <div class="grid grid-cols-2 gap-3">
-<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs"></select>
-<select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs">
+<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs draft-field"></select>
+<select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs draft-field">
 <option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
 </select>
 </div>
 <div id="women-only-container" class="hidden items-center justify-between p-3 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
 <div><div class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div><div class="text-[10px] t2">Объявление будет видно исключительно женщинам</div></div>
-<input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#ec4899">
+<input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
 </div>
 <div id="ad-onbehalf-container" class="hidden">
 <label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> Подать от имени пользователя (режим администратора)</label>
@@ -293,7 +311,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <label class="block text-xs font-bold mb-1" style="color:#9333ea"><i class="fa-solid fa-tags"></i> Личная категория Вашего магазина</label>
 <select id="ad-store-category" class="ig-input w-full px-3 py-2.5 text-xs"></select>
 </div>
-<input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
 <div>
 <label class="block text-xs t2 mb-1">Местоположение на карте * <span class="t2">(кликните на карту)</span></label>
 <div id="create-map" class="h-36 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
@@ -301,15 +319,15 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
 <div><div class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div><div class="text-[10px] t2">Безвозмездно нуждающимся</div></div>
-<input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#10b981">
+<input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#10b981">
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
 <div><div class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div><div class="text-[10px] t2">Покупатели смогут предложить свою цену</div></div>
-<input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
+<input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#3b82f6">
 </div>
 <div id="price-container" class="grid grid-cols-2 gap-3">
-<input type="number" id="ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs">
-<select id="ad-currency" class="ig-input w-full px-3 py-2.5 text-xs"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
+<input type="number" id="ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
+<select id="ad-currency" class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
 </div>
 <div>
 <div class="flex items-center justify-between mb-1">
@@ -319,7 +337,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
-<textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
+<textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
 <button type="submit" class="ig-btn w-full py-3 text-sm">Опубликовать объявление</button>
 </form>
 </div>
@@ -563,6 +581,7 @@ let editingCatId = null, catNameDraft = '', catIconChoice = 'fa-mobile-screen';
 let comboBuilderAds = [], comboSelectedIds = [], comboOwnerCache = null;
 let lastRatesUpdate = null, sharePayload = null, modalStack = [];
 let reports = []; // NEW: Reports state
+let lastReportCount = 0; // For sound notification
 const SHAMCASH_ID = '3adfe36abcbe52f1a4b008cd324082fb';
 const PLACEHOLDER_IMG = 'https://placehold.co/800x1000/1e293b/fff?text=Avito+Sham';
 let EXCHANGE_RATES = { SYP: 131.70, TRY: 47.74 };
@@ -674,13 +693,79 @@ function deleteCategoryWithConfirm(catId) { const c = categories.find(x => x.id 
 function pushCategoriesToCloud() { if (firebaseDb) firebaseDb.ref('categories').set(categories); }
 /* ================= ADS: CREATE / EDIT ================= */
 function fillCategorySelect(sel, selected) { if (!sel) return; sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join(''); if (selected) sel.value = selected; }
-function openCreateAdModal() { if (!currentUser) { openAuthModal(); return; } pendingCreateImages = []; renderPhotoThumbnailsGrid('create'); fillCategorySelect(byId('ad-category')); const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); sc.classList.remove('hidden'); } else sc.classList.add('hidden'); const wb = byId('women-only-container'); if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { wb.classList.remove('hidden'); wb.classList.add('flex'); } else { wb.classList.add('hidden'); wb.classList.remove('flex'); } const neg = byId('ad-is-negotiable'); if (neg) { neg.checked = false; toggleNegotiableField(false); } const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); if (onbC && onbS) { if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } onbC.classList.remove('hidden'); } else onbC.classList.add('hidden'); } openModal('modal-create-ad'); setTimeout(initCreateMap, 200); }
+
+// --- DRAFT LOGIC ---
+function saveDraft() {
+    const data = {};
+    document.querySelectorAll('.draft-field').forEach(el => {
+        if(el.type === 'checkbox') data[el.id] = el.checked;
+        else data[el.id] = el.value;
+    });
+    localStorage.setItem('bs_ad_draft', JSON.stringify(data));
+}
+function loadDraftCheck() {
+    const draft = localStorage.getItem('bs_ad_draft');
+    if(draft) {
+        const data = JSON.parse(draft);
+        // Check if draft has actual content
+        const hasContent = Object.values(data).some(v => v && v !== '' && v !== false);
+        if(hasContent) {
+            byId('draft-restore-banner').classList.remove('hidden');
+            return;
+        }
+    }
+    byId('draft-restore-banner').classList.add('hidden');
+}
+function restoreDraft() {
+    const draft = localStorage.getItem('bs_ad_draft');
+    if(draft) {
+        const data = JSON.parse(draft);
+        Object.keys(data).forEach(key => {
+            const el = byId(key);
+            if(el) {
+                if(el.type === 'checkbox') el.checked = data[key];
+                else el.value = data[key];
+                // Trigger change events for logic dependent fields
+                if(el.onchange) el.onchange();
+            }
+        });
+        showToast('Черновик восстановлен', 'success');
+        clearDraft(false);
+    }
+}
+function clearDraft(removeStorage = true) {
+    if(removeStorage) localStorage.removeItem('bs_ad_draft');
+    byId('draft-restore-banner').classList.add('hidden');
+    // Optional: clear fields visually if requested, but usually we just hide banner
+}
+
+function openCreateAdModal() { 
+    if (!currentUser) { openAuthModal(); return; } 
+    pendingCreateImages = []; 
+    renderPhotoThumbnailsGrid('create'); 
+    fillCategorySelect(byId('ad-category')); 
+    
+    // Check for draft
+    loadDraftCheck();
+
+    const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); sc.classList.remove('hidden'); } else sc.classList.add('hidden'); const wb = byId('women-only-container'); if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { wb.classList.remove('hidden'); wb.classList.add('flex'); } else { wb.classList.add('hidden'); wb.classList.remove('flex'); } const neg = byId('ad-is-negotiable'); if (neg) { neg.checked = false; toggleNegotiableField(false); } const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); if (onbC && onbS) { if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } onbC.classList.remove('hidden'); } else onbC.classList.add('hidden'); } openModal('modal-create-ad'); setTimeout(initCreateMap, 200); 
+    
+    // Attach listeners for draft saving
+    document.querySelectorAll('.draft-field').forEach(el => {
+        el.addEventListener('input', saveDraft);
+        el.addEventListener('change', saveDraft);
+    });
+}
+
 function openCreateAdModalForUser(username) { onBehalfPreset = username; openCreateAdModal(); }
 function initCreateMap() { const el = byId('create-map'); if (!el || typeof L === 'undefined') return; if (!createMap) { createMap = L.map('create-map').setView([33.5138, 36.2765], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); createMarker = L.marker([33.5138, 36.2765], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else createMap.invalidateSize(); }
 function handleRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('ad-lat').value = c[0]; byId('ad-lng').value = c[1]; if (createMap && createMarker) { createMap.setView(c, 12); createMarker.setLatLng(c); } }
 function toggleFreePriceField(isFree) { const p = byId('ad-price'), c = byId('price-container'); if (isFree) { if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } if (c) c.style.opacity = '.4'; } else { if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } if (c) c.style.opacity = '1'; } }
 function toggleNegotiableField(isNeg) { const p = byId('ad-price'); if (!p) return; if (isNeg) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } }
-function handleCreateAdSubmit(e) { e.preventDefault(); if (!currentUser) return; const isFree = byId('ad-is-free')?.checked || false; const isNegotiable = byId('ad-is-negotiable')?.checked || false; const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price').value || 0); let postingUser = currentUser; const onbS = byId('ad-post-onbehalf'); if (onbS && onbS.value && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.username === onbS.value); if (t) postingUser = t; } const imgs = [...pendingCreateImages]; if (!imgs.length) imgs.push(PLACEHOLDER_IMG); const adId = 'AD-' + Math.floor(100 + Math.random() * 900); const newAd = { id: adId, title: byId('ad-title').value.trim(), category: byId('ad-category').value, storeCategory: byId('ad-store-category')?.value || '', region: byId('ad-region').value, city: byId('ad-city').value.trim(), isWomenOnly: byId('ad-is-women-only')?.checked || false, isFree, isNegotiable, price, currency: byId('ad-currency').value, desc: byId('ad-desc').value.trim(), images: imgs, image: imgs[0], lat: parseFloat(byId('ad-lat').value || 33.5138), lng: parseFloat(byId('ad-lng').value || 36.2765), sellerUsername: postingUser.username, sellerKunya: postingUser.kunya || postingUser.username, sellerWhatsapp: postingUser.whatsapp || '', status: 'ACTIVE', createdAt: Date.now(), queue: [], likes: [], views: 0 }; ads.unshift(newAd); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(newAd); closeModal('modal-create-ad'); renderCategoryPills(); renderAds(); showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление успешно опубликовано!', 'success'); }
+function handleCreateAdSubmit(e) { e.preventDefault(); if (!currentUser) return; const isFree = byId('ad-is-free')?.checked || false; const isNegotiable = byId('ad-is-negotiable')?.checked || false; const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price').value || 0); let postingUser = currentUser; const onbS = byId('ad-post-onbehalf'); if (onbS && onbS.value && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.username === onbS.value); if (t) postingUser = t; } const imgs = [...pendingCreateImages]; if (!imgs.length) imgs.push(PLACEHOLDER_IMG); const adId = 'AD-' + Math.floor(100 + Math.random() * 900); const newAd = { id: adId, title: byId('ad-title').value.trim(), category: byId('ad-category').value, storeCategory: byId('ad-store-category')?.value || '', region: byId('ad-region').value, city: byId('ad-city').value.trim(), isWomenOnly: byId('ad-is-women-only')?.checked || false, isFree, isNegotiable, price, currency: byId('ad-currency').value, desc: byId('ad-desc').value.trim(), images: imgs, image: imgs[0], lat: parseFloat(byId('ad-lat').value || 33.5138), lng: parseFloat(byId('ad-lng').value || 36.2765), sellerUsername: postingUser.username, sellerKunya: postingUser.kunya || postingUser.username, sellerWhatsapp: postingUser.whatsapp || '', status: 'ACTIVE', createdAt: Date.now(), queue: [], likes: [], views: 0 }; ads.unshift(newAd); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(newAd); closeModal('modal-create-ad'); renderCategoryPills(); renderAds(); showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление успешно опубликовано!', 'success'); 
+// Clear draft on success
+localStorage.removeItem('bs_ad_draft');
+}
 function openEditAdModal(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); if (!isOwner) { showToast('Нет прав для редактирования!', 'error'); return; } pendingEditImages = ad.images ? [...ad.images] : [ad.image]; renderPhotoThumbnailsGrid('edit'); fillCategorySelect(byId('edit-ad-category'), ad.category); byId('edit-ad-id').value = ad.id; byId('edit-ad-title').value = ad.title || ''; byId('edit-ad-region').value = ad.region || 'DAM'; byId('edit-ad-city').value = ad.city || ''; byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly; byId('edit-ad-is-free').checked = !!ad.isFree; byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable; byId('edit-ad-price').value = ad.price || 0; byId('edit-ad-currency').value = ad.currency || 'USD'; byId('edit-ad-desc').value = ad.desc || ''; closeModal('modal-ad-detail'); openModal('modal-edit-ad'); }
 function handleEditAdSubmit(e) { e.preventDefault(); const adId = byId('edit-ad-id').value; const ad = ads.find(a => a.id === adId); if (!ad) return; const imgs = [...pendingEditImages]; if (!imgs.length) imgs.push(PLACEHOLDER_IMG); ad.title = byId('edit-ad-title').value.trim(); ad.category = byId('edit-ad-category').value; ad.region = byId('edit-ad-region').value; ad.city = byId('edit-ad-city').value.trim(); ad.isWomenOnly = byId('edit-ad-is-women-only').checked; ad.isFree = byId('edit-ad-is-free').checked; ad.isNegotiable = byId('edit-ad-is-negotiable')?.checked || false; ad.price = ad.isFree || ad.isNegotiable ? 0 : parseFloat(byId('edit-ad-price').value || 0); ad.currency = byId('edit-ad-currency').value; ad.desc = byId('edit-ad-desc').value.trim(); ad.images = imgs; ad.image = imgs[0]; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-edit-ad'); renderCategoryPills(); renderAds(); showToast('Объявление обновлено!', 'success'); }
 function archiveAdWithConfirm(adId) { showConfirmModal('Перевод в архив', 'Перенести объявление в архив? Оно исчезнет из общей ленты.', () => { const ad = ads.find(a => a.id === adId); if (ad) { ad.status = 'ARCHIVED'; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление в архиве', 'info'); } }); }
@@ -864,16 +949,37 @@ firebaseDb.ref('archivedUsers').on('value', snap => { const d = snap.val(); arch
 firebaseDb.ref('categories').on('value', snap => { const d = snap.val(); if (d && Array.isArray(d) && d.length) { if (JSON.stringify(d) !== JSON.stringify(categories)) { categories = d; renderCategoryPills(); } } else if (d === null) firebaseDb.ref('categories').set(categories); });
 firebaseDb.ref('combos').on('value', snap => { const d = snap.val(); const up = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : []; if (JSON.stringify(combos) !== JSON.stringify(up)) { combos = up; renderAds(); renderCategoryPills(); } });
 firebaseDb.ref('rates').on('value', snap => { const d = snap.val(); if (d && d.SYP && d.TRY) { EXCHANGE_RATES.SYP = parseFloat(d.SYP); EXCHANGE_RATES.TRY = parseFloat(d.TRY); renderAds(); } });
-// NEW: Reports Listener
+// NEW: Reports Listener with Sound
 firebaseDb.ref('reports').on('value', snap => {
     const d = snap.val();
-    reports = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : [];
+    const newReports = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : [];
+    
+    // Sound Logic
+    if(lastReportCount > 0 && newReports.length > lastReportCount) {
+        playNotificationSound();
+    }
+    lastReportCount = newReports.length;
+    reports = newReports;
+
     // Re-render admin panel if currently viewing reports
     if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') {
         renderAdminTabContent();
     }
 });
 }
+
+// --- SOUND LOGIC ---
+function playNotificationSound() {
+    // Only play if admin panel is open or user is admin
+    if(currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) {
+        try {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Short ding
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log("Audio play failed (interaction needed first):", e));
+        } catch(e) {}
+    }
+}
+
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
 async function fetchLiveExchangeRates(manual = false) { try { const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); const data = await res.json(); const ov = data?.overview; const ovObj = Array.isArray(ov) ? (ov[0] || {}) : (ov || {}); const ratesArr = ovObj?.data?.rates || data?.data?.rates || (Array.isArray(data?.rates) ? data.rates : null); const globalFx = ovObj?.global_fx || data?.global_fx || null; const pickCity = r => { const c = r?.cities || {}; return c.damascus || c.Damascus || Object.values(c)[0] || {}; }; let rawUsd = null, rawTry = null, sypVal = null, tryVal = null; if (Array.isArray(ratesArr)) { const usd = ratesArr.find(r => r.code === 'USD'); const tryp = ratesArr.find(r => r.code === 'TRY'); if (usd) { const cv = pickCity(usd); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawUsd = raw; } if (tryp) { const cv = pickCity(tryp); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawTry = raw; } } if (rawUsd !== null) sypVal = rawUsd > 1000 ? rawUsd / 100 : rawUsd; if (Array.isArray(globalFx)) { const p = globalFx.find(g => String(g.pair || '').toUpperCase() === 'USD/TRY'); if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; } } if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2); if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) { EXCHANGE_RATES.SYP = +sypVal.toFixed(2); if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2); lastRatesUpdate = new Date(); if (firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES); renderAds(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent(); if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error'); } catch (err) { console.warn('Live rates error:', err); if (manual) showToast('Ошибка получения курса валют', 'error'); } }
 /* ================= SORTING LOGIC (NEW) ================= */
@@ -1024,7 +1130,32 @@ function openAuthModal() { openModal('modal-auth'); }
 function switchAuthTab(tab) { const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), b = byId('auth-submit-btn'); if (tab === 'login') { l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; f.classList.add('hidden'); b.innerText = 'Войти'; } else { r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; f.classList.remove('hidden'); b.innerText = 'Зарегистрироваться'; } }
 function handleAuthSubmit(e) { e.preventDefault(); const isReg = !byId('reg-fields').classList.contains('hidden'); const username = byId('auth-username').value.trim(); const password = byId('auth-password').value; const remember = byId('auth-remember-me').checked; if (isReg) { const kunya = byId('auth-kunya').value.trim() || username; const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE'; const whatsapp = byId('auth-whatsapp').value.trim(); const avatar = byId('auth-avatar-data')?.value || null; if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) { showToast('Логин уже занят!', 'error'); return; } const uid = 'u_' + Date.now(); const nu = { uid, username, passwordHash: password, kunya, gender, whatsapp, avatar, role: (username.toLowerCase() === 'admin' || username.toLowerCase() === 'salimnashho') ? 'SUPERUSER' : 'USER', verifiedShop: false }; users.push(nu); if (firebaseDb) firebaseDb.ref(`users/${uid}`).set(nu); saveUserSession(nu, remember); closeModal('modal-auth'); showToast('Регистрация успешна!', 'success'); } else { const f = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase()); if (f) { const ok = !f.passwordHash || f.passwordHash === password || f.role === 'SUPERUSER' || f.role === 'ADMIN'; if (ok) { f.passwordHash = password; if (firebaseDb && f.uid) firebaseDb.ref(`users/${f.uid}/passwordHash`).set(password); saveUserSession(f, remember); closeModal('modal-auth'); showToast(`С возвращением, ${f.kunya || f.username}!`, 'success'); return; } } showToast('Неверный логин или пароль!', 'error'); } }
 /* ================= PROFILE ================= */
-function openProfileModal() { if (!currentUser) return; const c = byId('profile-content'); if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0); c.innerHTML = `<div class="space-y-4">
+function openProfileModal() { 
+    if (!currentUser) return; 
+    const c = byId('profile-content'); 
+    if (!c) return; 
+    const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; 
+    const isLight = document.body.classList.contains('light-mode'); 
+    const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); 
+    const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); 
+    const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0); 
+    
+    // Grid View HTML Generation
+    const gridHtml = myAds.length > 0 
+        ? `<div class="grid grid-cols-3 gap-1 mt-4">
+            ${myAds.map(ad => `
+                <div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-field cursor-pointer group overflow-hidden">
+                    <img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover group-hover:opacity-80 transition-opacity">
+                    <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center gap-3 text-white text-xs font-bold">
+                        <span><i class="fa-solid fa-heart"></i> ${(ad.likes||[]).length}</span>
+                    </div>
+                    ${ad.status === 'SOLD' ? '<div class="absolute top-1 right-1 bg-green-500 text-white text-[8px] px-1 rounded">SOLD</div>' : ''}
+                </div>
+            `).join('')}
+           </div>`
+        : '<div class="text-center py-8 t2 text-sm">Нет объявлений</div>';
+
+    c.innerHTML = `<div class="space-y-4">
 <div class="flex items-center gap-4">
 <div class="story-ring rounded-full p-[3px] shrink-0"><div class="rounded-full bg-card p-[3px]"><div class="w-[72px] h-[72px] rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-2xl">${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}</div></div></div>
 <div class="flex-1 space-y-1">
@@ -1047,6 +1178,15 @@ ${lastRatesUpdate ? `<div class="text-[10px] t2 text-right">Обновлено: 
 </div>
 <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2" style="color:#9333ea;border-color:rgba(147,51,234,.4);background:rgba(147,51,234,.1)"><i class="fa-solid fa-store"></i> ${currentUser.shop ? 'Мой магазин' : 'Открыть магазин'}</button>
 ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> Панель Администратора</button>` : ''}
+
+<!-- Grid View Section -->
+<div class="border-t b-ig pt-2">
+    <div class="flex justify-center gap-6 py-2 border-b b-ig mb-2">
+        <i class="fa-solid fa-table-cells text-blue-500"></i>
+    </div>
+    ${gridHtml}
+</div>
+
 <div class="flex gap-2 pt-1 border-t b-ig">
 <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2.5 text-xs"><i class="fa-solid fa-pen-to-square"></i> Изменить анкету</button>
 <button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs">Выйти</button>
@@ -1231,6 +1371,16 @@ renderAds();
 updateNavState();
 openModal('modal-rules-agreement');
 setInterval(() => { fetchLiveExchangeRates(); }, 300000);
+
+// Scroll Top Button Logic
+const scrollBtn = byId('btn-scroll-top');
+window.addEventListener('scroll', () => {
+    if(window.scrollY > 300) {
+        scrollBtn.classList.add('visible');
+    } else {
+        scrollBtn.classList.remove('visible');
+    }
+});
 };
 </script>
 </body>
