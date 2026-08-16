@@ -194,12 +194,11 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
 <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
 <button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Системное меню «Поделиться»</button>
+<button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
+<button onclick="shareImageToApp('telegram')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram (с картинкой)</button>
+<button onclick="shareImageToApp('viber')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber (с картинкой)</button>
+<a id="share-wa-link" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
 <button onclick="downloadShareCard()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> Скачать красивую карточку</button>
-<a id="share-wa" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp</a>
-<a id="share-tg" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram</a>
-<a id="share-vb" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber</a>
-<a id="share-fb" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-facebook w-6 text-center text-[#1877F2] text-lg"></i> Facebook</a>
-<a id="share-tw" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-x-twitter w-6 text-center t1 text-lg"></i> X (Twitter)</a>
 <button onclick="copyShareLink()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> Скопировать ссылку</button>
 <button onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
 </div>
@@ -780,6 +779,29 @@ async function shareAd(adId) {
   }
   if (navigator.share) { navigator.share(sharePayload).catch(err => { if (err && err.name !== 'AbortError') openShareSheet(); }); } else openShareSheet();
 }
+async function shareImageToApp(app) {
+  if (!lastShareBlob) { showToast('Сначала нажмите "Поделиться", чтобы создать картинку', 'warning'); return; }
+  const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: sharePayload.title, text: sharePayload.text + ' ' + sharePayload.url });
+      closeModal('modal-share');
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      console.warn('Share failed', err);
+    }
+  }
+  // Fallback to link if file sharing not supported
+  showToast('Браузер не поддерживает отправку файлов, открываю ссылку...', 'warning');
+  const enc = encodeURIComponent;
+  const u = sharePayload.url, tx = sharePayload.text;
+  let link = '';
+  if (app === 'whatsapp') link = `https://wa.me/?text=${enc(tx + ' ' + u)}`;
+  else if (app === 'telegram') link = `https://t.me/share/url?url=${enc(u)}&text=${enc(tx)}`;
+  else if (app === 'viber') link = `viber://forward?text=${enc(tx + ' ' + u)}`;
+  if (link) window.open(link, '_blank');
+}
 function downloadShareCard() {
   if (!lastShareBlob) { showToast('Карточка еще не готова — нажмите Поделиться сначала', 'warning'); return; }
   const a = document.createElement('a');
@@ -789,7 +811,7 @@ function downloadShareCard() {
   closeModal('modal-share');
   showToast('Карточка сохранена в загрузки', 'success');
 }
-function openShareSheet() { if (!sharePayload) return; const enc = encodeURIComponent, u = sharePayload.url, tx = sharePayload.text; byId('share-wa').href = `https://wa.me/?text=${enc(tx + ' ' + u)}`; byId('share-tg').href = `https://t.me/share/url?url=${enc(u)}&text=${enc(tx)}`; byId('share-vb').href = `viber://forward?text=${enc(tx + ' ' + u)}`; byId('share-fb').href = `https://www.facebook.com/sharer/sharer.php?u=${enc(u)}`; byId('share-tw').href = `https://twitter.com/intent/tweet?text=${enc(tx)}&url=${enc(u)}`; const sys = byId('share-system'); if (navigator.share) { sys.classList.remove('hidden'); sys.classList.add('flex'); } else { sys.classList.add('hidden'); sys.classList.remove('flex'); } openModal('modal-share'); }
+function openShareSheet() { if (!sharePayload) return; const enc = encodeURIComponent, u = sharePayload.url, tx = sharePayload.text; byId('share-wa-link').href = `https://wa.me/?text=${enc(tx + ' ' + u)}`; const sys = byId('share-system'); if (navigator.share) { sys.classList.remove('hidden'); sys.classList.add('flex'); } else { sys.classList.add('hidden'); sys.classList.remove('flex'); } openModal('modal-share'); }
 function systemShare() { if (navigator.share && sharePayload) navigator.share(sharePayload).catch(() => {}); closeModal('modal-share'); }
 function copyShareLink() { if (!sharePayload) return; fallbackCopy(sharePayload.url, () => showToast('Ссылка скопирована!', 'success')); closeModal('modal-share'); }
 /* ================= CATEGORIES (admin CRUD) ================= */
@@ -1223,26 +1245,6 @@ modalStack = modalStack.filter(x => x !== 'modal-rules-agreement');
 if (modalStack.length === 0) document.body.classList.remove('overflow-hidden');
 showToast('Условия приняты. Добро пожаловать!', 'success');
 }
-/* ================= REPORT LOGIC ================= */
-function openReportModal(adId) {
-    if (!currentUser) { openAuthModal(); return; }
-    byId('report-ad-id').value = adId;
-    byId('report-reason').value = '';
-    byId('report-comment').value = '';
-    openModal('modal-report-ad');
-}
-function submitReport(e) {
-    e.preventDefault();
-    const adId = byId('report-ad-id').value;
-    const reason = byId('report-reason').value;
-    const comment = byId('report-comment').value;
-    if (!reason) { showToast('Выберите причину', 'warning'); return; }
-    const report = { adId: adId, reason: reason, comment: comment, reporterUsername: currentUser.username, reporterUid: currentUser.uid, timestamp: Date.now() };
-    if (firebaseDb) { const newKey = firebaseDb.ref('reports').push().key; firebaseDb.ref('reports/' + newKey).set(report); }
-    closeModal('modal-report-ad');
-    showToast('Жалоба отправлена. Спасибо!', 'success');
-}
-function deleteReport(reportId) { if (firebaseDb) { firebaseDb.ref('reports/' + reportId).remove(); showToast('Жалоба удалена', 'info'); } }
 /* ================= INIT ================= */
 window.onload = function () {
 loadCachedAds();
