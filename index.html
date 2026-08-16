@@ -111,45 +111,45 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
 </div>
 <div class="ig-card rounded-xl flex flex-col gap-2 px-3 py-2">
-    <div class="flex items-center justify-between">
-        <button onclick="toggleRegionMenu()" class="flex items-center gap-2 text-sm font-semibold t1 hover:opacity-70 transition-opacity">
-            <i class="fa-solid fa-location-dot text-xs t2"></i>
-            <span id="current-region-label">Все регионы</span>
-            <i class="fa-solid fa-chevron-down text-[10px] t2"></i>
-        </button>
-        <button onclick="toggleSortMenu()" class="text-xs font-bold t1 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-field transition-colors">
-            <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
-        </button>
-    </div>
-    <select id="region-filter" onchange="resetPageAndRender(); updateRegionLabel()" class="hidden">
-        <option value="ALL">Все регионы (Сирия)</option>
-        <option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option>
-        <option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option>
-        <option value="HOMS">Хомс</option><option value="HAMA">Хама</option>
-        <option value="LAT">Латакия</option><option value="TAR">Тартус</option>
-        <option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option>
-        <option value="HAS">Хасеке</option><option value="DAR">Дараа</option>
-        <option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
-    </select>
+<div class="flex items-center justify-between">
+<button onclick="toggleRegionMenu()" class="flex items-center gap-2 text-sm font-semibold t1 hover:opacity-70 transition-opacity">
+<i class="fa-solid fa-location-dot text-xs t2"></i>
+<span id="current-region-label">Все регионы</span>
+<i class="fa-solid fa-chevron-down text-[10px] t2"></i>
+</button>
+<button onclick="toggleSortMenu()" class="text-xs font-bold t1 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-field transition-colors">
+<i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
+</button>
+</div>
+<select id="region-filter" onchange="resetPageAndRender(); updateRegionLabel()" class="hidden">
+<option value="ALL">Все регионы (Сирия)</option>
+<option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option>
+<option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option>
+<option value="HOMS">Хомс</option><option value="HAMA">Хама</option>
+<option value="LAT">Латакия</option><option value="TAR">Тартус</option>
+<option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option>
+<option value="HAS">Хасеке</option><option value="DAR">Дараа</option>
+<option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+</select>
 </div>
 <div id="region-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRegionMenu()">
-    <div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown max-h-[80vh] overflow-y-auto modal-scroll-body" onclick="event.stopPropagation()">
-        <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
-        <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig mb-2">Выберите регион</div>
-        <div id="region-list-container" class="space-y-1"></div>
-        <button onclick="closeRegionMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-2">Закрыть</button>
-    </div>
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown max-h-[80vh] overflow-y-auto modal-scroll-body" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig mb-2">Выберите регион</div>
+<div id="region-list-container" class="space-y-1"></div>
+<button onclick="closeRegionMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-2">Закрыть</button>
+</div>
 </div>
 <div id="sort-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeSortMenu()">
-    <div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown" onclick="event.stopPropagation()">
-        <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
-        <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Сортировать по:</div>
-        <button onclick="applySort('newest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🕒 Сначала новые</span> <i id="sort-check-newest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-        <button onclick="applySort('cheapest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💰 Сначала дешевые</span> <i id="sort-check-cheapest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-        <button onclick="applySort('expensive')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💎 Сначала дорогие</span> <i id="sort-check-expensive" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-        <button onclick="applySort('popular')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🔥 Популярные</span> <i id="sort-check-popular" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-        <button onclick="closeSortMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Закрыть</button>
-    </div>
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Сортировать по:</div>
+<button onclick="applySort('newest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🕒 Сначала новые</span> <i id="sort-check-newest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('cheapest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💰 Сначала дешевые</span> <i id="sort-check-cheapest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('expensive')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💎 Сначала дорогие</span> <i id="sort-check-expensive" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('popular')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🔥 Популярные</span> <i id="sort-check-popular" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="closeSortMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Закрыть</button>
+</div>
 </div>
 <div id="cloud-sync-status" class="hidden items-center justify-center gap-2 text-xs t2 py-1.5">
 <i class="fa-solid fa-arrows-rotate animate-spin"></i><span>Синхронизация с облаком…</span>
@@ -159,7 +159,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </main>
 <button id="btn-scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-20 right-4 z-40 w-10 h-10 rounded-full bg-field border b-ig t1 shadow-lg flex items-center justify-center hover:bg-ig-hover">
-    <i class="fa-solid fa-arrow-up"></i>
+<i class="fa-solid fa-arrow-up"></i>
 </button>
 <!-- ============ MOBILE BOTTOM NAV (Instagram) ============ -->
 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
@@ -269,22 +269,22 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 <form onsubmit="handleCreateAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <div id="draft-restore-banner" class="hidden mb-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
-    <span class="text-xs text-blue-400 font-semibold"><i class="fa-solid fa-rotate-left"></i> Найден черновик</span>
-    <div class="flex gap-2">
-        <button type="button" onclick="restoreDraft()" class="text-xs text-blue-400 font-bold underline">Восстановить</button>
-        <button type="button" onclick="clearDraft(true)" class="text-xs t2 hover:text-white">Удалить</button>
-    </div>
+<span class="text-xs text-blue-400 font-semibold"><i class="fa-solid fa-rotate-left"></i> Найден черновик</span>
+<div class="flex gap-2">
+<button type="button" onclick="restoreDraft()" class="text-xs text-blue-400 font-bold underline">Восстановить</button>
+<button type="button" onclick="clearDraft(true)" class="text-xs t2 hover:text-white">Удалить</button>
 </div>
-<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+</div>
+<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
 <div class="grid grid-cols-2 gap-3">
-<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs"></select>
-<select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs">
+<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs draft-field"></select>
+<select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs draft-field">
 <option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
 </select>
 </div>
 <div id="women-only-container" class="hidden items-center justify-between p-3 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
 <div><div class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div><div class="text-[10px] t2">Объявление будет видно исключительно женщинам</div></div>
-<input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#ec4899">
+<input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
 </div>
 <div id="ad-onbehalf-container" class="hidden">
 <label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> Подать от имени пользователя (режим администратора)</label>
@@ -294,7 +294,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <label class="block text-xs font-bold mb-1" style="color:#9333ea"><i class="fa-solid fa-tags"></i> Личная категория Вашего магазина</label>
 <select id="ad-store-category" class="ig-input w-full px-3 py-2.5 text-xs"></select>
 </div>
-<input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
 <div>
 <label class="block text-xs t2 mb-1">Местоположение на карте * <span class="t2">(кликните на карту)</span></label>
 <div id="create-map" class="h-36 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
@@ -302,15 +302,15 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
 <div><div class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div><div class="text-[10px] t2">Безвозмездно нуждающимся</div></div>
-<input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#10b981">
+<input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#10b981">
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
 <div><div class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div><div class="text-[10px] t2">Покупатели смогут предложить свою цену</div></div>
-<input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
+<input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#3b82f6">
 </div>
 <div id="price-container" class="grid grid-cols-2 gap-3">
-<input type="number" id="ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs">
-<select id="ad-currency" class="ig-input w-full px-3 py-2.5 text-xs"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
+<input type="number" id="ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
+<select id="ad-currency" class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
 </div>
 <div>
 <div class="flex items-center justify-between mb-1">
@@ -320,7 +320,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
-<textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
+<textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
 <button type="submit" class="ig-btn w-full py-3 text-sm">Опубликовать объявление</button>
 </form>
 </div>
@@ -581,9 +581,11 @@ let categories = [
 { id:'other', name:'Прочее', icon:'fa-boxes-stacked' }
 ];
 const CATEGORY_ICON_POOL = ['fa-mobile-screen','fa-laptop','fa-car','fa-house','fa-couch','fa-wrench','fa-boxes-stacked','fa-shirt','fa-baby','fa-utensils','fa-book','fa-futbol','fa-gamepad','fa-tractor','fa-truck','fa-gem','fa-paw','fa-seedling','fa-motorcycle','fa-camera','fa-tv','fa-blender','fa-chair','fa-hammer','fa-paint-roller','fa-plug','fa-scissors','fa-briefcase','fa-bicycle','fa-ring'];
+// SECURITY FIX: Passwords removed from local code.
+// Admins must exist in Firebase with passwordHash field to login.
 let users = [
-{ uid:'u_admin', username:'admin', passwordHash:'admin123', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true },
-{ uid:'u_salim', username:'salimnashho', passwordHash:'admin123', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true }
+{ uid:'u_admin', username:'admin', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true },
+{ uid:'u_salim', username:'salimnashho', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true }
 ];
 let archivedUsers = [];
 let combos = [];
@@ -669,169 +671,169 @@ function drawContain(ctx, img, x, y, w, h) { const ir = img.width / img.height, 
 function wrapTextCanvas(ctx, text, maxWidth, maxLines) { const words = String(text || '').split(/\s+/).filter(Boolean); const lines = []; let line = ''; for (let i = 0; i < words.length; i++) { const test = line ? line + ' ' + words[i] : words[i]; if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = words[i]; if (lines.length === maxLines) { if (i < words.length - 1) lines[lines.length - 1] += '…'; break; } } else { line = test; } } if (line && lines.length < maxLines) lines.push(line); return lines; }
 function makeQRImage(text, size) { return new Promise(resolve => { if (typeof QRCode === 'undefined') return resolve(null); const holder = document.createElement('div'); holder.style.cssText = 'position:fixed;left:-99999px;top:0;'; document.body.appendChild(holder); try { new QRCode(holder, { text, width: size, height: size, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { holder.remove(); return resolve(null); } const grab = tries => { const c = holder.querySelector('canvas'); const im = holder.querySelector('img'); let url = null; if (c && c.width) { try { url = c.toDataURL('image/png'); } catch (e) {} } else if (im && im.src && im.src.indexOf('data:') === 0) url = im.src; if (url) { holder.remove(); const q = new Image(); q.onload = () => resolve(q); q.onerror = () => resolve(null); q.src = url; } else if (tries > 0) setTimeout(() => grab(tries - 1), 60); else { holder.remove(); resolve(null); } }; setTimeout(() => grab(10), 40); }); }
 async function generateShareImage(ad) {
-  try {
-    const W = 1080, H = 1350;
-    const canvas = byId('share-canvas'); if (!canvas) return null;
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    const kunya = getSellerKunya(ad);
-    const verified = getSellerVerified(ad);
-    const avatar = getSellerAvatar(ad);
-    const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия';
-    const likesCount = (ad.likes || []).length;
-    const viewsCount = ad.views || 0;
-    const priceText = ad.isCombo ? ('🔥 $' + Number(ad.price).toFixed(2)) : convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable).replace(/<[^>]*>/g, '');
-    const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
-    const url = base + '#ad-' + ad.id;
-    const srcs = (ad.images && ad.images.length ? ad.images : [ad.image || PLACEHOLDER_IMG]).slice(0, 6);
-    const photos = (await Promise.all(srcs.map(loadImgSafe))).filter(Boolean);
-    const avatarImg = avatar ? await loadImgSafe(avatar) : null;
-    const qrImg = await makeQRImage(url, 300);
-    // 1) Instagram gradient frame
-    ctx.fillStyle = igGradient(ctx, 0, 0, W, H); ctx.fillRect(0, 0, W, H);
-    const FR = 16;
-    ctx.fillStyle = '#000'; roundRectPath(ctx, FR, FR, W - FR * 2, H - FR * 2, 42); ctx.fill();
-    // 2) Header
-    const padX = FR + 44;
-    const hy = FR + 44; const avR = 44;
-    ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR + 6, 0, Math.PI * 2); ctx.fillStyle = igGradient(ctx, padX, hy, padX + avR * 2, hy + avR * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR, 0, Math.PI * 2); ctx.fillStyle = '#121212'; ctx.fill();
-    if (avatarImg) { ctx.save(); ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR - 3, 0, Math.PI * 2); ctx.clip(); drawContain(ctx, avatarImg, padX + 3, hy + 3, avR * 2 - 6, avR * 2 - 6); ctx.restore(); }
-    else { ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((kunya || 'A').charAt(0).toUpperCase(), padX + avR, hy + avR + 3); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
-    ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 38px Arial';
-    const nameStr = kunya || 'Avito Sham';
-    ctx.fillText(nameStr, padX + avR * 2 + 26, hy + avR - 4);
-    if (verified) { const nw = ctx.measureText(nameStr).width; const bx = padX + avR * 2 + 26 + nw + 22, byy = hy + avR - 16; ctx.beginPath(); ctx.arc(bx, byy, 16, 0, Math.PI * 2); ctx.fillStyle = '#0095f6'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(bx - 7, byy); ctx.lineTo(bx - 2, byy + 6); ctx.lineTo(bx + 8, byy - 6); ctx.stroke(); }
-    ctx.fillStyle = '#a8a8a8'; ctx.font = '28px Arial';
-    ctx.fillText(`${regionName}${ad.city ? ' • ' + ad.city : ''}`, padX + avR * 2 + 26, hy + avR + 34);
-    if (srcs.length > 1) { ctx.font = 'bold 26px Arial'; const pw2 = ctx.measureText(' ' + srcs.length).width + 56; const px2 = W - FR - 44 - pw2, py2 = hy + 22; ctx.fillStyle = 'rgba(255,255,255,0.1)'; roundRectPath(ctx, px2, py2, pw2, 52, 26); ctx.fill(); ctx.fillStyle = '#f5f5f5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 ' + srcs.length, px2 + pw2 / 2, py2 + 27); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
-    // 3) Photo area (FULL photo visible + collage)
-    const px = padX, pw = W - padX * 2;
-    const py = hy + avR * 2 + 36;
-    const photoBottom = H - FR - 352;
-    const ph = photoBottom - py;
-    const tileBg = '#121212';
-    const strokeTile = (x, y, w, h, r) => { ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 2; roundRectPath(ctx, x, y, w, h, r); ctx.stroke(); };
-    if (photos.length > 1) {
-      const gap = 14, thumbH = 170;
-      const mainH = ph - thumbH - gap;
-      ctx.save(); roundRectPath(ctx, px, py, pw, mainH, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, mainH); if (photos[0]) drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, mainH - 16); ctx.restore(); strokeTile(px, py, pw, mainH, 26);
-      const remaining = photos.slice(1);
-      const slots = 4;
-      const thumbW = (pw - gap * (slots - 1)) / slots;
-      const ty = py + mainH + gap;
-      for (let i = 0; i < slots; i++) {
-        if (i >= remaining.length) break;
-        const tx = px + i * (thumbW + gap);
-        ctx.save(); roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(tx, ty, thumbW, thumbH); drawContain(ctx, remaining[i], tx + 6, ty + 6, thumbW - 12, thumbH - 12); ctx.restore(); strokeTile(tx, ty, thumbW, thumbH, 18);
-        if (i === slots - 1 && remaining.length > slots) { const extra = remaining.length - slots + 1; ctx.fillStyle = 'rgba(0,0,0,0.6)'; roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 44px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+' + extra, tx + thumbW / 2, ty + thumbH / 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
-      }
-    } else if (photos.length === 1) {
-      ctx.save(); roundRectPath(ctx, px, py, pw, ph, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, ph); drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, ph - 16); ctx.restore(); strokeTile(px, py, pw, ph, 26);
-    } else {
-      ctx.fillStyle = tileBg; roundRectPath(ctx, px, py, pw, ph, 26); ctx.fill();
-    }
-    // 4) Footer: price pill + QR + title + branding
-    const fy = photoBottom + 36;
-    ctx.font = 'bold 46px Arial';
-    const ptw = Math.min(ctx.measureText(priceText).width + 80, pw);
-    const phh = 78;
-    ctx.fillStyle = igGradient(ctx, px, fy, px + ptw, fy + phh);
-    roundRectPath(ctx, px, fy, ptw, phh, phh / 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(priceText, px + ptw / 2, fy + phh / 2 + 2);
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    const qrBox = 216;
-    const qx = W - FR - 44 - qrBox, qy = fy - 8;
-    ctx.fillStyle = '#fff'; roundRectPath(ctx, qx, qy, qrBox, qrBox, 24); ctx.fill();
-    if (qrImg) ctx.drawImage(qrImg, qx + 14, qy + 14, qrBox - 28, qrBox - 28);
-    const titleMaxW = qx - px - 30;
-    ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 42px Arial';
-    wrapTextCanvas(ctx, ad.title, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 64 + i * 54));
-    const by2 = H - FR - 40;
-    ctx.font = '54px "Grand Hotel", cursive';
-    const brand = 'Avito Sham';
-    const bw = ctx.measureText(brand).width;
-    ctx.fillStyle = igGradient(ctx, px, by2 - 40, px + bw, by2 + 10);
-    ctx.fillText(brand, px, by2);
-    ctx.fillStyle = '#a8a8a8'; ctx.font = '26px Arial'; ctx.textAlign = 'right';
-    ctx.fillText(`❤ ${likesCount} • 👁 ${viewsCount} • ${ad.id}`, W - FR - 44, by2 - 4);
-    ctx.textAlign = 'left';
-    return await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.92));
-  } catch (e) { console.warn('Share card error:', e); return null; }
+try {
+const W = 1080, H = 1350;
+const canvas = byId('share-canvas'); if (!canvas) return null;
+canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+const kunya = getSellerKunya(ad);
+const verified = getSellerVerified(ad);
+const avatar = getSellerAvatar(ad);
+const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия';
+const likesCount = (ad.likes || []).length;
+const viewsCount = ad.views || 0;
+const priceText = ad.isCombo ? ('🔥 $' + Number(ad.price).toFixed(2)) : convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable).replace(/<[^>]*>/g, '');
+const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
+const url = base + '#ad-' + ad.id;
+const srcs = (ad.images && ad.images.length ? ad.images : [ad.image || PLACEHOLDER_IMG]).slice(0, 6);
+const photos = (await Promise.all(srcs.map(loadImgSafe))).filter(Boolean);
+const avatarImg = avatar ? await loadImgSafe(avatar) : null;
+const qrImg = await makeQRImage(url, 300);
+// 1) Instagram gradient frame
+ctx.fillStyle = igGradient(ctx, 0, 0, W, H); ctx.fillRect(0, 0, W, H);
+const FR = 16;
+ctx.fillStyle = '#000'; roundRectPath(ctx, FR, FR, W - FR * 2, H - FR * 2, 42); ctx.fill();
+// 2) Header
+const padX = FR + 44;
+const hy = FR + 44; const avR = 44;
+ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR + 6, 0, Math.PI * 2); ctx.fillStyle = igGradient(ctx, padX, hy, padX + avR * 2, hy + avR * 2); ctx.fill();
+ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR, 0, Math.PI * 2); ctx.fillStyle = '#121212'; ctx.fill();
+if (avatarImg) { ctx.save(); ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR - 3, 0, Math.PI * 2); ctx.clip(); drawContain(ctx, avatarImg, padX + 3, hy + 3, avR * 2 - 6, avR * 2 - 6); ctx.restore(); }
+else { ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((kunya || 'A').charAt(0).toUpperCase(), padX + avR, hy + avR + 3); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 38px Arial';
+const nameStr = kunya || 'Avito Sham';
+ctx.fillText(nameStr, padX + avR * 2 + 26, hy + avR - 4);
+if (verified) { const nw = ctx.measureText(nameStr).width; const bx = padX + avR * 2 + 26 + nw + 22, byy = hy + avR - 16; ctx.beginPath(); ctx.arc(bx, byy, 16, 0, Math.PI * 2); ctx.fillStyle = '#0095f6'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(bx - 7, byy); ctx.lineTo(bx - 2, byy + 6); ctx.lineTo(bx + 8, byy - 6); ctx.stroke(); }
+ctx.fillStyle = '#a8a8a8'; ctx.font = '28px Arial';
+ctx.fillText(`${regionName}${ad.city ? ' • ' + ad.city : ''}`, padX + avR * 2 + 26, hy + avR + 34);
+if (srcs.length > 1) { ctx.font = 'bold 26px Arial'; const pw2 = ctx.measureText(' ' + srcs.length).width + 56; const px2 = W - FR - 44 - pw2, py2 = hy + 22; ctx.fillStyle = 'rgba(255,255,255,0.1)'; roundRectPath(ctx, px2, py2, pw2, 52, 26); ctx.fill(); ctx.fillStyle = '#f5f5f5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 ' + srcs.length, px2 + pw2 / 2, py2 + 27); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+// 3) Photo area (FULL photo visible + collage)
+const px = padX, pw = W - padX * 2;
+const py = hy + avR * 2 + 36;
+const photoBottom = H - FR - 352;
+const ph = photoBottom - py;
+const tileBg = '#121212';
+const strokeTile = (x, y, w, h, r) => { ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 2; roundRectPath(ctx, x, y, w, h, r); ctx.stroke(); };
+if (photos.length > 1) {
+const gap = 14, thumbH = 170;
+const mainH = ph - thumbH - gap;
+ctx.save(); roundRectPath(ctx, px, py, pw, mainH, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, mainH); if (photos[0]) drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, mainH - 16); ctx.restore(); strokeTile(px, py, pw, mainH, 26);
+const remaining = photos.slice(1);
+const slots = 4;
+const thumbW = (pw - gap * (slots - 1)) / slots;
+const ty = py + mainH + gap;
+for (let i = 0; i < slots; i++) {
+if (i >= remaining.length) break;
+const tx = px + i * (thumbW + gap);
+ctx.save(); roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(tx, ty, thumbW, thumbH); drawContain(ctx, remaining[i], tx + 6, ty + 6, thumbW - 12, thumbH - 12); ctx.restore(); strokeTile(tx, ty, thumbW, thumbH, 18);
+if (i === slots - 1 && remaining.length > slots) { const extra = remaining.length - slots + 1; ctx.fillStyle = 'rgba(0,0,0,0.6)'; roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 44px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+' + extra, tx + thumbW / 2, ty + thumbH / 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+}
+} else if (photos.length === 1) {
+ctx.save(); roundRectPath(ctx, px, py, pw, ph, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, ph); drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, ph - 16); ctx.restore(); strokeTile(px, py, pw, ph, 26);
+} else {
+ctx.fillStyle = tileBg; roundRectPath(ctx, px, py, pw, ph, 26); ctx.fill();
+}
+// 4) Footer: price pill + QR + title + branding
+const fy = photoBottom + 36;
+ctx.font = 'bold 46px Arial';
+const ptw = Math.min(ctx.measureText(priceText).width + 80, pw);
+const phh = 78;
+ctx.fillStyle = igGradient(ctx, px, fy, px + ptw, fy + phh);
+roundRectPath(ctx, px, fy, ptw, phh, phh / 2); ctx.fill();
+ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ctx.fillText(priceText, px + ptw / 2, fy + phh / 2 + 2);
+ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+const qrBox = 216;
+const qx = W - FR - 44 - qrBox, qy = fy - 8;
+ctx.fillStyle = '#fff'; roundRectPath(ctx, qx, qy, qrBox, qrBox, 24); ctx.fill();
+if (qrImg) ctx.drawImage(qrImg, qx + 14, qy + 14, qrBox - 28, qrBox - 28);
+const titleMaxW = qx - px - 30;
+ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 42px Arial';
+wrapTextCanvas(ctx, ad.title, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 64 + i * 54));
+const by2 = H - FR - 40;
+ctx.font = '54px "Grand Hotel", cursive';
+const brand = 'Avito Sham';
+const bw = ctx.measureText(brand).width;
+ctx.fillStyle = igGradient(ctx, px, by2 - 40, px + bw, by2 + 10);
+ctx.fillText(brand, px, by2);
+ctx.fillStyle = '#a8a8a8'; ctx.font = '26px Arial'; ctx.textAlign = 'right';
+ctx.fillText(`❤ ${likesCount} • 👁 ${viewsCount} • ${ad.id}`, W - FR - 44, by2 - 4);
+ctx.textAlign = 'left';
+return await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.92));
+} catch (e) { console.warn('Share card error:', e); return null; }
 }
 /* ================= REAL SHARE ================= */
 async function shareAd(adId) {
-  const ad = ads.find(a => a.id === adId) || combos.find(x => x.id === adId); if (!ad) return;
-  const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
-  const url = base + '#ad-' + ad.id;
-  sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
-  showToast('Генерация красивой карточки…', 'info');
-  const blob = await generateShareImage(ad);
-  lastShareBlob = blob;
-  if (blob) {
-    const file = new File([blob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: ad.title, text: sharePayload.text }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
-    }
-  }
-  if (navigator.share) { navigator.share(sharePayload).catch(err => { if (err && err.name !== 'AbortError') openShareSheet(); }); } else openShareSheet();
+const ad = ads.find(a => a.id === adId) || combos.find(x => x.id === adId); if (!ad) return;
+const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
+const url = base + '#ad-' + ad.id;
+sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
+showToast('Генерация красивой карточки…', 'info');
+const blob = await generateShareImage(ad);
+lastShareBlob = blob;
+if (blob) {
+const file = new File([blob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
+if (navigator.canShare && navigator.canShare({ files: [file] })) {
+try { await navigator.share({ files: [file], title: ad.title, text: sharePayload.text }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+}
+}
+if (navigator.share) { navigator.share(sharePayload).catch(err => { if (err && err.name !== 'AbortError') openShareSheet(); }); } else openShareSheet();
 }
 async function shareImageToApp(app) {
-  if (!lastShareBlob) { showToast('Сначала нажмите "Поделиться", чтобы создать картинку', 'warning'); return; }
-  const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: sharePayload.title, text: sharePayload.text + ' ' + sharePayload.url });
-      closeModal('modal-share');
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      console.warn('Share failed', err);
-    }
-  }
-  // Fallback to link if file sharing not supported
-  showToast('Браузер не поддерживает отправку файлов, открываю ссылку...', 'warning');
-  const enc = encodeURIComponent;
-  const u = sharePayload.url, tx = sharePayload.text;
-  let link = '';
-  if (app === 'whatsapp') link = `https://wa.me/?text=${enc(tx + ' ' + u)}`;
-  else if (app === 'telegram') link = `https://t.me/share/url?url=${enc(u)}&text=${enc(tx)}`;
-  else if (app === 'viber') link = `viber://forward?text=${enc(tx + ' ' + u)}`;
-  if (link) window.open(link, '_blank');
+if (!lastShareBlob) { showToast('Сначала нажмите "Поделиться", чтобы создать картинку', 'warning'); return; }
+const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
+if (navigator.canShare && navigator.canShare({ files: [file] })) {
+try {
+await navigator.share({ files: [file], title: sharePayload.title, text: sharePayload.text + ' ' + sharePayload.url });
+closeModal('modal-share');
+return;
+} catch (err) {
+if (err.name === 'AbortError') return;
+console.warn('Share failed', err);
+}
+}
+// Fallback to link if file sharing not supported
+showToast('Браузер не поддерживает отправку файлов, открываю ссылку...', 'warning');
+const enc = encodeURIComponent;
+const u = sharePayload.url, tx = sharePayload.text;
+let link = '';
+if (app === 'whatsapp') link = `https://wa.me/?text=${enc(tx + ' ' + u)}`;
+else if (app === 'telegram') link = `https://t.me/share/url?url=${enc(u)}&text=${enc(tx)}`;
+else if (app === 'viber') link = `viber://forward?text=${enc(tx + ' ' + u)}`;
+if (link) window.open(link, '_blank');
 }
 async function downloadShareCard() {
-  if (!lastShareBlob) { showToast('Карточка еще не готова — нажмите Поделиться сначала', 'warning'); return; }
-  // Try native share first (works on mobile)
-  const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: 'Avito Sham Card' });
-      closeModal('modal-share');
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-    }
-  }
-  // Fallback: Open in new window as DataURL (user can long-press to save)
-  try {
-    const reader = new FileReader();
-    reader.onloadend = function() {
-      const w = window.open();
-      if (w) {
-        w.document.write(`<html><head><title>Avito Sham Card</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${reader.result}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
-        showToast('Картинка открыта в новом окне. Нажмите и удерживайте для сохранения.', 'info');
-      } else {
-        showToast('Разрешите всплывающие окна для сохранения', 'warning');
-      }
-    };
-    reader.readAsDataURL(lastShareBlob);
-    closeModal('modal-share');
-  } catch (e) {
-    showToast('Ошибка сохранения', 'error');
-  }
+if (!lastShareBlob) { showToast('Карточка еще не готова — нажмите Поделиться сначала', 'warning'); return; }
+// Try native share first (works on mobile)
+const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
+if (navigator.canShare && navigator.canShare({ files: [file] })) {
+try {
+await navigator.share({ files: [file], title: 'Avito Sham Card' });
+closeModal('modal-share');
+return;
+} catch (err) {
+if (err.name === 'AbortError') return;
+}
+}
+// Fallback: Open in new window as DataURL (user can long-press to save)
+try {
+const reader = new FileReader();
+reader.onloadend = function() {
+const w = window.open();
+if (w) {
+w.document.write(`<html><head><title>Avito Sham Card</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${reader.result}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
+showToast('Картинка открыта в новом окне. Нажмите и удерживайте для сохранения.', 'info');
+} else {
+showToast('Разрешите всплывающие окна для сохранения', 'warning');
+}
+};
+reader.readAsDataURL(lastShareBlob);
+closeModal('modal-share');
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+}
 }
 function openShareSheet() { if (!sharePayload) return; const enc = encodeURIComponent, u = sharePayload.url, tx = sharePayload.text; byId('share-wa-link').href = `https://wa.me/?text=${enc(tx + ' ' + u)}`; const sys = byId('share-system'); if (navigator.share) { sys.classList.remove('hidden'); sys.classList.add('flex'); } else { sys.classList.add('hidden'); sys.classList.remove('flex'); } openModal('modal-share'); }
 function systemShare() { if (navigator.share && sharePayload) navigator.share(sharePayload).catch(() => {}); closeModal('modal-share'); }
@@ -846,6 +848,10 @@ function deleteCategoryWithConfirm(catId) { const c = categories.find(x => x.id 
 function pushCategoriesToCloud() { if (firebaseDb) firebaseDb.ref('categories').set(categories); }
 /* ================= ADS: CREATE / EDIT ================= */
 function fillCategorySelect(sel, selected) { if (!sel) return; sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join(''); if (selected) sel.value = selected; }
+function loadDraftCheck() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { byId('draft-restore-banner').classList.remove('hidden'); } } catch(e){} }
+function saveDraft() { try { const data = { title: byId('ad-title').value, category: byId('ad-category').value, region: byId('ad-region').value, city: byId('ad-city').value, price: byId('ad-price').value, currency: byId('ad-currency').value, desc: byId('ad-desc').value }; localStorage.setItem('bs_ad_draft', JSON.stringify(data)); } catch(e){} }
+function restoreDraft() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { const data = JSON.parse(d); byId('ad-title').value = data.title || ''; byId('ad-category').value = data.category || 'electronics'; byId('ad-region').value = data.region || 'DAM'; byId('ad-city').value = data.city || ''; byId('ad-price').value = data.price || ''; byId('ad-currency').value = data.currency || 'USD'; byId('ad-desc').value = data.desc || ''; byId('draft-restore-banner').classList.add('hidden'); } } catch(e){} }
+function clearDraft(silent) { localStorage.removeItem('bs_ad_draft'); byId('draft-restore-banner').classList.add('hidden'); if(!silent) showToast('Черновик удален', 'info'); }
 function openCreateAdModal() { if (!currentUser) { openAuthModal(); return; } pendingCreateImages = []; renderPhotoThumbnailsGrid('create'); fillCategorySelect(byId('ad-category')); loadDraftCheck(); const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); sc.classList.remove('hidden'); } else sc.classList.add('hidden'); const wb = byId('women-only-container'); if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { wb.classList.remove('hidden'); wb.classList.add('flex'); } else { wb.classList.add('hidden'); wb.classList.remove('flex'); } const neg = byId('ad-is-negotiable'); if (neg) { neg.checked = false; toggleNegotiableField(false); } const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); if (onbC && onbS) { if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } onbC.classList.remove('hidden'); } else onbC.classList.add('hidden'); } openModal('modal-create-ad'); setTimeout(initCreateMap, 200); document.querySelectorAll('.draft-field').forEach(el => { el.addEventListener('input', saveDraft); el.addEventListener('change', saveDraft); }); }
 function openCreateAdModalForUser(username) { onBehalfPreset = username; openCreateAdModal(); }
 function initCreateMap() { const el = byId('create-map'); if (!el || typeof L === 'undefined') return; if (!createMap) { createMap = L.map('create-map').setView([33.5138, 36.2765], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); createMarker = L.marker([33.5138, 36.2765], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else createMap.invalidateSize(); }
@@ -1037,12 +1043,12 @@ firebaseDb.ref('categories').on('value', snap => { const d = snap.val(); if (d &
 firebaseDb.ref('combos').on('value', snap => { const d = snap.val(); const up = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : []; if (JSON.stringify(combos) !== JSON.stringify(up)) { combos = up; renderAds(); renderCategoryPills(); } });
 firebaseDb.ref('rates').on('value', snap => { const d = snap.val(); if (d && d.SYP && d.TRY) { EXCHANGE_RATES.SYP = parseFloat(d.SYP); EXCHANGE_RATES.TRY = parseFloat(d.TRY); renderAds(); } });
 firebaseDb.ref('reports').on('value', snap => {
-    const d = snap.val();
-    const newReports = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : [];
-    if (lastReportCount > 0 && newReports.length > lastReportCount) { playNotificationSound(); }
-    lastReportCount = newReports.length;
-    reports = newReports;
-    if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') { renderAdminTabContent(); }
+const d = snap.val();
+const newReports = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : [];
+if (lastReportCount > 0 && newReports.length > lastReportCount) { playNotificationSound(); }
+lastReportCount = newReports.length;
+reports = newReports;
+if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') { renderAdminTabContent(); }
 }); }
 function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
@@ -1075,11 +1081,11 @@ if (selectedCategory === 'shops_dir') { const shops = users.filter(u => u.shop &
 const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
 const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false; if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false; return true; });
 filtered.sort((a, b) => {
-    if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
-    if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
-    if (currentSortMode === 'expensive') return adToUSD(b) - adToUSD(a);
-    if (currentSortMode === 'popular') { const scoreA = (a.views || 0) + ((a.likes || []).length * 10); const scoreB = (b.views || 0) + ((b.likes || []).length * 10); return scoreB - scoreA; }
-    return 0;
+if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
+if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
+if (currentSortMode === 'expensive') return adToUSD(b) - adToUSD(a);
+if (currentSortMode === 'popular') { const scoreA = (a.views || 0) + ((a.likes || []).length * 10); const scoreB = (b.views || 0) + ((b.likes || []).length * 10); return scoreB - scoreA; }
+return 0;
 });
 const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1; if (currentPage > totalPages) currentPage = totalPages;
 const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
@@ -1118,10 +1124,87 @@ function resetPageAndRender() { currentPage = 1; renderAds(); }
 function changePage(p) { currentPage = p; renderAds(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 /* ================= THEME ================= */
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('bs_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); const ic = byId('sb-theme-ic'); if (ic) ic.innerHTML = document.body.classList.contains('light-mode') ? IGSVG.moon() : IGSVG.sun(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); }
-/* ================= AUTH ================= */
+/* ================= SECURITY: SHA-256 HASHING ================= */
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+/* ================= AUTH (SECURITY FIX) ================= */
 function openAuthModal() { openModal('modal-auth'); }
 function switchAuthTab(tab) { const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), b = byId('auth-submit-btn'); if (tab === 'login') { l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; f.classList.add('hidden'); b.innerText = 'Войти'; } else { r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; f.classList.remove('hidden'); b.innerText = 'Зарегистрироваться'; } }
-function handleAuthSubmit(e) { e.preventDefault(); const isReg = !byId('reg-fields').classList.contains('hidden'); const username = byId('auth-username').value.trim(); const password = byId('auth-password').value; const remember = byId('auth-remember-me').checked; if (isReg) { const kunya = byId('auth-kunya').value.trim() || username; const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE'; const whatsapp = byId('auth-whatsapp').value.trim(); const avatar = byId('auth-avatar-data')?.value || null; if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) { showToast('Логин уже занят!', 'error'); return; } const uid = 'u_' + Date.now(); const nu = { uid, username, passwordHash: password, kunya, gender, whatsapp, avatar, role: (username.toLowerCase() === 'admin' || username.toLowerCase() === 'salimnashho') ? 'SUPERUSER' : 'USER', verifiedShop: false }; users.push(nu); if (firebaseDb) firebaseDb.ref(`users/${uid}`).set(nu); saveUserSession(nu, remember); closeModal('modal-auth'); showToast('Регистрация успешна!', 'success'); } else { const f = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase()); if (f) { const ok = !f.passwordHash || f.passwordHash === password || f.role === 'SUPERUSER' || f.role === 'ADMIN'; if (ok) { f.passwordHash = password; if (firebaseDb && f.uid) firebaseDb.ref(`users/${f.uid}/passwordHash`).set(password); saveUserSession(f, remember); closeModal('modal-auth'); showToast(`С возвращением, ${f.kunya || f.username}!`, 'success'); return; } } showToast('Неверный логин или пароль!', 'error'); } }
+// SECURITY FIX: Login now checks Firebase directly instead of local array
+async function handleAuthSubmit(e) {
+e.preventDefault();
+const isReg = !byId('reg-fields').classList.contains('hidden');
+const username = byId('auth-username').value.trim();
+const rawPassword = byId('auth-password').value;
+const password = await sha256(rawPassword);
+const remember = byId('auth-remember-me').checked;
+const btn = byId('auth-submit-btn');
+const originalText = btn.innerText;
+btn.disabled = true;
+btn.innerText = 'Проверка...';
+if (isReg) {
+// Registration logic (remains mostly same, but ensures unique check via Firebase ideally, here simplified)
+const kunya = byId('auth-kunya').value.trim() || username;
+const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+const whatsapp = byId('auth-whatsapp').value.trim();
+const avatar = byId('auth-avatar-data')?.value || null;
+// Check local cache first for speed, but Firebase is source of truth
+if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+showToast('Логин уже занят!', 'error');
+btn.disabled = false; btn.innerText = originalText;
+return;
+}
+const uid = 'u_' + Date.now();
+const nu = {
+uid, username,
+passwordHash: password, // Stored as SHA-256 hash
+kunya, gender, whatsapp, avatar,
+role: 'USER', verifiedShop: false
+};
+users.push(nu); // Add to local cache
+if (firebaseDb) firebaseDb.ref(`users/${uid}`).set(nu);
+saveUserSession(nu, remember);
+closeModal('modal-auth');
+showToast('Регистрация успешна!', 'success');
+btn.disabled = false; btn.innerText = originalText;
+} else {
+// LOGIN LOGIC: Query Firebase
+if (!firebaseDb) {
+showToast('Нет соединения с базой данных', 'error');
+btn.disabled = false; btn.innerText = originalText;
+return;
+}
+try {
+const snapshot = await firebaseDb.ref('users').orderByChild('username').equalTo(username).once('value');
+let foundUser = null;
+snapshot.forEach(child => {
+const u = child.val();
+if (u.passwordHash === password) {
+foundUser = { ...u, uid: child.key };
+}
+});
+if (foundUser) {
+// Update local cache with fresh data from Firebase
+const idx = users.findIndex(u => u.uid === foundUser.uid);
+if (idx !== -1) users[idx] = foundUser;
+else users.push(foundUser);
+saveUserSession(foundUser, remember);
+closeModal('modal-auth');
+showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
+} else {
+showToast('Неверный логин или пароль!', 'error');
+}
+} catch (err) {
+console.error(err);
+showToast('Ошибка входа. Попробуйте позже.', 'error');
+}
+btn.disabled = false; btn.innerText = originalText;
+}
+}
 /* ================= PROFILE ================= */
 function openProfileModal() { if (!currentUser) return; const c = byId('profile-content'); if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
 const gridHtml = myAds.length > 0 ? `<div class="grid grid-cols-3 gap-1 mt-4">${myAds.map(ad => `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-field cursor-pointer group overflow-hidden"><img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover group-hover:opacity-80 transition-opacity"><div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center gap-3 text-white text-xs font-bold"><span><i class="fa-solid fa-heart"></i> ${(ad.likes || []).length}</span></div>${ad.status === 'SOLD' ? '<div class="absolute top-1 right-1 bg-green-500 text-white text-[8px] px-1 rounded">SOLD</div>' : ''}</div>`).join('')}</div>` : '<div class="text-center py-8 t2 text-sm">Нет объявлений</div>';
@@ -1148,17 +1231,14 @@ ${lastRatesUpdate ? `<div class="text-[10px] t2 text-right">Обновлено: 
 </div>
 <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2" style="color:#9333ea;border-color:rgba(147,51,234,.4);background:rgba(147,51,234,.1)"><i class="fa-solid fa-store"></i> ${currentUser.shop ? 'Мой магазин' : 'Открыть магазин'}</button>
 ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> Панель Администратора</button>` : ''}
-<div class="border-t b-ig pt-2">
-    <div class="flex justify-center gap-6 py-2 border-b b-ig mb-2"><i class="fa-solid fa-table-cells text-blue-500"></i></div>
-    ${gridHtml}
-</div>
 <div class="flex gap-2 pt-1 border-t b-ig">
 <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2.5 text-xs"><i class="fa-solid fa-pen-to-square"></i> Изменить анкету</button>
 <button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs">Выйти</button>
 </div>
 </div>`; openModal('modal-profile'); }
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
-function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const np = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (np && np.trim()) u.passwordHash = np.trim(); u.kunya = nk; u.whatsapp = nw; u.avatar = na; if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); saveCachedAds(); if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
+function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
+async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); saveCachedAds(); if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
 /* ================= ADMIN ================= */
 function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'backup'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
@@ -1279,25 +1359,23 @@ fetchLiveExchangeRates();
 renderCategoryPills();
 renderAds();
 updateNavState();
-
 // NEW: Deep Linking - Check hash on load
 const hash = window.location.hash;
 if (hash && hash.startsWith('#ad-')) {
-  const adId = hash.substring(4);
-  // Wait a bit for Firebase to load data if needed, or try immediately
-  setTimeout(() => {
-    const ad = ads.find(a => a.id === adId);
-    if (ad) {
-      openAdDetail(adId);
-    } else {
-      // If not found yet, maybe data is still loading. 
-      // In a real app we'd listen for the specific ad. 
-      // For now, we just tried.
-      console.log('Ad not found in local cache yet:', adId);
-    }
-  }, 1000); // Small delay to allow initial render/data fetch
+const adId = hash.substring(4);
+// Wait a bit for Firebase to load data if needed, or try immediately
+setTimeout(() => {
+const ad = ads.find(a => a.id === adId);
+if (ad) {
+openAdDetail(adId);
+} else {
+// If not found yet, maybe data is still loading.
+// In a real app we'd listen for the specific ad.
+// For now, we just tried.
+console.log('Ad not found in local cache yet:', adId);
 }
-
+}, 1000); // Small delay to allow initial render/data fetch
+}
 openModal('modal-rules-agreement');
 setInterval(() => { fetchLiveExchangeRates(); }, 300000);
 const scrollBtn = byId('btn-scroll-top');
