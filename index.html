@@ -622,7 +622,20 @@ function priceBadge(ad) { if (ad.isNegotiable) return '<span style="color:#93c5f
 /* ================= MODAL STACK ================= */
 function openModal(id) { const m = byId(id); if (!m) return; m.classList.remove('hidden'); if (!modalStack.includes(id)) modalStack.push(id); m.style.zIndex = String(500 + modalStack.indexOf(id) * 30); document.body.classList.add('overflow-hidden'); }
 function closeModal(id) { const m = byId(id); if (m) m.classList.add('hidden'); modalStack = modalStack.filter(x => x !== id); if (modalStack.length === 0) document.body.classList.remove('overflow-hidden'); }
-function saveCachedAds() { try { localStorage.setItem('bs_cached_ads', JSON.stringify(ads)); } catch (e) {} }
+
+// ИСПРАВЛЕНИЕ #5: Защита от QuotaExceededError
+function saveCachedAds() { 
+    try { 
+        localStorage.setItem('bs_cached_ads', JSON.stringify(ads)); 
+    } catch (e) { 
+        console.warn('LocalStorage quota exceeded. Clearing cache...');
+        try {
+            localStorage.removeItem('bs_cached_ads');
+            showToast('Память браузера переполнена, кеш очищен', 'warning');
+        } catch(err) {}
+    } 
+}
+
 function loadCachedAds() { try { const c = localStorage.getItem('bs_cached_ads'); if (c) ads = JSON.parse(c); const f = localStorage.getItem('bs_favorites'); if (f) favorites = JSON.parse(f); } catch (e) {} }
 function showToast(message, type = 'info') { const c = byId('toast-container'); if (!c) return; const t = document.createElement('div'); let icon = 'fa-circle-info'; if (type === 'success') icon = 'fa-circle-check'; if (type === 'error') icon = 'fa-circle-xmark'; if (type === 'warning') icon = 'fa-triangle-exclamation'; t.className = 'px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-xl'; t.style.cssText = 'background:#262626;color:#fff;animation:cardIn .25s ease'; t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`; c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3200); }
 function showConfirmModal(title, msg, onConfirm) { byId('confirm-modal-title').innerText = title; byId('confirm-modal-msg').innerText = msg; openModal('modal-confirm'); const ok = byId('confirm-btn-ok'), cancel = byId('confirm-btn-cancel'); const clean = () => { closeModal('modal-confirm'); ok.onclick = null; cancel.onclick = null; }; cancel.onclick = clean; ok.onclick = () => { clean(); if (typeof onConfirm === 'function') onConfirm(); }; }
@@ -645,12 +658,12 @@ const sp = byId('sb-profile'), bp = byId('bn-profile-ic');
 if (sp) { sp.querySelector('.nav-ic').innerHTML = `<span class="w-6 h-6 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center" style="${active === 'profile' ? 'border-color:#f5f5f5' : ''}">${avHtml}</span>`; sp.classList.toggle('font-bold', active === 'profile'); }
 if (bp) { bp.innerHTML = avHtml; if (active === 'profile') bp.style.borderColor = '#f5f5f5'; else bp.style.borderColor = ''; }
 }
-function logout() { currentUser = null; try { localStorage.removeItem('bs_current_user'); sessionStorage.removeItem('bs_current_user'); } catch (e) {} closeModal('modal-profile'); updateAuthUI(); showToast('Вы вышли из аккаунта', 'info'); }
 /* ================= IMAGES ================= */
-function compressSingleImageFile(file, maxDim = 650, quality = 0.65) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); let d = c.toDataURL('image/webp', quality); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
-function processSquareImageCrop(file, size = 300) { return new Promise(resolve => { const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = size; c.height = size; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size); let d = c.toDataURL('image/webp', 0.75); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.75); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
-async function processAvatarUpload(e, mode = 'auth') { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 250); byId(mode === 'auth' ? 'auth-avatar-data' : 'edit-profile-avatar-data').value = d; const box = byId(mode === 'auth' ? 'auth-avatar-preview-box' : 'edit-profile-avatar-preview-box'); const img = byId(mode === 'auth' ? 'auth-avatar-preview-img' : 'edit-profile-avatar-preview-img'); if (box && img) { img.src = d; box.classList.remove('hidden'); } } catch (err) {} }
-async function handleMultiImageCompressUpload(e, mode = 'create') { const files = Array.from(e.target.files || []); if (!files.length) return; const arr = mode === 'create' ? pendingCreateImages : pendingEditImages; const slots = 6 - arr.length; if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; } showToast(`Обработка ${Math.min(files.length, slots)} фото...`, 'info'); for (const f of files.slice(0, slots)) { try { arr.push(await compressSingleImageFile(f, 650, 0.65)); renderPhotoThumbnailsGrid(mode); } catch (err) {} } e.target.value = ''; }
+// ИСПРАВЛЕНИЕ #5: Уменьшение размера фото (650->480, 0.65->0.55) для экономии места
+function compressSingleImageFile(file, maxDim = 480, quality = 0.55) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); let d = c.toDataURL('image/webp', quality); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
+function processSquareImageCrop(file, size = 300) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); c.width = size; c.height = size; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size); let d = c.toDataURL('image/webp', 0.75); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.75); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
+async function processAvatarUpload(e, mode = 'auth') { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 250); byId(mode === 'auth' ? 'auth-avatar-data' : 'edit-profile-avatar-data').value = d; const box = byId(mode === 'auth' ? 'auth-avatar-preview-box' : 'edit-profile-avatar-preview-box'); const img = byId(mode === 'auth' ? 'auth-avatar-preview-img' : 'edit-profile-avatar-preview-img'); if (box && img) { img.src = d; box.classList.remove('hidden'); } } catch (err) { console.warn('Avatar processing error:', err); showToast('Не удалось обработать аватарку', 'error'); } }
+async function handleMultiImageCompressUpload(e, mode = 'create') { const files = Array.from(e.target.files || []); if (!files.length) return; const arr = mode === 'create' ? pendingCreateImages : pendingEditImages; const slots = 6 - arr.length; if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; } showToast(`Обработка ${Math.min(files.length, slots)} фото...`, 'info'); for (const f of files.slice(0, slots)) { try { arr.push(await compressSingleImageFile(f, 480, 0.55)); renderPhotoThumbnailsGrid(mode); } catch (err) {} } e.target.value = ''; }
 function renderPhotoThumbnailsGrid(mode = 'create') { const isC = mode === 'create'; const arr = isC ? pendingCreateImages : pendingEditImages; const g = byId(isC ? 'create-thumbnails-grid' : 'edit-thumbnails-grid'); const b = byId(isC ? 'create-photo-count-badge' : 'edit-photo-count-badge'); if (b) b.innerText = `${arr.length} / 6`; if (!g) return; g.innerHTML = arr.map((d, i) => `<div class="relative h-14 rounded-lg overflow-hidden border b-ig"><img src="${d}" class="w-full h-full object-cover"><button type="button" onclick="removePendingPhoto('${mode}',${i})" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px]" style="background:#ed4956"><i class="fa-solid fa-xmark"></i></button>${i === 0 ? '<span class="absolute bottom-0 inset-x-0 text-[7px] font-bold text-center py-0.5" style="background:rgba(245,158,11,.85);color:#000">ГЛАВНАЯ</span>' : ''}</div>`).join(''); }
 function removePendingPhoto(mode, index) { (mode === 'create' ? pendingCreateImages : pendingEditImages).splice(index, 1); renderPhotoThumbnailsGrid(mode); }
 async function processShopLogoUpload(e) { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 300); byId('shop-logo-data').value = d; byId('shop-logo-preview-img').src = d; byId('shop-logo-preview-box').classList.remove('hidden'); } catch (err) {} }
@@ -1122,10 +1135,10 @@ function changePage(p) { currentPage = p; renderAds(); window.scrollTo({ top: 0,
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('bs_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); const ic = byId('sb-theme-ic'); if (ic) ic.innerHTML = document.body.classList.contains('light-mode') ? IGSVG.moon() : IGSVG.sun(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); }
 /* ================= SECURITY: SHA-256 HASHING ================= */
 async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+const msgBuffer = new TextEncoder().encode(message);
+const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
+return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 /* ================= AUTH (SECURITY FIX) ================= */
 function openAuthModal() { openModal('modal-auth'); }
@@ -1234,7 +1247,7 @@ ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text
 </div>`; openModal('modal-profile'); }
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
 function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
-async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); saveCachedAds(); if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
+async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } u.avatar = na; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); saveCachedAds();  if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
 /* ================= ADMIN ================= */
 function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'backup'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
@@ -1334,10 +1347,53 @@ function acceptLaunchRules() {
 const m = document.getElementById('modal-rules-agreement');
 if (!m || m.classList.contains('hidden')) return;
 SYSTEM_CONFIG.rulesAccepted = true;
+localStorage.setItem('bs_rules_accepted', 'true');
 m.classList.add('hidden');
 modalStack = modalStack.filter(x => x !== 'modal-rules-agreement');
 if (modalStack.length === 0) document.body.classList.remove('overflow-hidden');
 showToast('Условия приняты. Добро пожаловать!', 'success');
+}
+/* ================= REPORT FUNCTIONS ================= */
+function openReportModal(adId) {
+byId('report-ad-id').value = adId;
+byId('report-reason').value = '';
+byId('report-comment').value = '';
+openModal('modal-report-ad');
+}
+function submitReport(e) {
+e.preventDefault();
+const adId = byId('report-ad-id').value;
+const reason = byId('report-reason').value;
+const comment = byId('report-comment').value.trim();
+if (!reason) { showToast('Выберите причину жалобы', 'warning'); return; }
+const report = {
+adId: adId,
+reason: reason,
+comment: comment,
+reporterUsername: currentUser ? currentUser.username : 'Anonymous',
+timestamp: Date.now()
+};
+if (firebaseDb) {
+const newKey = firebaseDb.ref('reports').push().key;
+firebaseDb.ref('reports/' + newKey).set(report).then(() => {
+showToast('Жалоба отправлена. Спасибо!', 'success');
+closeModal('modal-report-ad');
+}).catch(err => {
+showToast('Ошибка отправки жалобы', 'error');
+console.error(err);
+});
+} else {
+showToast('Нет соединения с сервером', 'error');
+}
+}
+function deleteReport(reportId) {
+if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+if (firebaseDb) {
+firebaseDb.ref('reports/' + reportId).remove().then(() => {
+showToast('Жалоба удалена', 'info');
+renderAdminTabContent();
+});
+}
 }
 /* ================= INIT ================= */
 window.onload = function () {
@@ -1372,7 +1428,7 @@ console.log('Ad not found in local cache yet:', adId);
 }
 }, 1000); // Small delay to allow initial render/data fetch
 }
-openModal('modal-rules-agreement');
+if (!localStorage.getItem('bs_rules_accepted')) openModal('modal-rules-agreement');
 setInterval(() => { fetchLiveExchangeRates(); }, 300000);
 const scrollBtn = byId('btn-scroll-top');
 window.addEventListener('scroll', () => { if (window.scrollY > 300) scrollBtn.classList.add('visible'); else scrollBtn.classList.remove('visible'); });
