@@ -581,12 +581,8 @@ let categories = [
 { id:'other', name:'Прочее', icon:'fa-boxes-stacked' }
 ];
 const CATEGORY_ICON_POOL = ['fa-mobile-screen','fa-laptop','fa-car','fa-house','fa-couch','fa-wrench','fa-boxes-stacked','fa-shirt','fa-baby','fa-utensils','fa-book','fa-futbol','fa-gamepad','fa-tractor','fa-truck','fa-gem','fa-paw','fa-seedling','fa-motorcycle','fa-camera','fa-tv','fa-blender','fa-chair','fa-hammer','fa-paint-roller','fa-plug','fa-scissors','fa-briefcase','fa-bicycle','fa-ring'];
-// SECURITY FIX: Passwords removed from local code.
-// Admins must exist in Firebase with passwordHash field to login.
-let users = [
-{ uid:'u_admin', username:'admin', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true },
-{ uid:'u_salim', username:'salimnashho', kunya:'Salim Nashho', gender:'MALE', whatsapp:'+963956606833', role:'SUPERUSER', verifiedShop:true }
-];
+// SECURITY FIX: No hardcoded users. Data loads from Firebase.
+let users = [];
 let archivedUsers = [];
 let combos = [];
 let ads = [];
