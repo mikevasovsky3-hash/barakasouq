@@ -622,20 +622,18 @@ function priceBadge(ad) { if (ad.isNegotiable) return '<span style="color:#93c5f
 /* ================= MODAL STACK ================= */
 function openModal(id) { const m = byId(id); if (!m) return; m.classList.remove('hidden'); if (!modalStack.includes(id)) modalStack.push(id); m.style.zIndex = String(500 + modalStack.indexOf(id) * 30); document.body.classList.add('overflow-hidden'); }
 function closeModal(id) { const m = byId(id); if (m) m.classList.add('hidden'); modalStack = modalStack.filter(x => x !== id); if (modalStack.length === 0) document.body.classList.remove('overflow-hidden'); }
-
 // ИСПРАВЛЕНИЕ #5: Защита от QuotaExceededError
-function saveCachedAds() { 
-    try { 
-        localStorage.setItem('bs_cached_ads', JSON.stringify(ads)); 
-    } catch (e) { 
-        console.warn('LocalStorage quota exceeded. Clearing cache...');
-        try {
-            localStorage.removeItem('bs_cached_ads');
-            showToast('Память браузера переполнена, кеш очищен', 'warning');
-        } catch(err) {}
-    } 
+function saveCachedAds() {
+try {
+localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+} catch (e) {
+console.warn('LocalStorage quota exceeded. Clearing cache...');
+try {
+localStorage.removeItem('bs_cached_ads');
+showToast('Память браузера переполнена, кеш очищен', 'warning');
+} catch(err) {}
 }
-
+}
 function loadCachedAds() { try { const c = localStorage.getItem('bs_cached_ads'); if (c) ads = JSON.parse(c); const f = localStorage.getItem('bs_favorites'); if (f) favorites = JSON.parse(f); } catch (e) {} }
 function showToast(message, type = 'info') { const c = byId('toast-container'); if (!c) return; const t = document.createElement('div'); let icon = 'fa-circle-info'; if (type === 'success') icon = 'fa-circle-check'; if (type === 'error') icon = 'fa-circle-xmark'; if (type === 'warning') icon = 'fa-triangle-exclamation'; t.className = 'px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-xl'; t.style.cssText = 'background:#262626;color:#fff;animation:cardIn .25s ease'; t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`; c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3200); }
 function showConfirmModal(title, msg, onConfirm) { byId('confirm-modal-title').innerText = title; byId('confirm-modal-msg').innerText = msg; openModal('modal-confirm'); const ok = byId('confirm-btn-ok'), cancel = byId('confirm-btn-cancel'); const clean = () => { closeModal('modal-confirm'); ok.onclick = null; cancel.onclick = null; }; cancel.onclick = clean; ok.onclick = () => { clean(); if (typeof onConfirm === 'function') onConfirm(); }; }
@@ -647,7 +645,7 @@ function handleNavClick(tab) { LAST_NAV = tab; if (tab === 'home') { selectedCat
 function updateNavState() {
 const map = { home: 'home', shops: 'shops', create: 'create', favorites: 'fav', profile: 'profile' };
 const active = map[LAST_NAV] || 'home';
-const iconFor = key => key === 'home' ? IGSVG.home(active === 'home') : key === 'shops' ? IGSVG.store(active === 'shops') : key === 'create' ? IGSVG.plusSq() : key === 'fav' ? IGSVG.heart(active === 'fav') : '';
+const iconFor = key => key === 'home' ? IGSVG.home(active === 'home') : key === 'shops' ? IGSVG.store(active === 'shops') : key === 'create' ? IGSVG.plusSq() : key === 'fav' ? IGSVG.star(active === 'fav') : '';
 [['sb-home', 'bn-home', 'home'], ['sb-shops', 'bn-shops', 'shops'], ['sb-create', 'bn-create', 'create'], ['sb-fav', 'bn-fav', 'fav']].forEach(([sb, bn, key]) => {
 const s = byId(sb), b = byId(bn);
 if (s) { s.querySelector('.nav-ic').innerHTML = iconFor(key); s.classList.toggle('font-bold', active === key); }
@@ -1099,6 +1097,21 @@ return 0;
 const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1; if (currentPage > totalPages) currentPage = totalPages;
 const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
 if (!pageAds.length) { grid.innerHTML = '<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>Объявлений пока нет. Будьте первым!</div>'; if (pag) pag.innerHTML = ''; return; }
+const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+if (layout === 'grid') {
+grid.className = 'grid grid-cols-2 gap-1';
+grid.innerHTML = pageAds.map(ad => {
+const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
+return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-black cursor-pointer overflow-hidden"><img src="${img}" class="w-full h-full object-cover"><div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2"><div class="text-white text-xs font-bold truncate">${ad.title}</div><div class="text-white text-[10px] font-bold">${priceBadge(ad)}</div></div></div>`;
+}).join('');
+} else if (layout === 'list') {
+grid.className = 'space-y-2';
+grid.innerHTML = pageAds.map(ad => {
+const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
+return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-2 rounded-xl flex gap-3 cursor-pointer"><img src="${img}" class="w-20 h-20 rounded-lg object-cover shrink-0"><div class="flex-1 min-w-0 flex flex-col justify-center"><div class="font-bold t1 text-sm truncate">${ad.title}</div><div class="text-xs t2 truncate">${ad.city}</div><div class="text-sm font-bold mt-1" style="color:#f59e0b">${priceBadge(ad)}</div></div></div>`;
+}).join('');
+} else {
+grid.className = 'space-y-4';
 grid.innerHTML = pageAds.map(ad => { cardPhotoIndex[ad.id] = 0; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; const kunya = getSellerKunya(ad); const avatar = getSellerAvatar(ad); const verified = getSellerVerified(ad); const qc = (ad.queue || []).length; const isFav = favorites.includes(ad.id); const liked = currentUser && (ad.likes || []).includes(currentUser.username); const likesCount = (ad.likes || []).length; const viewsCount = ad.views || 0; const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; return `
 <article class="card-in border-b b-ig bg-card pb-3">
 <div class="flex items-center gap-3 px-3.5 py-2.5">
@@ -1128,6 +1141,7 @@ ${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 Цена 
 <div class="px-3.5 pt-1 text-sm t2 cursor-pointer" onclick="openAdDetail('${ad.id}')">${qc > 0 ? `Посмотреть очередь: ${qc}` : 'Очередь свободна'}</div>
 <div class="px-3.5 pt-1 text-[10px] t2 uppercase tracking-wide">${timeAgo(ad.createdAt)} • 👁 ${viewsCount}</div>
 </article>`; }).join('');
+}
 if (pag) pag.innerHTML = `<button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">« Первая</button><button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">< Назад</button><span class="px-3 py-1.5 rounded-lg text-xs font-bold t1 bg-field border b-ig">Страница ${currentPage} из ${totalPages}</span><button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">Вперед ></button><button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">Последняя »</button>`; }
 function resetPageAndRender() { currentPage = 1; renderAds(); }
 function changePage(p) { currentPage = p; renderAds(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1216,6 +1230,7 @@ btn.disabled = false; btn.innerText = originalText;
 }
 /* ================= PROFILE ================= */
 function openProfileModal() { if (!currentUser) return; const c = byId('profile-content'); if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
+const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 const gridHtml = myAds.length > 0 ? `<div class="grid grid-cols-3 gap-1 mt-4">${myAds.map(ad => `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-field cursor-pointer group overflow-hidden"><img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover group-hover:opacity-80 transition-opacity"><div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center gap-3 text-white text-xs font-bold"><span><i class="fa-solid fa-heart"></i> ${(ad.likes || []).length}</span></div>${ad.status === 'SOLD' ? '<div class="absolute top-1 right-1 bg-green-500 text-white text-[8px] px-1 rounded">SOLD</div>' : ''}</div>`).join('')}</div>` : '<div class="text-center py-8 t2 text-sm">Нет объявлений</div>';
 c.innerHTML = `<div class="space-y-4">
 <div class="flex items-center gap-4">
@@ -1238,6 +1253,14 @@ c.innerHTML = `<div class="space-y-4">
 </div>
 ${lastRatesUpdate ? `<div class="text-[10px] t2 text-right">Обновлено: ${lastRatesUpdate.toLocaleTimeString()}</div>` : ''}
 </div>
+<div class="bg-field border b-ig rounded-xl p-3 space-y-2">
+<div class="text-xs font-bold t1 mb-2">Вид ленты объявлений:</div>
+<div class="grid grid-cols-3 gap-2">
+<button onclick="setFeedLayout('grid')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'grid' ? 'text-white' : 'b-ig t2'}" style="${layout === 'grid' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-solid fa-table-cells-large block mb-1"></i>Сетка</button>
+<button onclick="setFeedLayout('list')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'list' ? 'text-white' : 'b-ig t2'}" style="${layout === 'list' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-solid fa-list block mb-1"></i>Список</button>
+<button onclick="setFeedLayout('instagram')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'instagram' ? 'text-white' : 'b-ig t2'}" style="${layout === 'instagram' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-brands fa-instagram block mb-1"></i>Лента</button>
+</div>
+</div>
 <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2" style="color:#9333ea;border-color:rgba(147,51,234,.4);background:rgba(147,51,234,.1)"><i class="fa-solid fa-store"></i> ${currentUser.shop ? 'Мой магазин' : 'Открыть магазин'}</button>
 ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> Панель Администратора</button>` : ''}
 <div class="flex gap-2 pt-1 border-t b-ig">
@@ -1245,6 +1268,13 @@ ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text
 <button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs">Выйти</button>
 </div>
 </div>`; openModal('modal-profile'); }
+function setFeedLayout(layout) {
+localStorage.setItem('bs_feed_layout', layout);
+itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
+renderAds();
+openProfileModal(); // Refresh modal to show active state
+showToast('Вид ленты изменен', 'success');
+}
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
 function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
 async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } u.avatar = na; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); saveCachedAds();  if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
