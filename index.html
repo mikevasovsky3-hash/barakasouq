@@ -553,7 +553,8 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <script>
 /* ================= STATE ================= */
 let firebaseApp = null, firebaseDb = null, currentUser = null;
-let selectedCategory = 'all', currentPage = 1, itemsPerPage = 4, favorites = [];
+const _savedLayout = localStorage.getItem('bs_feed_layout') || 'instagram'; 
+let selectedCategory = 'all', currentPage = 1, itemsPerPage = _savedLayout === 'list' ? 10 : (_savedLayout === 'grid' ? 12 : 4), favorites = [];
 let adminAdsTab = 'active', LAST_NAV = 'home', searchQuery = '';
 let currentSortMode = localStorage.getItem('bs_sort_mode') || 'newest';
 let createMap = null, createMarker = null, detailMap = null, shopCreateMap = null, shopCreateMarker = null, showcaseMap = null;
