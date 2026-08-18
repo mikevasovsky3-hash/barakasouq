@@ -1270,7 +1270,7 @@ ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text
 </div>`; openModal('modal-profile'); }
 function setFeedLayout(layout) {
 localStorage.setItem('bs_feed_layout', layout);
-itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 20 : 4);
+itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 12);
 renderAds();
 openProfileModal(); // Refresh modal to show active state
 showToast('Вид ленты изменен', 'success');
