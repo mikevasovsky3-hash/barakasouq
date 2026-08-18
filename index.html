@@ -1475,6 +1475,14 @@ renderAdminTabContent();
 });
 }
 }
+  function logout() {
+currentUser = null;
+localStorage.removeItem('bs_current_user');
+sessionStorage.removeItem('bs_current_user');
+closeModal('modal-profile');
+updateAuthUI();
+showToast('Вы вышли из аккаунта', 'info');
+}
 /* ================= INIT ================= */
 window.onload = function () {
 loadCachedAds();
