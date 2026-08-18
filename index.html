@@ -662,7 +662,56 @@ if (bp) { bp.innerHTML = avHtml; if (active === 'profile') bp.style.borderColor 
 function compressSingleImageFile(file, maxDim = 480, quality = 0.55) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); let d = c.toDataURL('image/webp', quality); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
 function processSquareImageCrop(file, size = 300) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); c.width = size; c.height = size; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size); let d = c.toDataURL('image/webp', 0.75); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.75); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
 async function processAvatarUpload(e, mode = 'auth') { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 250); byId(mode === 'auth' ? 'auth-avatar-data' : 'edit-profile-avatar-data').value = d; const box = byId(mode === 'auth' ? 'auth-avatar-preview-box' : 'edit-profile-avatar-preview-box'); const img = byId(mode === 'auth' ? 'auth-avatar-preview-img' : 'edit-profile-avatar-preview-img'); if (box && img) { img.src = d; box.classList.remove('hidden'); } } catch (err) { console.warn('Avatar processing error:', err); showToast('Не удалось обработать аватарку', 'error'); } }
-async function handleMultiImageCompressUpload(e, mode = 'create') { const files = Array.from(e.target.files || []); if (!files.length) return; const arr = mode === 'create' ? pendingCreateImages : pendingEditImages; const slots = 6 - arr.length; if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; } showToast(`Обработка ${Math.min(files.length, slots)} фото...`, 'info'); for (const f of files.slice(0, slots)) { try { arr.push(await compressSingleImageFile(f, 480, 0.55)); renderPhotoThumbnailsGrid(mode); } catch (err) {} } e.target.value = ''; }
+async function handleMultiImageCompressUpload(e, mode = 'create') {
+const files = Array.from(e.target.files || []);
+if (!files.length) return;
+const arr = mode === 'create' ? pendingCreateImages : pendingEditImages;
+const slots = 6 - arr.length;
+if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; }
+
+// Твой ключ ImgBB
+const IMGBB_KEY = '77bb343baa9af19a82ccde09deb73a05'; 
+
+showToast(`Загрузка ${Math.min(files.length, slots)} фото на сервер...`, 'info');
+
+for (const f of files.slice(0, slots)) {
+try {
+// Сначала сжимаем картинку локально
+const compressedData = await compressSingleImageFile(f, 1024, 0.8); 
+
+// Отправляем на ImgBB
+const formData = new FormData();
+// ImgBB принимает base64 строку (без заголовка data:image...) или Blob
+// compressSingleImageFile возвращает dataURL, поэтому берем часть после запятой
+const base64Data = compressedData.split(',')[1];
+formData.append("image", base64Data);
+
+const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+method: "POST",
+body: formData
+});
+
+const data = await response.json();
+
+if (data.success) {
+arr.push(data.data.url); // Сохраняем прямую ссылку
+renderPhotoThumbnailsGrid(mode);
+} else {
+throw new Error('ImgBB error');
+}
+} catch (err) {
+console.error(err);
+showToast('Ошибка загрузки. Сохраняю локально...', 'error');
+// Fallback: если ошибка сети, сохраняем как раньше в base64
+try {
+const localData = await compressSingleImageFile(f, 480, 0.55);
+arr.push(localData);
+renderPhotoThumbnailsGrid(mode);
+} catch(e) {}
+}
+}
+e.target.value = '';
+}
 function renderPhotoThumbnailsGrid(mode = 'create') { const isC = mode === 'create'; const arr = isC ? pendingCreateImages : pendingEditImages; const g = byId(isC ? 'create-thumbnails-grid' : 'edit-thumbnails-grid'); const b = byId(isC ? 'create-photo-count-badge' : 'edit-photo-count-badge'); if (b) b.innerText = `${arr.length} / 6`; if (!g) return; g.innerHTML = arr.map((d, i) => `<div class="relative h-14 rounded-lg overflow-hidden border b-ig"><img src="${d}" class="w-full h-full object-cover"><button type="button" onclick="removePendingPhoto('${mode}',${i})" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px]" style="background:#ed4956"><i class="fa-solid fa-xmark"></i></button>${i === 0 ? '<span class="absolute bottom-0 inset-x-0 text-[7px] font-bold text-center py-0.5" style="background:rgba(245,158,11,.85);color:#000">ГЛАВНАЯ</span>' : ''}</div>`).join(''); }
 function removePendingPhoto(mode, index) { (mode === 'create' ? pendingCreateImages : pendingEditImages).splice(index, 1); renderPhotoThumbnailsGrid(mode); }
 async function processShopLogoUpload(e) { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 300); byId('shop-logo-data').value = d; byId('shop-logo-preview-img').src = d; byId('shop-logo-preview-box').classList.remove('hidden'); } catch (err) {} }
