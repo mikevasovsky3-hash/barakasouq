@@ -553,7 +553,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <script>
 /* ================= STATE ================= */
 let firebaseApp = null, firebaseDb = null, currentUser = null;
-const _savedLayout = localStorage.getItem('bs_feed_layout') || 'instagram'; 
+const _savedLayout = localStorage.getItem('bs_feed_layout') || 'instagram';
 let selectedCategory = 'all', currentPage = 1, itemsPerPage = _savedLayout === 'list' ? 10 : (_savedLayout === 'grid' ? 12 : 4), favorites = [];
 let adminAdsTab = 'active', LAST_NAV = 'home', searchQuery = '';
 let currentSortMode = localStorage.getItem('bs_sort_mode') || 'newest';
@@ -668,31 +668,24 @@ if (!files.length) return;
 const arr = mode === 'create' ? pendingCreateImages : pendingEditImages;
 const slots = 6 - arr.length;
 if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; }
-
 // Твой ключ ImgBB
-const IMGBB_KEY = '77bb343baa9af19a82ccde09deb73a05'; 
-
+const IMGBB_KEY = '77bb343baa9af19a82ccde09deb73a05';
 showToast(`Загрузка ${Math.min(files.length, slots)} фото на сервер...`, 'info');
-
 for (const f of files.slice(0, slots)) {
 try {
 // Сначала сжимаем картинку локально
-const compressedData = await compressSingleImageFile(f, 1024, 0.8); 
-
+const compressedData = await compressSingleImageFile(f, 1024, 0.8);
 // Отправляем на ImgBB
 const formData = new FormData();
 // ImgBB принимает base64 строку (без заголовка data:image...) или Blob
 // compressSingleImageFile возвращает dataURL, поэтому берем часть после запятой
 const base64Data = compressedData.split(',')[1];
 formData.append("image", base64Data);
-
 const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
 method: "POST",
 body: formData
 });
-
 const data = await response.json();
-
 if (data.success) {
 arr.push(data.data.url); // Сохраняем прямую ссылку
 renderPhotoThumbnailsGrid(mode);
@@ -1254,14 +1247,27 @@ return;
 try {
 const snapshot = await firebaseDb.ref('users').orderByChild('username').equalTo(username).once('value');
 let foundUser = null;
+let needsHashUpdate = false;
 snapshot.forEach(child => {
 const u = child.val();
+// 1. Проверяем новый формат (хеш)
 if (u.passwordHash === password) {
 foundUser = { ...u, uid: child.key };
+} 
+// 2. Проверяем старый формат (обычный текст) - для совместимости
+else if (u.passwordHash === rawPassword || u.password === rawPassword) {
+foundUser = { ...u, uid: child.key };
+needsHashUpdate = true; // Помечаем, что надо обновить пароль в базе
 }
 });
 if (foundUser) {
-// Update local cache with fresh data from Firebase
+// Если зашли по старому паролю — молча обновляем его в базе на новый хеш
+if (needsHashUpdate) {
+console.log("Migrating old password to hash for user:", foundUser.username);
+if (firebaseDb) firebaseDb.ref(`users/${foundUser.uid}`).update({ passwordHash: password, password: null });
+foundUser.passwordHash = password; // Обновляем и в локальном объекте
+delete foundUser.password; // Удаляем старый текстовый пароль из памяти
+}
 const idx = users.findIndex(u => u.uid === foundUser.uid);
 if (idx !== -1) users[idx] = foundUser;
 else users.push(foundUser);
@@ -1324,6 +1330,14 @@ itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
 renderAds();
 openProfileModal(); // Refresh modal to show active state
 showToast('Вид ленты изменен', 'success');
+}
+function logout() {
+currentUser = null;
+localStorage.removeItem('bs_current_user');
+sessionStorage.removeItem('bs_current_user');
+closeModal('modal-profile');
+updateAuthUI();
+showToast('Вы вышли из аккаунта', 'info');
 }
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
 function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
@@ -1474,14 +1488,6 @@ showToast('Жалоба удалена', 'info');
 renderAdminTabContent();
 });
 }
-}
-  function logout() {
-currentUser = null;
-localStorage.removeItem('bs_current_user');
-sessionStorage.removeItem('bs_current_user');
-closeModal('modal-profile');
-updateAuthUI();
-showToast('Вы вышли из аккаунта', 'info');
 }
 /* ================= INIT ================= */
 window.onload = function () {
