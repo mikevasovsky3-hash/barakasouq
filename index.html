@@ -217,7 +217,11 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1">
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
 <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
-<button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Системное меню «Поделиться»</button>
+<div id="share-preview-state" class="text-center text-xs t2 py-2 hidden">Генерируем красивую карточку...</div>
+<div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1">
+<img id="share-preview-image" class="w-full max-h-[52vh] object-contain rounded-lg" alt="Предпросмотр карточки объявления Авито Шам">
+</div>
+<button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Поделиться карточкой</button>
 <button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
 <button onclick="shareImageToApp('telegram')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram (с картинкой)</button>
 <button onclick="shareImageToApp('viber')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber (с картинкой)</button>
@@ -583,6 +587,7 @@ let lastRatesUpdate = null, sharePayload = null, modalStack = [];
 let reports = [];
 let lastReportCount = 0;
 let lastShareBlob = null;
+let lastShareObjectUrl = null;
 let hasCloudMarqueeSettings = false;
 let MARQUEE_SETTINGS = { text: '', color: '#a8a8a8', fontSize: 13, speed: 20, direction: 'left', pauseOnHover: false };
 let BACKUPS_META = {};
@@ -733,7 +738,7 @@ function renderSupportQR() { const box = byId('support-qr-box'); if (!box) retur
 function copyShamCashCode() { const done = () => showToast('ID код ShamCash скопирован!', 'success'); if (navigator.clipboard) navigator.clipboard.writeText(SHAMCASH_ID).then(done).catch(() => fallbackCopy(SHAMCASH_ID, done)); else fallbackCopy(SHAMCASH_ID, done); }
 function fallbackCopy(text, cb) { const i = document.createElement('input'); i.value = text; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); if (cb) cb(); }
 /* ================= BEAUTIFUL SHARE CARD ================= */
-function roundRectPath(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x + y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function roundRectPath(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function igGradient(ctx, x0, y0, x1, y1) { const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#feda75'); g.addColorStop(0.25, '#fa7e1e'); g.addColorStop(0.5, '#d62976'); g.addColorStop(0.75, '#962fbf'); g.addColorStop(1, '#4f5bd5'); return g; }
 function loadImgSafe(src) { return new Promise(resolve => { if (!src) return resolve(null); const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src; }); }
 function drawContain(ctx, img, x, y, w, h) { const ir = img.width / img.height, rr = w / h; let dw, dh; if (ir > rr) { dw = w; dh = w / ir; } else { dh = h; dw = h * ir; } ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh); }
@@ -835,16 +840,33 @@ const ad = ads.find(a => a.id === adId) || combos.find(x => x.id === adId); if (
 const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
 const url = base + '#ad-' + ad.id;
 sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
+const state = byId('share-preview-state'), preview = byId('share-preview-wrap');
+if (state) { state.innerText = 'Генерируем красивую карточку...'; state.classList.remove('hidden'); }
+if (preview) preview.classList.add('hidden');
+openShareSheet();
 showToast('Генерация красивой карточки…', 'info');
 const blob = await generateShareImage(ad);
 lastShareBlob = blob;
+if (lastShareObjectUrl) { URL.revokeObjectURL(lastShareObjectUrl); lastShareObjectUrl = null; }
 if (blob) {
-const file = new File([blob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
-if (navigator.canShare && navigator.canShare({ files: [file] })) {
-try { await navigator.share({ files: [file], title: ad.title, text: sharePayload.text }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+lastShareObjectUrl = URL.createObjectURL(blob);
+const img = byId('share-preview-image');
+if (img) img.src = lastShareObjectUrl;
+if (preview) preview.classList.remove('hidden');
+if (state) state.classList.add('hidden');
+} else if (state) {
+state.innerText = 'Не удалось создать карточку. Можно отправить ссылку.';
+showToast('Не удалось создать карточку, ссылка доступна ниже', 'warning');
 }
+updateShareActions();
 }
-if (navigator.share) { navigator.share(sharePayload).catch(err => { if (err && err.name !== 'AbortError') openShareSheet(); }); } else openShareSheet();
+function updateShareActions() {
+const sys = byId('share-system');
+if (!sys) return;
+const file = lastShareBlob ? new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' }) : null;
+const canShareFile = !!(file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] }));
+if (navigator.share) { sys.classList.remove('hidden'); sys.classList.add('flex'); } else { sys.classList.add('hidden'); sys.classList.remove('flex'); }
+sys.disabled = !canShareFile && !navigator.share;
 }
 async function shareImageToApp(app) {
 if (!lastShareBlob) { showToast('Сначала нажмите "Поделиться", чтобы создать картинку', 'warning'); return; }
@@ -883,13 +905,15 @@ if (err.name === 'AbortError') return;
 try {
 const reader = new FileReader();
 reader.onloadend = function() {
-const w = window.open();
-if (w) {
-w.document.write(`<html><head><title>Avito Sham Card</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${reader.result}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
-showToast('Картинка открыта в новом окне. Нажмите и удерживайте для сохранения.', 'info');
-} else {
-showToast('Разрешите всплывающие окна для сохранения', 'warning');
-}
+const link = document.createElement('a');
+link.href = reader.result;
+link.download = 'avito-sham-card.jpg';
+link.style.display = 'none';
+document.body.appendChild(link);
+link.click();
+link.remove();
+showToast('Красивая карточка скачана', 'success');
+closeModal('modal-share');
 };
 reader.readAsDataURL(lastShareBlob);
 closeModal('modal-share');
@@ -898,7 +922,14 @@ showToast('Ошибка сохранения', 'error');
 }
 }
 function openShareSheet() { if (!sharePayload) return; const enc = encodeURIComponent, u = sharePayload.url, tx = sharePayload.text; byId('share-wa-link').href = `https://wa.me/?text=${enc(tx + ' ' + u)}`; const sys = byId('share-system'); if (navigator.share) { sys.classList.remove('hidden'); sys.classList.add('flex'); } else { sys.classList.add('hidden'); sys.classList.remove('flex'); } openModal('modal-share'); }
-function systemShare() { if (navigator.share && sharePayload) navigator.share(sharePayload).catch(() => {}); closeModal('modal-share'); }
+function systemShare() {
+if (!navigator.share || !sharePayload) return;
+const file = lastShareBlob ? new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' }) : null;
+const data = file && navigator.canShare && navigator.canShare({ files: [file] })
+? { files: [file], title: sharePayload.title, text: sharePayload.text }
+: sharePayload;
+navigator.share(data).catch(() => {});
+}
 function copyShareLink() { if (!sharePayload) return; fallbackCopy(sharePayload.url, () => showToast('Ссылка скопирована!', 'success')); closeModal('modal-share'); }
 /* ================= CATEGORIES (admin CRUD) ================= */
 function autoPickIcon() { const used = categories.map(c => c.icon); for (const ic of CATEGORY_ICON_POOL) if (!used.includes(ic)) return ic; return 'fa-tag'; }
