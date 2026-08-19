@@ -1121,7 +1121,8 @@ if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adm
 // Listen for Marquee updates
 firebaseDb.ref('settings/marqueeText').on('value', snap => {
     const txt = snap.val();
-    if (txt && !localStorage.getItem(MARQUEE_STORAGE_KEY)) {
+    if (typeof txt === 'string' && txt.trim()) {
+        localStorage.setItem(MARQUEE_STORAGE_KEY, txt);
         updateMarqueeText(txt);
     }
 });
@@ -1556,6 +1557,8 @@ function saveMarqueeSettings() {
     updateMarqueeText(text);
     if (firebaseDb) {
         firebaseDb.ref('settings/marqueeText').set(text).then(() => {
+            localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+            updateMarqueeText(text);
             showToast('Бегущая строка обновлена!', 'success');
         }).catch(err => {
             showToast('Сохранено на этом устройстве. Ошибка облачной синхронизации.', 'warning');
