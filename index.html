@@ -1460,15 +1460,24 @@ else if (tab === 'marquee') {
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(0,149,246,.3);background:rgba(0,149,246,.06)">
 <div class="flex items-center gap-2 mb-2"><i class="fa-solid fa-text-width" style="color:#0095f6"></i><h4 class="font-bold t1 text-sm">Управление бегущей строкой</h4></div>
 <p class="text-xs t2">Текст отображается в поле поиска на главной странице (Desktop и Mobile).</p>
-<textarea id="admin-marquee-input" rows="4" class="ig-input w-full px-3.5 py-2.5 text-sm" placeholder="Введите текст бегущей строки...">${currentText}</textarea>
-<div class="flex gap-2 pt-2">
-<button onclick="saveMarqueeSettings()" class="ig-btn px-4 py-2.5 text-xs flex-1"><i class="fa-solid fa-save"></i> Сохранить и обновить</button>
+<div class="flex items-center justify-between text-[10px] t2"><span>Редактор текста</span><span id="admin-marquee-counter">0 символов</span></div>
+<textarea id="admin-marquee-input" rows="4" oninput="handleMarqueeInput(this)" class="ig-input w-full px-3.5 py-2.5 text-sm" placeholder="Введите текст бегущей строки..."></textarea>
+<div class="p-3 rounded-lg bg-field border b-ig overflow-hidden">
+<div class="text-[10px] t2 mb-1">Предпросмотр</div>
+<div id="admin-marquee-preview" class="marquee-content text-xs">Предпросмотр появится здесь</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-2">
+<button onclick="saveMarqueeSettings()" class="ig-btn px-3 py-2.5 text-xs"><i class="fa-solid fa-cloud-arrow-up"></i> Сохранить в Firebase</button>
+<button onclick="loadMarqueeFromFirebase()" class="ig-btn-outline px-3 py-2.5 text-xs"><i class="fa-solid fa-cloud-arrow-down"></i> Загрузить из Firebase</button>
 </div>
 </div>
 <div class="p-3 rounded-xl bg-field border b-ig text-xs t2">
 <i class="fa-solid fa-circle-info"></i> Совет: Используйте разделители (например, •) для разделения новостей.
 </div>
-</div>`; 
+</div>`;
+    const editor = byId('admin-marquee-input');
+    if (editor) editor.value = currentText;
+    updateMarqueePreview(currentText);
 }
 else if (tab === 'backup') { c.innerHTML = `<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Полный резервный бэкап платформы (JSON)</h4>
@@ -1540,11 +1549,45 @@ function updateMarqueeText(text) {
     const mobile = byId('mobile-marquee-text');
     if (desktop) desktop.innerText = text;
     if (mobile) mobile.innerText = text;
+    const input = byId('admin-marquee-input');
+    if (input && document.activeElement !== input) input.value = text;
+    updateMarqueePreview(text);
+}
+
+function updateMarqueePreview(text) {
+    const preview = byId('admin-marquee-preview');
+    const counter = byId('admin-marquee-counter');
+    if (preview) preview.innerText = text || 'Предпросмотр появится здесь';
+    if (counter) counter.innerText = `${String(text || '').length} символов`;
+}
+
+function handleMarqueeInput(input) {
+    updateMarqueePreview(input.value);
 }
 
 function loadMarqueeText() {
     const savedText = localStorage.getItem(MARQUEE_STORAGE_KEY);
     if (savedText) updateMarqueeText(savedText);
+}
+
+function loadMarqueeFromFirebase() {
+    if (!firebaseDb) {
+        showToast('Firebase ещё не подключён', 'warning');
+        return;
+    }
+    firebaseDb.ref('settings/marqueeText').once('value').then(snapshot => {
+        const text = snapshot.val();
+        if (typeof text !== 'string' || !text.trim()) {
+            showToast('В Firebase пока нет текста бегущей строки', 'warning');
+            return;
+        }
+        localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+        updateMarqueeText(text);
+        showToast('Текст загружен из Firebase', 'success');
+    }).catch(err => {
+        showToast('Не удалось загрузить текст из Firebase', 'error');
+        console.warn('Marquee cloud read error:', err);
+    });
 }
 
 function saveMarqueeSettings() {
@@ -1553,18 +1596,19 @@ function saveMarqueeSettings() {
     const text = input.value.trim();
     if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
 
-    localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-    updateMarqueeText(text);
     if (firebaseDb) {
-        firebaseDb.ref('settings/marqueeText').set(text).then(() => {
+        const marqueeRef = firebaseDb.ref('settings/marqueeText');
+        marqueeRef.set(text).then(() => {
             localStorage.setItem(MARQUEE_STORAGE_KEY, text);
             updateMarqueeText(text);
             showToast('Бегущая строка обновлена!', 'success');
         }).catch(err => {
-            showToast('Сохранено на этом устройстве. Ошибка облачной синхронизации.', 'warning');
+            showToast('Не удалось сохранить текст в Firebase.', 'error');
             console.warn('Marquee cloud save error:', err);
         });
     } else {
+        localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+        updateMarqueeText(text);
         showToast('Сохранено локально (нет связи с БД)', 'warning');
     }
 }
