@@ -78,9 +78,33 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 /* === APP-STYLE: СТРЕЛКА НАЗАД + ПОЛНЫЙ ЭКРАН НА ТЕЛЕФОНЕ === */
 .app-back{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ig-text);font-size:18px;flex-shrink:0;}
 .app-back:active{background:var(--ig-hover);}
+#modal-admin-panel #admin-tab-content{min-width:0;}
+#modal-admin-panel #admin-tab-content .ig-card{min-width:0;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between{flex-wrap:wrap;}
+#modal-admin-panel #admin-tab-content button{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+#modal-admin-panel h3{min-width:0;overflow-wrap:anywhere;}
+#modal-auth .ig-sheet > .text-center{padding-top:2.5rem;}
+#modal-shamcash-qr .ig-sheet > .w-14{margin-top:2.5rem;}
+#modal-report-ad .ig-sheet > .text-center{padding-top:2.5rem;}
+#modal-edit-profile .ig-sheet > h3{min-height:40px;padding-left:3.25rem;display:flex;align-items:center;overflow-wrap:anywhere;}
+#modal-profile #profile-content{padding-top:2.5rem;}
+.ig-sheet h2,.ig-sheet h3{min-width:0;overflow-wrap:anywhere;}
+.ig-sheet button{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+#app-mobile-header,#app-mobile-nav{position:fixed !important;z-index:1000 !important;}
+.ig-modal-blur{z-index:500;}
 @media (max-width:640px){
 .ig-modal-blur:not(#modal-confirm):not(#modal-share){padding:0 !important;align-items:stretch !important;justify-content:stretch !important;}
 .ig-modal-blur:not(#modal-confirm):not(#modal-share)>.ig-sheet{width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;}
+#modal-admin-panel #admin-tab-content{padding:.75rem;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :first-child{flex:1 1 100%;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :last-child{flex:1 1 100%;justify-content:flex-start;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between button{flex-shrink:1;}
+}
+@media (max-width:1023px){
+#app-mobile-header{top:0;right:0;left:0;}
+#app-mobile-nav{right:0;bottom:0;left:0;}
+.ig-modal-blur{top:52px !important;right:0;bottom:52px !important;left:0;}
+.ig-modal-blur > .ig-sheet{max-height:100% !important;}
 }
 </style>
 </head>
@@ -117,7 +141,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </aside>
 <!-- ============ MOBILE HEADER (Instagram) ============ -->
-<header class="lg:hidden sticky top-0 z-40 h-[52px] border-b b-ig bg-card flex items-center gap-3 px-4">
+<header id="app-mobile-header" class="lg:hidden fixed inset-x-0 top-0 z-40 h-[52px] border-b b-ig bg-card flex items-center gap-3 px-4">
 <span class="ig-logo text-[26px] t1 leading-none whitespace-nowrap cursor-pointer" onclick="handleNavClick('home')">Avito Sham</span>
 <div class="relative flex-1">
 <div class="search-wrapper">
@@ -129,7 +153,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button onclick="openSupportModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0" style="background:linear-gradient(45deg,#10b981,#14b8a6)" title="Поддержать проект"><i class="fa-solid fa-hand-holding-dollar text-sm"></i></button>
 </header>
 <!-- ============ MAIN FEED ============ -->
-<main class="lg:ml-[73px] xl:ml-[244px] pt-4 pb-6">
+<main class="lg:ml-[73px] xl:ml-[244px] pt-[68px] lg:pt-4 pb-6">
 <div class="max-w-[470px] mx-auto sm:px-1 space-y-3">
 <div class="ig-card rounded-xl px-2 py-3">
 <div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
@@ -186,7 +210,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <i class="fa-solid fa-arrow-up"></i>
 </button>
 <!-- ============ MOBILE BOTTOM NAV (Instagram) ============ -->
-<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
+<nav id="app-mobile-nav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
 <button id="bn-home" onclick="handleNavClick('home')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
 <button id="bn-shops" onclick="handleNavClick('shops')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
 <button id="bn-create" onclick="handleNavClick('create')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
@@ -400,8 +424,8 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </div>
 <!-- ============ AD DETAIL MODAL ============ -->
-<div id="modal-ad-detail" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-2 sm:p-6">
-<div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col relative">
+<div id="modal-ad-detail" class="fixed inset-0 z-30 lg:z-50 ig-modal-blur hidden flex items-center justify-center p-2 sm:p-6">
+<div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col relative max-lg:h-[calc(100vh-104px)] max-lg:max-h-[calc(100vh-104px)] max-lg:rounded-none">
 <button onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="detail-content" class="overflow-y-auto modal-scroll-body"></div>
 </div>
@@ -550,8 +574,8 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </div>
 <!-- ============ ADMIN PANEL ============ -->
-<div id="modal-admin-panel" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-3">
-<div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col">
+<div id="modal-admin-panel" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-stretch justify-stretch p-0">
+<div class="ig-sheet w-full h-full max-w-none max-h-none rounded-none overflow-hidden flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
 <button onclick="adminPanelBack()" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color:#0095f6"></i><h3 class="text-sm font-bold t1">Панель управления Главного Администратора</h3></div>
@@ -1588,7 +1612,7 @@ else if (tab === 'shops') { const shopsList = users.filter(u => u.shop); const n
 <div class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-user-plus" style="color:#0095f6"></i> Зарегистрировать магазин для пользователя:</div>
 ${noShop.length ? `<div class="flex gap-2"><select id="admin-new-shop-user" class="ig-input flex-1 px-3 py-2 text-xs">${noShop.map(u => `<option value="${u.uid}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join('')}</select><button onclick="adminCreateShopForUser()" class="ig-btn px-3 py-2 text-xs shrink-0">+ Создать</button></div>` : '<div class="text-[11px] t2">Все пользователи уже имеют магазины.</div>'}
 </div>
-<div class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">${shopsList.length === 0 ? '<div class="text-center py-8 t2">Магазинов пока нет</div>' : shopsList.map(u => { const s = u.shop; const isVer = u.verifiedShop || s.isVerified; const uCombos = combos.filter(x => x.shopUid === u.uid).length; return `<div class="ig-card p-3 rounded-xl flex flex-col gap-2">
+<div class="space-y-2 max-h-none overflow-y-auto pr-1">${shopsList.length === 0 ? '<div class="text-center py-8 t2">Магазинов пока нет</div>' : shopsList.map(u => { const s = u.shop; const isVer = u.verifiedShop || s.isVerified; const uCombos = combos.filter(x => x.shopUid === u.uid).length; return `<div class="ig-card p-3 rounded-xl flex flex-col gap-2">
 <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">${s.logo ? `<img src="${s.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store"></i>'}</div>
 <div class="flex-1 min-w-0"><div class="font-bold t1 text-xs flex items-center gap-1.5 flex-wrap"><span>${s.name}</span><span class="px-2 py-0.5 rounded-full text-[9px] border" style="${isVer ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}">${isVer ? 'Подтвержден' : 'На проверке'}</span>${uCombos > 0 ? `<span class="px-2 py-0.5 rounded-full text-[9px] border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.4)"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</div><div class="text-[10px] t2 truncate">Владелец: @${u.username} • ${REGION_NAMES[s.region] || s.region} • ${s.whatsapp}</div></div></div>
 <div class="flex items-center gap-1.5 flex-wrap">
@@ -1597,18 +1621,18 @@ ${noShop.length ? `<div class="flex gap-2"><select id="admin-new-shop-user" clas
 <button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold ${isVer ? 'border b-ig' : 'text-white'}" style="${isVer ? 'color:#f59e0b;background:rgba(245,158,11,.12)' : 'background:#10b981'}">${isVer ? 'Отменить верификацию' : '<i class="fa-solid fa-check"></i> Верифицировать'}</button>
 <button onclick="deleteShopWithConfirm('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button>
 </div></div>`; }).join('')}</div></div>`; }
-else if (tab === 'users') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Пользователи (${users.length})</h4><div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">${users.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
+else if (tab === 'users') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Пользователи (${users.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${users.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
 <div class="flex items-center gap-2.5 min-w-0"><div class="w-8 h-8 rounded-full bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2 text-xs">${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}</div>
 <div class="min-w-0"><div class="font-bold t1 text-xs truncate">${u.kunya || u.username} <span class="text-[10px] t2 font-normal">(@${u.username})</span></div><div class="text-[10px] t2">Роль: <span class="font-bold" style="color:#f59e0b">${u.role}</span> • WA: ${u.whatsapp || '—'}</div></div></div>
 <div class="flex gap-1.5 shrink-0"><button onclick="openCreateAdModalForUser('${u.username}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)" title="Подать объявление от имени этого пользователя"><i class="fa-solid fa-plus"></i> Объявление</button><button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(0,149,246,.12);color:#0095f6;border-color:rgba(0,149,246,.4)">Редакт.</button><button onclick="archiveUserWithConfirm('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(147,51,234,.12);color:#a855f7;border-color:rgba(147,51,234,.4)">Архив</button></div></div>`).join('')}</div></div>`; }
 else if (tab === 'ads') { const activeList = ads.filter(a => a.status === 'ACTIVE'); const archivedList = ads.filter(a => a.status !== 'ACTIVE'); const list = adminAdsTab === 'active' ? activeList : archivedList; c.innerHTML = `<div class="space-y-3">
 <div class="flex gap-2"><button onclick="switchAdminAdsSubTab('active')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'active' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'active' ? 'background:#0095f6;border-color:#0095f6' : ''}">Активные (${activeList.length})</button><button onclick="switchAdminAdsSubTab('archived')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'archived' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'archived' ? 'background:#9333ea;border-color:#9333ea' : ''}">Архив / Продано / Передумал (${archivedList.length})</button></div>
-<div class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Список пуст</div>' : list.map(a => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
+<div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Список пуст</div>' : list.map(a => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
 <div class="flex items-center gap-3 min-w-0"><img src="${a.images ? a.images[0] : a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="min-w-0"><div class="font-bold t1 text-xs flex items-center gap-1.5 flex-wrap"><span class="truncate">${a.title}</span><span class="text-[10px] font-mono t2">(${a.id})</span>${a.status !== 'ACTIVE' ? `<span class="px-1.5 py-0.5 rounded text-[8px] font-bold border" style="${a.status === 'SOLD' ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : (a.status === 'WITHDRAWN' ? 'background:var(--ig-field);color:var(--ig-text2);border-color:var(--ig-border)' : 'background:rgba(147,51,234,.15);color:#a855f7;border-color:rgba(147,51,234,.4)')}">${a.status === 'SOLD' ? 'ПРОДАНО' : (a.status === 'WITHDRAWN' ? 'ПЕРЕДУМАЛ' : 'АРХИВ')}</span>` : ''}</div><div class="text-[10px] t2 truncate">${a.city} • @${a.sellerUsername} • 👁 ${a.views || 0} • ❤ ${(a.likes || []).length}</div></div></div>
 <div class="flex items-center gap-1.5 shrink-0 flex-wrap">${a.status === 'ACTIVE' ? `<button onclick="openAdDetail('${a.id}', false)" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(0,149,246,.12);color:#0095f6;border-color:rgba(0,149,246,.4)">Открыть</button><button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)">Изменить</button><button onclick="markAdSold('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Продано</button><button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(147,51,234,.12);color:#a855f7;border-color:rgba(147,51,234,.4)">Архив</button>` : `<button onclick="restoreAd('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Восстановить</button>`}<button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956">Удалить</button></div></div>`).join('')}</div></div>`; }
 else if (tab === 'reports') { const sortedReports = [...reports].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); c.innerHTML = `<div class="space-y-3">
 <h4 class="font-bold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-flag text-red-500"></i> Жалобы пользователей (${sortedReports.length})</h4>
-<div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+<div class="space-y-2 max-h-none overflow-y-auto pr-1">
 ${sortedReports.length === 0 ? '<div class="text-center py-8 t2">Жалоб пока нет</div>' : sortedReports.map(r => { const ad = ads.find(a => a.id === r.adId); const reasonMap = { 'scam': 'Мошенничество', 'fake': 'Фейк', 'prohibited': 'Запрещенный товар', 'spam': 'Спам', 'other': 'Другое' }; return `<div class="ig-card p-3 rounded-xl border-l-4 border-red-500">
 <div class="flex justify-between items-start mb-2">
 <div>
@@ -1624,7 +1648,7 @@ ${r.comment ? `<div class="text-xs t1 italic">"${r.comment}"</div>` : ''}
 ${ad ? `<button onclick="closeModal('modal-admin-panel'); openAdDetail('${ad.id}')" class="w-full py-1.5 rounded-lg text-xs font-semibold border b-ig t1 hover:bg-field">Открыть объявление</button>` : ''}
 </div>`; }).join('')}
 </div></div>`; }
-else if (tab === 'archive') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Архив пользователей (${archivedUsers.length})</h4><div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">${archivedUsers.length === 0 ? '<div class="text-center py-8 t2">Архив пуст</div>' : archivedUsers.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs">${u.kunya || u.username} (@${u.username})</div><div class="text-[10px] t2">${u.role} • ${u.whatsapp || '—'}</div></div><div class="flex gap-1.5 shrink-0"><button onclick="restoreUserFromArchive('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Вернуть</button><button onclick="deleteUserPermanently('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956">Удалить</button></div></div>`).join('')}</div></div>`; }
+else if (tab === 'archive') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Архив пользователей (${archivedUsers.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${archivedUsers.length === 0 ? '<div class="text-center py-8 t2">Архив пуст</div>' : archivedUsers.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs">${u.kunya || u.username} (@${u.username})</div><div class="text-[10px] t2">${u.role} • ${u.whatsapp || '—'}</div></div><div class="flex gap-1.5 shrink-0"><button onclick="restoreUserFromArchive('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Вернуть</button><button onclick="deleteUserPermanently('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956">Удалить</button></div></div>`).join('')}</div></div>`; }
 else if (tab === 'cats') { c.innerHTML = `<div class="space-y-3">
 <h4 class="font-bold t1 text-xs">Основные категории ленты (${categories.length})</h4>
 <div class="ig-card p-4 rounded-xl space-y-3">
@@ -1634,7 +1658,7 @@ else if (tab === 'cats') { c.innerHTML = `<div class="space-y-3">
 <div class="flex flex-wrap gap-1.5">${CATEGORY_ICON_POOL.map(ic => `<button type="button" onclick="pickCatIcon('${ic}')" class="w-9 h-9 rounded-lg border flex items-center justify-center transition-all ${catIconChoice === ic ? 'text-white scale-110' : 'b-ig t1 hover:bg-field'}" style="${catIconChoice === ic ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-solid ${ic}"></i></button>`).join('')}</div>
 <div class="flex gap-2"><button onclick="saveCategoryForm()" class="flex-1 py-2.5 rounded-lg text-xs font-bold text-white" style="background:#0095f6">${editingCatId ? 'Сохранить изменения' : '+ Добавить категорию'}</button>${editingCatId ? `<button onclick="cancelEditCategory()" class="px-4 py-2.5 rounded-lg ig-btn-outline text-xs">Отмена</button>` : ''}</div>
 </div>
-<div class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">${categories.map(cat => { const cnt = getCategoryAdsCount(cat.id); return `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
+<div class="space-y-2 max-h-none overflow-y-auto pr-1">${categories.map(cat => { const cnt = getCategoryAdsCount(cat.id); return `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
 <div class="flex items-center gap-3 min-w-0"><div class="w-10 h-10 rounded-lg bg-field border b-ig flex items-center justify-center shrink-0" style="color:#f59e0b"><i class="fa-solid ${cat.icon || 'fa-tag'}"></i></div>
 <div class="min-w-0"><div class="font-bold t1 text-xs truncate">${cat.name}</div><div class="text-[10px] t2">ID: ${cat.id} • Объявлений: ${cnt}</div></div></div>
 <div class="flex gap-1.5 shrink-0"><button onclick="startEditCategory('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteCategoryWithConfirm('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('')}</div></div>`; }
