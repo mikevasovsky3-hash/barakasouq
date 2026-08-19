@@ -55,7 +55,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 @keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.9)}100%{transform:scale(1)}}
 .card-in{animation:cardIn .3s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-2{display:-webkit-box;line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--ig-border);border-radius:9999px}
 .no-scrollbar::-webkit-scrollbar{display:none}
@@ -67,11 +67,12 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 #btn-scroll-top { transition: all 0.3s ease; opacity: 0; pointer-events: none; transform: translateY(20px); }
 #btn-scroll-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 /* === БЕГУЩАЯ СТРОКА В ПОИСКЕ === */
-.search-wrapper { position: relative; width: 100%; height: 36px; display: flex; align-items: center; }
-.marquee-container { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; pointer-events: none; padding-left: 36px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
+.search-wrapper { position: relative; width: 100%; height: 36px; display: flex; align-items: center; background: var(--ig-field); border-radius: 8px; overflow: hidden; }
+.marquee-container { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; overflow: hidden; pointer-events: none; padding-left: 36px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
 .marquee-content { white-space: nowrap; color: var(--ig-text2); font-size: 13px; animation: marqueeScroll 20s linear infinite; }
 @keyframes marqueeScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 .ig-input:focus ~ .marquee-container, .ig-input:not(:placeholder-shown) ~ .marquee-container { opacity: 0; }
+.search-wrapper .ig-input { background: transparent; position: relative; z-index: 2; }
 .ig-input:focus::placeholder { color: var(--ig-text2); opacity: .5; }
 /* === APP-STYLE: СТРЕЛКА НАЗАД + ПОЛНЫЙ ЭКРАН НА ТЕЛЕФОНЕ === */
 .app-back{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ig-text);font-size:18px;flex-shrink:0;}
@@ -93,7 +94,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="search-wrapper">
 <input type="text" id="search-input-desktop" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm relative z-10">
 <span class="absolute left-3 top-2.5 t2 z-20 pointer-events-none" id="sb-search-ic"></span>
-<div class="marquee-container"><div class="marquee-content">🔥 Добро пожаловать на Avito Sham! • 🇸 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+<div class="marquee-container"><div class="marquee-content" id="desktop-marquee-text">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
 </div>
 </div>
 <nav class="space-y-1 flex-1">
@@ -121,7 +122,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="search-wrapper">
 <input type="text" id="search-input" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm relative z-10">
 <span class="absolute left-3 top-2.5 t2 z-20 pointer-events-none" id="hd-search-ic"></span>
-<div class="marquee-container"><div class="marquee-content">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+<div class="marquee-container"><div class="marquee-content" id="mobile-marquee-text">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
 </div>
 </div>
 <button onclick="openSupportModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0" style="background:linear-gradient(45deg,#10b981,#14b8a6)" title="Поддержать проект"><i class="fa-solid fa-hand-holding-dollar text-sm"></i></button>
@@ -559,6 +560,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button onclick="switchAdminTab('archive')" id="atab-archive" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Архив</button>
 <button onclick="switchAdminTab('cats')" id="atab-cats" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Категории</button>
 <button onclick="switchAdminTab('rates')" id="atab-rates" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Курсы валют</button>
+<button onclick="switchAdminTab('marquee')" id="atab-marquee" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Бегущая строка</button>
 <button onclick="switchAdminTab('backup')" id="atab-backup" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Бэкап БД</button>
 </div>
 <div id="admin-tab-content" class="p-5 overflow-y-auto flex-1 space-y-4 text-sm modal-scroll-body"></div>
@@ -589,6 +591,7 @@ let lastRatesUpdate = null, sharePayload = null, modalStack = [];
 let reports = [];
 let lastReportCount = 0;
 let lastShareBlob = null;
+const MARQUEE_STORAGE_KEY = 'bs_marquee_text';
 const SHAMCASH_ID = '3adfe36abcbe52f1a4b008cd324082fb';
 const PLACEHOLDER_IMG = 'https://placehold.co/800x1000/1e293b/fff?text=Avito+Sham';
 let EXCHANGE_RATES = { SYP: 131.70, TRY: 47.74 };
@@ -1114,8 +1117,17 @@ if (lastReportCount > 0 && newReports.length > lastReportCount) { playNotificati
 lastReportCount = newReports.length;
 reports = newReports;
 if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') { renderAdminTabContent(); }
-}); }
+});
+// Listen for Marquee updates
+firebaseDb.ref('settings/marqueeText').on('value', snap => {
+    const txt = snap.val();
+    if (txt && !localStorage.getItem(MARQUEE_STORAGE_KEY)) {
+        updateMarqueeText(txt);
+    }
+});
+}
 function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
+
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
 async function fetchLiveExchangeRates(manual = false) { try { const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); const data = await res.json(); const ov = data?.overview; const ovObj = Array.isArray(ov) ? (ov[0] || {}) : (ov || {}); const ratesArr = ovObj?.data?.rates || data?.data?.rates || (Array.isArray(data?.rates) ? data.rates : null); const globalFx = ovObj?.global_fx || data?.global_fx || null; const pickCity = r => { const c = r?.cities || {}; return c.damascus || c.Damascus || Object.values(c)[0] || {}; }; let rawUsd = null, rawTry = null, sypVal = null, tryVal = null; if (Array.isArray(ratesArr)) { const usd = ratesArr.find(r => r.code === 'USD'); const tryp = ratesArr.find(r => r.code === 'TRY'); if (usd) { const cv = pickCity(usd); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawUsd = raw; } if (tryp) { const cv = pickCity(tryp); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawTry = raw; } } if (rawUsd !== null) sypVal = rawUsd > 1000 ? rawUsd / 100 : rawUsd; if (Array.isArray(globalFx)) { const p = globalFx.find(g => String(g.pair || '').toUpperCase() === 'USD/TRY'); if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; } } if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2); if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) { EXCHANGE_RATES.SYP = +sypVal.toFixed(2); if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2); lastRatesUpdate = new Date(); if (firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES); renderAds(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent(); if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error'); } catch (err) { console.warn('Live rates error:', err); if (manual) showToast('Ошибка получения курса валют', 'error'); } }
 /* ================= SORTING ================= */
@@ -1352,7 +1364,7 @@ function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-prof
 async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } u.avatar = na; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); saveCachedAds();  if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
 /* ================= ADMIN ================= */
 function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
-function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'backup'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
+function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
 function switchAdminAdsSubTab(sub) { adminAdsTab = sub; renderAdminTabContent(); }
 function goToAdminSection(tab, sub = null) { if (sub) adminAdsTab = sub; switchAdminTab(tab); }
 function archiveUserWithConfirm(uid) { const u = users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя архивировать суперюзера!', 'error'); return; } if (currentUser && currentUser.uid === uid) { showToast('Нельзя архивировать себя!', 'error'); return; } showConfirmModal('Архивация пользователя', `Переместить @${u.username} в архив? Его объявления будут скрыты из ленты.`, () => { users = users.filter(x => x.uid !== uid); archivedUsers.push(u); ads.forEach(a => { if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) a.status = 'ARCHIVED'; }); saveCachedAds(); if (firebaseDb) { firebaseDb.ref(`users/${uid}`).remove(); firebaseDb.ref(`archivedUsers/${uid}`).set(u); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Пользователь архивирован', 'info'); }); }
@@ -1440,6 +1452,23 @@ else if (tab === 'rates') { c.innerHTML = `<div class="space-y-4">
 </div>
 <button onclick="applyManualRates()" class="w-full py-2.5 rounded-lg text-white text-xs font-bold" style="background:#9333ea">Сохранить курс вручную</button>
 </div></div>`; }
+else if (tab === 'marquee') { 
+    // Get current text from DOM as default value
+    const currentText = byId('desktop-marquee-text')?.innerText || '';
+    c.innerHTML = `<div class="space-y-4">
+<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(0,149,246,.3);background:rgba(0,149,246,.06)">
+<div class="flex items-center gap-2 mb-2"><i class="fa-solid fa-text-width" style="color:#0095f6"></i><h4 class="font-bold t1 text-sm">Управление бегущей строкой</h4></div>
+<p class="text-xs t2">Текст отображается в поле поиска на главной странице (Desktop и Mobile).</p>
+<textarea id="admin-marquee-input" rows="4" class="ig-input w-full px-3.5 py-2.5 text-sm" placeholder="Введите текст бегущей строки...">${currentText}</textarea>
+<div class="flex gap-2 pt-2">
+<button onclick="saveMarqueeSettings()" class="ig-btn px-4 py-2.5 text-xs flex-1"><i class="fa-solid fa-save"></i> Сохранить и обновить</button>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-field border b-ig text-xs t2">
+<i class="fa-solid fa-circle-info"></i> Совет: Используйте разделители (например, •) для разделения новостей.
+</div>
+</div>`; 
+}
 else if (tab === 'backup') { c.innerHTML = `<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Полный резервный бэкап платформы (JSON)</h4>
 <p class="text-xs t2 leading-relaxed">Выгрузка и восстановление всей базы данных платформы (объявления, пользователи, магазины, категории, акции, курсы, жалобы) в один клик.</p>
@@ -1461,72 +1490,132 @@ byId('report-comment').value = '';
 openModal('modal-report-ad');
 }
 function submitReport(e) {
-e.preventDefault();
-const adId = byId('report-ad-id').value;
-const reason = byId('report-reason').value;
-const comment = byId('report-comment').value.trim();
-if (!reason) { showToast('Выберите причину жалобы', 'warning'); return; }
-const report = {
-adId: adId,
-reason: reason,
-comment: comment,
-reporterUsername: currentUser ? currentUser.username : 'Anonymous',
-timestamp: Date.now()
-};
-if (firebaseDb) {
-const newKey = firebaseDb.ref('reports').push().key;
-firebaseDb.ref('reports/' + newKey).set(report).then(() => {
-showToast('Жалоба отправлена. Спасибо!', 'success');
-closeModal('modal-report-ad');
-}).catch(err => {
-showToast('Ошибка отправки жалобы', 'error');
-console.error(err);
-});
-} else {
-showToast('Нет соединения с сервером', 'error');
+    e.preventDefault();
+    const adId = byId('report-ad-id').value;
+    const reason = byId('report-reason').value;
+    const comment = byId('report-comment').value.trim();
+    
+    if (!reason) { 
+        showToast('Выберите причину жалобы', 'warning'); 
+        return; 
+    }
+
+    const report = {
+        adId: adId,
+        reason: reason,
+        comment: comment,
+        reporterUsername: currentUser ? currentUser.username : 'Anonymous',
+        timestamp: Date.now()
+    };
+
+    if (firebaseDb) {
+        // Generate a unique key for the report
+        const newKey = firebaseDb.ref('reports').push().key;
+        firebaseDb.ref('reports/' + newKey).set(report).then(() => {
+            showToast('Жалоба отправлена. Спасибо!', 'success');
+            closeModal('modal-report-ad');
+        }).catch(err => {
+            showToast('Ошибка отправки жалобы', 'error');
+            console.error(err);
+        });
+    } else {
+        showToast('Нет соединения с сервером', 'error');
+    }
 }
-}
+
 function deleteReport(reportId) {
-if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
-if (firebaseDb) {
-firebaseDb.ref('reports/' + reportId).remove().then(() => {
-showToast('Жалоба удалена', 'info');
-renderAdminTabContent();
-});
+    if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+    if (firebaseDb) {
+        firebaseDb.ref('reports/' + reportId).remove().then(() => {
+            showToast('Жалоба удалена', 'info');
+            renderAdminTabContent();
+        });
+    }
 }
+
+/* ================= MARQUEE CONTROL FUNCTIONS ================= */
+function updateMarqueeText(text) {
+    const desktop = byId('desktop-marquee-text');
+    const mobile = byId('mobile-marquee-text');
+    if (desktop) desktop.innerText = text;
+    if (mobile) mobile.innerText = text;
 }
-/* ================= INIT ================= */
+
+function loadMarqueeText() {
+    const savedText = localStorage.getItem(MARQUEE_STORAGE_KEY);
+    if (savedText) updateMarqueeText(savedText);
+}
+
+function saveMarqueeSettings() {
+    const input = byId('admin-marquee-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
+
+    localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+    updateMarqueeText(text);
+    if (firebaseDb) {
+        firebaseDb.ref('settings/marqueeText').set(text).then(() => {
+            showToast('Бегущая строка обновлена!', 'success');
+        }).catch(err => {
+            showToast('Сохранено на этом устройстве. Ошибка облачной синхронизации.', 'warning');
+            console.warn('Marquee cloud save error:', err);
+        });
+    } else {
+        showToast('Сохранено локально (нет связи с БД)', 'warning');
+    }
+}
+
+/* ================= INITIALIZATION ================= */
 window.onload = function () {
-loadCachedAds();
-restoreUserSession();
-if (localStorage.getItem('bs_theme') === 'light') document.body.classList.add('light-mode');
-const sbSearch = byId('sb-search-ic'), hdSearch = byId('hd-search-ic'), sbTheme = byId('sb-theme-ic');
-if (sbSearch) sbSearch.innerHTML = IGSVG.search();
-if (hdSearch) hdSearch.innerHTML = IGSVG.search();
-if (sbTheme) sbTheme.innerHTML = document.body.classList.contains('light-mode') ? IGSVG.moon() : IGSVG.sun();
-const rulesBtn = byId('rules-accept-btn');
-if (rulesBtn) rulesBtn.addEventListener('click', acceptLaunchRules);
-initFirebaseSync();
-fetchLiveExchangeRates();
-renderCategoryPills();
-renderAds();
-updateNavState();
-const hash = window.location.hash;
-if (hash && hash.startsWith('#ad-')) {
-const adId = hash.substring(4);
-setTimeout(() => {
-const ad = ads.find(a => a.id === adId);
-if (ad) {
-openAdDetail(adId);
-} else {
-console.log('Ad not found in local cache yet:', adId);
-}
-}, 1000);
-}
-if (!localStorage.getItem('bs_rules_accepted')) openModal('modal-rules-agreement');
-setInterval(() => { fetchLiveExchangeRates(); }, 300000);
-const scrollBtn = byId('btn-scroll-top');
-window.addEventListener('scroll', () => { if (window.scrollY > 300) scrollBtn.classList.add('visible'); else scrollBtn.classList.remove('visible'); });
+    loadCachedAds();
+    restoreUserSession();
+    loadMarqueeText();
+    
+    // Theme Init
+    if (localStorage.getItem('bs_theme') === 'light') document.body.classList.add('light-mode');
+    
+    // Icons Init
+    const sbSearch = byId('sb-search-ic'), hdSearch = byId('hd-search-ic'), sbTheme = byId('sb-theme-ic');
+    if (sbSearch) sbSearch.innerHTML = IGSVG.search();
+    if (hdSearch) hdSearch.innerHTML = IGSVG.search();
+    if (sbTheme) sbTheme.innerHTML = document.body.classList.contains('light-mode') ? IGSVG.moon() : IGSVG.sun();
+
+    // Rules Modal Logic
+    const rulesBtn = byId('rules-accept-btn');
+    if (rulesBtn) rulesBtn.addEventListener('click', acceptLaunchRules);
+
+    // Firebase & Data Init
+    initFirebaseSync();
+    fetchLiveExchangeRates();
+    
+    // Initial Render
+    renderCategoryPills();
+    renderAds();
+    updateNavState();
+
+    // Deep Link Handling (#ad-ID)
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#ad-')) {
+        const adId = hash.substring(4);
+        setTimeout(() => {
+            const ad = ads.find(a => a.id === adId);
+            if (ad) openAdDetail(adId);
+        }, 1000);
+    }
+
+    // Show Rules if not accepted
+    if (!localStorage.getItem('bs_rules_accepted')) openModal('modal-rules-agreement');
+
+    // Auto-refresh rates every 5 mins
+    setInterval(() => { fetchLiveExchangeRates(); }, 300000);
+
+    // Scroll Top Button Visibility
+    const scrollBtn = byId('btn-scroll-top');
+    window.addEventListener('scroll', () => { 
+        if (window.scrollY > 300) scrollBtn.classList.add('visible'); 
+        else scrollBtn.classList.remove('visible'); 
+    });
 };
 </script>
 </body>
