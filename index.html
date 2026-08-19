@@ -2,7 +2,9 @@
 <html lang="ru" class="h-full">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Avito Sham — Авито Шам</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -37,7 +39,7 @@ max-width:100vw; overflow-x:hidden;
 .ig-modal-blur{background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
 .ig-input{background:var(--ig-field);border:1px solid transparent;color:var(--ig-text);border-radius:8px;outline:none;transition:border .15s}
 .ig-input:focus{border-color:var(--ig-text2)}
-.ig-input::placeholder{color:var(--ig-text2)}
+.ig-input::placeholder{color:transparent}
 select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 .ig-btn{background:#0095f6;color:#fff;border-radius:8px;font-weight:600;transition:background .15s}
 .ig-btn:hover{background:#1877f2}
@@ -64,6 +66,20 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 #btn-scroll-top { transition: all 0.3s ease; opacity: 0; pointer-events: none; transform: translateY(20px); }
 #btn-scroll-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+/* === БЕГУЩАЯ СТРОКА В ПОИСКЕ === */
+.search-wrapper { position: relative; width: 100%; height: 36px; display: flex; align-items: center; }
+.marquee-container { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; pointer-events: none; padding-left: 36px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
+.marquee-content { white-space: nowrap; color: var(--ig-text2); font-size: 13px; animation: marqueeScroll 20s linear infinite; }
+@keyframes marqueeScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.ig-input:focus ~ .marquee-container, .ig-input:not(:placeholder-shown) ~ .marquee-container { opacity: 0; }
+.ig-input:focus::placeholder { color: var(--ig-text2); opacity: .5; }
+/* === APP-STYLE: СТРЕЛКА НАЗАД + ПОЛНЫЙ ЭКРАН НА ТЕЛЕФОНЕ === */
+.app-back{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ig-text);font-size:18px;flex-shrink:0;}
+.app-back:active{background:var(--ig-hover);}
+@media (max-width:640px){
+.ig-modal-blur:not(#modal-confirm):not(#modal-share){padding:0 !important;align-items:stretch !important;justify-content:stretch !important;}
+.ig-modal-blur:not(#modal-confirm):not(#modal-share)>.ig-sheet{width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;}
+}
 </style>
 </head>
 <body class="min-h-full flex flex-col pb-16 lg:pb-0">
@@ -74,8 +90,11 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <span class="xl:hidden flex w-7 h-7 rounded-lg text-white items-center justify-center font-bold text-sm story-ring">A</span>
 </div>
 <div class="relative hidden xl:block mb-3">
-<input type="text" id="search-input-desktop" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm">
-<span class="absolute left-3 top-2.5 t2" id="sb-search-ic"></span>
+<div class="search-wrapper">
+<input type="text" id="search-input-desktop" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm relative z-10">
+<span class="absolute left-3 top-2.5 t2 z-20 pointer-events-none" id="sb-search-ic"></span>
+<div class="marquee-container"><div class="marquee-content">🔥 Добро пожаловать на Avito Sham! • 🇸 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+</div>
 </div>
 <nav class="space-y-1 flex-1">
 <button id="sb-home" onclick="handleNavClick('home')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Главная</span></button>
@@ -99,8 +118,11 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <header class="lg:hidden sticky top-0 z-40 h-[52px] border-b b-ig bg-card flex items-center gap-3 px-4">
 <span class="ig-logo text-[26px] t1 leading-none whitespace-nowrap cursor-pointer" onclick="handleNavClick('home')">Avito Sham</span>
 <div class="relative flex-1">
-<input type="text" id="search-input" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm">
-<span class="absolute left-3 top-2.5 t2" id="hd-search-ic"></span>
+<div class="search-wrapper">
+<input type="text" id="search-input" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-9 pr-3 text-sm relative z-10">
+<span class="absolute left-3 top-2.5 t2 z-20 pointer-events-none" id="hd-search-ic"></span>
+<div class="marquee-container"><div class="marquee-content">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через ShamCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+</div>
 </div>
 <button onclick="openSupportModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0" style="background:linear-gradient(45deg,#10b981,#14b8a6)" title="Поддержать проект"><i class="fa-solid fa-hand-holding-dollar text-sm"></i></button>
 </header>
@@ -172,7 +194,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ SUPPORT / SHAMCASH QR ============ -->
 <div id="modal-shamcash-qr" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 text-center space-y-4 relative shadow-2xl">
-<button onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 right-3 ig-btn-nav t2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="w-14 h-14 mx-auto rounded-2xl text-white flex items-center justify-center text-2xl" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar"></i></div>
 <div>
 <h3 class="text-base font-bold t1">Поддержка сервера — ShamCash</h3>
@@ -205,7 +227,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
 <div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2">
-<button onclick="closeModal('modal-image-viewer')" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
 <img id="fullscreen-viewer-img" class="max-w-full max-h-[92vh] object-contain rounded-lg">
 </div>
 <!-- ============ RULES MODAL ============ -->
@@ -233,7 +255,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AUTH MODAL ============ -->
 <div id="modal-auth" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-auth')" class="absolute top-3 right-3 ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-auth')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="text-center pt-2"><span class="ig-logo text-[34px] t1">Avito Sham</span></div>
 <div class="flex border-b b-ig text-sm">
 <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold border-b-2" style="border-color:#0095f6;color:#0095f6">Вход</button>
@@ -263,9 +285,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ CREATE AD MODAL ============ -->
 <div id="modal-create-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Подача нового объявления</h3>
-<button onclick="closeModal('modal-create-ad')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <form onsubmit="handleCreateAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <div id="draft-restore-banner" class="hidden mb-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
@@ -328,9 +350,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ EDIT AD MODAL ============ -->
 <div id="modal-edit-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-edit-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Редактирование объявления</h3>
-<button onclick="closeModal('modal-edit-ad')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <form onsubmit="handleEditAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <input type="hidden" id="edit-ad-id">
@@ -374,21 +396,21 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AD DETAIL MODAL ============ -->
 <div id="modal-ad-detail" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-2 sm:p-6">
 <div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col relative">
-<button onclick="closeModal('modal-ad-detail')" class="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="detail-content" class="overflow-y-auto modal-scroll-body"></div>
 </div>
 </div>
 <!-- ============ PROFILE MODAL ============ -->
 <div id="modal-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-md rounded-2xl p-6 relative max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-profile')" class="absolute top-3 right-3 ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="profile-content" class="space-y-4"></div>
 </div>
 </div>
 <!-- ============ EDIT PROFILE MODAL ============ -->
 <div id="modal-edit-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-3 text-sm max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-edit-profile')" class="absolute top-3 right-3 ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-edit-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="font-bold text-sm t1">Редактирование анкеты</h3>
 <form onsubmit="handleSaveProfile(event)" class="space-y-2.5">
 <input type="hidden" id="edit-profile-username">
@@ -410,9 +432,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ CREATE / EDIT SHOP MODAL ============ -->
 <div id="modal-create-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-create-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 id="shop-modal-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i><span>Открытие нового магазина</span></h3>
-<button onclick="closeModal('modal-create-shop')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <form onsubmit="handleCreateShopSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <div id="shop-admin-target-banner" class="hidden p-3 rounded-xl border text-xs font-bold" style="border-color:#93c5fd;background:rgba(59,130,246,.1);color:#60a5fa"><i class="fa-solid fa-user-shield"></i> <span id="shop-admin-target-text"></span></div>
@@ -449,16 +471,16 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ SHOP SHOWCASE MODAL ============ -->
 <div id="modal-shop-showcase" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col relative">
-<button onclick="closeModal('modal-shop-showcase')" class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-shop-showcase')" class="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="shop-showcase-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
 </div>
 </div>
 <!-- ============ MY SHOP MODAL ============ -->
 <div id="modal-my-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-2xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-my-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i> Панель управления магазином</h3>
-<button onclick="closeModal('modal-my-shop')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <div id="my-shop-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
 </div>
@@ -466,9 +488,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ COMBO / PROMO BUILDER ============ -->
 <div id="modal-combo-builder" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col" style="border-color:rgba(249,115,22,.4)">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-combo-builder')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 id="combo-builder-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-fire" style="color:#f97316"></i> Новая акция (комбо-набор)</h3>
-<button onclick="closeModal('modal-combo-builder')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <form onsubmit="handleComboSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <input type="hidden" id="combo-edit-id"><input type="hidden" id="combo-target-uid">
@@ -500,7 +522,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ REPORT MODAL ============ -->
 <div id="modal-report-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
-<button onclick="closeModal('modal-report-ad')" class="absolute top-3 right-3 ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
+<button onclick="closeModal('modal-report-ad')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="text-center space-y-2">
 <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-xl mx-auto"><i class="fa-solid fa-flag"></i></div>
 <h3 class="text-base font-bold t1">Пожаловаться на объявление</h3>
@@ -524,9 +546,9 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ ADMIN PANEL ============ -->
 <div id="modal-admin-panel" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-3">
 <div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col">
-<div class="px-5 py-3.5 border-b b-ig flex items-center justify-between shrink-0">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="closeModal('modal-admin-panel')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color:#0095f6"></i><h3 class="text-sm font-bold t1">Панель управления Главного Администратора</h3></div>
-<button onclick="closeModal('modal-admin-panel')" class="ig-btn-nav t2"><i class="fa-solid fa-xmark"></i></button>
 </div>
 <div class="flex border-b b-ig overflow-x-auto no-scrollbar text-sm shrink-0">
 <button onclick="switchAdminTab('overview')" id="atab-overview" class="px-4 py-3 font-semibold whitespace-nowrap border-b-2 border-transparent">Обзор</button>
@@ -582,7 +604,6 @@ let categories = [
 { id:'other', name:'Прочее', icon:'fa-boxes-stacked' }
 ];
 const CATEGORY_ICON_POOL = ['fa-mobile-screen','fa-laptop','fa-car','fa-house','fa-couch','fa-wrench','fa-boxes-stacked','fa-shirt','fa-baby','fa-utensils','fa-book','fa-futbol','fa-gamepad','fa-tractor','fa-truck','fa-gem','fa-paw','fa-seedling','fa-motorcycle','fa-camera','fa-tv','fa-blender','fa-chair','fa-hammer','fa-paint-roller','fa-plug','fa-scissors','fa-briefcase','fa-bicycle','fa-ring'];
-// SECURITY FIX: No hardcoded users. Data loads from Firebase.
 let users = [];
 let archivedUsers = [];
 let combos = [];
@@ -620,10 +641,20 @@ let p = amount; if (fromCurr === 'SYP') p = amount / EXCHANGE_RATES.SYP; if (fro
 return `$${p.toFixed(2)} <span class="t2 text-[10px]">/ ${Math.round(p * EXCHANGE_RATES.SYP).toLocaleString()} SYP</span>`;
 }
 function priceBadge(ad) { if (ad.isNegotiable) return '<span style="color:#93c5fd">🤝 Договорная</span>'; if (ad.isFree || ad.price === 0) return '<span style="color:#6ee7b7">🎁 ДАРОМ</span>'; let p = ad.price; if (ad.currency === 'SYP') p = ad.price / EXCHANGE_RATES.SYP; if (ad.currency === 'TRY') p = ad.price / EXCHANGE_RATES.TRY; return '$' + p.toFixed(2); }
-/* ================= MODAL STACK ================= */
-function openModal(id) { const m = byId(id); if (!m) return; m.classList.remove('hidden'); if (!modalStack.includes(id)) modalStack.push(id); m.style.zIndex = String(500 + modalStack.indexOf(id) * 30); document.body.classList.add('overflow-hidden'); }
-function closeModal(id) { const m = byId(id); if (m) m.classList.add('hidden'); modalStack = modalStack.filter(x => x !== id); if (modalStack.length === 0) document.body.classList.remove('overflow-hidden'); }
-// ИСПРАВЛЕНИЕ #5: Защита от QuotaExceededError
+/* ================= MODAL STACK + ANDROID BACK ================= */
+let suppressPop = false;
+function openModal(id) { const m = byId(id); if (!m) return; m.classList.remove('hidden'); if (!modalStack.includes(id)) modalStack.push(id); m.style.zIndex = String(500 + modalStack.indexOf(id) * 30); document.body.classList.add('overflow-hidden'); try { history.pushState({ appModal: id }, ''); } catch (e) {} }
+function closeModal(id) { const m = byId(id); if (m) m.classList.add('hidden'); const wasTop = modalStack[modalStack.length - 1] === id; modalStack = modalStack.filter(x => x !== id); if (modalStack.length === 0) document.body.classList.remove('overflow-hidden'); if (wasTop && history.state && history.state.appModal === id) { suppressPop = true; try { history.back(); } catch (e) {} } }
+window.addEventListener('popstate', function () {
+if (suppressPop) { suppressPop = false; return; }
+if (modalStack.length) {
+const top = modalStack[modalStack.length - 1];
+if (top === 'modal-rules-agreement') return;
+const m = byId(top); if (m) m.classList.add('hidden');
+modalStack.pop();
+if (modalStack.length === 0) document.body.classList.remove('overflow-hidden');
+}
+});
 function saveCachedAds() {
 try {
 localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
@@ -658,7 +689,6 @@ if (sp) { sp.querySelector('.nav-ic').innerHTML = `<span class="w-6 h-6 rounded-
 if (bp) { bp.innerHTML = avHtml; if (active === 'profile') bp.style.borderColor = '#f5f5f5'; else bp.style.borderColor = ''; }
 }
 /* ================= IMAGES ================= */
-// ИСПРАВЛЕНИЕ #5: Уменьшение размера фото (650->480, 0.65->0.55) для экономии места
 function compressSingleImageFile(file, maxDim = 480, quality = 0.55) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); let d = c.toDataURL('image/webp', quality); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
 function processSquareImageCrop(file, size = 300) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); c.width = size; c.height = size; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size); let d = c.toDataURL('image/webp', 0.75); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.75); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
 async function processAvatarUpload(e, mode = 'auth') { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 250); byId(mode === 'auth' ? 'auth-avatar-data' : 'edit-profile-avatar-data').value = d; const box = byId(mode === 'auth' ? 'auth-avatar-preview-box' : 'edit-profile-avatar-preview-box'); const img = byId(mode === 'auth' ? 'auth-avatar-preview-img' : 'edit-profile-avatar-preview-img'); if (box && img) { img.src = d; box.classList.remove('hidden'); } } catch (err) { console.warn('Avatar processing error:', err); showToast('Не удалось обработать аватарку', 'error'); } }
@@ -682,7 +712,7 @@ body: formData
 });
 const data = await response.json();
 if (data.success) {
-arr.push(data.data.url); 
+arr.push(data.data.url);
 renderPhotoThumbnailsGrid(mode);
 } else {
 throw new Error('ImgBB error');
@@ -690,8 +720,8 @@ throw new Error('ImgBB error');
 } catch (err) {
 console.error(err);
 showToast('Ошибка загрузки фото. Проверьте интернет.', 'error');
-e.target.value = ''; 
-return; 
+e.target.value = '';
+return;
 }
 }
 e.target.value = '';
@@ -704,8 +734,8 @@ function openSupportModal() { openModal('modal-shamcash-qr'); setTimeout(renderS
 function renderSupportQR() { const box = byId('support-qr-box'); if (!box) return; box.innerHTML = ''; if (typeof QRCode === 'undefined') { box.innerHTML = '<i class="fa-solid fa-qrcode text-5xl text-slate-300"></i>'; return; } try { new QRCode(box, { text: SHAMCASH_ID, width: 208, height: 208, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { box.innerHTML = '<i class="fa-solid fa-qrcode text-5xl text-slate-300"></i>'; } }
 function copyShamCashCode() { const done = () => showToast('ID код ShamCash скопирован!', 'success'); if (navigator.clipboard) navigator.clipboard.writeText(SHAMCASH_ID).then(done).catch(() => fallbackCopy(SHAMCASH_ID, done)); else fallbackCopy(SHAMCASH_ID, done); }
 function fallbackCopy(text, cb) { const i = document.createElement('input'); i.value = text; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); if (cb) cb(); }
-/* ================= BEAUTIFUL SHARE CARD (Instagram Style + Collage) ================= */
-function roundRectPath(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+/* ================= BEAUTIFUL SHARE CARD ================= */
+function roundRectPath(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x + y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function igGradient(ctx, x0, y0, x1, y1) { const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#feda75'); g.addColorStop(0.25, '#fa7e1e'); g.addColorStop(0.5, '#d62976'); g.addColorStop(0.75, '#962fbf'); g.addColorStop(1, '#4f5bd5'); return g; }
 function loadImgSafe(src) { return new Promise(resolve => { if (!src) return resolve(null); const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src; }); }
 function drawContain(ctx, img, x, y, w, h) { const ir = img.width / img.height, rr = w / h; let dw, dh; if (ir > rr) { dw = w; dh = w / ir; } else { dh = h; dw = h * ir; } ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh); }
@@ -732,11 +762,9 @@ const srcs = (ad.images && ad.images.length ? ad.images : [ad.image || PLACEHOLD
 const photos = (await Promise.all(srcs.map(loadImgSafe))).filter(Boolean);
 const avatarImg = avatar ? await loadImgSafe(avatar) : null;
 const qrImg = await makeQRImage(url, 300);
-// 1) Instagram gradient frame
 ctx.fillStyle = igGradient(ctx, 0, 0, W, H); ctx.fillRect(0, 0, W, H);
 const FR = 16;
 ctx.fillStyle = '#000'; roundRectPath(ctx, FR, FR, W - FR * 2, H - FR * 2, 42); ctx.fill();
-// 2) Header
 const padX = FR + 44;
 const hy = FR + 44; const avR = 44;
 ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR + 6, 0, Math.PI * 2); ctx.fillStyle = igGradient(ctx, padX, hy, padX + avR * 2, hy + avR * 2); ctx.fill();
@@ -750,7 +778,6 @@ if (verified) { const nw = ctx.measureText(nameStr).width; const bx = padX + avR
 ctx.fillStyle = '#a8a8a8'; ctx.font = '28px Arial';
 ctx.fillText(`${regionName}${ad.city ? ' • ' + ad.city : ''}`, padX + avR * 2 + 26, hy + avR + 34);
 if (srcs.length > 1) { ctx.font = 'bold 26px Arial'; const pw2 = ctx.measureText(' ' + srcs.length).width + 56; const px2 = W - FR - 44 - pw2, py2 = hy + 22; ctx.fillStyle = 'rgba(255,255,255,0.1)'; roundRectPath(ctx, px2, py2, pw2, 52, 26); ctx.fill(); ctx.fillStyle = '#f5f5f5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 ' + srcs.length, px2 + pw2 / 2, py2 + 27); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
-// 3) Photo area (FULL photo visible + collage)
 const px = padX, pw = W - padX * 2;
 const py = hy + avR * 2 + 36;
 const photoBottom = H - FR - 352;
@@ -776,7 +803,6 @@ ctx.save(); roundRectPath(ctx, px, py, pw, ph, 26); ctx.clip(); ctx.fillStyle = 
 } else {
 ctx.fillStyle = tileBg; roundRectPath(ctx, px, py, pw, ph, 26); ctx.fill();
 }
-// 4) Footer: price pill + QR + title + branding
 const fy = photoBottom + 36;
 ctx.font = 'bold 46px Arial';
 const ptw = Math.min(ctx.measureText(priceText).width + 80, pw);
@@ -835,7 +861,6 @@ if (err.name === 'AbortError') return;
 console.warn('Share failed', err);
 }
 }
-// Fallback to link if file sharing not supported
 showToast('Браузер не поддерживает отправку файлов, открываю ссылку...', 'warning');
 const enc = encodeURIComponent;
 const u = sharePayload.url, tx = sharePayload.text;
@@ -847,7 +872,6 @@ if (link) window.open(link, '_blank');
 }
 async function downloadShareCard() {
 if (!lastShareBlob) { showToast('Карточка еще не готова — нажмите Поделиться сначала', 'warning'); return; }
-// Try native share first (works on mobile)
 const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
 if (navigator.canShare && navigator.canShare({ files: [file] })) {
 try {
@@ -858,7 +882,6 @@ return;
 if (err.name === 'AbortError') return;
 }
 }
-// Fallback: Open in new window as DataURL (user can long-press to save)
 try {
 const reader = new FileReader();
 reader.onloadend = function() {
@@ -924,7 +947,8 @@ function openComboBuilder(targetUid = null, editComboId = null) { let owner = cu
 function renderComboItemsList() { const list = byId('combo-items-list'); if (!list) return; if (!comboBuilderAds.length) { list.innerHTML = '<div class="text-center py-6 t2">У магазина пока нет активных товаров</div>'; return; } list.innerHTML = comboBuilderAds.map(a => { const sel = comboSelectedIds.includes(a.id); return `<label class="flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${sel ? '' : 'b-ig bg-field hover:bg-ig'}" style="${sel ? 'border-color:#f97316;background:rgba(249,115,22,.1)' : ''}"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleComboItem('${a.id}')" class="w-4 h-4 shrink-0" style="accent-color:#f97316"><img src="${(a.images && a.images[0]) || a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate">${a.title}</div><div class="text-[10px] t2">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div></div>${sel ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : ''}</label>`; }).join(''); }
 function toggleComboItem(adId) { const i = comboSelectedIds.indexOf(adId); if (i === -1) comboSelectedIds.push(adId); else comboSelectedIds.splice(i, 1); renderComboItemsList(); updateComboSummary(); }
 function updateComboSummary() { const el = byId('combo-summary'); if (!el) return; const selected = comboBuilderAds.filter(a => comboSelectedIds.includes(a.id)); const total = selected.reduce((s, a) => s + adToUSD(a), 0); const price = parseFloat(byId('combo-price')?.value || 0); if (selected.length < 2) { el.innerHTML = `<i class="fa-solid fa-circle-info"></i> Выберите минимум 2 товара для создания комбо. Выбрано: ${selected.length}.`; return; } const save = total - price; el.innerHTML = `<div class="space-y-1"><div>Товаров в комплекте: <b class="t1">${selected.length}</b></div><div>Цена по отдельности: <b class="t2 line-through">$${total.toFixed(2)}</b></div><div>Цена акции: <b style="color:#f97316">$${(price || 0).toFixed(2)}</b></div>${price > 0 ? `<div>Выгода покупателя: <b style="color:${save > 0 ? '#10b981' : '#ed4956'}">${save > 0 ? '$' + save.toFixed(2) + ' (-' + Math.round(save / total * 100) + '%)' : 'нет скидки'}</b></div>` : ''}</div>`; }
-function handleComboSubmit(e) { e.preventDefault(); const owner = comboOwnerCache; if (!owner) return; if (comboSelectedIds.length < 2) { showToast('Выберите минимум 2 товара!', 'warning'); return; } const price = parseFloat(byId('combo-price').value); if (isNaN(price) || price <= 0) { showToast('Укажите специальную цену акции!', 'warning'); return; } const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров`; const editId = byId('combo-edit-id').value; if (editId) { const c = combos.find(x => x.id === editId); if (c) { c.title = title; c.price = price; c.items = [...comboSelectedIds]; if (firebaseDb) firebaseDb.ref(`combos/${c.id}`).set(c); } showToast('Акция обновлена!', 'success'); } else { const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); showToast('Акция создана! Комбо появилось в ленте.', 'success'); } closeModal('modal-combo-builder'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); if (!byId('modal-shop-showcase').classList.contains('hidden') && owner.uid) openShopShowcase(owner.uid); }
+function handleComboSubmit(e) { e.preventDefault(); const owner = comboOwnerCache; if (!owner) return; if (comboSelectedIds.length < 2) { showToast('Выберите минимум 2 товара!', 'warning'); return; } const price = parseFloat(byId('combo-price').value); if (isNaN(price) || price <= 0) { showToast('Укажите специальную цену акции!', 'warning'); return; } const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров
+`; const editId = byId('combo-edit-id').value; if (editId) { const c = combos.find(x => x.id === editId); if (c) { c.title = title; c.price = price; c.items = [...comboSelectedIds]; if (firebaseDb) firebaseDb.ref(`combos/${c.id}`).set(c); } showToast('Акция обновлена!', 'success'); } else { const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); showToast('Акция создана! Комбо появилось в ленте.', 'success'); } closeModal('modal-combo-builder'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); if (!byId('modal-shop-showcase').classList.contains('hidden') && owner.uid) openShopShowcase(owner.uid); }
 function deleteComboWithConfirm(comboId) { showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { combos = combos.filter(x => x.id !== comboId); if (firebaseDb) firebaseDb.ref(`combos/${comboId}`).remove(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); showToast('Акция удалена', 'info'); }); }
 function openComboDetail(comboId) { const c = combos.find(x => x.id === comboId); if (!c) return; const v = comboToVirtualAd(c); if (!v) { showToast('Товары этой акции больше недоступны', 'warning'); return; } const content = byId('detail-content'); if (!content) return; currentDetailPhotoIndex = 0; const imgs = v.images; const owner = getComboOwner(c); const shop = owner?.shop; const wa = shop?.whatsapp || owner?.whatsapp || ''; const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); const save = v.comboOriginalTotal - c.price; content.innerHTML = `<div class="grid md:grid-cols-2">
 <div class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height:320px">
@@ -1120,7 +1144,7 @@ if (selectedCategory === 'shops_dir') { const shops = users.filter(u => u.shop &
 <p class="text-xs t1 line-clamp-2 bg-field p-2 rounded-lg border b-ig">${s.desc || ''}</p>
 <div class="pt-2 border-t b-ig flex items-center justify-between"><span class="text-[10px] font-bold" style="color:#f59e0b"><i class="fa-solid fa-boxes-stacked"></i> ${cnt} товаров ${uCombos > 0 ? `• <span style="color:#f97316"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</span><button onclick="openShopShowcase('${u.uid}')" class="ig-btn px-4 py-1.5 text-xs">Смотреть магазин</button></div></div>`; }).join(''); if (pag) pag.innerHTML = ''; return; }
 const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
-const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false; if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false; return true; });
+const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' || currentUser.role !== 'SUPERUSER' || currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false; if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false; return true; });
 filtered.sort((a, b) => {
 if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
 if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
@@ -1191,7 +1215,6 @@ return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 /* ================= AUTH (SECURITY FIX) ================= */
 function openAuthModal() { openModal('modal-auth'); }
 function switchAuthTab(tab) { const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), b = byId('auth-submit-btn'); if (tab === 'login') { l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; f.classList.add('hidden'); b.innerText = 'Войти'; } else { r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; f.classList.remove('hidden'); b.innerText = 'Зарегистрироваться'; } }
-// SECURITY FIX: Login now checks Firebase directly instead of local array
 async function handleAuthSubmit(e) {
 e.preventDefault();
 const isReg = !byId('reg-fields').classList.contains('hidden');
@@ -1204,12 +1227,10 @@ const originalText = btn.innerText;
 btn.disabled = true;
 btn.innerText = 'Проверка...';
 if (isReg) {
-// Registration logic (remains mostly same, but ensures unique check via Firebase ideally, here simplified)
 const kunya = byId('auth-kunya').value.trim() || username;
 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
 const whatsapp = byId('auth-whatsapp').value.trim();
 const avatar = byId('auth-avatar-data')?.value || null;
-// Check local cache first for speed, but Firebase is source of truth
 if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
 showToast('Логин уже занят!', 'error');
 btn.disabled = false; btn.innerText = originalText;
@@ -1218,18 +1239,17 @@ return;
 const uid = 'u_' + Date.now();
 const nu = {
 uid, username,
-passwordHash: password, // Stored as SHA-256 hash
+passwordHash: password,
 kunya, gender, whatsapp, avatar,
 role: 'USER', verifiedShop: false
 };
-users.push(nu); // Add to local cache
+users.push(nu);
 if (firebaseDb) firebaseDb.ref(`users/${uid}`).set(nu);
 saveUserSession(nu, remember);
 closeModal('modal-auth');
 showToast('Регистрация успешна!', 'success');
 btn.disabled = false; btn.innerText = originalText;
 } else {
-// LOGIN LOGIC: Query Firebase
 if (!firebaseDb) {
 showToast('Нет соединения с базой данных', 'error');
 btn.disabled = false; btn.innerText = originalText;
@@ -1241,23 +1261,20 @@ let foundUser = null;
 let needsHashUpdate = false;
 snapshot.forEach(child => {
 const u = child.val();
-// 1. Проверяем новый формат (хеш)
 if (u.passwordHash === password) {
 foundUser = { ...u, uid: child.key };
 }
-// 2. Проверяем старый формат (обычный текст) - для совместимости
 else if (u.passwordHash === rawPassword || u.password === rawPassword) {
 foundUser = { ...u, uid: child.key };
-needsHashUpdate = true; // Помечаем, что надо обновить пароль в базе
+needsHashUpdate = true;
 }
 });
 if (foundUser) {
-// Если зашли по старому паролю — молча обновляем его в базе на новый хеш
 if (needsHashUpdate) {
 console.log("Migrating old password to hash for user:", foundUser.username);
 if (firebaseDb) firebaseDb.ref(`users/${foundUser.uid}`).update({ passwordHash: password, password: null });
-foundUser.passwordHash = password; // Обновляем и в локальном объекте
-delete foundUser.password; // Удаляем старый текстовый пароль из памяти
+foundUser.passwordHash = password;
+delete foundUser.password;
 }
 const idx = users.findIndex(u => u.uid === foundUser.uid);
 if (idx !== -1) users[idx] = foundUser;
@@ -1319,7 +1336,7 @@ function setFeedLayout(layout) {
 localStorage.setItem('bs_feed_layout', layout);
 itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
 renderAds();
-openProfileModal(); // Refresh modal to show active state
+openProfileModal();
 showToast('Вид ленты изменен', 'success');
 }
 function logout() {
@@ -1427,15 +1444,13 @@ else if (tab === 'backup') { c.innerHTML = `<div class="p-4 rounded-xl border sp
 <h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Полный резервный бэкап платформы (JSON)</h4>
 <p class="text-xs t2 leading-relaxed">Выгрузка и восстановление всей базы данных платформы (объявления, пользователи, магазины, категории, акции, курсы, жалобы) в один клик.</p>
 <div class="grid grid-cols-2 gap-3 pt-2"><button onclick="exportFullDatabaseJSON()" class="py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95" style="background:#f59e0b;color:#000"><i class="fa-solid fa-download"></i> Экспорт БД</button><label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> Импорт БД<input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden"></label></div></div>`; } }
-/* ================= RULES ACCEPT (fixed, robust) ================= */
+/* ================= RULES ACCEPT ================= */
 function acceptLaunchRules() {
 const m = document.getElementById('modal-rules-agreement');
 if (!m || m.classList.contains('hidden')) return;
 SYSTEM_CONFIG.rulesAccepted = true;
 localStorage.setItem('bs_rules_accepted', 'true');
-m.classList.add('hidden');
-modalStack = modalStack.filter(x => x !== 'modal-rules-agreement');
-if (modalStack.length === 0) document.body.classList.remove('overflow-hidden');
+closeModal('modal-rules-agreement');
 showToast('Условия приняты. Добро пожаловать!', 'success');
 }
 /* ================= REPORT FUNCTIONS ================= */
@@ -1496,22 +1511,17 @@ fetchLiveExchangeRates();
 renderCategoryPills();
 renderAds();
 updateNavState();
-// NEW: Deep Linking - Check hash on load
 const hash = window.location.hash;
 if (hash && hash.startsWith('#ad-')) {
 const adId = hash.substring(4);
-// Wait a bit for Firebase to load data if needed, or try immediately
 setTimeout(() => {
 const ad = ads.find(a => a.id === adId);
 if (ad) {
 openAdDetail(adId);
 } else {
-// If not found yet, maybe data is still loading.
-// In a real app we'd listen for the specific ad.
-// For now, we just tried.
 console.log('Ad not found in local cache yet:', adId);
 }
-}, 1000); // Small delay to allow initial render/data fetch
+}, 1000);
 }
 if (!localStorage.getItem('bs_rules_accepted')) openModal('modal-rules-agreement');
 setInterval(() => { fetchLiveExchangeRates(); }, 300000);
