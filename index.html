@@ -69,7 +69,8 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 /* === БЕГУЩАЯ СТРОКА В ПОИСКЕ === */
 .search-wrapper { position: relative; width: 100%; height: 36px; display: flex; align-items: center; background: var(--ig-field); border-radius: 8px; overflow: hidden; }
 .marquee-container { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; overflow: hidden; pointer-events: none; padding-left: 36px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
-.marquee-content { white-space: nowrap; color: var(--ig-text2); font-size: 13px; animation: marqueeScroll 20s linear infinite; }
+.marquee-content { white-space: nowrap; color: var(--marquee-color, var(--ig-text2)); font-size: var(--marquee-font-size, 13px); animation: marqueeScroll var(--marquee-speed, 20s) linear infinite; }
+.marquee-pause-hover:hover .marquee-content { animation-play-state: paused; }
 @keyframes marqueeScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 .ig-input:focus ~ .marquee-container, .ig-input:not(:placeholder-shown) ~ .marquee-container { opacity: 0; }
 .search-wrapper .ig-input { background: transparent; position: relative; z-index: 2; }
@@ -591,6 +592,8 @@ let lastRatesUpdate = null, sharePayload = null, modalStack = [];
 let reports = [];
 let lastReportCount = 0;
 let lastShareBlob = null;
+let hasCloudMarqueeSettings = false;
+let MARQUEE_SETTINGS = { text: '', color: '#a8a8a8', fontSize: 13, speed: 20, direction: 'left', pauseOnHover: false };
 const MARQUEE_STORAGE_KEY = 'bs_marquee_text';
 const SHAMCASH_ID = '3adfe36abcbe52f1a4b008cd324082fb';
 const PLACEHOLDER_IMG = 'https://placehold.co/800x1000/1e293b/fff?text=Avito+Sham';
@@ -1119,9 +1122,17 @@ reports = newReports;
 if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') { renderAdminTabContent(); }
 });
 // Listen for Marquee updates
+firebaseDb.ref('settings/marquee').on('value', snap => {
+    const settings = snap.val();
+    if (settings && typeof settings.text === 'string' && settings.text.trim()) {
+        hasCloudMarqueeSettings = true;
+        localStorage.setItem(MARQUEE_STORAGE_KEY, settings.text);
+        applyMarqueeSettings(settings);
+    }
+});
 firebaseDb.ref('settings/marqueeText').on('value', snap => {
     const txt = snap.val();
-    if (typeof txt === 'string' && txt.trim()) {
+    if (!hasCloudMarqueeSettings && typeof txt === 'string' && txt.trim()) {
         localStorage.setItem(MARQUEE_STORAGE_KEY, txt);
         updateMarqueeText(txt);
     }
@@ -1462,6 +1473,13 @@ else if (tab === 'marquee') {
 <p class="text-xs t2">Текст отображается в поле поиска на главной странице (Desktop и Mobile).</p>
 <div class="flex items-center justify-between text-[10px] t2"><span>Редактор текста</span><span id="admin-marquee-counter">0 символов</span></div>
 <textarea id="admin-marquee-input" rows="4" oninput="handleMarqueeInput(this)" class="ig-input w-full px-3.5 py-2.5 text-sm" placeholder="Введите текст бегущей строки..."></textarea>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+<label class="text-[10px] t2">Цвет<input id="admin-marquee-color" type="color" value="#a8a8a8" onchange="handleMarqueeSettingsInput()" class="w-full h-9 mt-1 rounded-lg cursor-pointer bg-field"></label>
+<label class="text-[10px] t2">Размер<input id="admin-marquee-size" type="number" min="10" max="32" value="13" oninput="handleMarqueeSettingsInput()" class="ig-input w-full px-2 py-2 mt-1 text-xs"></label>
+<label class="text-[10px] t2">Скорость, сек<input id="admin-marquee-speed" type="number" min="5" max="120" value="20" oninput="handleMarqueeSettingsInput()" class="ig-input w-full px-2 py-2 mt-1 text-xs"></label>
+<label class="text-[10px] t2">Направление<select id="admin-marquee-direction" onchange="handleMarqueeSettingsInput()" class="ig-input w-full px-2 py-2 mt-1 text-xs"><option value="left">Справа налево</option><option value="right">Слева направо</option></select></label>
+</div>
+<label class="flex items-center gap-2 text-xs t2 cursor-pointer"><input id="admin-marquee-pause" type="checkbox" onchange="handleMarqueeSettingsInput()" class="accent-[#0095f6]"><span>Останавливать при наведении</span></label>
 <div class="p-3 rounded-lg bg-field border b-ig overflow-hidden">
 <div class="text-[10px] t2 mb-1">Предпросмотр</div>
 <div id="admin-marquee-preview" class="marquee-content text-xs">Предпросмотр появится здесь</div>
@@ -1477,6 +1495,7 @@ else if (tab === 'marquee') {
 </div>`;
     const editor = byId('admin-marquee-input');
     if (editor) editor.value = currentText;
+    updateMarqueeControls();
     updateMarqueePreview(currentText);
 }
 else if (tab === 'backup') { c.innerHTML = `<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
@@ -1545,6 +1564,7 @@ function deleteReport(reportId) {
 
 /* ================= MARQUEE CONTROL FUNCTIONS ================= */
 function updateMarqueeText(text) {
+    MARQUEE_SETTINGS.text = text;
     const desktop = byId('desktop-marquee-text');
     const mobile = byId('mobile-marquee-text');
     if (desktop) desktop.innerText = text;
@@ -1552,6 +1572,21 @@ function updateMarqueeText(text) {
     const input = byId('admin-marquee-input');
     if (input && document.activeElement !== input) input.value = text;
     updateMarqueePreview(text);
+}
+
+function applyMarqueeSettings(settings) {
+    MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...settings };
+    updateMarqueeText(MARQUEE_SETTINGS.text || '');
+    document.querySelectorAll('.marquee-container').forEach(container => {
+        container.classList.toggle('marquee-pause-hover', !!MARQUEE_SETTINGS.pauseOnHover);
+    });
+    document.querySelectorAll('.marquee-content').forEach(content => {
+        content.style.setProperty('--marquee-color', MARQUEE_SETTINGS.color || '#a8a8a8');
+        content.style.setProperty('--marquee-font-size', `${Number(MARQUEE_SETTINGS.fontSize) || 13}px`);
+        content.style.setProperty('--marquee-speed', `${Number(MARQUEE_SETTINGS.speed) || 20}s`);
+        content.style.animationDirection = MARQUEE_SETTINGS.direction === 'right' ? 'reverse' : 'normal';
+    });
+    updateMarqueeControls();
 }
 
 function updateMarqueePreview(text) {
@@ -1562,7 +1597,32 @@ function updateMarqueePreview(text) {
 }
 
 function handleMarqueeInput(input) {
+    MARQUEE_SETTINGS.text = input.value;
     updateMarqueePreview(input.value);
+}
+
+function updateMarqueeControls() {
+    const color = byId('admin-marquee-color');
+    const size = byId('admin-marquee-size');
+    const speed = byId('admin-marquee-speed');
+    const direction = byId('admin-marquee-direction');
+    const pause = byId('admin-marquee-pause');
+    if (color) color.value = MARQUEE_SETTINGS.color || '#a8a8a8';
+    if (size) size.value = MARQUEE_SETTINGS.fontSize || 13;
+    if (speed) speed.value = MARQUEE_SETTINGS.speed || 20;
+    if (direction) direction.value = MARQUEE_SETTINGS.direction || 'left';
+    if (pause) pause.checked = !!MARQUEE_SETTINGS.pauseOnHover;
+}
+
+function handleMarqueeSettingsInput() {
+    const input = byId('admin-marquee-input');
+    MARQUEE_SETTINGS.text = input ? input.value : MARQUEE_SETTINGS.text;
+    MARQUEE_SETTINGS.color = byId('admin-marquee-color')?.value || MARQUEE_SETTINGS.color;
+    MARQUEE_SETTINGS.fontSize = Number(byId('admin-marquee-size')?.value || MARQUEE_SETTINGS.fontSize);
+    MARQUEE_SETTINGS.speed = Number(byId('admin-marquee-speed')?.value || MARQUEE_SETTINGS.speed);
+    MARQUEE_SETTINGS.direction = byId('admin-marquee-direction')?.value || MARQUEE_SETTINGS.direction;
+    MARQUEE_SETTINGS.pauseOnHover = !!byId('admin-marquee-pause')?.checked;
+    applyMarqueeSettings(MARQUEE_SETTINGS);
 }
 
 function loadMarqueeText() {
@@ -1575,14 +1635,15 @@ function loadMarqueeFromFirebase() {
         showToast('Firebase ещё не подключён', 'warning');
         return;
     }
-    firebaseDb.ref('settings/marqueeText').once('value').then(snapshot => {
-        const text = snapshot.val();
-        if (typeof text !== 'string' || !text.trim()) {
+    firebaseDb.ref('settings/marquee').once('value').then(snapshot => {
+        const settings = snapshot.val();
+        if (!settings || typeof settings.text !== 'string' || !settings.text.trim()) {
             showToast('В Firebase пока нет текста бегущей строки', 'warning');
             return;
         }
-        localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-        updateMarqueeText(text);
+        hasCloudMarqueeSettings = true;
+        localStorage.setItem(MARQUEE_STORAGE_KEY, settings.text);
+        applyMarqueeSettings(settings);
         showToast('Текст загружен из Firebase', 'success');
     }).catch(err => {
         showToast('Не удалось загрузить текст из Firebase', 'error');
@@ -1596,11 +1657,13 @@ function saveMarqueeSettings() {
     const text = input.value.trim();
     if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
 
+    const settings = { ...MARQUEE_SETTINGS, text };
     if (firebaseDb) {
-        const marqueeRef = firebaseDb.ref('settings/marqueeText');
-        marqueeRef.set(text).then(() => {
+        firebaseDb.ref('settings/marquee').set(settings).then(() => {
+            firebaseDb.ref('settings/marqueeText').set(text);
             localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-            updateMarqueeText(text);
+            hasCloudMarqueeSettings = true;
+            applyMarqueeSettings(settings);
             showToast('Бегущая строка обновлена!', 'success');
         }).catch(err => {
             showToast('Не удалось сохранить текст в Firebase.', 'error');
@@ -1608,7 +1671,7 @@ function saveMarqueeSettings() {
         });
     } else {
         localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-        updateMarqueeText(text);
+        applyMarqueeSettings(settings);
         showToast('Сохранено локально (нет связи с БД)', 'warning');
     }
 }
