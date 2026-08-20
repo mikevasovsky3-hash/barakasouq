@@ -635,6 +635,19 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button onclick="redeemGiftCode()" class="ig-btn w-full py-2.5 text-sm font-bold"><i class="fa-solid fa-check"></i> Активировать код</button>
 </div>
 </div>
+</div>
+<!-- ============ SHAMCASH TRANSFER ============ -->
+<div id="modal-transfer-shamcash" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
+<button onclick="closeModal('modal-transfer-shamcash')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-arrow-right-arrow-left" style="color:#10b981"></i> Оплатить ShamCash</h3>
+<p class="text-xs t2">Перевод другому пользователю будет сохранен в журнале транзакций.</p>
+<label class="block text-xs font-semibold t2">Получатель<select id="transfer-recipient" class="ig-input w-full px-3 py-2.5 mt-1"></select></label>
+<label class="block text-xs font-semibold t2">Сумма, SC<input id="transfer-amount" type="number" min="0.01" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 5"></label>
+<label class="block text-xs font-semibold t2">Назначение платежа<input id="transfer-note" type="text" maxlength="120" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, оплата товара"></label>
+<button onclick="transferShamCash()" class="ig-btn w-full py-2.5 text-sm font-bold"><i class="fa-solid fa-paper-plane"></i> Отправить оплату</button>
+</div>
+</div>
 <footer class="hidden sm:block mt-auto border-t b-ig py-3 px-4 text-xs text-center t2">
 <div class="max-w-3xl mx-auto flex items-center justify-between gap-3 text-[11px]">
 <div>Разработчик: <span class="font-bold t1">Салим Нашхо</span> • <a href="https://wa.me/447887280238" target="_blank" class="font-semibold inline-flex items-center gap-1" style="color:#10b981"><i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238</a></div>
@@ -668,6 +681,7 @@ let SHAMCASH_PRICES = { adPrice: 0, shopSubscription: 5, editPrice: 0, freeAdsCo
 let SHAMCASH_RATE = 1;
 let TOPUP_REQUESTS = {};
 let GIFT_CODES = {};
+let TRANSACTIONS = {};
 const MARQUEE_STORAGE_KEY = 'bs_marquee_text';
 const SHAMCASH_ID = '3adfe36abcbe52f1a4b008cd324082fb';
 const PLACEHOLDER_IMG = 'https://placehold.co/800x1000/1e293b/fff?text=Avito+Sham';
@@ -688,6 +702,10 @@ let users = [];
 let archivedUsers = [];
 let combos = [];
 let ads = [];
+
+// Для поиска в разделе платежей
+let paymentSearchQuery = '';
+
 /* ================= INSTAGRAM SVG ICONS ================= */
 const IGSVG = {
 home: f => f ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10.2 12 2.6l9 7.6V22h-6.4v-6.2a2.6 2.6 0 0 0-5.2 0V22H3Z"/></svg>' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.2 12 2.6l9 7.6V22h-6.4v-6.2a2.6 2.6 0 0 0-5.2 0V22H3Z"/></svg>',
@@ -1084,7 +1102,11 @@ ${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openC
 </div>
 </div>`; openModal('modal-ad-detail'); }
 /* ================= AD DETAIL ================= */
-function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/views`).set(ad.views); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0; const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); const likesCount = (ad.likes || []).length; const userLiked = currentUser && (ad.likes || []).includes(currentUser.username); const viewsCount = ad.views || 0; const rating = likesCount * 10 + viewsCount; content.innerHTML = `<div class="grid md:grid-cols-2">
+function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/views`).set(ad.views); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0; const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); const likesCount = (ad.likes || []).length; const userLiked = currentUser && (ad.likes || []).includes(currentUser.username); const viewsCount = ad.views || 0; const rating = likesCount * 10 + viewsCount; const priceUsd = adToUSD(ad);
+// Кнопка оплаты теперь показывается всем (включая владельца), но в функции purchaseAd есть защита от покупки своего товара.
+const canBuyWithBalance = currentUser && !ad.isFree && !ad.isNegotiable && priceUsd > 0 && (currentUser.shamcashBalance || 0) >= priceUsd;
+
+content.innerHTML = `<div class="grid md:grid-cols-2">
 <div class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height:320px">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full max-h-[46vh] md:max-h-[80vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
@@ -1119,6 +1141,7 @@ ${currentUser ? `<button onclick="${inQ ? `leaveQueue('${ad.id}')` : `joinQueue(
 <div><div class="text-xs font-bold t2 uppercase tracking-wide mb-1">Описание и изъяны</div><p class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${ad.desc}</p></div>
 <div class="flex gap-2">
 <a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> Связаться через WhatsApp</a>
+${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#f59e0b"><i class="fa-solid fa-coins"></i> Оплатить из баланса</button>` : ''}
 <button onclick="shareAd('${ad.id}')" class="ig-btn-outline py-3 px-4" title="Поделиться">${IGSVG.send()}</button>
 </div>
 <div class="pt-2 border-t b-ig flex gap-2 flex-wrap">
@@ -1138,6 +1161,104 @@ function sendPriceOffer(adId) { const ad = ads.find(a => a.id === adId); if (!ad
 function initDetailMap(lat, lng) { const el = byId('detail-map'); if (!el || typeof L === 'undefined') return; if (detailMap) { detailMap.remove(); detailMap = null; } detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(detailMap); L.marker([lat, lng]).addTo(detailMap); }
 function changeDetailPhoto(adId, dir) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgs.length) % imgs.length; setDetailPhoto(adId, currentDetailPhotoIndex); }
 function setDetailPhoto(adId, idx) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
+
+/* ================= PURCHASE AD WITH BALANCE ================= */
+async function purchaseAd(adId) {
+    if (!currentUser) { openAuthModal(); return; }
+    const ad = ads.find(a => a.id === adId);
+    if (!ad) { showToast('Объявление не найдено', 'error'); return; }
+    if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) {
+        showToast('Вы не можете купить собственное объявление', 'warning');
+        return;
+    }
+    if (ad.isFree || ad.isNegotiable || ad.price <= 0) {
+        showToast('Это объявление нельзя оплатить через баланс', 'warning');
+        return;
+    }
+    const priceUsd = adToUSD(ad);
+    if (priceUsd <= 0) { showToast('Цена должна быть больше нуля', 'warning'); return; }
+    const buyerBalance = currentUser.shamcashBalance || 0;
+    if (buyerBalance < priceUsd) {
+        showToast(`Недостаточно ShamCash. Требуется ${priceUsd.toFixed(2)} SC, у вас ${buyerBalance.toFixed(2)} SC`, 'error');
+        return;
+    }
+    // Найдем продавца
+    const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+    if (!seller || !seller.uid) {
+        showToast('Продавец не найден в системе, оплата невозможна', 'error');
+        return;
+    }
+    if (!firebaseDb) {
+        showToast('Нет соединения с Firebase', 'error');
+        return;
+    }
+    showToast('Обработка платежа...', 'info');
+    try {
+        // Атомарное списание у покупателя
+        const buyerRef = firebaseDb.ref(`users/${currentUser.uid}/shamcashBalance`);
+        const debitResult = await buyerRef.transaction(balance => {
+            const current = Number(balance || 0);
+            if (current < priceUsd) return; // не хватает
+            return Math.round((current - priceUsd) * 100) / 100;
+        });
+        if (!debitResult.committed) {
+            showToast('Недостаточно средств или ошибка списания', 'error');
+            return;
+        }
+        // Атомарное зачисление продавцу
+        const sellerRef = firebaseDb.ref(`users/${seller.uid}/shamcashBalance`);
+        const creditResult = await sellerRef.transaction(balance => {
+            return Math.round((Number(balance || 0) + priceUsd) * 100) / 100;
+        });
+        if (!creditResult.committed) {
+            // откат списания
+            await buyerRef.transaction(balance => Math.round((Number(balance || 0) + priceUsd) * 100) / 100);
+            showToast('Ошибка зачисления продавцу, платеж отменен', 'error');
+            return;
+        }
+        // Обновляем локальные балансы
+        currentUser.shamcashBalance = debitResult.snapshot.val();
+        const localSeller = users.find(u => u.uid === seller.uid);
+        if (localSeller) localSeller.shamcashBalance = creditResult.snapshot.val();
+        saveUserSession(currentUser, true);
+        // Создаем транзакцию
+        const txKey = firebaseDb.ref('transactions').push().key;
+        const tx = {
+            id: txKey,
+            type: 'purchase',
+            status: 'completed',
+            amount: priceUsd,
+            currency: 'SC',
+            senderUid: currentUser.uid,
+            senderUsername: currentUser.username,
+            recipientUid: seller.uid,
+            recipientUsername: seller.username,
+            adId: ad.id,
+            adTitle: ad.title,
+            timestamp: Date.now()
+        };
+        await firebaseDb.ref(`transactions/${txKey}`).set(tx);
+        // Помечаем объявление как проданное
+        ad.status = 'SOLD';
+        saveCachedAds();
+        if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad);
+        // Закрываем детали и обновляем ленту
+        closeModal('modal-ad-detail');
+        renderAds();
+        renderCategoryPills();
+        showToast(`Покупка успешна! Списано ${priceUsd.toFixed(2)} SC. Продавец уведомлен.`, 'success');
+        // Отправляем уведомление продавцу через WhatsApp (опционально)
+        const sellerWa = seller.whatsapp || '';
+        if (sellerWa) {
+            const msg = `Здравствуйте! Ваше объявление "${ad.title}" (${ad.id}) было оплачено через ShamCash покупателем ${currentUser.kunya || currentUser.username}. Сумма ${priceUsd.toFixed(2)} SC зачислена на ваш баланс.`;
+            window.open(`https://wa.me/${sellerWa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+    } catch (err) {
+        console.error('Purchase error:', err);
+        showToast('Ошибка при оплате: ' + err.message, 'error');
+    }
+}
+
 /* ================= SHOPS ================= */
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
@@ -1340,6 +1461,7 @@ function initFirebaseSync() { try { firebaseApp = firebase.apps.length ? firebas
         firebaseDb.ref('settings/shamcashRate').on('value', snap => { const n = Number(snap.val()); SHAMCASH_RATE = 1; if (n !== 1) firebaseDb.ref('settings/shamcashRate').set(1); });
         firebaseDb.ref('topup_requests').on('value', snap => { TOPUP_REQUESTS = snap.val() || {}; if (!byId('modal-admin-panel').classList.contains('hidden') && (SYSTEM_CONFIG.adminTab === 'payments' || SYSTEM_CONFIG.adminTab === 'finance')) renderAdminTabContent(); });
         firebaseDb.ref('gift_codes').on('value', snap => { GIFT_CODES = snap.val() || {}; });
+        firebaseDb.ref('transactions').on('value', snap => { TRANSACTIONS = snap.val() || {}; if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'finance') renderAdminTabContent(); });
     }
 firebaseDb.ref('ads').on('value', snap => { const d = snap.val(); let up = []; if (d) up = Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k })); if (ads.length !== up.length || JSON.stringify(ads.map(a=>a.id)) !== JSON.stringify(up.map(a=>a.id))) { ads = up; saveCachedAds(); renderAds(); renderCategoryPills(); } else { ads = up; } if (st) { st.classList.add('hidden'); st.classList.remove('flex'); } }, () => { if (st) { st.classList.add('hidden'); st.classList.remove('flex'); } });
 firebaseDb.ref('users').on('value', snap => { const d = snap.val(); if (d) { users = Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], uid: k })); if (currentUser) { const me = users.find(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (me) { currentUser = me; saveUserSession(currentUser, true); } } if (byId('modal-admin-panel') && !byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'finance') renderAdminTabContent(); } });
@@ -1571,6 +1693,8 @@ function drawGiftCard(code, amount, expiresAt) { const canvas = byId('gift-card-
 function generateGiftCode() { if (!_0xSCAdmin()) return; const amount = _0xSCAmount(byId('gift-amount')?.value); const days = Math.max(0, Math.floor(Number(byId('gift-days')?.value || 0))); if (!amount) { showToast('Укажите сумму подарка', 'warning'); return; } const code = _0xGiftCode(); const expiresAt = days ? Date.now() + days * 86400000 : 0; const gift = { code, amount, status: 'active', createdAt: Date.now(), createdBy: currentUser.uid || currentUser.username, expiresAt }; const key = firebaseDb ? firebaseDb.ref('gift_codes').push().key : code; byId('gift-code-label').innerText = code; byId('gift-details').innerText = `${amount.toFixed(2)} SC • ${expiresAt ? 'до ' + new Date(expiresAt).toLocaleDateString() : 'без срока'}`; drawGiftCard(code, amount, expiresAt); byId('gift-qr').innerHTML = ''; if (typeof QRCode !== 'undefined') new QRCode(byId('gift-qr'), { text: JSON.stringify({ code, amount }), width: 190, height: 190, colorDark: '#111827', colorLight: '#ffffff' }); byId('gift-generator-form').classList.add('hidden'); byId('gift-result').classList.remove('hidden'); if (!firebaseDb) { showToast('Код создан локально, Firebase недоступен', 'warning'); return; } firebaseDb.ref(`gift_codes/${key}`).set(gift).then(() => showToast('Подарочный код сохранен', 'success')).catch(err => showToast('Карточка создана, но Firebase отклонил сохранение: ' + (err.code || 'нет доступа'), 'warning')); }
 function openRedeemGiftModal() { if (!currentUser) { openAuthModal(); return; } byId('redeem-gift-code').value = ''; openModal('modal-redeem-gift'); setTimeout(() => byId('redeem-gift-code')?.focus(), 100); }
 async function redeemGiftCode() { const input = byId('redeem-gift-code'); const entered = String(input?.value || '').trim().toUpperCase(); if (!currentUser || !entered) { showToast('Введите подарочный код', 'warning'); return; } if (!firebaseDb || !currentUser.uid) { showToast('Нет соединения с Firebase', 'error'); return; } const match = Object.entries(GIFT_CODES || {}).find(([, gift]) => gift && String(gift.code || '').toUpperCase() === entered); if (!match) { showToast('Подарочный код не найден', 'error'); return; } const [giftId, gift] = match; const giftRef = firebaseDb.ref(`gift_codes/${giftId}`); try { const reservation = await giftRef.transaction(current => { if (!current || current.status !== 'active') return; if (current.expiresAt && Number(current.expiresAt) < Date.now()) return; return { ...current, status: 'used', usedBy: currentUser.uid, usedByUsername: currentUser.username, usedAt: Date.now() }; }); if (!reservation.committed) { showToast('Код уже использован или истек', 'warning'); return; } const amount = _0xSCAmount(reservation.snapshot.val().amount); const balanceRef = firebaseDb.ref(`users/${currentUser.uid}/shamcashBalance`); const balanceResult = await balanceRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); if (!balanceResult.committed) throw new Error('Не удалось обновить баланс'); currentUser.shamcashBalance = balanceResult.snapshot.val(); const localUser = users.find(u => u.uid === currentUser.uid); if (localUser) localUser.shamcashBalance = balanceResult.snapshot.val(); saveUserSession(currentUser, true); closeModal('modal-redeem-gift'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Подарок активирован: +${amount.toFixed(2)} SC`, 'success'); } catch (e) { showToast('Не удалось активировать код. Попробуйте еще раз.', 'error'); } }
+function openTransferModal() { if (!currentUser) { openAuthModal(); return; } const select = byId('transfer-recipient'); if (!select) return; const available = users.filter(u => u.uid && u.uid !== currentUser.uid); select.innerHTML = available.length ? available.map(u => `<option value="${u.uid}">${u.kunya || u.username} (@${u.username})</option>`).join('') : '<option value="">Нет доступных получателей</option>'; byId('transfer-amount').value = ''; byId('transfer-note').value = ''; openModal('modal-transfer-shamcash'); }
+async function transferShamCash() { if (!currentUser?.uid || !firebaseDb) { showToast('Нет соединения с Firebase', 'error'); return; } const recipientUid = byId('transfer-recipient')?.value; const amount = _0xSCAmount(byId('transfer-amount')?.value); const note = String(byId('transfer-note')?.value || '').trim(); const recipient = users.find(u => u.uid === recipientUid); if (!recipientUid || !recipient || recipientUid === currentUser.uid) { showToast('Выберите получателя', 'warning'); return; } if (!amount) { showToast('Укажите сумму перевода', 'warning'); return; } const senderRef = firebaseDb.ref(`users/${currentUser.uid}/shamcashBalance`); const recipientRef = firebaseDb.ref(`users/${recipientUid}/shamcashBalance`); let deducted = false, credited = false; try { const debit = await senderRef.transaction(balance => { const current = Number(balance || 0); if (current < amount) return; return Math.round((current - amount) * 100) / 100; }); if (!debit.committed) { showToast('Недостаточно ShamCash', 'warning'); return; } deducted = true; const credit = await recipientRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); if (!credit.committed) throw new Error('Не удалось начислить получателю'); credited = true; const txKey = firebaseDb.ref('transactions').push().key; const tx = { id: txKey, type: 'transfer', status: 'completed', amount, currency: 'SC', senderUid: currentUser.uid, senderUsername: currentUser.username, recipientUid, recipientUsername: recipient.username, note, timestamp: Date.now() }; await firebaseDb.ref(`transactions/${txKey}`).set(tx); currentUser.shamcashBalance = debit.snapshot.val(); const localSender = users.find(u => u.uid === currentUser.uid); const localRecipient = users.find(u => u.uid === recipientUid); if (localSender) localSender.shamcashBalance = debit.snapshot.val(); if (localRecipient) localRecipient.shamcashBalance = credit.snapshot.val(); saveUserSession(currentUser, true); closeModal('modal-transfer-shamcash'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Оплата отправлена: ${amount.toFixed(2)} SC`, 'success'); } catch (e) { if (credited) { try { await recipientRef.transaction(balance => Math.max(0, Math.round((Number(balance || 0) - amount) * 100) / 100)); } catch (rollbackError) {} } if (deducted) { try { await senderRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); } catch (rollbackError) {} } showToast('Перевод не выполнен, баланс возвращен', 'error'); } }
 function downloadGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; const link = document.createElement('a'); link.download = 'AvitoSham-Gift-Code.png'; link.href = canvas.toDataURL('image/png'); link.click(); }
 async function shareGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; canvas.toBlob(async blob => { const file = new File([blob], 'AvitoSham-Gift-Code.png', { type: 'image/png' }); if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ title: 'Подарочный код Avito Sham', text: byId('gift-code-label').innerText, files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; } } downloadGiftCard(); showToast('Карточка скачана для отправки', 'info'); }, 'image/png'); }
 function _0xSCPrices() { return { adPrice: _0xSCAmount(SHAMCASH_PRICES.adPrice), shopSubscription: _0xSCAmount(SHAMCASH_PRICES.shopSubscription), editPrice: _0xSCAmount(SHAMCASH_PRICES.editPrice) }; }
@@ -1605,6 +1729,7 @@ c.innerHTML = `<div class="space-y-4">
 <div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs font-bold t1"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Баланс ShamCash</span><b class="text-base font-extrabold" style="color:#f59e0b">${Number(currentUser.shamcashBalance || 0).toFixed(2)} SC</b></div>
 <button onclick="openTopupModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#f59e0b;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)"><i class="fa-solid fa-qrcode"></i> Пополнить баланс</button>
 <button onclick="openRedeemGiftModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#a78bfa;border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.1)"><i class="fa-solid fa-gift"></i> Активировать подарочный код</button>
+<button onclick="openTransferModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#10b981;border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Передать баланс за товар</button>
 </div>
 <div class="bg-field border b-ig rounded-xl p-3 space-y-2.5 text-left">
 <div class="flex items-center justify-between"><span class="text-xs font-bold t1">Тема оформления:</span><button onclick="toggleTheme()" class="ig-btn-outline w-9 h-9 flex items-center justify-center" id="theme-icon">${isLight ? IGSVG.moon() : IGSVG.sun()}</button></div>
@@ -1770,7 +1895,14 @@ else if (tab === 'finance') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="te
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Настройки ShamCash и тарифов</h4>
 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3"><label class="text-xs t2">Подача объявления, SC<input id="sc-ad-price" type="number" min="0" step="0.01" value="${SHAMCASH_PRICES.adPrice}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Бесплатных объявлений<input id="sc-free-ads" type="number" min="0" step="1" value="${SHAMCASH_PRICES.freeAdsCount}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Магазин / месяц, SC<input id="sc-shop-price" type="number" min="0" step="0.01" value="${SHAMCASH_PRICES.shopSubscription}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Редактирование, SC<input id="sc-edit-price" type="number" min="0" step="0.01" value="${SHAMCASH_PRICES.editPrice}" class="ig-input w-full px-3 py-2 mt-1"></label></div>
 <div class="text-xs t2">Курс ShamCash к доллару: <b class="t1">1 SC = 1 USD</b></div><button onclick="saveShamCashSettings()" class="ig-btn w-full py-2.5 text-xs font-bold">Сохранить в Firebase</button><button onclick="openGiftGenerator()" class="w-full py-3 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fa-solid fa-gift"></i> Создать подарочный код</button></div></div>`; }
-else if (tab === 'payments') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Верификация платежей</h4><input id="payment-search" oninput="renderAdminTabContent()" class="ig-input w-full px-3 py-2 text-xs" placeholder="Поиск по коду или пользователю"><div class="space-y-2">${Object.entries(TOPUP_REQUESTS).filter(([id,r]) => r.status === 'pending' && (!byId('payment-search')?.value || String(r.code).toLowerCase().includes(byId('payment-search').value.toLowerCase()) || String(r.username).toLowerCase().includes(byId('payment-search').value.toLowerCase()))).map(([id,r]) => `<div class="ig-card p-3 rounded-xl space-y-2"><div class="flex items-center justify-between gap-2 flex-wrap"><span class="font-mono font-bold t1">${r.code}</span><span class="font-bold" style="color:#f59e0b">${Number(r.amount).toFixed(2)} SC</span></div><div class="text-xs t2">@${r.username} • ${new Date(r.timestamp).toLocaleString()}</div><div class="flex gap-2 flex-wrap"><button onclick="verifyPayment('${id}', true)" class="ig-btn px-3 py-2 text-xs font-bold">✅ Подтвердить</button><button onclick="verifyPayment('${id}', false)" class="ig-btn-danger px-3 py-2 text-xs font-bold">❌ Отклонить</button></div></div>`).join('') || '<div class="text-center py-8 t2">Ожидающих заявок нет</div>'}</div></div>`; }
+else if (tab === 'payments') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } 
+// Сохраняем текущее значение поиска перед перерисовкой
+const searchVal = paymentSearchQuery || '';
+c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Верификация платежей</h4><input id="payment-search" oninput="paymentSearchQuery=this.value; renderAdminTabContent()" class="ig-input w-full px-3 py-2 text-xs" placeholder="Поиск по коду или пользователю" value="${searchVal}"><div class="space-y-2">${Object.entries(TOPUP_REQUESTS).filter(([id,r]) => {
+    const q = searchVal.toLowerCase();
+    if (!q) return true;
+    return String(r.code).toLowerCase().includes(q) || String(r.username).toLowerCase().includes(q);
+}).map(([id,r]) => `<div class="ig-card p-3 rounded-xl space-y-2"><div class="flex items-center justify-between gap-2 flex-wrap"><span class="font-mono font-bold t1">${r.code}</span><span class="font-bold" style="color:#f59e0b">${Number(r.amount).toFixed(2)} SC</span></div><div class="text-xs t2">@${r.username} • ${new Date(r.timestamp).toLocaleString()}</div><div class="flex gap-2 flex-wrap"><span class="px-2 py-1 rounded-full text-[10px] font-semibold border" style="${r.status === 'pending' ? 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)' : r.status === 'approved' ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(237,73,86,.15);color:#ed4956;border-color:rgba(237,73,86,.4)'}">${r.status}</span>${r.status === 'pending' ? `<button onclick="verifyPayment('${id}', true)" class="ig-btn px-3 py-2 text-xs font-bold">✅ Подтвердить</button><button onclick="verifyPayment('${id}', false)" class="ig-btn-danger px-3 py-2 text-xs font-bold">❌ Отклонить</button>` : ''}</div></div>`).join('') || '<div class="text-center py-8 t2">Заявок не найдено</div>'}</div></div>`; }
 else if (tab === 'rates') { c.innerHTML = `<div class="space-y-4">
 <div class="p-4 rounded-xl border space-y-2" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)">
 <div class="flex items-center justify-between"><span class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-tower-broadcast" style="color:#10b981"></i> Живой парсинг курса (sp-proxy)</span><button onclick="fetchLiveExchangeRates(true)" class="ig-btn px-3 py-1.5 text-xs"><i class="fa-solid fa-arrows-rotate"></i> Обновить сейчас</button></div>
