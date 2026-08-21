@@ -594,7 +594,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </div>
 <!-- ============ AVITOCASH TOP-UP ============ -->
-<div id="modal-shamcash-topup" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div id="modal-avitocash-topup" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
 <button onclick="closeModal('modal-shamcash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-base font-bold t1 pt-8">Пополнение AvitoCash</h3>
@@ -1175,7 +1175,24 @@ if (ad.isFree || ad.isNegotiable || ad.price <= 0) {
 showToast('Это объявление нельзя оплатить через баланс', 'warning');
 return;
 }
-const priceUsd = adToUSD(ad);
+
+// === ЗАЩИТА ОТ ПОДМЕНЫ ЦЕНЫ В КОНСОЛИ ===
+let realPriceUsd = adToUSD(ad);
+if (firebaseDb && ad.id) {
+    try {
+        const snap = await firebaseDb.ref(`ads/${ad.id}/price`).once('value');
+        const cloudPrice = snap.val();
+        if (cloudPrice !== null && cloudPrice !== undefined) {
+            // Пересчитываем цену из базы, чтобы хакер не купил за 0.01$
+            let p = Number(cloudPrice);
+            if (ad.currency === 'SYP') p = p / EXCHANGE_RATES.SYP;
+            if (ad.currency === 'TRY') p = p / EXCHANGE_RATES.TRY;
+            if (p > 0) realPriceUsd = p;
+        }
+    } catch (e) { console.warn('Price check failed', e); }
+}
+
+const priceUsd = realPriceUsd;
 if (priceUsd <= 0) { showToast('Цена должна быть больше нуля', 'warning'); return; }
 const buyerBalance = currentUser.shamcashBalance || 0;
 if (buyerBalance < priceUsd) {
@@ -1252,8 +1269,7 @@ window.open(`https://wa.me/${sellerWa.replace(/[^0-9]/g, '')}?text=${encodeURICo
 console.error('Purchase error:', err);
 showToast('Ошибка при оплате: ' + err.message, 'error');
 }
-}
-/* ================= SHOPS ================= */
+}/* ================= SHOPS ================= */
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
 function handleShopRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('shop-lat').value = c[0]; byId('shop-lng').value = c[1]; if (shopCreateMap && shopCreateMarker) { shopCreateMap.setView(c, 12); shopCreateMarker.setLatLng(c); } }
@@ -1597,24 +1613,38 @@ showToast('Логин уже занят!', 'error');
 btn.disabled = false; btn.innerText = originalText;
 return;
 }
-const whatsappCheck = validateWhatsApp(whatsappRaw);
-if (!whatsappCheck.valid) {
-showToast(whatsappCheck.error, 'error');
-btn.disabled = false; btn.innerText = originalText;
-return;
-}
-const whatsapp = whatsappCheck.number;
-const uid = 'u_' + Date.now();
-const nu = {
-uid, username,
-passwordHash: password,
-kunya, gender, whatsapp, avatar,
-role: 'USER', verifiedShop: false,
-shamcashBalance: 0, trialBalance: 10
-};
-users.push(nu);
-if (firebaseDb) firebaseDb.ref(`users/${uid}`).set(nu);
-saveUserSession(nu, remember);
+        const whatsappCheck = validateWhatsApp(whatsappRaw);
+        if (!whatsappCheck.valid) {
+            showToast(whatsappCheck.error, 'error');
+            btn.disabled = false; btn.innerText = originalText;
+            return;
+        }
+        const whatsapp = whatsappCheck.number;
+        // === БЕЗОПАСНОСТЬ: УНИКАЛЬНОСТЬ WHATSAPP ===
+        const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
+        if (waExists) {
+            showToast('Этот номер WhatsApp уже зарегистрирован!', 'error');
+            btn.disabled = false; btn.innerText = originalText;
+            return;
+        }
+        // ==========================================
+        const uid = 'u_' + Date.now();
+        const nu = {
+            uid, username,
+            passwordHash: password,
+            kunya, gender, whatsapp, avatar,
+            role: 'USER', verifiedShop: false,
+            shamcashBalance: 0, trialBalance: 10
+        };
+        
+        // Записываем номер в индекс WhatsApp, чтобы никто другой не смог его занять
+        if (firebaseDb) {
+            const waClean = whatsapp.replace(/\D/g, '');
+            firebaseDb.ref(`whatsapp_index/${waClean}`).set(uid).catch(err => console.warn('WA index write failed', err));
+            firebaseDb.ref(`users/${uid}`).set(nu);
+        }
+        users.push(nu);
+		saveUserSession(nu, remember);
 closeModal('modal-auth');
 showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC — на объявления и магазин, без права передачи', 'success');
 btn.disabled = false; btn.innerText = originalText;
@@ -1776,8 +1806,65 @@ return;
 }
 const nw = nwCheck.number;
 const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
-async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } u.avatar = na; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); saveCachedAds();  if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
-/* ================= ADMIN ================= */
+async function finalizeProfileSave(u, orig, nl, nk, nw, na) {
+// === БЕЗОПАСНОСТЬ: УНИКАЛЬНОСТЬ WHATSAPP ПРИ РЕДАКТИРОВАНИИ ===
+if (nw) {
+const waClean = nw.replace(/\D/g,'');
+const waOwner = users.find(x => x.whatsapp && x.whatsapp.replace(/\D/g,'') === waClean);
+if (waOwner && waOwner.username.toLowerCase() !== orig.toLowerCase()) {
+showToast('Этот номер WhatsApp уже используется другим пользователем!', 'error');
+return;
+}
+}
+// =================================================================
+
+// === ЗАЩИТА РОЛИ И ПАРОЛЯ ОТ ВЗЛОМА ЧЕРЕЗ КОНСОЛЬ ===
+let safeRole = u.role || 'USER';
+let safePasswordHash = u.passwordHash;
+
+if (firebaseDb && u.uid) {
+    try {
+        const snap = await firebaseDb.ref(`users/${u.uid}`).once('value');
+        const cloudData = snap.val();
+        if (cloudData) {
+            // Берем роль ТОЛЬКО из базы, игнорируем то, что прислал браузер
+            safeRole = cloudData.role || 'USER';
+            // Защищаем хэш пароля от перезаписи, если он уже есть в базе
+            if (cloudData.passwordHash) safePasswordHash = cloudData.passwordHash;
+        }
+    } catch (e) { console.warn('Security check failed', e); }
+}
+
+// Применяем безопасные значения
+u.role = safeRole;
+u.passwordHash = safePasswordHash;
+
+// Только настоящий админ в текущей сессии может менять роли через интерфейс
+if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.uid !== u.uid) { 
+    u.gender = byId('edit-profile-gender').value; 
+    u.role = byId('edit-profile-role').value; 
+} 
+
+u.avatar = na; 
+
+if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); 
+
+ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); 
+
+combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); 
+
+saveCachedAds();  
+
+if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { 
+    currentUser = { ...u }; 
+    saveUserSession(currentUser, true); 
+} 
+
+closeModal('modal-edit-profile'); 
+closeModal('modal-profile'); 
+updateAuthUI(); 
+showToast(`Данные "${nl}" обновлены!`, 'success'); 
+}/* ================= ADMIN ================= */
 function adminPanelBack() { try { if (SYSTEM_CONFIG.adminTab && SYSTEM_CONFIG.adminTab !== 'overview') { switchAdminTab('overview'); return; } } catch (e) { /* ignore */ } closeModal('modal-admin-panel'); }
 function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup', 'finance', 'payments', 'tx'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.borderBottomWidth = t === tab ? '2px' : '0'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
