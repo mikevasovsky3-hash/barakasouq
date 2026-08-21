@@ -1101,7 +1101,10 @@ ${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openC
 </div>
 </div>`; openModal('modal-ad-detail'); }
 /* ================= AD DETAIL ================= */
-function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/views`).set(ad.views); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0; const isRealOwner = currentUser && currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase(); const isOwner = currentUser && (isRealOwner || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); const likesCount = (ad.likes || []).length; const userLiked = currentUser && (ad.likes || []).includes(currentUser.username); const viewsCount = ad.views || 0; const rating = likesCount * 10 + viewsCount; const priceUsd = adToUSD(ad);
+function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/views`).set(ad.views); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0; 
+const isRealOwner = currentUser && currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase(); 
+const isOwner = currentUser && (isRealOwner || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); 
+const likesCount = (ad.likes || []).length; const userLiked = currentUser && (ad.likes || []).includes(currentUser.username); const viewsCount = ad.views || 0; const rating = likesCount * 10 + viewsCount; const priceUsd = adToUSD(ad);
 const canBuyWithBalance = currentUser && !isRealOwner && !ad.isFree && !ad.isNegotiable && priceUsd > 0 && (currentUser.shamcashBalance || 0) >= priceUsd;
 content.innerHTML = `<div class="grid md:grid-cols-2">
 <div class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height:320px">
@@ -1587,13 +1590,20 @@ btn.innerText = 'Проверка...';
 if (isReg) {
 const kunya = byId('auth-kunya').value.trim() || username;
 const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
-const whatsapp = byId('auth-whatsapp').value.trim();
+const whatsappRaw = byId('auth-whatsapp').value.trim();
 const avatar = byId('auth-avatar-data')?.value || null;
 if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
 showToast('Логин уже занят!', 'error');
 btn.disabled = false; btn.innerText = originalText;
 return;
 }
+const whatsappCheck = validateWhatsApp(whatsappRaw);
+if (!whatsappCheck.valid) {
+showToast(whatsappCheck.error, 'error');
+btn.disabled = false; btn.innerText = originalText;
+return;
+}
+const whatsapp = whatsappCheck.number;
 const uid = 'u_' + Date.now();
 const nu = {
 uid, username,
@@ -1758,7 +1768,14 @@ updateAuthUI();
 showToast('Вы вышли из аккаунта', 'info');
 }
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
-function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
+function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nwRaw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; } 
+const nwCheck = validateWhatsApp(nwRaw);
+if (!nwCheck.valid) {
+showToast(nwCheck.error, 'error');
+return;
+}
+const nw = nwCheck.number;
+const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
 async function finalizeProfileSave(u, orig, nl, nk, nw, na) { if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; } u.avatar = na; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } }); combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } }); saveCachedAds();  if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); } closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success'); }
 /* ================= ADMIN ================= */
 function adminPanelBack() { try { if (SYSTEM_CONFIG.adminTab && SYSTEM_CONFIG.adminTab !== 'overview') { switchAdminTab('overview'); return; } } catch (e) { /* ignore */ } closeModal('modal-admin-panel'); }
@@ -2164,6 +2181,26 @@ if (window.scrollY > 300) scrollBtn.classList.add('visible');
 else scrollBtn.classList.remove('visible');
 });
 };
+/* ================= WHATSAPP VALIDATION ================= */
+function validateWhatsApp(phone) {
+    if (!phone) return { valid: false, error: 'Введите номер WhatsApp' };
+    let raw = phone.trim().replace(/[\s\-\(\)]/g, '');
+    if (!raw.startsWith('+')) {
+        if (raw.startsWith('0')) raw = '+963' + raw.substring(1);
+        else if (!raw.startsWith('963') && !raw.startsWith('7') && !raw.startsWith('1')) raw = '+963' + raw;
+        else raw = '+' + raw;
+    }
+    try {
+        if (typeof libphonenumber !== 'undefined') {
+            const parsed = libphonenumber.parsePhoneNumber(raw, 'SY');
+            if (!parsed || !parsed.isValid()) return { valid: false, error: 'Некорректный номер телефона' };
+            return { valid: true, number: parsed.number.replace('+', '') };
+        }
+    } catch (e) {}
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 15) return { valid: false, error: 'Некорректная длина номера' };
+    return { valid: true, number: digits };
+}
 </script>
 </body>
 </html>
