@@ -1718,12 +1718,13 @@ function openRedeemGiftModal() { if (!currentUser) { openAuthModal(); return; } 
 async function redeemGiftCode() { const input = byId('redeem-gift-code'); const entered = String(input?.value || '').trim().toUpperCase(); if (!currentUser || !entered) { showToast('Введите подарочный код', 'warning'); return; } if (!firebaseDb || !currentUser.uid) { showToast('Нет соединения с Firebase', 'error'); return; } const match = Object.entries(GIFT_CODES || {}).find(([, gift]) => gift && String(gift.code || '').toUpperCase() === entered); if (!match) { showToast('Подарочный код не найден', 'error'); return; } const [giftId, gift] = match; const giftRef = firebaseDb.ref(`gift_codes/${giftId}`); try { const reservation = await giftRef.transaction(current => { if (!current || current.status !== 'active') return; if (current.expiresAt && Number(current.expiresAt) < Date.now()) return; return { ...current, status: 'used', usedBy: currentUser.uid, usedByUsername: currentUser.username, usedAt: Date.now() }; }); if (!reservation.committed) { showToast('Код уже использован или истек', 'warning'); return; } const amount = _0xSCAmount(reservation.snapshot.val().amount); const balanceRef = firebaseDb.ref(`users/${currentUser.uid}/avitocashBalance`); const balanceResult = await balanceRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); if (!balanceResult.committed) throw new Error('Не удалось обновить баланс'); currentUser.avitocashBalance = balanceResult.snapshot.val(); const localUser = users.find(u => u.uid === currentUser.uid); if (localUser) localUser.avitocashBalance = balanceResult.snapshot.val(); saveUserSession(currentUser, true); logTransaction({ type: 'gift', amount, recipientUid: currentUser.uid, recipientUsername: currentUser.username, note: 'Подарочный код ' + entered }).catch(() => {}); closeModal('modal-redeem-gift'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Подарок активирован: +${amount.toFixed(2)} AC`, 'success'); } catch (e) { showToast('Не удалось активировать код. Попробуйте еще раз.', 'error'); } }
 function openTransferModal() { if (!currentUser) { openAuthModal(); return; } const select = byId('transfer-recipient'); if (!select) return; const available = users.filter(u => u.uid && u.uid !== currentUser.uid); select.innerHTML = available.length ? available.map(u => `<option value="${u.uid}">${u.kunya || u.username} (@${u.username})</option>`).join('') : '<option value="">Нет доступных получателей</option>'; byId('transfer-amount').value = ''; byId('transfer-note').value = ''; openModal('modal-transfer-avitocash'); }
 async function transferAvitoCash() {
+    console.log("=== НАЧАЛО ПЕРЕВОДА ===");
     if (!currentUser?.uid || !firebaseDb) {
         showToast('Нет соединения с Firebase', 'error');
         return;
     }
     if (currentUser.frozen) {
-        showToast('Аккаунт заморожен администратором — перевод недоступен', 'error');
+        showToast('Аккаунт заморожен', 'error');
         return;
     }
 
@@ -1731,39 +1732,43 @@ async function transferAvitoCash() {
     const amountInput = byId('transfer-amount')?.value;
     const amount = parseFloat(amountInput);
     const note = String(byId('transfer-note')?.value || '').trim();
-    
     const recipient = users.find(u => u.uid === recipientUid);
+
+    console.log("Данные:", { recipientUid, amount, note, recipient });
 
     if (!recipientUid || !recipient || recipientUid === currentUser.uid) {
         showToast('Выберите получателя', 'warning');
         return;
     }
     if (!amount || amount <= 0) {
-        showToast('Укажите корректную сумму перевода', 'warning');
+        showToast('Укажите сумму', 'warning');
         return;
     }
 
-    // Проверка баланса (берем из локальных данных, они синхронизированы)
     const currentBalance = Number(currentUser.avitocashBalance || 0);
+    console.log("Текущий баланс:", currentBalance);
+    
     if (currentBalance < amount) {
         showToast(`Недостаточно средств. У вас ${currentBalance.toFixed(2)} AC`, 'error');
         return;
     }
 
     try {
-        showToast('Обработка перевода...', 'info');
-
-        // 1. Считаем новые балансы
+        showToast('Отправка данных в базу...', 'info');
+        
         const newSenderBalance = Math.round((currentBalance - amount) * 100) / 100;
         const currentRecipientBalance = Number(recipient.avitocashBalance || 0);
         const newRecipientBalance = Math.round((currentRecipientBalance + amount) * 100) / 100;
 
-        // 2. Записываем напрямую через set (обходим проблемы с transaction)
-        // Это сработает, потому что в Rules стоит ".write": "auth != null"
+        console.log("Попытка записи...");
+        // Прямая запись. Если тут ошибка - значит Rules закрыты.
         await firebaseDb.ref(`users/${currentUser.uid}/avitocashBalance`).set(newSenderBalance);
+        console.log("Списание прошло успешно");
+        
         await firebaseDb.ref(`users/${recipientUid}/avitocashBalance`).set(newRecipientBalance);
+        console.log("Зачисление прошло успешно");
 
-        // 3. Обновляем локальные переменные, чтобы интерфейс обновился сразу
+        // Обновляем локально
         currentUser.avitocashBalance = newSenderBalance;
         const localSender = users.find(u => u.uid === currentUser.uid);
         if (localSender) localSender.avitocashBalance = newSenderBalance;
@@ -1773,7 +1778,6 @@ async function transferAvitoCash() {
 
         saveUserSession(currentUser, true);
 
-        // 4. Логируем транзакцию (не блокируем перевод, если лог упадет)
         logTransaction({
             type: 'transfer',
             amount: amount,
@@ -1786,13 +1790,14 @@ async function transferAvitoCash() {
 
         closeModal('modal-transfer-avitocash');
         if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
-        showToast(`Успешно переведено ${amount.toFixed(2)} AC пользователю ${recipient.kunya || recipient.username}`, 'success');
+        showToast(`Успешно переведено ${amount.toFixed(2)} AC`, 'success');
 
     } catch (e) {
-        console.error('Transfer error:', e);
-        showToast('Ошибка базы данных: ' + e.message, 'error');
+        console.error("КРИТИЧЕСКАЯ ОШИБКА:", e);
+        showToast('Ошибка: ' + e.message, 'error');
     }
-}function downloadGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; const link = document.createElement('a'); link.download = 'AvitoSham-Gift-Code.png'; link.href = canvas.toDataURL('image/png'); link.click(); }
+}
+function downloadGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; const link = document.createElement('a'); link.download = 'AvitoSham-Gift-Code.png'; link.href = canvas.toDataURL('image/png'); link.click(); }
 async function shareGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; canvas.toBlob(async blob => { const file = new File([blob], 'AvitoSham-Gift-Code.png', { type: 'image/png' }); if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ title: 'Подарочный код Avito Sham', text: byId('gift-code-label').innerText, files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; } } downloadGiftCard(); showToast('Карточка скачана для отправки', 'info'); }, 'image/png'); }
 function _0xSCPrices() { return { adPrice: _0xSCAmount(AVITOCASH_PRICES.adPrice), shopSubscription: _0xSCAmount(AVITOCASH_PRICES.shopSubscription), editPrice: _0xSCAmount(AVITOCASH_PRICES.editPrice) }; }
 async function _0xSCCharge(uid, amount, label) { const target = users.find(x => x.uid === uid); if (target && target.frozen) { showToast('Аккаунт заморожен администратором — действие недоступно', 'error'); return false; } const price = _0xSCAmount(amount); if (!price) return true; try { await deductFeeWithTrial(uid, price); logTransaction({ type: 'fee', amount: price, senderUid: uid, senderUsername: (target || {}).username || '', note: label }).catch(() => {}); showToast(`${label}: списано ${price.toFixed(2)} AC`, 'info'); return true; } catch (e) { showToast(`Недостаточно AvitoCash для действия. Требуется ${price.toFixed(2)} AC`, 'warning'); return false; } }
