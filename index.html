@@ -1826,31 +1826,31 @@ async function initSupabaseSync() {
 
   try {
     const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, shop, receipts, frozen'),
+      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, shop, receipts, frozen, is_archived'),
       supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
       supabaseClient.from('reports').select('*')
     ]);
 
-if (usersRes.data) {
-  const allParsedUsers = usersRes.data.map(u => ({
-    ...u,
-    passwordHash: u.password_hash,
-    verifiedShop: !!u.verified_shop,
-    avitocashBalance: Number(u.avitocash_balance || 0),
-    trialBalance: Number(u.trial_balance || 0),
-    showWomenAds: !!u.show_women_ads,
-    frozen: !!u.frozen,
-    isArchived: !!u.is_archived
-  }));
+    if (usersRes.data) {
+      const allParsedUsers = usersRes.data.map(u => ({
+        ...u,
+        passwordHash: u.password_hash,
+        verifiedShop: !!u.verified_shop,
+        avitocashBalance: Number(u.avitocash_balance || 0),
+        trialBalance: Number(u.trial_balance || 0),
+        showWomenAds: !!u.show_women_ads,
+        frozen: !!u.frozen,
+        isArchived: !!u.is_archived
+      }));
 
-  users = allParsedUsers.filter(u => !u.isArchived);
-  archivedUsers = allParsedUsers.filter(u => u.isArchived);
-  
+      users = allParsedUsers.filter(u => !u.isArchived);
+      archivedUsers = allParsedUsers.filter(u => u.isArchived);
+
       // Мгновенно синхронизируем данные текущей сессии с базой
       if (currentUser) {
-        const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+        const freshMe = allParsedUsers.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
         if (freshMe) {
           currentUser = { ...currentUser, ...freshMe };
           saveUserSession(currentUser, true);
@@ -1914,8 +1914,7 @@ if (usersRes.data) {
     console.error("Ошибка синхронизации Supabase:", error);
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
   }
-}
-function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
+}function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
 async function fetchLiveExchangeRates(manual = false) { try { const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); const data = await res.json(); const ov = data?.overview; const ovObj = Array.isArray(ov) ? (ov[0] || {}) : (ov || {}); const ratesArr = ovObj?.data?.rates || data?.data?.rates || (Array.isArray(data?.rates) ? data.rates : null); const globalFx = ovObj?.global_fx || data?.global_fx || null; const pickCity = r => { const c = r?.cities || {}; return c.damascus || c.Damascus || Object.values(c)[0] || {}; }; let rawUsd = null, rawTry = null, sypVal = null, tryVal = null; if (Array.isArray(ratesArr)) { const usd = ratesArr.find(r => r.code === 'USD'); const tryp = ratesArr.find(r => r.code === 'TRY'); if (usd) { const cv = pickCity(usd); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawUsd = raw; } if (tryp) { const cv = pickCity(tryp); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawTry = raw; } } if (rawUsd !== null) sypVal = rawUsd > 1000 ? rawUsd / 100 : rawUsd; if (Array.isArray(globalFx)) { const p = globalFx.find(g => String(g.pair || '').toUpperCase() === 'USD/TRY'); if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; } } if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2); if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) { EXCHANGE_RATES.SYP = +sypVal.toFixed(2); if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2); lastRatesUpdate = new Date(); localStorage.setItem('bs_rates', JSON.stringify(EXCHANGE_RATES)); renderAds(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent(); if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error'); } catch (err) { console.warn('Live rates error:', err); if (manual) showToast('Ошибка получения курса валют', 'error'); } }
 /* ================= SORTING ================= */
