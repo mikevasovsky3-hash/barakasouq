@@ -2201,11 +2201,11 @@ showToast('Регистрация успешна! 🎁 Приветственн�
     }
     try {
       // Безопасная авторизация через серверную функцию
-      const { data: res, error } = await supabaseClient.rpc('verify_user_login', {
+const { data: res, error } = await supabaseClient.rpc('verify_user_login', {
         p_username: username,
         p_password_hash: password
       });
-
+	  
       if (error) throw error;
 
       if (res && res.success && res.user) {
