@@ -3905,7 +3905,22 @@ const DICTIONARY = {
   'Эс-Сувейда': 'السويداء',
   'Эль-Кунейтра': 'القنيطرة',
 
-// Системные уведомления и синхронизация
+// Модальные окна и каркас
+  'ID код ShamCash скопирован!': 'تم نسخ كود شام كاش بنجاح!',
+  'Пожаловаться на объявление': 'إبلاغ عن الإعلان',
+  'Мы проверим это объявление на нарушение правил.': 'سنقوم بمراجعة هذا الإعلان للتحقق من التزامه بالقواعد.',
+  'Выберите причину...': 'اختر سبب الإبلاغ...',
+  'Мошенничество / Скам': 'احتيال / نصب',
+  'Фейковый товар / Фото': 'منتج أو صور مزيفة',
+  'Запрещенный товар': 'منتج محظور أو مخالف',
+  'Спам / Дубликат': 'إعلان مكرر / مزعج',
+  'Другое': 'سبب آخر',
+  'Комментарий (необязательно)': 'ملاحظات إضافية (اختياري)',
+  'Отправить жалобу': 'إرسال البلاغ',
+  'Правила и рекомендации Авито Шам': 'شروط وإرشادات أفيتو الشام',
+  'Я подтверждаю и принимаю условия': 'أوافق وأقبل الشروط',
+
+  // Системные уведомления и синхронизация
   'Синхронизация с облаком…': 'جاري المزامنة مع السحابة...',
   'Язык переключен на русский': 'تم تحويل اللغة إلى العربية',
   'تم تحويل اللغة إلى العربية': 'تم تحويل اللغة إلى العربية',
@@ -4106,6 +4121,83 @@ async function translateDynamic(text, targetLang = currentLang) {
   }
   return clean;
 }
+function triggerGoogleTranslate(lang) {
+  // Установка куки для Google Translate
+  document.cookie = `googtrans=/ru/${lang}; path=/;`;
+  document.cookie = `googtrans=/ru/${lang}; domain=${location.hostname}; path=/;`;
+
+  const select = document.querySelector('.goog-te-combo');
+  if (select) {
+    select.value = lang;
+    select.dispatchEvent(new Event('change'));
+  }
+}
+
+function translateStaticUI(lang) {
+  // Навигация сайдбара и футер
+  const navMap = {
+    'sb-home': 'Главная', 'sb-shops': 'Магазины', 'sb-create': 'Создать',
+    'sb-fav': 'Избранное', 'sb-profile': 'Профиль'
+  };
+  Object.keys(navMap).forEach(id => {
+    const el = byId(id)?.querySelector('.nav-label');
+    if (el) el.innerText = lang === 'ar' ? DICTIONARY[navMap[id]] || navMap[id] : navMap[id];
+  });
+
+  const supLbl = byId('sb-support-label');
+  if (supLbl) supLbl.innerText = lang === 'ar' ? DICTIONARY['Техподдержка'] : 'Техподдержка';
+
+  const donLbl = byId('sb-donate-label');
+  if (donLbl) donLbl.innerText = lang === 'ar' ? DICTIONARY['Поддержать проект'] : 'Поддержать проект';
+
+  const thmLbl = byId('sb-theme-label');
+  if (thmLbl) thmLbl.innerText = lang === 'ar' ? DICTIONARY['Сменить тему'] : 'Сменить тему';
+
+  const regLbl = byId('current-region-label');
+  if (regLbl) {
+    const regVal = byId('region-filter')?.value || 'ALL';
+    const rawName = regVal === 'ALL' ? 'Все регионы' : (REGION_NAMES[regVal] || 'Все регионы');
+    regLbl.innerText = lang === 'ar' ? (DICTIONARY[rawName] || rawName) : rawName;
+  }
+
+  const sortLbl = byId('current-sort-label');
+  if (sortLbl) {
+    const sortLabels = { newest: 'Новые', cheapest: 'Дешевые', expensive: 'Дорогие', popular: 'Популярные' };
+    const rawSort = sortLabels[currentSortMode] || 'Новые';
+    sortLbl.innerText = lang === 'ar' ? (DICTIONARY[rawSort] || rawSort) : rawSort;
+  }
+
+  // Модальное окно ShamCash QR
+  const supTitle = byId('support-modal-title');
+  if (supTitle) supTitle.innerText = lang === 'ar' ? DICTIONARY['Поддержка сервера — ShamCash'] : 'Поддержка сервера — ShamCash';
+  const supDesc = byId('support-modal-desc');
+  if (supDesc) supDesc.innerText = lang === 'ar' ? DICTIONARY['Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.'] : 'Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.';
+  const supIdLbl = byId('support-modal-idlabel');
+  if (supIdLbl) supIdLbl.innerText = lang === 'ar' ? DICTIONARY['ID счёта ShamCash'] : 'ID счёта ShamCash';
+  const supCopy = byId('support-modal-copybtn')?.querySelector('span');
+  if (supCopy) supCopy.innerText = lang === 'ar' ? DICTIONARY['Скопировать ID'] : 'Скопировать ID';
+
+  // Модальное окно создания объявления
+  const createTitle = document.querySelector('#modal-create-ad h3');
+  if (createTitle) createTitle.innerText = lang === 'ar' ? DICTIONARY['Подача нового объявления'] : 'Подача нового объявления';
+  const adTitleInp = byId('ad-title');
+  if (adTitleInp) adTitleInp.placeholder = lang === 'ar' ? DICTIONARY['Заголовок объявления *'] : 'Заголовок объявления *';
+  const adCityInp = byId('ad-city');
+  if (adCityInp) adCityInp.placeholder = lang === 'ar' ? DICTIONARY['Город / Населенный пункт *'] : 'Город / Населенный пункт *';
+  const adPriceInp = byId('ad-price');
+  if (adPriceInp) adPriceInp.placeholder = lang === 'ar' ? DICTIONARY['Цена *'] : 'Цена *';
+  const adDescInp = byId('ad-desc');
+  if (adDescInp) adDescInp.placeholder = lang === 'ar' ? DICTIONARY['Описание и возможные изъяны *'] : 'Описание и возможные изъяны *';
+  const createSubBtn = document.querySelector('#modal-create-ad button[type="submit"]');
+  if (createSubBtn) createSubBtn.innerText = lang === 'ar' ? DICTIONARY['Опубликовать объявление'] : 'Опубликовать объявление';
+
+  // Футер
+  const devLbl = byId('ft-dev-label');
+  if (devLbl) devLbl.innerText = lang === 'ar' ? DICTIONARY['Разработчик:'] : 'Разработчик:';
+  const cpyLbl = byId('ft-copy-label');
+  if (cpyLbl) cpyLbl.innerText = lang === 'ar' ? DICTIONARY['Авито Шам © 2026'] : 'Авито Шам © 2026';
+}
+
 function changeLanguage(langCode) {
   currentLang = langCode;
   localStorage.setItem('bs_app_lang', langCode);
@@ -4118,42 +4210,39 @@ function changeLanguage(langCode) {
     document.documentElement.setAttribute('lang', 'ru');
   }
 
-  // Обновление названий регионов
+  // 1. Мгновенный перевод статического каркаса по словарю
+  translateStaticUI(langCode);
+
+  // 2. Обновление селекторов регионов и категорий
   const regSel = byId('region-filter');
   if (regSel) {
     Array.from(regSel.options).forEach(opt => {
-      opt.text = (langCode === 'ar') ? t(opt.value === 'ALL' ? 'Все регионы (Сирия)' : (REGION_NAMES[opt.value] || opt.text)) : (opt.value === 'ALL' ? 'Все регионы (Сирия)' : (REGION_NAMES[opt.value] || opt.text));
+      const baseKey = opt.value === 'ALL' ? 'Все регионы (Сирия)' : (REGION_NAMES[opt.value] || opt.value);
+      opt.text = langCode === 'ar' ? (DICTIONARY[baseKey] || baseKey) : (opt.value === 'ALL' ? 'Все регионы (Сирия)' : (REGION_NAMES[opt.value] || opt.text));
     });
   }
 
-  // Обновление поиска
   const sMob = byId('search-input'), sDsk = byId('search-input-desktop');
   if (sMob) sMob.placeholder = t('Поиск');
   if (sDsk) sDsk.placeholder = t('Поиск');
 
-  // Обновление интерфейса
+  // 3. Перерисовка динамических списков (лента, пилюли, профиль, бегущая строка)
   updateNavState();
   renderCategoryPills();
-  updateRegionLabel();
   renderAds();
 
-// Если открыт профиль — сразу перерисовываем его
   const profileModal = byId('modal-profile');
   if (profileModal && !profileModal.classList.contains('hidden')) {
     openProfileModal();
   }
 
-  // Если открыто объявление — мгновенно переводим его на выбранный язык
+  // 4. Если открыто объявление — переводим динамический текст через translateDynamic
   const detailModal = byId('modal-ad-detail');
   if (detailModal && !detailModal.classList.contains('hidden')) {
-    const currentAdId = detailModal.querySelector('.ad-id-badge, .font-mono')?.innerText?.trim();
-    if (currentAdId) {
-      openAdDetail(currentAdId, false);
-    }
+    const currentAdId = detailModal.querySelector('.font-mono')?.innerText?.trim();
+    if (currentAdId) openAdDetail(currentAdId, false);
   }
 
-  showToast(langCode === 'ar' ? 'تم تحويل اللغة إلى العربية' : 'Язык переключен на русский', 'success');
-  // Обновление надписи статуса синхронизации
   const syncLbl = byId('cloud-sync-label');
   if (syncLbl) syncLbl.innerText = t('Синхронизация с облаком…');
 
@@ -4167,6 +4256,7 @@ function initLanguageState() {
     document.documentElement.setAttribute('lang', 'ar');
     const syncLbl = byId('cloud-sync-label');
     if (syncLbl) syncLbl.innerText = t('Синхронизация с облаком…');
+    setTimeout(() => triggerGoogleTranslate('ar'), 600);
   }
 }
 /* ================= INITIALIZATION ================= */
@@ -4242,17 +4332,5 @@ return { valid: true, number: digits };
    class="fixed bottom-20 left-4 z-40 w-11 h-11 rounded-full bg-[#25D366] text-white shadow-xl flex items-center justify-center hover:bg-[#20bd5a] active:scale-90 transition-all max-lg:flex lg:!hidden">
   <i class="fa-brands fa-whatsapp text-2xl"></i>
 </a>
-<!-- Контейнер скрыт через opaciy/pointer-events, чтобы Google Translate корректно инициализировал внутренний селект -->
-<div id="google_translate_element" style="position:fixed;bottom:-9999px;left:-9999px;opacity:0;pointer-events:none;"></div>
-<script>
-  function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-      pageLanguage: 'ru',
-      includedLanguages: 'ru,ar',
-      autoDisplay: false
-    }, 'google_translate_element');
-  }
-</script>
-<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
