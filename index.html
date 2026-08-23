@@ -252,8 +252,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
 <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
 <div id="share-preview-state" class="text-center text-xs t2 py-2 hidden">Генерируем красивую карточку...</div>
-<div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1">
-<img id="share-preview-image" src="" alt="Предпросмотр карточки объявления Авито Шам" class="w-full max-h-[52vh] object-contain rounded-lg">
+<div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1"><img id="share-preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Предпросмотр карточки объявления Авито Шам" class="w-full max-h-[52vh] object-contain rounded-lg">
 </div>
 <button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Поделиться карточкой</button>
 <button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
@@ -268,7 +267,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
 <div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2">
 <button onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
-<img id="fullscreen-viewer-img" src="" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg">
+<img id="fullscreen-viewer-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg">
 </div>
 <!-- ============ RULES MODAL ============ -->
 <div id="modal-rules-agreement" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
@@ -309,7 +308,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div>
 <input type="file" id="auth-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'auth')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <input type="hidden" id="auth-avatar-data">
-<div id="auth-avatar-preview-box" class="hidden mt-2 w-14 h-14 rounded-full overflow-hidden border b-ig"><img id="auth-avatar-preview-img" src="" alt="Превью аватара" class="w-full h-full object-cover"></div>
+<div id="auth-avatar-preview-box" class="hidden mt-2 w-14 h-14 rounded-full overflow-hidden border b-ig"><img id="auth-avatar-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью аватара" class="w-full h-full object-cover"></div>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <label class="flex items-center justify-center gap-2 p-2.5 rounded-lg border b-ig bg-field cursor-pointer text-xs font-semibold"><input type="radio" name="auth-gender" value="MALE" checked class="accent-[#0095f6]"><span>Мужчина</span></label>
@@ -464,7 +463,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <input type="text" id="edit-profile-kunya" required placeholder="Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
 <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <input type="hidden" id="edit-profile-avatar-data">
-<div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" src="" alt="Превью аватара" class="w-full h-full object-cover"></div>
+<div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью аватара" class="w-full h-full object-cover"></div>
 <input type="text" id="edit-profile-whatsapp" required placeholder="WhatsApp *" class="ig-input w-full px-3 py-2 text-xs">
 <div id="edit-profile-admin-fields" class="space-y-2.5 pt-2 border-t b-ig hidden">
 <select id="edit-profile-gender" class="ig-input w-full px-3 py-2 text-xs"><option value="MALE">Мужчина</option><option value="FEMALE">Женщина 🌸</option></select>
@@ -506,7 +505,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <label class="block text-xs t2 mb-1">Логотип магазина (1:1) *</label>
 <input type="file" id="shop-logo-file" accept="image/*" onchange="processShopLogoUpload(event)" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#9333ea] file:text-white cursor-pointer">
 <input type="hidden" id="shop-logo-data">
-<div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" src="" alt="Превью логотипа" class="w-full h-full object-cover"></div>
+<div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью логотипа" class="w-full h-full object-cover"></div>
 </div>
 <div class="p-3 rounded-xl text-xs leading-relaxed border b-ig bg-field t2"><i class="fa-solid fa-circle-info"></i> Магазин будет отправлен на проверку администратору.</div>
 <button type="submit" id="shop-submit-btn" class="w-full py-3 rounded-lg text-white text-sm font-semibold" style="background:#9333ea">Сохранить магазин</button>
