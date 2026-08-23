@@ -2868,12 +2868,87 @@ else if (tab === 'users') {
         </div>
     </div>`;
 }
-else if (tab === 'ads') { const activeList = ads.filter(a => a.status === 'ACTIVE'); const archivedList = ads.filter(a => a.status !== 'ACTIVE'); const list = adminAdsTab === 'active' ? activeList : archivedList; c.innerHTML = `<div class="space-y-3">
-<div class="flex gap-2"><button onclick="switchAdminAdsSubTab('active')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'active' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'active' ? 'background:#0095f6;border-color:#0095f6' : ''}">Активные (${activeList.length})</button><button onclick="switchAdminAdsSubTab('archived')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'archived' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'archived' ? 'background:#9333ea;border-color:#9333ea' : ''}">Архив / Продано / Передумал (${archivedList.length})</button></div>
-<div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Список пуст</div>' : list.map(a => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
-<div class="flex items-center gap-3 min-w-0"><img src="${a.images ? a.images[0] : a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="min-w-0"><div class="font-bold t1 text-xs flex items-center gap-1.5 flex-wrap"><span class="truncate">${a.title}</span><span class="text-[10px] font-mono t2">(${a.id})</span>${a.status !== 'ACTIVE' ? `<span class="px-1.5 py-0.5 rounded text-[8px] font-bold border" style="${a.status === 'SOLD' ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : (a.status === 'WITHDRAWN' ? 'background:var(--ig-field);color:var(--ig-text2);border-color:var(--ig-border)' : 'background:rgba(147,51,234,.15);color:#a855f7;border-color:rgba(147,51,234,.4)')}">${a.status === 'SOLD' ? 'ПРОДАНО' : (a.status === 'WITHDRAWN' ? 'ПЕРЕДУМАЛ' : 'АРХИВ')}</span>` : ''}</div><div class="text-[10px] t2 truncate">${a.city} • @${a.sellerUsername} • 👁 ${a.views || 0} • ❤ ${(a.likes || []).length}</div></div></div>
-<div class="flex items-center gap-1.5 shrink-0 flex-wrap">${a.status === 'ACTIVE' ? `<button onclick="openAdDetail('${a.id}', false)" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(0,149,246,.12);color:#0095f6;border-color:rgba(0,149,246,.4)">Открыть</button><button onclick="openEditAdModal('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)">Изменить</button><button onclick="markAdSold('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Продано</button><button onclick="archiveAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(147,51,234,.12);color:#a855f7;border-color:rgba(147,51,234,.4)">Архив</button>` : `<button onclick="restoreAd('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Восстановить</button>`}<button onclick="deleteAdWithConfirm('${a.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956">Удалить</button></div></div>`).join('')}</div></div>`; }
-else if (tab === 'tx') { const list = collectAllTransactions(); c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Журнал транзакций и чеков (${list.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Транзакций пока нет</div>' : list.map(t => `<div class="ig-card p-3 rounded-xl space-y-1"><div class="flex items-center justify-between gap-2 flex-wrap"><span class="font-bold t1 text-xs">${txTypeLabel(t, null)} • <span style="color:#f59e0b">${Number(t.amount || 0).toFixed(2)} AC</span></span><span class="text-[10px] t2">${new Date(t.timestamp || Date.now()).toLocaleString()}</span></div><div class="text-[11px] t2">@${t.senderUsername || '—'} → @${t.recipientUsername || '—'}</div>${t.adTitle ? `<div class="text-[11px] t1 truncate">Объявление: ${t.adTitle} (${t.adId || ''})</div>` : ''}${t.note ? `<div class="text-[11px] t2 truncate">${t.note}</div>` : ''}<div class="text-[9px] t2 font-mono">Чек ${t.id}</div></div>`).join('')}</div></div>`; }
+else if (tab === 'ads') { 
+    const activeList = ads.filter(a => a.status === 'ACTIVE'); 
+    const archivedList = ads.filter(a => a.status !== 'ACTIVE'); 
+    const list = adminAdsTab === 'active' ? activeList : archivedList; 
+    
+    c.innerHTML = `
+    <div class="space-y-3">
+        <!-- Переключатели вкладок Активные / Архив -->
+        <div class="flex gap-2">
+            <button onclick="switchAdminAdsSubTab('active')" class="px-3 py-1.5 rounded-lg font-bold text-xs border ${adminAdsTab === 'active' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'active' ? 'background:#0095f6;border-color:#0095f6' : ''}">
+                Активные (${activeList.length})
+            </button>
+            <button onclick="switchAdminAdsSubTab('archived')" class="px-3 py-1.5 rounded-lg font-bold text-xs border ${adminAdsTab === 'archived' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'archived' ? 'background:#9333ea;border-color:#9333ea' : ''}">
+                Архив / Продано (${archivedList.length})
+            </button>
+        </div>
+
+        <!-- Список объявлений -->
+        <div class="space-y-2 max-h-none overflow-y-auto pr-1">
+            ${list.length === 0 ? '<div class="text-center py-8 t2">Список объявлений пуст</div>' : list.map(a => {
+                const img = (a.images && a.images[0]) || a.image || PLACEHOLDER_IMG;
+                const priceFormatted = priceBadge(a);
+                const statusBadge = a.status !== 'ACTIVE' ? `
+                    <span class="px-1.5 py-0.5 rounded text-[8px] font-bold border" style="${a.status === 'SOLD' ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : (a.status === 'WITHDRAWN' ? 'background:var(--ig-field);color:var(--ig-text2);border-color:var(--ig-border)' : 'background:rgba(147,51,234,.15);color:#a855f7;border-color:rgba(147,51,234,.4)')}">
+                        ${a.status === 'SOLD' ? 'ПРОДАНО' : (a.status === 'WITHDRAWN' ? 'ПЕРЕДУМАЛ' : 'АРХИВ')}
+                    </span>` : '';
+                
+                return `
+                <div class="ig-card p-3 rounded-xl flex flex-col gap-2.5">
+                    <!-- Первая строка: Картинка, Заголовок, ID, Цена и Статус -->
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden bg-field border b-ig shrink-0">
+                                <img src="${img}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold t1 text-xs truncate flex items-center gap-1.5 flex-wrap">
+                                    <span class="truncate">${a.title}</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="text-[10px] t2 truncate">
+                                    ${a.city || 'Сирия'} • @${a.sellerUsername || 'неизвестно'} • 👁 ${a.views || 0} • ❤ ${(a.likes || []).length}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Цена объявления -->
+                        <div class="text-right shrink-0 bg-field px-2.5 py-1 rounded-lg border b-ig">
+                            <div class="text-[9px] t2 uppercase">Цена</div>
+                            <div class="text-xs font-extrabold" style="color:#f59e0b">${priceFormatted}</div>
+                        </div>
+                    </div>
+
+                    <!-- Вторая строка: Компактные иконки-кнопки управления объявлением -->
+                    <div class="flex items-center gap-1.5 pt-2 border-t b-ig justify-end flex-wrap">
+                        ${a.status === 'ACTIVE' ? `
+                            <button onclick="openAdDetail('${a.id}', false)" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(0,149,246,.1);color:#0095f6;border-color:rgba(0,149,246,.3)" title="Открыть объявление">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="openEditAdModal('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3)" title="Редактировать">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="markAdSold('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)" title="Отметить как продано">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="archiveAdWithConfirm('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(147,51,234,.1);color:#a855f7;border-color:rgba(147,51,234,.3)" title="Перенести в архив">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </button>
+                        ` : `
+                            <button onclick="restoreAd('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)" title="Восстановить в активные">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        `}
+                        <button onclick="deleteAdWithConfirm('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(237,73,86,.1);color:#ed4956;border-color:rgba(237,73,86,.3)" title="Удалить навсегда">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`; 
+}else if (tab === 'tx') { const list = collectAllTransactions(); c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Журнал транзакций и чеков (${list.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Транзакций пока нет</div>' : list.map(t => `<div class="ig-card p-3 rounded-xl space-y-1"><div class="flex items-center justify-between gap-2 flex-wrap"><span class="font-bold t1 text-xs">${txTypeLabel(t, null)} • <span style="color:#f59e0b">${Number(t.amount || 0).toFixed(2)} AC</span></span><span class="text-[10px] t2">${new Date(t.timestamp || Date.now()).toLocaleString()}</span></div><div class="text-[11px] t2">@${t.senderUsername || '—'} → @${t.recipientUsername || '—'}</div>${t.adTitle ? `<div class="text-[11px] t1 truncate">Объявление: ${t.adTitle} (${t.adId || ''})</div>` : ''}${t.note ? `<div class="text-[11px] t2 truncate">${t.note}</div>` : ''}<div class="text-[9px] t2 font-mono">Чек ${t.id}</div></div>`).join('')}</div></div>`; }
 else if (tab === 'reports') { const sortedReports = [...reports].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); c.innerHTML = `<div class="space-y-3">
 <h4 class="font-bold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-flag text-red-500"></i> Жалобы пользователей (${sortedReports.length})</h4>
 <div class="space-y-2 max-h-none overflow-y-auto pr-1">
