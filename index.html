@@ -9,10 +9,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel/index.css">
 <style>
@@ -386,6 +384,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 </div>
 <!-- ============ EDIT AD MODAL ============ -->
+
 <div id="modal-edit-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
@@ -394,6 +393,10 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 </div>
 <form onsubmit="handleEditAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
 <input type="hidden" id="edit-ad-id">
+<div id="edit-ad-owner-container" class="hidden">
+<label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> Привязать к аккаунту (владелец)</label>
+<select id="edit-ad-seller-username" class="ig-input w-full px-3 py-2.5 text-xs"></select>
+</div>
 <input type="text" id="edit-ad-title" required placeholder="Заголовок *" class="ig-input w-full px-3.5 py-2.5 text-xs">
 <div class="grid grid-cols-2 gap-3">
 <select id="edit-ad-category" required class="ig-input w-full px-3 py-2.5 text-xs"></select>
@@ -602,13 +605,15 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AVITOCASH TOP-UP ============ -->
 <div id="modal-avitocash-topup" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-shamcash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
-<h3 class="text-base font-bold t1 pt-8">Пополнение AvitoCash</h3>
-<label class="block text-xs font-semibold t2">Сумма в AvitoCash<input id="topup-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10"></label>
-<button onclick="createTopupRequest()" class="ig-btn w-full py-2.5 text-sm font-bold">Сгенерировать код оплаты</button>
+<button onclick="closeModal('modal-avitocash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8">Пополнение баланса AvitoCash через ShamCash</h3>
+<label class="block text-xs font-semibold t2">Сумма пополнения (в AvitoCash / USD)
+<input id="topup-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10">
+</label>
+<button onclick="createTopupRequest()" class="ig-btn w-full py-2.5 text-sm font-bold">Сгенерировать код пополнения</button>
 <div id="topup-result" class="hidden space-y-3 text-center">
 <div id="topup-qr" class="bg-white p-3 rounded-xl w-fit mx-auto"></div>
-<div class="text-xs t2">Переведите сумму на AvitoCash ID и отправьте код администратору в WhatsApp.</div>
+<div class="text-xs t2">Переведите средства через платежную систему <b>ShamCash</b> на счет проекта, затем отправьте этот код администратору в WhatsApp для зачисления <b>AvitoCash</b> на ваш баланс.</div>
 <div id="topup-code" class="font-mono font-bold text-lg t1 bg-field border b-ig rounded-lg px-3 py-2 break-all select-all"></div>
 <a href="https://wa.me/447887280238" target="_blank" class="ig-btn w-full py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp"></i> Отправить код админу</a>
 </div>
@@ -666,7 +671,15 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
 <script>
 /* ================= STATE ================= */
-let firebaseApp = null, firebaseDb = null, currentUser = null;
+let currentUser = null;
+let supabaseClient = null;
+const SUPABASE_URL = "https://wykjwznojmzlbrujikft.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5a2p3em5vam16bGJydWppa2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczODUwNTksImV4cCI6MjEwMjk2MTA1OX0.5wfUCVKV9yQan1nz2BLLLzzzy9JrBBovzVeEePg09x4";
+try {
+  if (typeof supabase !== 'undefined') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch(e) { console.warn("Supabase init error:", e); }
 const _savedLayout = localStorage.getItem('bs_feed_layout') || 'instagram';
 let selectedCategory = 'all', currentPage = 1, itemsPerPage = _savedLayout === 'list' ? 10 : (_savedLayout === 'grid' ? 12 : 4), favorites = [];
 let adminAdsTab = 'active', LAST_NAV = 'home', searchQuery = '';
@@ -1052,29 +1065,176 @@ function initCreateMap() { const el = byId('create-map'); if (!el || typeof L ==
 function handleRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('ad-lat').value = c[0]; byId('ad-lng').value = c[1]; if (createMap && createMarker) { createMap.setView(c, 12); createMarker.setLatLng(c); } }
 function toggleFreePriceField(isFree) { const p = byId('ad-price'), c = byId('price-container'); if (isFree) { if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } if (c) c.style.opacity = '.4'; } else { if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } if (c) c.style.opacity = '1'; } }
 function toggleNegotiableField(isNeg) { const p = byId('ad-price'); if (!p) return; if (isNeg) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } }
-function handleCreateAdSubmit(e) { e.preventDefault(); if (!currentUser) return; const isFree = byId('ad-is-free')?.checked || false; const isNegotiable = byId('ad-is-negotiable')?.checked || false; const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price').value || 0); let postingUser = currentUser; const onbS = byId('ad-post-onbehalf'); if (onbS && onbS.value && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.username === onbS.value); if (t) postingUser = t; } const imgs = [...pendingCreateImages]; if (!imgs.length) imgs.push(PLACEHOLDER_IMG); const adId = 'AD-' + Math.floor(100 + Math.random() * 900); 
-// FIX FOR FIREBASE RULES: Added sellerUid
-const newAd = { id: adId, title: byId('ad-title').value.trim(), category: byId('ad-category').value, storeCategory: byId('ad-store-category')?.value || '', region: byId('ad-region').value, city: byId('ad-city').value.trim(), isWomenOnly: byId('ad-is-women-only')?.checked || false, isFree, isNegotiable, price, currency: byId('ad-currency').value, desc: byId('ad-desc').value.trim(), images: imgs, image: imgs[0], lat: parseFloat(byId('ad-lat').value || 33.5138), lng: parseFloat(byId('ad-lng').value || 36.2765), sellerUsername: postingUser.username, sellerUid: postingUser.uid || '', sellerKunya: postingUser.kunya || postingUser.username, sellerWhatsapp: postingUser.whatsapp || '', status: 'ACTIVE', createdAt: Date.now(), queue: [], likes: [], views: 0 }; 
-ads.unshift(newAd); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(newAd); closeModal('modal-create-ad'); localStorage.removeItem('bs_ad_draft'); renderCategoryPills(); renderAds(); showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление успешно опубликовано!', 'success'); }
-function openEditAdModal(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'); if (!isOwner) { showToast('Нет прав для редактирования!', 'error'); return; } pendingEditImages = ad.images ? [...ad.images] : [ad.image]; renderPhotoThumbnailsGrid('edit'); fillCategorySelect(byId('edit-ad-category'), ad.category); byId('edit-ad-id').value = ad.id; byId('edit-ad-title').value = ad.title || ''; byId('edit-ad-region').value = ad.region || 'DAM'; byId('edit-ad-city').value = ad.city || ''; byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly; byId('edit-ad-is-free').checked = !!ad.isFree; byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable; byId('edit-ad-price').value = ad.price || 0; byId('edit-ad-currency').value = ad.currency || 'USD'; byId('edit-ad-desc').value = ad.desc || ''; closeModal('modal-ad-detail'); openModal('modal-edit-ad'); }
-function handleEditAdSubmit(e) { e.preventDefault(); const adId = byId('edit-ad-id').value; const ad = ads.find(a => a.id === adId); if (!ad) return; const imgs = [...pendingEditImages]; if (!imgs.length) imgs.push(PLACEHOLDER_IMG); ad.title = byId('edit-ad-title').value.trim(); ad.category = byId('edit-ad-category').value; ad.region = byId('edit-ad-region').value; ad.city = byId('edit-ad-city').value.trim(); ad.isWomenOnly = byId('edit-ad-is-women-only').checked; ad.isFree = byId('edit-ad-is-free').checked; ad.isNegotiable = byId('edit-ad-is-negotiable')?.checked || false; ad.price = ad.isFree || ad.isNegotiable ? 0 : parseFloat(byId('edit-ad-price').value || 0); ad.currency = byId('edit-ad-currency').value; ad.desc = byId('edit-ad-desc').value.trim(); ad.images = imgs; ad.image = imgs[0]; 
-// FIX FOR FIREBASE RULES: Ensure sellerUid exists on update
-if (!ad.sellerUid) { const owner = users.find(u => u.username && u.username.toLowerCase() === (ad.sellerUsername||'').toLowerCase()); if(owner) ad.sellerUid = owner.uid; }
-saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-edit-ad'); renderCategoryPills(); renderAds(); showToast('Объявление обновлено!', 'success'); }
-function archiveAdWithConfirm(adId) { showConfirmModal('Перевод в архив', 'Перенести объявление в архив? Оно исчезнет из общей ленты.', () => { const ad = ads.find(a => a.id === adId); if (ad) { ad.status = 'ARCHIVED'; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление в архиве', 'info'); } }); }
-function restoreAd(adId) { const ad = ads.find(a => a.id === adId); if (ad) { ad.status = 'ACTIVE'; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление восстановлено!', 'success'); } }
-function deleteAdWithConfirm(adId) { showConfirmModal('Удаление объявления', 'Удалить объявление полностью и навсегда?', () => { ads = ads.filter(a => a.id !== adId); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).remove(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление удалено', 'success'); }); }
-function markAdSold(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; ad.status = 'SOLD'; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast(`Объявление "${ad.title}" отмечено как ПРОДАНО 🎉`, 'success'); }
-function markAdWithdrawn(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; ad.status = 'WITHDRAWN'; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление снято с продажи (передумали)', 'info'); }
+async function saveAdToSupabase(ad) {
+  if (!supabaseClient) return;
+  const dbAd = {
+    id: ad.id, title: ad.title, category: ad.category, store_category: ad.storeCategory || '',
+    region: ad.region, city: ad.city, is_women_only: !!ad.isWomenOnly, is_free: !!ad.isFree,
+    is_negotiable: !!ad.isNegotiable, price: Number(ad.price || 0), currency: ad.currency,
+    description: ad.desc || '', images: ad.images || [], image: ad.image || '',
+    lat: Number(ad.lat || 33.5138), lng: Number(ad.lng || 36.2765),
+    seller_username: ad.sellerUsername || '', seller_uid: ad.sellerUid || '',
+    seller_kunya: ad.sellerKunya || '', seller_whatsapp: ad.sellerWhatsapp || '',
+    status: ad.status || 'ACTIVE', created_at: Number(ad.createdAt || Date.now()),
+    queue: ad.queue || [], likes: ad.likes || [], views: Number(ad.views || 0)
+  };
+  await supabaseClient.from('ads').upsert(dbAd);
+}
+
+async function handleCreateAdSubmit(e) {
+  e.preventDefault();
+  if (!currentUser) return;
+
+  const isFree = byId('ad-is-free')?.checked || false;
+  const isNegotiable = byId('ad-is-negotiable')?.checked || false;
+  const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price').value || 0);
+
+  let postingUser = currentUser;
+  const onbS = byId('ad-post-onbehalf');
+  if (onbS && onbS.value && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+    const t = users.find(u => u.username === onbS.value);
+    if (t) postingUser = t;
+  }
+
+  const imgs = [...pendingCreateImages];
+  if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
+
+  const adId = 'AD-' + Date.now().toString(36).toUpperCase();
+  const newAd = {
+    id: adId,
+    title: byId('ad-title').value.trim(),
+    category: byId('ad-category').value,
+    storeCategory: byId('ad-store-category')?.value || '',
+    region: byId('ad-region').value,
+    city: byId('ad-city').value.trim(),
+    isWomenOnly: byId('ad-is-women-only')?.checked || false,
+    isFree,
+    isNegotiable,
+    price,
+    currency: byId('ad-currency').value,
+    desc: byId('ad-desc').value.trim(),
+    images: imgs,
+    image: imgs[0],
+    lat: parseFloat(byId('ad-lat').value || 33.5138),
+    lng: parseFloat(byId('ad-lng').value || 36.2765),
+    sellerUsername: postingUser.username,
+    sellerUid: postingUser.uid || '',
+    sellerKunya: postingUser.kunya || postingUser.username,
+    sellerWhatsapp: postingUser.whatsapp || '',
+    status: 'ACTIVE',
+    createdAt: Date.now(),
+    queue: [],
+    likes: [],
+    views: 0
+  };
+
+  ads.unshift(newAd);
+  saveCachedAds();
+  saveAdToSupabase(newAd);
+
+  closeModal('modal-create-ad');
+  localStorage.removeItem('bs_ad_draft');
+
+  selectedCategory = 'all';
+  currentPage = 1;
+  renderCategoryPills();
+  renderAds();
+
+  showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление опубликовано!', 'success');
+}function openEditAdModal(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad) return;
+  const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+  if (!isOwner) {
+    showToast('Нет прав для редактирования!', 'error');
+    return;
+  }
+
+  // Заполняем селект владельцев для администратора/суперюзера
+  const ownerContainer = byId('edit-ad-owner-container');
+  const ownerSelect = byId('edit-ad-seller-username');
+  if (ownerContainer && ownerSelect) {
+    if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+      ownerSelect.innerHTML = users.map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join('');
+      ownerSelect.value = ad.sellerUsername || currentUser.username;
+      ownerContainer.classList.remove('hidden');
+    } else {
+      ownerContainer.classList.add('hidden');
+    }
+  }
+
+  pendingEditImages = ad.images ? [...ad.images] : [ad.image];
+  renderPhotoThumbnailsGrid('edit');
+  fillCategorySelect(byId('edit-ad-category'), ad.category);
+  byId('edit-ad-id').value = ad.id;
+  byId('edit-ad-title').value = ad.title || '';
+  byId('edit-ad-region').value = ad.region || 'DAM';
+  byId('edit-ad-city').value = ad.city || '';
+  byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly;
+  byId('edit-ad-is-free').checked = !!ad.isFree;
+  byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable;
+  byId('edit-ad-price').value = ad.price || 0;
+  byId('edit-ad-currency').value = ad.currency || 'USD';
+  byId('edit-ad-desc').value = ad.desc || '';
+  closeModal('modal-ad-detail');
+  openModal('modal-edit-ad');
+}
+
+function handleEditAdSubmit(e) {
+  e.preventDefault();
+  const adId = byId('edit-ad-id').value;
+  const ad = ads.find(a => a.id === adId);
+  if (!ad) return;
+
+  const ownerSelect = byId('edit-ad-seller-username');
+  if (ownerSelect && ownerSelect.value) {
+    const newOwnerUsername = ownerSelect.value;
+    const targetUser = users.find(u => u.username && u.username.toLowerCase() === newOwnerUsername.toLowerCase());
+    if (targetUser) {
+      ad.sellerUsername = targetUser.username;
+      ad.sellerUid = targetUser.uid || '';
+      ad.sellerKunya = targetUser.kunya || targetUser.username;
+      ad.sellerWhatsapp = targetUser.whatsapp || '';
+    }
+  }
+
+  const imgs = [...pendingEditImages];
+  if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
+
+  ad.title = byId('edit-ad-title').value.trim();
+  ad.category = byId('edit-ad-category').value;
+  ad.region = byId('edit-ad-region').value;
+  ad.city = byId('edit-ad-city').value.trim();
+  ad.isWomenOnly = byId('edit-ad-is-women-only').checked;
+  ad.isFree = byId('edit-ad-is-free').checked;
+  ad.isNegotiable = byId('edit-ad-is-negotiable')?.checked || false;
+  ad.price = ad.isFree || ad.isNegotiable ? 0 : parseFloat(byId('edit-ad-price').value || 0);
+  ad.currency = byId('edit-ad-currency').value;
+  ad.desc = byId('edit-ad-desc').value.trim();
+  ad.images = imgs;
+  ad.image = imgs[0];
+
+  saveCachedAds();
+  saveAdToSupabase(ad);
+  closeModal('modal-edit-ad');
+  renderCategoryPills();
+  renderAds();
+  showToast('Объявление обновлено и перепривязано!', 'success');
+}
+function archiveAdWithConfirm(adId) { showConfirmModal('Перевод в архив', 'Перенести объявление в архив? Оно исчезнет из общей ленты.', () => { const ad = ads.find(a => a.id === adId); if (ad) { ad.status = 'ARCHIVED'; saveCachedAds(); saveAdToSupabase(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление в архиве', 'info'); } }); }
+function restoreAd(adId) { const ad = ads.find(a => a.id === adId); if (ad) { ad.status = 'ACTIVE'; saveCachedAds(); saveAdToSupabase(ad); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление восстановлено!', 'success'); } }
+function deleteAdWithConfirm(adId) { showConfirmModal('Удаление объявления', 'Удалить объявление полностью и навсегда?', () => { ads = ads.filter(a => a.id !== adId); saveCachedAds(); if (supabaseClient) supabaseClient.from('ads').delete().eq('id', adId).then(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление удалено', 'success'); }); }
+function markAdSold(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; ad.status = 'SOLD'; saveCachedAds(); saveAdToSupabase(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast(`Объявление "${ad.title}" отмечено как ПРОДАНО 🎉`, 'success'); }
+function markAdWithdrawn(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; ad.status = 'WITHDRAWN'; saveCachedAds(); saveAdToSupabase(ad); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); renderAdminTabContent(); showToast('Объявление снято с продажи (передумали)', 'info'); }
 /* ================= LIKES ================= */
-function doToggleLike(adId) { if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } const ad = ads.find(a => a.id === adId); if (!ad) return false; if (!ad.likes) ad.likes = []; const i = ad.likes.indexOf(currentUser.username); if (i === -1) ad.likes.push(currentUser.username); else ad.likes.splice(i, 1); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/likes`).set(ad.likes); return true; }
+function doToggleLike(adId) { if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } const ad = ads.find(a => a.id === adId); if (!ad) return false; if (!ad.likes) ad.likes = []; const i = ad.likes.indexOf(currentUser.username); if (i === -1) ad.likes.push(currentUser.username); else ad.likes.splice(i, 1); saveCachedAds(); if (supabaseClient) supabaseClient.from('ads').update({ likes: ad.likes }).eq('id', adId).then(); return true; }
 function toggleLike(adId, e) { if (e) e.stopPropagation(); if (!doToggleLike(adId)) return; renderAds(); }
 function toggleLikeDetail(adId) { if (!doToggleLike(adId)) return; renderAds(); openAdDetail(adId, false); }
 /* ================= FAVORITES / QUEUE ================= */
 function toggleFavorite(adId, e) { if (e) e.stopPropagation(); if (favorites.includes(adId)) { favorites = favorites.filter(i => i !== adId); showToast('Удалено из избранного', 'info'); } else { favorites.push(adId); showToast('Добавлено в избранное!', 'success'); } try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {} renderCategoryPills(); renderAds(); }
-function joinQueue(adId) { if (!currentUser) { openAuthModal(); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (!ad.queue) ad.queue = []; if (ad.queue.some(q => q.username === currentUser.username)) return; ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); openAdDetail(adId, false); showToast('Вы успешно заняли очередь!', 'success'); }
-function leaveQueue(adId) { if (!currentUser) return; const ad = ads.find(a => a.id === adId); if (!ad || !ad.queue) return; ad.queue = ad.queue.filter(q => q.username !== currentUser.username); saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); openAdDetail(adId, false); showToast('Вы вышли из очереди', 'info'); }
-function queueToggleCard(adId) { if (!currentUser) { openAuthModal(); return; } const ad = ads.find(a => a.id === adId); if (!ad) { openAdDetail(adId); return; } if (!ad.queue) ad.queue = []; const idx = ad.queue.findIndex(q => q.username === currentUser.username); if (idx !== -1) { ad.queue.splice(idx, 1); showToast('Вы вышли из очереди', 'info'); } else { ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); showToast('Вы успешно заняли очередь!', 'success'); } saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad); renderAds(); }
+function joinQueue(adId) { if (!currentUser) { openAuthModal(); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (!ad.queue) ad.queue = []; if (ad.queue.some(q => q.username === currentUser.username)) return; ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); saveCachedAds(); saveAdToSupabase(ad); openAdDetail(adId, false); showToast('Вы успешно заняли очередь!', 'success'); }
+function leaveQueue(adId) { if (!currentUser) return; const ad = ads.find(a => a.id === adId); if (!ad || !ad.queue) return; ad.queue = ad.queue.filter(q => q.username !== currentUser.username); saveCachedAds(); saveAdToSupabase(ad); openAdDetail(adId, false); showToast('Вы вышли из очереди', 'info'); }
+function queueToggleCard(adId) { if (!currentUser) { openAuthModal(); return; } const ad = ads.find(a => a.id === adId); if (!ad) { openAdDetail(adId); return; } if (!ad.queue) ad.queue = []; const idx = ad.queue.findIndex(q => q.username === currentUser.username); if (idx !== -1) { ad.queue.splice(idx, 1); showToast('Вы вышли из очереди', 'info'); } else { ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); showToast('Вы успешно заняли очередь!', 'success'); } saveCachedAds(); saveAdToSupabase(ad); renderAds(); }
 /* ================= COMBOS / АКЦИИ ================= */
 function getComboOwner(c) { return users.find(u => u.uid === c.shopUid) || users.find(u => u.username && c.sellerUsername && u.username.toLowerCase() === c.sellerUsername.toLowerCase()) || null; }
 function comboToVirtualAd(c) { if (!c || !Array.isArray(c.items) || c.items.length < 2) return null; const items = c.items.map(id => ads.find(a => a.id === id)).filter(a => a && a.status === 'ACTIVE'); if (items.length < 2) return null; const owner = getComboOwner(c); const shop = owner?.shop; const images = items.map(a => (a.images && a.images[0]) || a.image).filter(Boolean).slice(0, 6); const originalTotal = items.reduce((s, a) => s + adToUSD(a), 0); return { id: c.id, isCombo: true, comboRef: c, comboItems: items, comboOriginalTotal: originalTotal, title: c.title || 'Комбо-набор', category: 'combo', region: shop?.region || 'DAM', city: shop?.name || 'Авито Шам', isFree: false, isNegotiable: false, isWomenOnly: false, price: c.price, currency: 'USD', desc: `Акция! Комплект из ${items.length} товаров по специальной цене.`, images, image: images[0] || PLACEHOLDER_IMG, sellerUsername: c.sellerUsername || owner?.username || '', sellerKunya: owner?.kunya || '', sellerWhatsapp: shop?.whatsapp || owner?.whatsapp || '', verified: !!(owner && (owner.verifiedShop || (owner.shop && owner.shop.isVerified))), status: 'ACTIVE', createdAt: c.createdAt || Date.now(), queue: [], likes: [], views: 0 }; }
@@ -1083,9 +1243,8 @@ function openComboBuilder(targetUid = null, editComboId = null) { let owner = cu
 function renderComboItemsList() { const list = byId('combo-items-list'); if (!list) return; if (!comboBuilderAds.length) { list.innerHTML = '<div class="text-center py-6 t2">У магазина пока нет активных товаров</div>'; return; } list.innerHTML = comboBuilderAds.map(a => { const sel = comboSelectedIds.includes(a.id); return `<label class="flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${sel ? '' : 'b-ig bg-field hover:bg-ig'}" style="${sel ? 'border-color:#f97316;background:rgba(249,115,22,.1)' : ''}"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleComboItem('${a.id}')" class="w-4 h-4 shrink-0" style="accent-color:#f97316"><img src="${(a.images && a.images[0]) || a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate">${a.title}</div><div class="text-[10px] t2">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div></div>${sel ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : ''}</label>`; }).join(''); }
 function toggleComboItem(adId) { const i = comboSelectedIds.indexOf(adId); if (i === -1) comboSelectedIds.push(adId); else comboSelectedIds.splice(i, 1); renderComboItemsList(); updateComboSummary(); }
 function updateComboSummary() { const el = byId('combo-summary'); if (!el) return; const selected = comboBuilderAds.filter(a => comboSelectedIds.includes(a.id)); const total = selected.reduce((s, a) => s + adToUSD(a), 0); const price = parseFloat(byId('combo-price')?.value || 0); if (selected.length < 2) { el.innerHTML = `<i class="fa-solid fa-circle-info"></i> Выберите минимум 2 товара для создания комбо. Выбрано: ${selected.length}.`; return; } const save = total - price; el.innerHTML = `<div class="space-y-1"><div>Товаров в комплекте: <b class="t1">${selected.length}</b></div><div>Цена по отдельности: <b class="t2 line-through">$${total.toFixed(2)}</b></div><div>Цена акции: <b style="color:#f97316">$${(price || 0).toFixed(2)}</b></div>${price > 0 ? `<div>Выгода покупателя: <b style="color:${save > 0 ? '#10b981' : '#ed4956'}">${save > 0 ? '$' + save.toFixed(2) + ' (-' + Math.round(save / total * 100) + '%)' : 'нет скидки'}</b></div>` : ''}</div>`; }
-function handleComboSubmit(e) { e.preventDefault(); const owner = comboOwnerCache; if (!owner) return; if (comboSelectedIds.length < 2) { showToast('Выберите минимум 2 товара!', 'warning'); return; } const price = parseFloat(byId('combo-price').value); if (isNaN(price) || price <= 0) { showToast('Укажите специальную цену акции!', 'warning'); return; } const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров`; const editId = byId('combo-edit-id').value; if (editId) { const c = combos.find(x => x.id === editId); if (c) { c.title = title; c.price = price; c.items = [...comboSelectedIds]; if (firebaseDb) firebaseDb.ref(`combos/${c.id}`).set(c); } showToast('Акция обновлена!', 'success'); } else { const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); showToast('Акция создана! Комбо появилось в ленте.', 'success'); } closeModal('modal-combo-builder'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); if (!byId('modal-shop-showcase').classList.contains('hidden') && owner.uid) openShopShowcase(owner.uid); }
-function deleteComboWithConfirm(comboId) { showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { combos = combos.filter(x => x.id !== comboId); if (firebaseDb) firebaseDb.ref(`combos/${comboId}`).remove(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); showToast('Акция удалена', 'info'); }); }
-function openComboDetail(comboId) { const c = combos.find(x => x.id === comboId); if (!c) return; const v = comboToVirtualAd(c); if (!v) { showToast('Товары этой акции больше недоступны', 'warning'); return; } const content = byId('detail-content'); if (!content) return; currentDetailPhotoIndex = 0; const imgs = v.images; const owner = getComboOwner(c); const shop = owner?.shop; const wa = shop?.whatsapp || owner?.whatsapp || ''; const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); const save = v.comboOriginalTotal - c.price; content.innerHTML = `<div class="grid md:grid-cols-2">
+function handleComboSubmit(e) { e.preventDefault(); const owner = comboOwnerCache; if (!owner) return; if (comboSelectedIds.length < 2) { showToast('Выберите минимум 2 товара!', 'warning'); return; } const price = parseFloat(byId('combo-price').value); if (isNaN(price) || price <= 0) { showToast('Укажите специальную цену акции!', 'warning'); return; } const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров`; const editId = byId('combo-edit-id').value; if (editId) { const c = combos.find(x => x.id === editId); if (c) { c.title = title; c.price = price; c.items = [...comboSelectedIds]; if (supabaseClient) supabaseClient.from('combos').upsert(c).then(); } showToast('Акция обновлена!', 'success'); } else { const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; combos.push(nc); if (supabaseClient) supabaseClient.from('combos').upsert(nc).then(); showToast('Акция создана! Комбо появилось в ленте.', 'success'); } closeModal('modal-combo-builder'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); if (!byId('modal-shop-showcase').classList.contains('hidden') && owner.uid) openShopShowcase(owner.uid); }
+function deleteComboWithConfirm(comboId) { showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { combos = combos.filter(x => x.id !== comboId); if (supabaseClient) supabaseClient.from('combos').delete().eq('id', comboId).then(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); showToast('Акция удалена', 'info'); }); }function openComboDetail(comboId) { const c = combos.find(x => x.id === comboId); if (!c) return; const v = comboToVirtualAd(c); if (!v) { showToast('Товары этой акции больше недоступны', 'warning'); return; } const content = byId('detail-content'); if (!content) return; currentDetailPhotoIndex = 0; const imgs = v.images; const owner = getComboOwner(c); const shop = owner?.shop; const wa = shop?.whatsapp || owner?.whatsapp || ''; const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); const save = v.comboOriginalTotal - c.price; content.innerHTML = `<div class="grid md:grid-cols-2">
 <div class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height:320px">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full max-h-[46vh] md:max-h-[80vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
@@ -1113,7 +1272,7 @@ ${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openC
 </div>
 </div>`; openModal('modal-ad-detail'); }
 /* ================= AD DETAIL ================= */
-function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (firebaseDb) firebaseDb.ref(`ads/${adId}/views`).set(ad.views); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0;
+function openAdDetail(adId, countView = true) { if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; } const ad = ads.find(a => a.id === adId); if (!ad) return; if (countView) { ad.views = (ad.views || 0) + 1; saveCachedAds(); if (supabaseClient) supabaseClient.from('ads').update({ views: ad.views }).eq('id', adId); } const content = byId('detail-content'); if (!content) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = 0; const wa = getSellerWhatsapp(ad), kunya = getSellerKunya(ad), avatar = getSellerAvatar(ad), verified = getSellerVerified(ad); const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия'; const converted = convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable); const queueList = ad.queue || []; const inQ = currentUser && queueList.some(q => q.username === currentUser.username); const rank = inQ ? queueList.findIndex(q => q.username === currentUser.username) + 1 : 0;
 const isRealOwner = currentUser && currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase();
 const isOwner = currentUser && (isRealOwner || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
 const likesCount = (ad.likes || []).length; const userLiked = currentUser && (ad.likes || []).includes(currentUser.username); const viewsCount = ad.views || 0; const rating = likesCount * 10 + viewsCount; const priceUsd = adToUSD(ad);
@@ -1266,7 +1425,7 @@ note: 'Покупка объявления'
 // Помечаем объявление как проданное
 ad.status = 'SOLD';
 saveCachedAds();
-if (firebaseDb) firebaseDb.ref(`ads/${adId}`).set(ad);
+if (supabaseClient) supabaseClient.from('ads').upsert(ad);
 // Закрываем детали и обновляем ленту
 closeModal('modal-ad-detail');
 renderAds();
@@ -1282,12 +1441,12 @@ window.open(`https://wa.me/${sellerWa.replace(/[^0-9]/g, '')}?text=${encodeURICo
 console.error('Purchase error:', err);
 showToast('Ошибка при оплате: ' + err.message, 'error');
 }
-}/* ================= SHOPS ================= */
+}
+/* ================= SHOPS ================= */
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
 function handleShopRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('shop-lat').value = c[0]; byId('shop-lng').value = c[1]; if (shopCreateMap && shopCreateMarker) { shopCreateMap.setView(c, 12); shopCreateMarker.setLatLng(c); } }
-function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) { const u = users.find(x => x.uid === shopEditTargetUid); if (!u) return; u.shop = shopData; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); closeModal('modal-create-shop'); shopEditTargetUid = null; renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast(`Магазин "${name}" сохранен!`, 'success'); } else { currentUser.shop = shopData; currentUser.uid = currentUser.uid || ('u_' + Date.now()); const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (idx !== -1) users[idx] = currentUser; else users.push(currentUser); if (firebaseDb) firebaseDb.ref(`users/${currentUser.uid}`).set(currentUser); saveUserSession(currentUser, true); closeModal('modal-create-shop'); showToast(`Магазин "${name}" сохранен!`, 'success'); updateAuthUI(); } }
-function adminVerifyShop(userUid, status) { const u = users.find(x => x.uid === userUid); if (!u || !u.shop) { showToast('Магазин не найден', 'error'); return; } u.verifiedShop = status; u.shop.isVerified = status; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); renderAdminTabContent(); renderCategoryPills(); renderAds(); showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success'); }
+function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) { const u = users.find(x => x.uid === shopEditTargetUid); if (!u) return; u.shop = shopData; if (supabaseClient && u.uid) supabaseClient.from('users').update({ shop: shopData }).eq('uid', u.uid).then(); closeModal('modal-create-shop'); shopEditTargetUid = null; renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast(`Магазин "${name}" сохранен!`, 'success'); } else { currentUser.shop = shopData; currentUser.uid = currentUser.uid || ('u_' + Date.now()); const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (idx !== -1) users[idx] = currentUser; else users.push(currentUser); if (supabaseClient) supabaseClient.from('users').update({ shop: shopData }).eq('uid', currentUser.uid).then(); saveUserSession(currentUser, true); closeModal('modal-create-shop'); showToast(`Магазин "${name}" сохранен!`, 'success'); updateAuthUI(); } }function adminVerifyShop(userUid, status) { const u = users.find(x => x.uid === userUid); if (!u || !u.shop) { showToast('Магазин не найден', 'error'); return; } u.verifiedShop = status; u.shop.isVerified = status; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); renderAdminTabContent(); renderCategoryPills(); renderAds(); showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success'); }
 function deleteShopWithConfirm(userUid) { const u = users.find(x => x.uid === userUid); if (!u || !u.shop) return; showConfirmModal('Удаление магазина', `Удалить магазин "${u.shop.name}" пользователя @${u.username}?`, () => { delete u.shop; u.verifiedShop = false; if (firebaseDb && u.uid) { firebaseDb.ref(`users/${u.uid}/shop`).remove(); firebaseDb.ref(`users/${u.uid}/verifiedShop`).set(false); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Магазин удален', 'info'); }); }
 function adminCreateShopForUser() { const sel = byId('admin-new-shop-user'); if (sel && sel.value) openCreateShopModal(sel.value); }
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { const seller = users.find(u => u.uid === shopUserUid); if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } const shop = seller.shop; const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE'); const cats = shop.customCategories || []; const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); const c = byId('shop-showcase-content'); if (!c) return; const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; const shopCombos = combos.filter(x => x.shopUid === shopUserUid || (x.sellerUsername && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())).map(comboToVirtualAd).filter(Boolean); c.innerHTML = `<div class="space-y-4">
@@ -1359,7 +1518,7 @@ exportDate: d.exportDate
 } catch (e) { console.warn('Failed to write shop backup meta to Firebase', e); }
 }
 showToast('Бэкап магазина выгружен!', 'success'); }
-function importShopDatabaseJSON(event) { const f = event.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if (d.type !== 'AVITO_SHAM_SHOP_BACKUP' || !d.shop) { showToast('Неверный формат бэкапа!', 'error'); return; } currentUser.shop = d.shop; if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/shop`).set(d.shop); if (Array.isArray(d.products)) d.products.forEach(na => { na.sellerUsername = currentUser.username; na.sellerKunya = currentUser.kunya; na.sellerWhatsapp = currentUser.whatsapp; const i = ads.findIndex(a => a.id === na.id); if (i !== -1) ads[i] = na; else ads.unshift(na); if (firebaseDb) firebaseDb.ref(`ads/${na.id}`).set(na); }); if (Array.isArray(d.combos)) d.combos.forEach(nc => { nc.sellerUsername = currentUser.username; nc.shopUid = currentUser.uid; const i = combos.findIndex(x => x.id === nc.id); if (i !== -1) combos[i] = nc; else combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); }); saveCachedAds(); saveUserSession(currentUser, true); openMyShopModal(); renderAds(); renderCategoryPills(); showToast('Импорт магазина выполнен!', 'success'); } catch (err) { showToast('Ошибка JSON: ' + err.message, 'error'); } }; r.readAsText(f); }
+function importShopDatabaseJSON(event) { const f = event.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if (d.type !== 'AVITO_SHAM_SHOP_BACKUP' || !d.shop) { showToast('Неверный формат бэкапа!', 'error'); return; } currentUser.shop = d.shop; if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/shop`).set(d.shop); if (Array.isArray(d.products)) d.products.forEach(na => { na.sellerUsername = currentUser.username; na.sellerKunya = currentUser.kunya; na.sellerWhatsapp = currentUser.whatsapp; const i = ads.findIndex(a => a.id === na.id); if (i !== -1) ads[i] = na; else ads.unshift(na); if (supabaseClient) supabaseClient.from('ads').upsert(na); }); if (Array.isArray(d.combos)) d.combos.forEach(nc => { nc.sellerUsername = currentUser.username; nc.shopUid = currentUser.uid; const i = combos.findIndex(x => x.id === nc.id); if (i !== -1) combos[i] = nc; else combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); }); saveCachedAds(); saveUserSession(currentUser, true); openMyShopModal(); renderAds(); renderCategoryPills(); showToast('Импорт магазина выполнен!', 'success'); } catch (err) { showToast('Ошибка JSON: ' + err.message, 'error'); } }; r.readAsText(f); }
 function exportFullDatabaseJSON() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return; const d = { version: '3.1', type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP', exportDate: new Date().toISOString(), users, archivedUsers, ads, categories, combos, rates: EXCHANGE_RATES, reports: reports }; const a = document.createElement('a'); a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d, null, 2)); a.download = `AvitoSham_FullDB_${Date.now()}.json`; document.body.appendChild(a); a.click(); a.remove(); try { localStorage.setItem('bs_last_full_backup', d.exportDate); } catch (e) { /* ignore storage errors */ }
 if (firebaseDb && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
 try {
@@ -1373,7 +1532,118 @@ exportDate: d.exportDate
 } catch (e) { console.warn('Failed to write full backup meta to Firebase', e); }
 }
 showToast('Полный бэкап выгружен!', 'success'); }
-function importFullDatabaseJSON(event) { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return; const f = event.target.files[0]; if (!f) return; showConfirmModal('Импорт полной БД', 'Обновить локальную и облачную базу данных платформы?', () => { const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if (d.type !== 'AVITO_SHAM_FULL_PLATFORM_BACKUP') { showToast('Файл не является бэкапом Авито Шам!', 'error'); return; } if (Array.isArray(d.ads)) ads = d.ads; if (Array.isArray(d.users)) users = d.users; if (Array.isArray(d.archivedUsers)) archivedUsers = d.archivedUsers; if (Array.isArray(d.categories) && d.categories.length) categories = d.categories; if (Array.isArray(d.combos)) combos = d.combos; if (d.rates) EXCHANGE_RATES = d.rates; if (Array.isArray(d.reports)) reports = d.reports; saveCachedAds(); if (firebaseDb) { firebaseDb.ref('ads').set(ads); firebaseDb.ref('users').set(users); firebaseDb.ref('archivedUsers').set(archivedUsers); firebaseDb.ref('categories').set(categories); firebaseDb.ref('combos').set(combos); firebaseDb.ref('rates').set(EXCHANGE_RATES); firebaseDb.ref('reports').set(reports); } renderCategoryPills(); renderAds(); renderAdminTabContent(); showToast('База данных импортирована!', 'success'); } catch (err) { showToast('Ошибка бэкапа: ' + err.message, 'error'); } }; r.readAsText(f); }); }
+function importFullDatabaseJSON(event) {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+  const f = event.target.files[0]; if (!f) return;
+  showConfirmModal('Импорт полной БД', 'Восстановить базу данных из бэкапа? Это перенесет все данные и восстановит привязки.', () => {
+    const r = new FileReader();
+    r.onload = async e => {
+      try {
+        const d = JSON.parse(e.target.result);
+        
+        showToast('Загружаем данные в облако Supabase...', 'info');
+
+        // 1. Импорт пользователей
+        const rawUsers = d.users || [];
+        if (Array.isArray(rawUsers) && supabaseClient) {
+            const dbUsers = rawUsers.map(u => ({
+                uid: u.uid,
+                username: u.username,
+                password_hash: u.passwordHash || u.password_hash || '',
+                kunya: u.kunya,
+                gender: u.gender || 'MALE',
+                whatsapp: u.whatsapp,
+                avatar: u.avatar,
+                role: u.role || 'USER',
+                verified_shop: !!(u.verifiedShop || u.verified_shop),
+                avitocash_balance: Number(u.avitocashBalance ?? u.shamcashBalance ?? 0),
+                trial_balance: Number(u.trialBalance || 10),
+                show_women_ads: !!u.showWomenAds,
+                shop: u.shop || null,
+                receipts: u.receipts || null
+            }));
+            const { error: userErr } = await supabaseClient.from('users').upsert(dbUsers);
+            if (userErr) console.warn("User import warning:", userErr);
+        }
+
+        // 2. Импорт объявлений с сохранением хозяев (sellerUid, sellerUsername)
+        const rawAds = d.ads || [];
+        if (Array.isArray(rawAds) && supabaseClient) {
+            const dbAds = rawAds.map(a => ({
+                id: a.id,
+                title: a.title,
+                category: a.category,
+                store_category: a.storeCategory || a.store_category || '',
+                region: a.region || 'DAM',
+                city: a.city || '',
+                is_women_only: !!a.isWomenOnly,
+                is_free: !!a.isFree,
+                is_negotiable: !!a.isNegotiable,
+                price: Number(a.price || 0),
+                currency: a.currency || 'USD',
+                description: a.desc || a.description || '',
+                images: Array.isArray(a.images) ? a.images : [a.image || ''],
+                image: a.image || (Array.isArray(a.images) ? a.images[0] : ''),
+                lat: Number(a.lat || 33.5138),
+                lng: Number(a.lng || 36.2765),
+                seller_username: a.sellerUsername || a.seller_username || '',
+                seller_uid: a.sellerUid || a.seller_uid || '',
+                seller_kunya: a.sellerKunya || a.seller_kunya || '',
+                seller_whatsapp: a.sellerWhatsapp || a.seller_whatsapp || '',
+                status: a.status || 'ACTIVE',
+                created_at: Number(a.createdAt || a.created_at || Date.now()),
+                queue: Array.isArray(a.queue) ? a.queue : [],
+                likes: Array.isArray(a.likes) ? a.likes : [],
+                views: Number(a.views || 0)
+            }));
+            const { error: adErr } = await supabaseClient.from('ads').upsert(dbAds);
+            if (adErr) console.warn("Ads import warning:", adErr);
+        }
+
+        // 3. Импорт комбо-акций
+        const rawCombos = d.combos || [];
+        if (Array.isArray(rawCombos) && supabaseClient) {
+            const dbCombos = rawCombos.map(c => ({
+                id: c.id,
+                shop_uid: c.shopUid || c.shop_uid || '',
+                seller_username: c.sellerUsername || c.seller_username || '',
+                title: c.title,
+                price: Number(c.price || 0),
+                items: Array.isArray(c.items) ? c.items : [],
+                created_at: Number(c.createdAt || c.created_at || Date.now())
+            }));
+            await supabaseClient.from('combos').upsert(dbCombos);
+        }
+
+        // 4. Импорт категорий
+        if (Array.isArray(d.categories) && supabaseClient) {
+            await supabaseClient.from('categories').upsert(d.categories);
+        }
+
+        // 5. Импорт жалоб
+        const rawReports = d.reports || [];
+        if (Array.isArray(rawReports) && supabaseClient) {
+            const dbReports = rawReports.map(r => ({
+                id: r.id,
+                ad_id: r.adId || r.ad_id,
+                reason: r.reason,
+                comment: r.comment || '',
+                reporter_username: r.reporterUsername || r.reporter_username || '',
+                timestamp: Number(r.timestamp || Date.now())
+            }));
+            await supabaseClient.from('reports').upsert(dbReports);
+        }
+
+        showToast('Все данные и привязки успешно перенесены!', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) { 
+        console.error(err);
+        showToast('Ошибка импорта: ' + err.message, 'error'); 
+      }
+    };
+    r.readAsText(f);
+  });
+}
 /* ================= BACKUPS UI HELPERS ================= */
 function renderBackupList() {
 const container = byId('admin-backup-list');
@@ -1448,65 +1718,96 @@ showToast('Ошибка генерации снимка', 'error');
 console.error(e);
 }
 }
-/* ================= FIREBASE ================= */
-function initFirebaseSync() { try { firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp({ databaseURL: "https://barakasouq-72b4e-default-rtdb.firebaseio.com" }); firebaseDb = firebase.database(); } catch (e) { return; } const st = byId('cloud-sync-status'); if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
-if (firebaseDb) {
-try {
-firebaseDb.ref('settings/marquee').on('value', snap => {
-const s = snap.val();
-if (s && typeof s === 'object') {
-hasCloudMarqueeSettings = true;
-MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...s };
-applyMarqueeSettings(MARQUEE_SETTINGS);
-}
-});
-} catch (e) { console.warn('Marquee listener error', e); }
-try {
-firebaseDb.ref('backups').on('value', snap => {
-BACKUPS_META = snap.val() || {};
-if (byId('modal-admin-panel') && !byId('modal-admin-panel').classList.contains('hidden')) {
-renderAdminTabContent();
-}
-});
-} catch (e) { console.warn('Backups listener error', e); }
-// RENAMED: settings/prices uses AVITOCASH_PRICES logic internally but keeps path or updates variable name? Keeping variable name consistent with logic.
-// Variable SHAMCASH_PRICES renamed to AVITOCASH_PRICES in declaration above.
-firebaseDb.ref('settings/prices').on('value', snap => { const p = snap.val(); if (!p) { firebaseDb.ref('settings/prices').set(AVITOCASH_PRICES); } else AVITOCASH_PRICES = { ...AVITOCASH_PRICES, ...p }; });
-// RENAMED: settings/shamcashRate -> settings/avitocashRate (Optional, but good for consistency. Or keep path if DB structure strict. User said "fix rules", implying DB structure might change. I will keep path 'settings/shamcashRate' to avoid breaking existing settings unless requested, but variable is AVITOCASH_RATE)
-firebaseDb.ref('settings/shamcashRate').on('value', snap => { const n = Number(snap.val()); AVITOCASH_RATE = 1; if (n !== 1) firebaseDb.ref('settings/shamcashRate').set(1); });
-firebaseDb.ref('topup_requests').on('value', snap => { TOPUP_REQUESTS = snap.val() || {}; if (!byId('modal-admin-panel').classList.contains('hidden') && (SYSTEM_CONFIG.adminTab === 'payments' || SYSTEM_CONFIG.adminTab === 'finance')) renderAdminTabContent(); });
-firebaseDb.ref('gift_codes').on('value', snap => { GIFT_CODES = snap.val() || {}; });
-firebaseDb.ref('transactions').on('value', snap => { TRANSACTIONS = snap.val() || {}; if (!byId('modal-admin-panel').classList.contains('hidden') && (SYSTEM_CONFIG.adminTab === 'finance' || SYSTEM_CONFIG.adminTab === 'tx')) renderAdminTabContent(); });
-}
-firebaseDb.ref('ads').on('value', snap => { const d = snap.val(); let up = []; if (d) up = Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k })); if (ads.length !== up.length || JSON.stringify(ads.map(a=>a.id)) !== JSON.stringify(up.map(a=>a.id))) { ads = up; saveCachedAds(); renderAds(); renderCategoryPills(); } else { ads = up; } if (st) { st.classList.add('hidden'); st.classList.remove('flex'); } }, () => { if (st) { st.classList.add('hidden'); st.classList.remove('flex'); } });
-firebaseDb.ref('users').on('value', snap => { const d = snap.val(); if (d) { users = Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], uid: k })); if (currentUser) { const me = users.find(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (me) { currentUser = me; saveUserSession(currentUser, true); } } if (byId('modal-admin-panel') && !byId('modal-admin-panel').classList.contains('hidden') && (SYSTEM_CONFIG.adminTab === 'finance' || SYSTEM_CONFIG.adminTab === 'tx')) renderAdminTabContent(); } });
-firebaseDb.ref('archivedUsers').on('value', snap => { const d = snap.val(); archivedUsers = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], uid: k }))) : []; });
-firebaseDb.ref('categories').on('value', snap => { const d = snap.val(); if (d && Array.isArray(d) && d.length) { if (JSON.stringify(d) !== JSON.stringify(categories)) { categories = d; renderCategoryPills(); } } else if (d === null) firebaseDb.ref('categories').set(categories); });
-firebaseDb.ref('combos').on('value', snap => { const d = snap.val(); const up = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : []; if (JSON.stringify(combos) !== JSON.stringify(up)) { combos = up; renderAds(); renderCategoryPills(); } });
-firebaseDb.ref('rates').on('value', snap => { const d = snap.val(); if (d && d.SYP && d.TRY) { EXCHANGE_RATES.SYP = parseFloat(d.SYP); EXCHANGE_RATES.TRY = parseFloat(d.TRY); renderAds(); } });
-firebaseDb.ref('reports').on('value', snap => {
-const d = snap.val();
-const newReports = d ? (Array.isArray(d) ? d.filter(x => x != null) : Object.keys(d).map(k => ({ ...d[k], id: k }))) : [];
-if (lastReportCount > 0 && newReports.length > lastReportCount) { playNotificationSound(); }
-lastReportCount = newReports.length;
-reports = newReports;
-if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'reports') { renderAdminTabContent(); }
-});
-firebaseDb.ref('settings/marquee').on('value', snap => {
-const settings = snap.val();
-if (settings && typeof settings.text === 'string' && settings.text.trim()) {
-hasCloudMarqueeSettings = true;
-localStorage.setItem(MARQUEE_STORAGE_KEY, settings.text);
-applyMarqueeSettings(settings);
-}
-});
-firebaseDb.ref('settings/marqueeText').on('value', snap => {
-const txt = snap.val();
-if (!hasCloudMarqueeSettings && typeof txt === 'string' && txt.trim()) {
-localStorage.setItem(MARQUEE_STORAGE_KEY, txt);
-updateMarqueeText(txt);
-}
-});
+/* ================= SUPABASE SYNC ================= */
+async function initSupabaseSync() {
+  const st = byId('cloud-sync-status');
+  if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
+
+  try {
+    const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
+      supabaseClient.from('users').select('*'),
+      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
+      supabaseClient.from('combos').select('*'),
+      supabaseClient.from('categories').select('*'),
+      supabaseClient.from('reports').select('*')
+    ]);
+
+if (usersRes.data) {
+      users = usersRes.data.map(u => ({
+        ...u,
+        passwordHash: u.password_hash,
+        verifiedShop: u.verified_shop,
+        avitocashBalance: Number(u.avitocash_balance || 0),
+        trialBalance: Number(u.trial_balance || 0),
+        showWomenAds: !!u.show_women_ads
+      }));
+
+      // Мгновенно синхронизируем данные текущей сессии с базой
+      if (currentUser) {
+        const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+        if (freshMe) {
+          currentUser = { ...currentUser, ...freshMe };
+          saveUserSession(currentUser, true);
+        }
+      }
+    }	
+    if (adsRes.data) {
+      ads = adsRes.data.map(a => {
+        const owner = users.find(u => u.uid === a.seller_uid || (u.username && a.seller_username && u.username.toLowerCase() === a.seller_username.toLowerCase()));
+        return {
+          id: a.id,
+          title: a.title,
+          category: a.category,
+          storeCategory: a.store_category,
+          region: a.region,
+          city: a.city,
+          isWomenOnly: !!a.is_women_only,
+          isFree: !!a.is_free,
+          isNegotiable: !!a.is_negotiable,
+          price: Number(a.price || 0),
+          currency: a.currency,
+          desc: a.description || a.desc || '',
+          images: Array.isArray(a.images) ? a.images : [a.image || ''],
+          image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
+          lat: Number(a.lat) || 33.5138,
+          lng: Number(a.lng) || 36.2765,
+          sellerUsername: a.seller_username || owner?.username || '',
+          sellerUid: a.seller_uid || owner?.uid || '',
+          sellerKunya: a.seller_kunya || owner?.kunya || owner?.username || '',
+          sellerWhatsapp: a.seller_whatsapp || owner?.whatsapp || '',
+          status: a.status || 'ACTIVE',
+          createdAt: Number(a.created_at) || Date.now(),
+          queue: Array.isArray(a.queue) ? a.queue : [],
+          likes: Array.isArray(a.likes) ? a.likes : [],
+          views: Number(a.views || 0)
+        };
+      });
+    }
+
+    if (combosRes.data) {
+      combos = combosRes.data.map(c => ({
+        id: c.id,
+        shopUid: c.shop_uid,
+        sellerUsername: c.seller_username,
+        title: c.title,
+        price: Number(c.price || 0),
+        items: Array.isArray(c.items) ? c.items : [],
+        createdAt: Number(c.created_at) || Date.now()
+      }));
+    }
+
+    if (catsRes.data && catsRes.data.length) categories = catsRes.data;
+    if (reportsRes.data) reports = reportsRes.data;
+
+    saveCachedAds();
+    renderCategoryPills();
+    renderAds();
+    if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
+
+  } catch (error) {
+    console.error("Ошибка синхронизации Supabase:", error);
+    if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
+  }
 }
 function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
@@ -1609,103 +1910,139 @@ return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 function openAuthModal() { openModal('modal-auth'); }
 function switchAuthTab(tab) { const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), b = byId('auth-submit-btn'); if (tab === 'login') { l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; f.classList.add('hidden'); b.innerText = 'Войти'; } else { r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; f.classList.remove('hidden'); b.innerText = 'Зарегистрироваться'; } }
 async function handleAuthSubmit(e) {
-e.preventDefault();
-const isReg = !byId('reg-fields').classList.contains('hidden');
-const username = byId('auth-username').value.trim();
-const rawPassword = byId('auth-password').value;
-const password = await sha256(rawPassword);
-const remember = byId('auth-remember-me').checked;
-const btn = byId('auth-submit-btn');
-const originalText = btn.innerText;
-btn.disabled = true;
-btn.innerText = 'Проверка...';
-if (isReg) {
-const kunya = byId('auth-kunya').value.trim() || username;
-const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
-const whatsappRaw = byId('auth-whatsapp').value.trim();
-const avatar = byId('auth-avatar-data')?.value || null;
-if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
-showToast('Логин уже занят!', 'error');
-btn.disabled = false; btn.innerText = originalText;
-return;
-}
-const whatsappCheck = validateWhatsApp(whatsappRaw);
-if (!whatsappCheck.valid) {
-showToast(whatsappCheck.error, 'error');
-btn.disabled = false; btn.innerText = originalText;
-return;
-}
-const whatsapp = whatsappCheck.number;
-// === БЕЗОПАСНОСТЬ: УНИКАЛЬНОСТЬ WHATSAPP ===
-const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
-if (waExists) {
-showToast('Этот номер WhatsApp уже зарегистрирован!', 'error');
-btn.disabled = false; btn.innerText = originalText;
-return;
-}
-// ==========================================
-const uid = 'u_' + Date.now();
-const nu = {
-uid, username,
-passwordHash: password,
-kunya, gender, whatsapp, avatar,
-role: 'USER', verifiedShop: false,
-// RENAMED: shamcashBalance -> avitocashBalance
-avitocashBalance: 0, trialBalance: 10
-};
-// Записываем номер в индекс WhatsApp, чтобы никто другой не смог его занять
-if (firebaseDb) {
-const waClean = whatsapp.replace(/\D/g, '');
-firebaseDb.ref(`whatsapp_index/${waClean}`).set(uid).catch(err => console.warn('WA index write failed', err));
-firebaseDb.ref(`users/${uid}`).set(nu);
-}
-users.push(nu);
-saveUserSession(nu, remember);
-closeModal('modal-auth');
-showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC — на объявления и магазин, без права передачи', 'success');
-btn.disabled = false; btn.innerText = originalText;
-} else {
-if (!firebaseDb) {
-showToast('Нет соединения с базой данных', 'error');
-btn.disabled = false; btn.innerText = originalText;
-return;
-}
-try {
-const snapshot = await firebaseDb.ref('users').orderByChild('username').equalTo(username).once('value');
-let foundUser = null;
-let needsHashUpdate = false;
-snapshot.forEach(child => {
-const u = child.val();
-if (u.passwordHash === password) {
-foundUser = { ...u, uid: child.key };
-}
-else if (u.passwordHash === rawPassword || u.password === rawPassword) {
-foundUser = { ...u, uid: child.key };
-needsHashUpdate = true;
-}
-});
-if (foundUser) {
-if (needsHashUpdate) {
-console.log("Migrating old password to hash for user:", foundUser.username);
-if (firebaseDb) firebaseDb.ref(`users/${foundUser.uid}`).update({ passwordHash: password, password: null });
-foundUser.passwordHash = password;
-delete foundUser.password;
-}
-const idx = users.findIndex(u => u.uid === foundUser.uid);
-if (idx !== -1) users[idx] = foundUser;
-else users.push(foundUser);
-saveUserSession(foundUser, remember);
-closeModal('modal-auth');
-showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
-} else {
-showToast('Неверный логин или пароль!', 'error');
-}
-} catch (err) {
-console.error(err);
-showToast('Ошибка входа. Попробуйте позже.', 'error');
-}
-btn.disabled = false; btn.innerText = originalText;
-}
+  e.preventDefault();
+  const isReg = !byId('reg-fields').classList.contains('hidden');
+  const username = byId('auth-username').value.trim();
+  const rawPassword = byId('auth-password').value;
+  const password = await sha256(rawPassword);
+  const remember = byId('auth-remember-me').checked;
+  const btn = byId('auth-submit-btn');
+  const originalText = btn.innerText;
+  btn.disabled = true;
+  btn.innerText = 'Проверка...';
+
+  if (isReg) {
+    const kunya = byId('auth-kunya').value.trim() || username;
+    const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
+    const whatsappRaw = byId('auth-whatsapp').value.trim();
+    const avatar = byId('auth-avatar-data')?.value || null;
+
+    if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+      showToast('Логин уже занят!', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+
+    const whatsappCheck = validateWhatsApp(whatsappRaw);
+    if (!whatsappCheck.valid) {
+      showToast(whatsappCheck.error, 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+    const whatsapp = whatsappCheck.number;
+
+    const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
+    if (waExists) {
+      showToast('Этот номер WhatsApp уже зарегистрирован!', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+
+    const uid = 'u_' + Date.now();
+    
+    const nu = {
+      uid: uid,
+      username: username,
+      password_hash: password,
+      passwordHash: password,
+      kunya: kunya,
+      gender: gender,
+      whatsapp: whatsapp,
+      avatar: avatar,
+      role: 'USER',
+      verified_shop: false,
+      verifiedShop: false,
+      avitocash_balance: 0,
+      avitocashBalance: 0,
+      trial_balance: 10,
+      trialBalance: 10
+    };
+
+    if (supabaseClient) {
+      const { error } = await supabaseClient.from('users').insert({
+        uid: nu.uid,
+        username: nu.username,
+        password_hash: nu.password_hash,
+        kunya: nu.kunya,
+        gender: nu.gender,
+        whatsapp: nu.whatsapp,
+        avatar: nu.avatar,
+        role: nu.role,
+        verified_shop: nu.verified_shop,
+        avitocash_balance: nu.avitocash_balance,
+        trial_balance: nu.trial_balance
+      });
+      if (error) console.error("Ошибка регистрации:", error);
+    }
+
+    users.push(nu);
+    saveUserSession(nu, remember);
+    closeModal('modal-auth');
+    showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
+    btn.disabled = false; btn.innerText = originalText;
+
+  } else {
+    if (!supabaseClient) {
+      showToast('Нет соединения с базой данных', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+    try {
+      const { data: matchedUsers, error } = await supabaseClient.from('users').select('*').eq('username', username);
+      if (error) throw error;
+
+      let foundUser = null;
+      let needsHashUpdate = false;
+
+      if (matchedUsers && matchedUsers.length > 0) {
+        const u = matchedUsers[0];
+        
+        u.passwordHash = u.password_hash;
+        u.verifiedShop = u.verified_shop;
+        u.avitocashBalance = u.avitocash_balance;
+        u.trialBalance = u.trial_balance;
+        u.showWomenAds = u.show_women_ads;
+
+        if (u.passwordHash === password) {
+          foundUser = u;
+        } else if (u.passwordHash === rawPassword || u.password === rawPassword) {
+          foundUser = u;
+          needsHashUpdate = true;
+        }
+      }
+
+      if (foundUser) {
+        if (needsHashUpdate) {
+          await supabaseClient.from('users').update({ password_hash: password, password: null }).eq('uid', foundUser.uid);
+          foundUser.passwordHash = password;
+          delete foundUser.password;
+        }
+        const idx = users.findIndex(u => u.uid === foundUser.uid);
+        if (idx !== -1) users[idx] = foundUser;
+        else users.push(foundUser);
+
+        saveUserSession(foundUser, remember);
+        closeModal('modal-auth');
+        showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
+      } else {
+        showToast('Неверный логин или пароль!', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Ошибка входа.', 'error');
+    }
+    btn.disabled = false; btn.innerText = originalText;
+  }
 }
 /* ================= AVITOCASH ================= */
 function _0xSCAdmin() { return !!(currentUser && currentUser.role === 'SUPERUSER'); }
@@ -1713,15 +2050,35 @@ function _0xSCAmount(value) { const n = Number(value); return Number.isFinite(n)
 function _0xSCCode() { return 'SHAM-' + Math.random().toString(36).slice(2, 8).toUpperCase() + '-' + Date.now().toString(36).toUpperCase().slice(-4); }
 // RENAMED: shamcashBalance -> avitocashBalance
 function _0xSCBalance(uid) { const u = users.find(x => x.uid === uid) || (currentUser && currentUser.uid === uid ? currentUser : null); return Number(u?.avitocashBalance ?? u?.shamcashBalance ?? 0); }
-function _0xSCTransaction(uid, amount, direction) {
-if (!firebaseDb || !uid) return Promise.reject(new Error('Нет соединения с базой данных'));
-const value = _0xSCAmount(amount); if (!value) return Promise.reject(new Error('Некорректная сумма'));
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-return firebaseDb.ref(`users/${uid}/avitocashBalance`).transaction(balance => { const current = Number(balance || 0); if (direction === 'deduct' && current < value) return; return Math.round((direction === 'deduct' ? current - value : current + value) * 100) / 100; }).then(result => { if (!result.committed) throw new Error('Недостаточно AvitoCash'); return result.snapshot.val(); });
+async function _0xSCTransaction(uid, amount, direction) {
+  if (!supabaseClient || !uid) throw new Error('Нет соединения с БД');
+  const value = _0xSCAmount(amount); 
+  if (!value) throw new Error('Некорректная сумма');
+
+  // 1. Получаем текущий баланс пользователя
+  const { data: user, error: fetchErr } = await supabaseClient.from('users').select('avitocash_balance').eq('uid', uid).single();
+  if (fetchErr || !user) throw new Error('Пользователь не найден');
+
+  let current = Number(user.avitocash_balance || 0);
+  if (direction === 'deduct' && current < value) throw new Error('Недостаточно AvitoCash');
+
+  // 2. Вычисляем новый баланс
+  let newBalance = Math.round((direction === 'deduct' ? current - value : current + value) * 100) / 100;
+
+  // 3. Обновляем в Supabase
+  const { error: updateErr } = await supabaseClient.from('users').update({ avitocash_balance: newBalance }).eq('uid', uid);
+  if (updateErr) throw new Error('Ошибка обновления баланса');
+
+  return newBalance;
 }
-function deductBalance(uid, amount) { return _0xSCTransaction(uid, amount, 'deduct'); }
-function addBalance(uid, amount) { if (!_0xSCAdmin()) return Promise.reject(new Error('Только Главный Администратор может начислять баланс')); return _0xSCTransaction(uid, amount, 'add'); }
-function logTransaction(data) { if (!firebaseDb) return Promise.resolve(); const key = 'TX-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); const tx = Object.assign({ id: key, status: 'completed', currency: 'AC', timestamp: Date.now() }, data); const jobs = []; if (tx.senderUid) jobs.push(firebaseDb.ref(`users/${tx.senderUid}/receipts/${key}`).set(tx).catch(() => {})); if (tx.recipientUid && tx.recipientUid !== tx.senderUid) jobs.push(firebaseDb.ref(`users/${tx.recipientUid}/receipts/${key}`).set(tx).catch(() => {})); jobs.push(firebaseDb.ref(`transactions/${key}`).set(tx).catch(() => {})); return Promise.all(jobs); }
+async function deductBalance(uid, amount) {
+  return await _0xSCTransaction(uid, amount, 'deduct');
+}
+
+function addBalance(uid, amount) {
+  if (!_0xSCAdmin()) return Promise.reject(new Error('Только Главный Администратор может начислять баланс'));
+  return _0xSCTransaction(uid, amount, 'add');
+}
 function collectAllTransactions() { const map = {}; Object.values(TRANSACTIONS || {}).forEach(t => { if (t && t.id) map[t.id] = t; }); users.forEach(u => { Object.values(u.receipts || {}).forEach(t => { if (t && t.id && !map[t.id]) map[t.id] = t; }); }); return Object.values(map).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); }
 function txTypeLabel(t, viewerUid) { const isIn = viewerUid && t.recipientUid === viewerUid; const map = { purchase: isIn ? 'Куплено' : (viewerUid && t.senderUid === viewerUid ? 'Продано' : 'Покупка'), transfer: isIn ? 'Получено' : 'Отправлено', topup: 'Пополнение', gift: 'Подарок', fee: 'Оплата услуги', seizure: 'Взыскание' }; return map[t.type] || t.type || 'Транзакция'; }
 function renderMyReceipts() { if (!currentUser) return '<div class="text-[11px] t2">Нет данных</div>'; const list = Object.values(currentUser.receipts || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); if (!list.length) return '<div class="text-[11px] t2">Чеков пока нет — история покупок и продаж появится здесь</div>'; return list.map(t => `<div class="flex items-center justify-between gap-2 border-b b-ig py-1.5 text-[11px]"><div class="min-w-0"><div class="font-bold t1 truncate">${txTypeLabel(t, currentUser.uid)} • ${Number(t.amount || 0).toFixed(2)} AC</div><div class="t2 truncate">${t.adTitle || t.note || ''}${t.senderUsername && t.recipientUsername ? ' • ' + (t.recipientUid === currentUser.uid ? 'от @' + t.senderUsername : '→ @' + t.recipientUsername) : ''}</div></div><div class="t2 shrink-0 text-[9px]">${new Date(t.timestamp || Date.now()).toLocaleDateString()}</div></div>`).join(''); }
@@ -1742,36 +2099,165 @@ currentUser.avitocashBalance = balanceResult.snapshot.val();
 const localUser = users.find(u => u.uid === currentUser.uid); 
 if (localUser) localUser.avitocashBalance = balanceResult.snapshot.val(); 
 saveUserSession(currentUser, true); logTransaction({ type: 'gift', amount, recipientUid: currentUser.uid, recipientUsername: currentUser.username, note: 'Подарочный код ' + entered }).catch(() => {}); closeModal('modal-redeem-gift'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Подарок активирован: +${amount.toFixed(2)} AC`, 'success'); } catch (e) { showToast('Не удалось активировать код. Попробуйте еще раз.', 'error'); } }
-function openTransferModal() { if (!currentUser) { openAuthModal(); return; } const select = byId('transfer-recipient'); if (!select) return; const available = users.filter(u => u.uid && u.uid !== currentUser.uid); select.innerHTML = available.length ? available.map(u => `<option value="${u.uid}">${u.kunya || u.username} (@${u.username})</option>`).join('') : '<option value="">Нет доступных получателей</option>'; byId('transfer-amount').value = ''; byId('transfer-note').value = ''; openModal('modal-transfer-shamcash'); }
-async function transferShamCash() { if (!currentUser?.uid || !firebaseDb) { showToast('Нет соединения с Firebase', 'error'); return; } if (currentUser.frozen) { showToast('Аккаунт заморожен администратором — перевод недоступен', 'error'); return; } const recipientUid = byId('transfer-recipient')?.value; const amount = _0xSCAmount(byId('transfer-amount')?.value); const note = String(byId('transfer-note')?.value || '').trim(); const recipient = users.find(u => u.uid === recipientUid); if (!recipientUid || !recipient || recipientUid === currentUser.uid) { showToast('Выберите получателя', 'warning'); return; } if (!amount) { showToast('Укажите сумму перевода', 'warning'); return; } 
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-const senderRef = firebaseDb.ref(`users/${currentUser.uid}/avitocashBalance`); 
-const recipientRef = firebaseDb.ref(`users/${recipientUid}/avitocashBalance`); 
-let deducted = false, credited = false; try { const debit = await senderRef.transaction(balance => { const current = Number(balance || 0); if (current < amount) return; return Math.round((current - amount) * 100) / 100; }); if (!debit.committed) { showToast('Недостаточно AvitoCash', 'warning'); return; } deducted = true; const credit = await recipientRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); if (!credit.committed) throw new Error('Не удалось начислить получателю'); credited = true; await logTransaction({ type: 'transfer', amount, senderUid: currentUser.uid, senderUsername: currentUser.username, recipientUid, recipientUsername: recipient.username, note }).catch(() => {}); 
-// RENAMED: shamcashBalance -> avitocashBalance
-currentUser.avitocashBalance = debit.snapshot.val(); 
-const localSender = users.find(u => u.uid === currentUser.uid); const localRecipient = users.find(u => u.uid === recipientUid); 
-if (localSender) localSender.avitocashBalance = debit.snapshot.val(); 
-if (localRecipient) localRecipient.avitocashBalance = credit.snapshot.val(); 
-saveUserSession(currentUser, true); closeModal('modal-transfer-shamcash'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Оплата отправлена: ${amount.toFixed(2)} AC`, 'success'); } catch (e) { if (credited) { try { await recipientRef.transaction(balance => Math.max(0, Math.round((Number(balance || 0) - amount) * 100) / 100)); } catch (rollbackError) {} } if (deducted) { try { await senderRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); } catch (rollbackError) {} } showToast('Перевод не выполнен, баланс возвращен', 'error'); } }
+function openTransferModal() {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+  const select = byId('transfer-recipient');
+  if (!select) return;
+
+  const currentId = currentUser.uid || currentUser.username;
+  const available = users.filter(u => (u.uid || u.username) !== currentId);
+
+  select.innerHTML = available.length
+    ? available.map(u => `<option value="${u.uid || u.username}">${u.kunya || u.username} (@${u.username})</option>`).join('')
+    : '<option value="">Нет доступных получателей</option>';
+
+  byId('transfer-amount').value = '';
+  byId('transfer-note').value = '';
+  openModal('modal-transfer-shamcash');
+}
+
+async function transferShamCash() {
+  if (!currentUser || !supabaseClient) {
+    showToast('Нет соединения с базой данных', 'error');
+    return;
+  }
+  if (currentUser.frozen) {
+    showToast('Аккаунт заморожен администратором — перевод недоступен', 'error');
+    return;
+  }
+
+  const recipientKey = byId('transfer-recipient')?.value;
+  const amount = parseFloat(byId('transfer-amount')?.value || 0);
+  const note = String(byId('transfer-note')?.value || '').trim();
+
+  const recipient = users.find(u => (u.uid && u.uid === recipientKey) || (u.username && u.username === recipientKey));
+
+  if (!recipient || (recipient.uid && recipient.uid === currentUser.uid) || (recipient.username === currentUser.username)) {
+    showToast('Выберите корректного получателя', 'warning');
+    return;
+  }
+  if (!amount || amount <= 0 || isNaN(amount)) {
+    showToast('Укажите сумму перевода', 'warning');
+    return;
+  }
+
+  const currentBal = Number(currentUser.avitocashBalance ?? currentUser.avitocash_balance ?? 0);
+  if (currentBal < amount) {
+    showToast(`Недостаточно AvitoCash. У вас: ${currentBal.toFixed(2)} AC`, 'warning');
+    return;
+  }
+
+  showToast('Выполняется перевод...', 'info');
+
+  try {
+    const senderQuery = currentUser.uid 
+      ? supabaseClient.from('users').select('avitocash_balance, uid, username').eq('uid', currentUser.uid)
+      : supabaseClient.from('users').select('avitocash_balance, uid, username').eq('username', currentUser.username);
+
+    const { data: senderRows, error: senderErr } = await senderQuery;
+    if (senderErr || !senderRows || !senderRows.length) {
+      throw new Error('Отправитель не найден в базе данных');
+    }
+    const senderData = senderRows[0];
+    const realSenderBal = Number(senderData.avitocash_balance || 0);
+
+    if (realSenderBal < amount) {
+      throw new Error('Недостаточно средств на балансе');
+    }
+
+    const recipQuery = recipient.uid
+      ? supabaseClient.from('users').select('avitocash_balance, uid, username').eq('uid', recipient.uid)
+      : supabaseClient.from('users').select('avitocash_balance, uid, username').eq('username', recipient.username);
+
+    const { data: recipRows, error: recipErr } = await recipQuery;
+    if (recipErr || !recipRows || !recipRows.length) {
+      throw new Error('Получатель не найден в базе данных');
+    }
+    const recipData = recipRows[0];
+    const realRecipBal = Number(recipData.avitocash_balance || 0);
+
+    const newSenderBal = Math.round((realSenderBal - amount) * 100) / 100;
+    const newRecipBal = Math.round((realRecipBal + amount) * 100) / 100;
+
+    const senderUpdate = currentUser.uid
+      ? supabaseClient.from('users').update({ avitocash_balance: newSenderBal }).eq('uid', currentUser.uid)
+      : supabaseClient.from('users').update({ avitocash_balance: newSenderBal }).eq('username', currentUser.username);
+
+    const { error: updSendErr } = await senderUpdate;
+    if (updSendErr) throw updSendErr;
+
+    const recipUpdate = recipient.uid
+      ? supabaseClient.from('users').update({ avitocash_balance: newRecipBal }).eq('uid', recipient.uid)
+      : supabaseClient.from('users').update({ avitocash_balance: newRecipBal }).eq('username', recipient.username);
+
+    const { error: updRecErr } = await recipUpdate;
+    if (updRecErr) {
+      if (currentUser.uid) {
+        await supabaseClient.from('users').update({ avitocash_balance: realSenderBal }).eq('uid', currentUser.uid);
+      } else {
+        await supabaseClient.from('users').update({ avitocash_balance: realSenderBal }).eq('username', currentUser.username);
+      }
+      throw new Error('Сбой зачисления. Средства возвращены.');
+    }
+
+    currentUser.avitocashBalance = newSenderBal;
+    currentUser.avitocash_balance = newSenderBal;
+    recipient.avitocashBalance = newRecipBal;
+    recipient.avitocash_balance = newRecipBal;
+
+    saveUserSession(currentUser, true);
+
+    closeModal('modal-transfer-shamcash');
+    if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
+
+    showToast(`Перевод выполнен: ${amount.toFixed(2)} AC отправлено @${recipient.username}`, 'success');
+
+  } catch (err) {
+    console.error('Transfer error:', err);
+    showToast('Ошибка перевода: ' + (err.message || 'Сбой базы данных'), 'error');
+  }
+}
+
 function downloadGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; const link = document.createElement('a'); link.download = 'AvitoSham-Gift-Code.png'; link.href = canvas.toDataURL('image/png'); link.click(); }
-async function shareGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; canvas.toBlob(async blob => { const file = new File([blob], 'AvitoSham-Gift-Code.png', { type: 'image/png' }); if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ title: 'Подарочный код Avito Sham', text: byId('gift-code-label').innerText, files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; } } downloadGiftCard(); showToast('Карточка скачана для отправки', 'info'); }, 'image/png'); }
-// RENAMED: SHAMCASH_PRICES -> AVITOCASH_PRICES
-function _0xSCPrices() { return { adPrice: _0xSCAmount(AVITOCASH_PRICES.adPrice), shopSubscription: _0xSCAmount(AVITOCASH_PRICES.shopSubscription), editPrice: _0xSCAmount(AVITOCASH_PRICES.editPrice) }; }
-async function _0xSCCharge(uid, amount, label) { const target = users.find(x => x.uid === uid); if (target && target.frozen) { showToast('Аккаунт заморожен администратором — действие недоступно', 'error'); return false; } const price = _0xSCAmount(amount); if (!price) return true; try { await deductFeeWithTrial(uid, price); logTransaction({ type: 'fee', amount: price, senderUid: uid, senderUsername: (target || {}).username || '', note: label }).catch(() => {}); showToast(`${label}: списано ${price.toFixed(2)} AC`, 'info'); return true; } catch (e) { showToast(`Недостаточно AvitoCash для действия. Требуется ${price.toFixed(2)} AC`, 'warning'); return false; } }
-async function deductFeeWithTrial(uid, price) { if (!firebaseDb) return Promise.reject(new Error('Нет соединения с базой данных')); const u = users.find(x => x.uid === uid); const trial = Number(u?.trialBalance || 0); 
-// RENAMED: shamcashBalance -> avitocashBalance
-const real = Number(u?.avitocashBalance ?? u?.shamcashBalance ?? 0); 
-const useTrial = Math.min(trial, price); const useReal = Math.round((price - useTrial) * 100) / 100; if (real < useReal) return Promise.reject(new Error('Недостаточно AvitoCash')); if (useTrial > 0) { const t = await firebaseDb.ref(`users/${uid}/trialBalance`).transaction(v => Math.round((Number(v || 0) - useTrial) * 100) / 100); if (!t.committed) return Promise.reject(new Error('Недостаточно AvitoCash')); } if (useReal > 0) { 
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-const r = await firebaseDb.ref(`users/${uid}/avitocashBalance`).transaction(v => { const cur = Number(v || 0); if (cur < useReal) return; return Math.round((cur - useReal) * 100) / 100; }); if (!r.committed) { if (useTrial > 0) firebaseDb.ref(`users/${uid}/trialBalance`).transaction(v => Math.round((Number(v || 0) + useTrial) * 100) / 100); return Promise.reject(new Error('Недостаточно AvitoCash')); } } if (u) { u.trialBalance = Math.round((trial - useTrial) * 100) / 100; 
-// RENAMED: shamcashBalance -> avitocashBalance
-u.avitocashBalance = Math.round((real - useReal) * 100) / 100; } if (currentUser && currentUser.uid === uid) { currentUser.trialBalance = Math.round((trial - useTrial) * 100) / 100; 
-// RENAMED: shamcashBalance -> avitocashBalance
-currentUser.avitocashBalance = Math.round((real - useReal) * 100) / 100; saveUserSession(currentUser, true); } return Promise.resolve(); }
-function saveShamCashSettings() { if (!_0xSCAdmin()) { showToast('Доступ запрещен!', 'error'); return; } 
-// RENAMED: SHAMCASH_PRICES -> AVITOCASH_PRICES
-const prices = { adPrice: _0xSCAmount(byId('sc-ad-price')?.value), shopSubscription: _0xSCAmount(byId('sc-shop-price')?.value), editPrice: _0xSCAmount(byId('sc-edit-price')?.value), freeAdsCount: Math.max(0, Math.floor(Number(byId('sc-free-ads')?.value || 0))) }; const rate = 1; AVITOCASH_RATE = 1; if (firebaseDb) Promise.all([firebaseDb.ref('settings/prices').set(prices), firebaseDb.ref('settings/shamcashRate').set(rate)]).then(() => { AVITOCASH_PRICES = prices; showToast('Настройки сохранены. Курс: 1 AC = 1 USD', 'success'); }).catch(() => showToast('Ошибка сохранения настроек', 'error')); }
+async function shareGiftCard() { const canvas = byId('gift-card-canvas'); if (!canvas) return; canvas.toBlob(async blob => { const file = new File([blob], 'AvitoSham-Gift-Code.png', { type: 'image/png' }); if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ title: 'Подарочный код Avito Sham', text: byId('gift-code-label').innerText, files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; } } downloadGiftCard(); showToast('Карточка скачана для отправки', 'info'); }, 'image/png'); }function _0xSCPrices() { return { adPrice: _0xSCAmount(AVITOCASH_PRICES.adPrice), shopSubscription: _0xSCAmount(AVITOCASH_PRICES.shopSubscription), editPrice: _0xSCAmount(AVITOCASH_PRICES.editPrice) }; }
+async function _0xSCCharge(uid, amount, label) {
+  const target = users.find(x => (x.uid && x.uid === uid) || (x.username && x.username === uid)) || currentUser;
+  if (target && target.frozen) {
+    showToast('Аккаунт заморожен администратором — действие недоступно', 'error');
+    return false;
+  }
+  const price = _0xSCAmount(amount);
+  if (!price || price <= 0) return true;
+
+  const currentBal = Number(target.avitocashBalance ?? target.avitocash_balance ?? 0);
+  if (currentBal < price) {
+    showToast(`Недостаточно AvitoCash. Требуется ${price.toFixed(2)} AC`, 'warning');
+    return false;
+  }
+
+  const newBal = Math.round((currentBal - price) * 100) / 100;
+  target.avitocashBalance = newBal;
+  target.avitocash_balance = newBal;
+
+  if (currentUser && ((currentUser.uid && currentUser.uid === target.uid) || currentUser.username === target.username)) {
+    currentUser.avitocashBalance = newBal;
+    currentUser.avitocash_balance = newBal;
+    saveUserSession(currentUser, true);
+  }
+
+  if (supabaseClient) {
+    const q = target.uid
+      ? supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('uid', target.uid)
+      : supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('username', target.username);
+    q.then();
+  }
+
+  showToast(`${label}: списано ${price.toFixed(2)} AC`, 'info');
+  return true;
+}
 function renderFinanceReport() { 
 // RENAMED: shamcashBalance -> avitocashBalance
 const balances = users.map(u => ({ username: u.username || '—', name: u.kunya || u.username || '—', balance: Number(u.avitocashBalance ?? u.shamcashBalance ?? 0) })).sort((a, b) => b.balance - a.balance); const totalBalance = balances.reduce((sum, u) => sum + u.balance, 0); const fundedUsers = balances.filter(u => u.balance > 0).length; const requests = Object.values(TOPUP_REQUESTS || {}); const pending = requests.filter(r => r.status === 'pending'); const approved = requests.filter(r => r.status === 'approved'); const rejected = requests.filter(r => r.status === 'rejected'); const approvedAmount = approved.reduce((sum, r) => sum + Number(r.amount || 0), 0); const pendingAmount = pending.reduce((sum, r) => sum + Number(r.amount || 0), 0); return `<div class="space-y-3"><div class="flex items-center justify-between gap-2 flex-wrap"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-chart-line" style="color:#10b981"></i> Актуальный финансовый отчет</h4><span class="text-[10px] t2">Обновлено: ${new Date().toLocaleTimeString()}</span></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-2"><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Баланс пользователей</div><div class="text-lg font-extrabold" style="color:#f59e0b">${totalBalance.toFixed(2)} AC</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">С балансом</div><div class="text-lg font-extrabold" style="color:#0095f6">${fundedUsers}</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Ожидают проверки</div><div class="text-lg font-extrabold" style="color:#f59e0b">${pendingAmount.toFixed(2)} AC</div><div class="text-[10px] t2">${pending.length} заявок</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Подтверждено</div><div class="text-lg font-extrabold" style="color:#10b981">${approvedAmount.toFixed(2)} AC</div><div class="text-[10px] t2">${approved.length} заявок</div></div></div><div class="ig-card p-3 rounded-xl"><div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-bold t1">Баланс пользователей</span><span class="text-[10px] t2">Отклонено заявок: ${rejected.length}</span></div><div class="space-y-1 max-h-64 overflow-y-auto">${balances.length ? balances.map(u => `<div class="flex items-center justify-between gap-3 border-b b-ig py-2 text-xs"><span class="min-w-0 truncate"><b class="t1">${u.name}</b> <span class="t2">@${u.username}</span></span><b style="color:${u.balance > 0 ? '#f59e0b' : 'var(--ig-text2)'}">${u.balance.toFixed(2)} AC</b></div>`).join('') : '<div class="text-center py-4 t2">Пользователей нет</div>'}</div></div></div>`; }
@@ -1783,7 +2269,16 @@ handleEditAdSubmit = async function(e) { e.preventDefault(); const uid = current
 const _0xLegacyCreateShop = handleCreateShopSubmit;
 handleCreateShopSubmit = async function(e) { e.preventDefault(); const isNewShop = !shopEditTargetUid && !currentUser?.shop; if (isNewShop && !(await _0xSCCharge(currentUser?.uid, AVITOCASH_PRICES.shopSubscription, 'Открытие магазина'))) return; _0xLegacyCreateShop(e); };
 /* ================= PROFILE ================= */
-function openProfileModal() { if (!currentUser) return; const c = byId('profile-content'); if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
+function openProfileModal() { 
+  if (!currentUser) return; 
+  // Подтягиваем свежие данные перед отрисовкой
+  const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+  if (freshMe) {
+    currentUser.avitocashBalance = freshMe.avitocashBalance;
+    currentUser.trialBalance = freshMe.trialBalance;
+  }
+  const c = byId('profile-content'); 
+  if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 c.innerHTML = `<div class="space-y-4">
 <div class="flex items-center gap-4">
@@ -1800,7 +2295,7 @@ c.innerHTML = `<div class="space-y-4">
 ${(currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.gender !== 'FEMALE' ? `<div class="flex items-center justify-between pt-1 border-t b-ig mt-1"><div class="text-xs t2 leading-tight"><div class="font-bold t1">Показывать женские объявления</div><div class="text-[10px]">Видеть «Только для женщин» в общей ленте</div></div><label class="ig-switch"><input type="checkbox" id="profile-show-women-ads" onchange="toggleShowWomenAds(this.checked)" ${currentUser.showWomenAds ? 'checked' : ''}><span class="slider"></span></label></div>` : ''}
 </div>
 <div class="bg-field border rounded-xl p-3 space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)">
-<div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs font-bold t1"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Баланс AvitoCash</span><b class="text-base font-extrabold" style="color:#f59e0b">${(Number(currentUser.avitocashBalance ?? currentUser.shamcashBalance ?? 0) + Number(currentUser.trialBalance || 0)).toFixed(2)} AC</b></div>
+<div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs font-bold t1"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Баланс AvitoCash</span><b class="text-base font-extrabold" style="color:#f59e0b">${Number(currentUser.avitocashBalance || 0).toFixed(2)} AC</b></div>
 ${Number(currentUser.trialBalance || 0) > 0 ? `<div class="text-[10px] t2">Из них подарочные (нельзя передавать): ${Number(currentUser.trialBalance).toFixed(2)} AC — только на объявления и магазин</div>` : ''}
 <button onclick="openTopupModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#f59e0b;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)"><i class="fa-solid fa-qrcode"></i> Пополнить баланс</button>
 <button onclick="openRedeemGiftModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#a78bfa;border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.1)"><i class="fa-solid fa-gift"></i> Активировать подарочный код</button>
@@ -1848,7 +2343,26 @@ closeModal('modal-profile');
 updateAuthUI();
 showToast('Вы вышли из аккаунта', 'info');
 }
-function toggleShowWomenAds(enabled) { if (!currentUser) return; currentUser.showWomenAds = !!enabled; const idx = users.findIndex(u => u.uid === currentUser.uid); if (idx !== -1) users[idx].showWomenAds = !!enabled; if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/showWomenAds`).set(!!enabled); saveUserSession(currentUser, true); renderAds(); renderCategoryPills(); showToast(enabled ? 'Женские объявления включены в ленте' : 'Женские объявления скрыты из ленты', 'info'); }
+async function toggleShowWomenAds(enabled) {
+  if (!currentUser) return;
+  currentUser.showWomenAds = !!enabled;
+
+  const idx = users.findIndex(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+  if (idx !== -1) users[idx].showWomenAds = !!enabled;
+
+  saveUserSession(currentUser, true);
+
+  if (supabaseClient) {
+    const query = currentUser.uid 
+      ? supabaseClient.from('users').update({ show_women_ads: !!enabled }).eq('uid', currentUser.uid)
+      : supabaseClient.from('users').update({ show_women_ads: !!enabled }).eq('username', currentUser.username);
+    await query;
+  }
+
+  renderCategoryPills();
+  renderAds();
+  showToast(enabled ? 'Женские объявления включены' : 'Женские объявления скрыты', 'info');
+}
 function openEditProfileModal(targetUsername) { const user = users.find(u => u.username === targetUsername) || currentUser; if (!user) return; byId('edit-profile-username').value = user.username; byId('edit-profile-login').value = user.username; byId('edit-profile-password').value = ''; byId('edit-profile-kunya').value = user.kunya || ''; byId('edit-profile-whatsapp').value = user.whatsapp || ''; byId('edit-profile-avatar-data').value = user.avatar || ''; const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); if (user.avatar && box && img) { img.src = user.avatar; box.classList.remove('hidden'); } else if (box) box.classList.add('hidden'); const af = byId('edit-profile-admin-fields'); if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { af.classList.remove('hidden'); byId('edit-profile-gender').value = user.gender || 'MALE'; byId('edit-profile-role').value = user.role || 'USER'; } else af.classList.add('hidden'); openModal('modal-edit-profile'); }
 function handleSaveProfile(e) { e.preventDefault(); const orig = byId('edit-profile-username').value; const nl = byId('edit-profile-login').value.trim(); const npRaw = byId('edit-profile-password').value; const nk = byId('edit-profile-kunya').value.trim(); const nwRaw = byId('edit-profile-whatsapp').value.trim(); const na = byId('edit-profile-avatar-data').value || null; const idx = users.findIndex(u => u.username && u.username.toLowerCase() === orig.toLowerCase()); if (idx === -1) { showToast('Пользователь не найден!', 'error'); return; } if (nl.toLowerCase() !== orig.toLowerCase() && users.some(u => u.username && u.username.toLowerCase() === nl.toLowerCase())) { showToast('Логин занят!', 'error'); return; }
 const nwCheck = validateWhatsApp(nwRaw);
@@ -1859,53 +2373,20 @@ return;
 const nw = nwCheck.number;
 const u = users[idx]; u.username = nl; if (npRaw && npRaw.trim()) { sha256(npRaw.trim()).then(hashed => { u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); }); } else { finalizeProfileSave(u, orig, nl, nk, nw, na); } }
 async function finalizeProfileSave(u, orig, nl, nk, nw, na) {
-// === БЕЗОПАСНОСТЬ: УНИКАЛЬНОСТЬ WHATSAPP ПРИ РЕДАКТИРОВАНИИ ===
-if (nw) {
-const waClean = nw.replace(/\D/g,'');
-const waOwner = users.find(x => x.whatsapp && x.whatsapp.replace(/\D/g,'') === waClean);
-if (waOwner && waOwner.username.toLowerCase() !== orig.toLowerCase()) {
-showToast('Этот номер WhatsApp уже используется другим пользователем!', 'error');
-return;
-}
-}
-// =================================================================
-// === ЗАЩИТА РОЛИ И ПАРОЛЯ ОТ ВЗЛОМА ЧЕРЕЗ КОНСОЛЬ ===
-let safeRole = u.role || 'USER';
-let safePasswordHash = u.passwordHash;
-if (firebaseDb && u.uid) {
-try {
-const snap = await firebaseDb.ref(`users/${u.uid}`).once('value');
-const cloudData = snap.val();
-if (cloudData) {
-// Берем роль ТОЛЬКО из базы, игнорируем то, что прислал браузер
-safeRole = cloudData.role || 'USER';
-// Защищаем хэш пароля от перезаписи, если он уже есть в базе
-if (cloudData.passwordHash) safePasswordHash = cloudData.passwordHash;
-}
-} catch (e) { console.warn('Security check failed', e); }
-}
-// Применяем безопасные значения
-u.role = safeRole;
-u.passwordHash = safePasswordHash;
-// Только настоящий админ в текущей сессии может менять роли через интерфейс
-if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.uid !== u.uid) {
-u.gender = byId('edit-profile-gender').value;
-u.role = byId('edit-profile-role').value;
-}
+if (nw) { const waClean = nw.replace(/\D/g,''); const waOwner = users.find(x => x.whatsapp && x.whatsapp.replace(/\D/g,'') === waClean); if (waOwner && waOwner.username.toLowerCase() !== orig.toLowerCase()) { showToast('Этот номер WhatsApp уже используется другим пользователем!', 'error'); return; } }
+let safeRole = u.role || 'USER'; let safePasswordHash = u.passwordHash;
+if (supabaseClient && u.uid) { try { const { data: cloudData } = await supabaseClient.from('users').select('role, password_hash').eq('uid', u.uid).single(); if (cloudData) { safeRole = cloudData.role || 'USER'; if (cloudData.password_hash) safePasswordHash = cloudData.password_hash; } } catch (e) { console.warn('Security check failed', e); } }
+u.role = safeRole; u.passwordHash = safePasswordHash;
+if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.uid !== u.uid) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; }
 u.avatar = na;
-if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u);
-ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (firebaseDb && ad.id) firebaseDb.ref(`ads/${ad.id}`).update({ sellerUsername: nl, sellerKunya: nk, sellerWhatsapp: nw }); } });
-combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (firebaseDb && c.id) firebaseDb.ref(`combos/${c.id}/sellerUsername`).set(nl); } });
+if (supabaseClient && u.uid) { const dbUser = { username: u.username, kunya: u.kunya, whatsapp: u.whatsapp, avatar: u.avatar, gender: u.gender, role: u.role, password_hash: u.passwordHash }; await supabaseClient.from('users').update(dbUser).eq('uid', u.uid); }
+ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (supabaseClient && ad.id) supabaseClient.from('ads').update({ seller_username: nl, seller_kunya: nk, seller_whatsapp: nw }).eq('id', ad.id).then(); } });
+combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (supabaseClient && c.id) supabaseClient.from('combos').update({ seller_username: nl }).eq('id', c.id).then(); } });
 saveCachedAds();
-if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) {
-currentUser = { ...u };
-saveUserSession(currentUser, true);
+if (currentUser && currentUser.username.toLowerCase() === orig.toLowerCase()) { currentUser = { ...u }; saveUserSession(currentUser, true); }
+closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); showToast(`Данные "${nl}" обновлены!`, 'success');
 }
-closeModal('modal-edit-profile');
-closeModal('modal-profile');
-updateAuthUI();
-showToast(`Данные "${nl}" обновлены!`, 'success');
-}/* ================= ADMIN ================= */
+/* ================= ADMIN ================= */
 function adminPanelBack() { try { if (SYSTEM_CONFIG.adminTab && SYSTEM_CONFIG.adminTab !== 'overview') { switchAdminTab('overview'); return; } } catch (e) { /* ignore */ } closeModal('modal-admin-panel'); }
 function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup', 'finance', 'payments', 'tx'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.borderBottomWidth = t === tab ? '2px' : '0'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
@@ -2408,7 +2889,7 @@ if (sbTheme) sbTheme.innerHTML = document.body.classList.contains('light-mode') 
 const rulesBtn = byId('rules-accept-btn');
 if (rulesBtn) rulesBtn.addEventListener('click', acceptLaunchRules);
 // Firebase & Data Init
-initFirebaseSync();
+initSupabaseSync();
 fetchLiveExchangeRates();
 // Initial Render
 renderCategoryPills();
