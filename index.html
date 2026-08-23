@@ -700,7 +700,7 @@ body { top: 0px !important; }
 </div>
 <footer class="w-full mt-auto pt-4 pb-3 border-t b-ig text-center t2">
 <div class="max-w-[470px] mx-auto flex flex-col items-center justify-center gap-1 text-[11px]">
-<div><span id="ft-dev-label">Разработчик:</span> <span class="font-bold t1">Салим Нашхо</span> • <a href="https://wa.me/447887280238" target="_blank" class="font-semibold inline-flex items-center gap-1" style="color:#10b981"><i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238</a></div>
+<div><span id="ft-dev-label">Разработчик:</span> <a href="https://wa.me/447887280238" target="_blank" class="font-bold t1 hover:underline inline-flex items-center gap-1"><span>Салим Нашхо</span> <i class="fa-brands fa-whatsapp text-xs" style="color:#10b981"></i></a></div>
 <div id="ft-copy-label" class="font-mono text-[10px]">Авито Шам © 2026</div>
 </div>
 </footer>
@@ -873,12 +873,12 @@ const cpyLbl = byId('ft-copy-label');
 if (cpyLbl) cpyLbl.innerText = t('Авито Шам © 2026');
 
 // Динамический автоперевод имени разработчика в футере при переключении языка
-const devName = byId('ft-dev-label')?.nextElementSibling;
-if (devName) {
+const devSpan = byId('ft-dev-label')?.nextElementSibling?.querySelector('span');
+if (devSpan) {
   if (currentLang === 'ar') {
-    translateDynamic('Салим Нашхо', 'ar').then(res => { devName.innerText = res; });
+    translateDynamic('Салим Нашхо', 'ar').then(res => { devSpan.innerText = res; });
   } else {
-    devName.innerText = 'Салим Нашхо';
+    devSpan.innerText = 'Салим Нашхо';
   }
 }
 // Перевод кнопки текущей сортировки
