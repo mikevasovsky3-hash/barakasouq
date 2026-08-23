@@ -2582,7 +2582,66 @@ closeModal('modal-edit-profile'); closeModal('modal-profile'); updateAuthUI(); s
 }
 /* ================= ADMIN ================= */
 function adminPanelBack() { try { if (SYSTEM_CONFIG.adminTab && SYSTEM_CONFIG.adminTab !== 'overview') { switchAdminTab('overview'); return; } } catch (e) { /* ignore */ } closeModal('modal-admin-panel'); }
-function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
+async function seizeFunds(uid) {
+    if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+        showToast('Доступ запрещен', 'error');
+        return;
+    }
+    
+    const targetUser = users.find(u => u.uid === uid);
+    if (!targetUser) {
+        showToast('Пользователь не найден', 'error');
+        return;
+    }
+
+    if (targetUser.uid === currentUser.uid) {
+        showToast('Нельзя взыскать средства у самого себя', 'warning');
+        return;
+    }
+
+    const amountStr = prompt(`Введите сумму взыскания (AC) с баланса @${targetUser.username} в вашу пользу:`, '5');
+    if (!amountStr) return;
+    
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('Некорректная сумма', 'warning');
+        return;
+    }
+
+    const targetBal = Number(targetUser.avitocashBalance || targetUser.avitocash_balance || 0);
+    if (targetBal < amount) {
+        showToast(`У пользователя недостаточно средств (баланс: ${targetBal.toFixed(2)} AC)`, 'warning');
+        return;
+    }
+
+    try {
+        showToast('Выполняется взыскание средств...', 'info');
+
+        // Используем серверную RPC функцию перевода, чтобы деньги ушли к админу
+        const { data: res, error } = await supabaseClient.rpc('transfer_avitocash', {
+            sender_identifier: targetUser.uid,
+            recipient_identifier: currentUser.uid,
+            transfer_amount: amount
+        });
+
+        if (error) throw error;
+        if (!res || !res.success) throw new Error(res?.error || 'Сбой транзакции в базе данных');
+
+        // Обновляем локальные балансы
+        targetUser.avitocashBalance = res.new_sender_balance;
+        targetUser.avitocash_balance = res.new_sender_balance;
+
+        currentUser.avitocashBalance = res.new_recip_balance;
+        currentUser.avitocash_balance = res.new_recip_balance;
+        saveUserSession(currentUser, true);
+
+        renderAdminTabContent();
+        showToast(`Успешно взыскано ${amount.toFixed(2)} AC с баланса @${targetUser.username} в вашу пользу!`, 'success');
+    } catch (err) {
+        console.error('Seize funds error:', err);
+        showToast('Ошибка при взыскании: ' + (err.message || 'Сбой'), 'error');
+    }
+}function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } openModal('modal-admin-panel'); renderAdminTabContent(); }
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup', 'finance', 'payments', 'tx'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.borderBottomWidth = t === tab ? '2px' : '0'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
 function switchAdminAdsSubTab(sub) { adminAdsTab = sub; renderAdminTabContent(); }
 function goToAdminSection(tab, sub = null) { if (sub) adminAdsTab = sub; switchAdminTab(tab); }
@@ -2752,10 +2811,63 @@ ${noShop.length ? `<div class="flex gap-2"><select id="admin-new-shop-user" clas
 <button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold ${isVer ? 'border b-ig' : 'text-white'}" style="${isVer ? 'color:#f59e0b;background:rgba(245,158,11,.12)' : 'background:#10b981'}">${isVer ? 'Отменить верификацию' : '<i class="fa-solid fa-check"></i> Верифицировать'}</button>
 <button onclick="deleteShopWithConfirm('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button>
 </div></div>`; }).join('')}</div></div>`; }
-else if (tab === 'users') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Пользователи (${users.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${users.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
-<div class="flex items-center gap-2.5 min-w-0"><div class="w-8 h-8 rounded-full bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2 text-xs">${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}</div>
-<div class="min-w-0"><div class="font-bold t1 text-xs truncate">${u.kunya || u.username} <span class="text-[10px] t2 font-normal">(@${u.username})</span> ${u.frozen ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style="background:rgba(96,165,250,.15);color:#60a5fa">❄ ЗАМОРОЖЕН</span>' : ''}</div><div class="text-[10px] t2">Роль: <span class="font-bold" style="color:#f59e0b">${u.role}</span> • WA: ${u.whatsapp || '—'}</div></div></div>
-<div class="flex gap-1.5 shrink-0 flex-wrap"><button onclick="openCreateAdModalForUser('${u.username}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)" title="Подать объявление от имени этого пользователя"><i class="fa-solid fa-plus"></i> Объявление</button><button onclick="openEditProfileModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(0,149,246,.12);color:#0095f6;border-color:rgba(0,149,246,.4)">Редакт.</button><button onclick="toggleFreezeUser('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="${u.frozen ? 'background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(96,165,250,.12);color:#60a5fa;border-color:rgba(96,165,250,.4)'}">${u.frozen ? 'Разморозить' : 'Заморозить'}</button><button onclick="seizeFunds('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)">Взыскать</button><button onclick="archiveUserWithConfirm('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(147,51,234,.12);color:#a855f7;border-color:rgba(147,51,234,.4)">Архив</button></div></div>`).join('')}</div></div>`; }
+else if (tab === 'users') { 
+    c.innerHTML = `
+    <div class="space-y-3">
+        <h4 class="font-bold t1 text-xs">Пользователи (${users.length})</h4>
+        <div class="space-y-2 max-h-none overflow-y-auto pr-1">
+            ${users.map(u => {
+                const bal = Number(u.avitocashBalance ?? u.avitocash_balance ?? 0);
+                return `
+                <div class="ig-card p-3 rounded-xl flex flex-col gap-2.5">
+                    <!-- Первая строка: Аватар, Имя, Логин, Баланс и Статус -->
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-9 h-9 rounded-full bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2 text-xs">
+                                ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold t1 text-xs truncate flex items-center gap-1.5 flex-wrap">
+                                    <span>${u.kunya || u.username}</span> 
+                                    <span class="t2 font-normal">(@${u.username})</span> 
+                                    ${u.frozen ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400">❄ ЗАМОРОЖЕН</span>' : ''}
+                                </div>
+                                <div class="text-[10px] t2 flex items-center gap-2">
+                                    <span>Роль: <b style="color:#f59e0b">${u.role}</b></span>
+                                    <span>• WA: ${u.whatsapp || '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Баланс аккаунта -->
+                        <div class="text-right shrink-0 bg-field px-2.5 py-1 rounded-lg border b-ig">
+                            <div class="text-[9px] t2 uppercase">Баланс</div>
+                            <div class="text-xs font-extrabold" style="color:#f59e0b">${bal.toFixed(2)} AC</div>
+                        </div>
+                    </div>
+
+                    <!-- Вторая строка: Компактные иконки-кнопки действий -->
+                    <div class="flex items-center gap-1.5 pt-2 border-t b-ig justify-end flex-wrap">
+                        <button onclick="openCreateAdModalForUser('${u.username}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)" title="Подать объявление от имени пользователя">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button onclick="openEditProfileModal('${u.username}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(0,149,246,.1);color:#0095f6;border-color:rgba(0,149,246,.3)" title="Редактировать анкету">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="toggleFreezeUser('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="${u.frozen ? 'background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)' : 'background:rgba(96,165,250,.1);color:#60a5fa;border-color:rgba(96,165,250,.3)'}" title="${u.frozen ? 'Разморозить' : 'Заморозить'}">
+                            <i class="fa-solid ${u.frozen ? 'fa-lock-open' : 'fa-lock'}"></i>
+                        </button>
+                        <button onclick="seizeFunds('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3)" title="Взыскать средства в свою пользу">
+                            <i class="fa-solid fa-coins"></i>
+                        </button>
+                        <button onclick="archiveUserWithConfirm('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(147,51,234,.1);color:#a855f7;border-color:rgba(147,51,234,.3)" title="Перенести в архив">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+}
 else if (tab === 'ads') { const activeList = ads.filter(a => a.status === 'ACTIVE'); const archivedList = ads.filter(a => a.status !== 'ACTIVE'); const list = adminAdsTab === 'active' ? activeList : archivedList; c.innerHTML = `<div class="space-y-3">
 <div class="flex gap-2"><button onclick="switchAdminAdsSubTab('active')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'active' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'active' ? 'background:#0095f6;border-color:#0095f6' : ''}">Активные (${activeList.length})</button><button onclick="switchAdminAdsSubTab('archived')" class="px-3 py-1 rounded-lg font-bold text-xs border ${adminAdsTab === 'archived' ? 'text-white' : 'b-ig t2'}" style="${adminAdsTab === 'archived' ? 'background:#9333ea;border-color:#9333ea' : ''}">Архив / Продано / Передумал (${archivedList.length})</button></div>
 <div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Список пуст</div>' : list.map(a => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2">
