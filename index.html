@@ -738,6 +738,10 @@ let BACKUPS_META = {};
 let AVITOCASH_PRICES = { adPrice: 1, shopSubscription: 5, editPrice: 0, freeAdsCount: 0 };
 let AVITOCASH_RATE = 1;
 let TOPUP_REQUESTS = {};
+try {
+  const savedReqs = localStorage.getItem('bs_topup_requests');
+  if (savedReqs) TOPUP_REQUESTS = JSON.parse(savedReqs);
+} catch(e) {}
 let GIFT_CODES = {};
 let TRANSACTIONS = {};
 const MARQUEE_STORAGE_KEY = 'bs_marquee_text';
@@ -1898,7 +1902,11 @@ ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="bo
 ${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs truncate">${x.title}</div><div class="text-[10px] t2">${x.items.length} товаров • Цена акции: <b style="color:#f97316">$${Number(x.price).toFixed(2)}</b></div></div><div class="flex gap-1.5 shrink-0"><button onclick="openComboBuilder(null,'${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteComboWithConfirm('${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
 </div>` : ''}
 <div class="grid grid-cols-2 gap-3">
-<div class="bg-field p-3 rounded-2xl border b-ig"><div class="text-[10px] t2">Товаров в магазине:</div><div class="text-lg font-extrabold" style="color:#f59e0b">${shopAds.length} шт.</div></div>
+<div class="bg-field p-3 rounded-2xl border b-ig">
+  <div class="text-[10px] t2">${t('Товаров в магазине / Лимит:')}</div>
+  <div class="text-lg font-extrabold" style="color:#f59e0b">${shopAds.length} / ${shop.maxAds || 50} ${t('шт.')}</div>
+  <div class="text-[9px] t2 mt-0.5">${t('Тариф:')} ${shop.subscriptionPrice || 5} AC/мес</div>
+</div>
 <div class="bg-field p-3 rounded-2xl border b-ig"><div class="text-[10px] t2">WhatsApp:</div><div class="text-xs font-extrabold" style="color:#10b981">${shop.whatsapp}</div></div>
 </div>
 <div class="p-4 rounded-2xl bg-field border b-ig space-y-3">
@@ -2638,6 +2646,23 @@ function createTopupRequest() {
     return;
   }
   const code = _0xSCCode();
+  const requestId = 'REQ-' + Date.now();
+  
+  const reqData = {
+    id: requestId,
+    code: code,
+    amount: amount,
+    uid: currentUser.uid || '',
+    username: currentUser.username,
+    status: 'pending',
+    timestamp: Date.now()
+  };
+
+  TOPUP_REQUESTS[requestId] = reqData;
+  try {
+    localStorage.setItem('bs_topup_requests', JSON.stringify(TOPUP_REQUESTS));
+  } catch(e) {}
+
   byId('topup-code').innerText = code;
   byId('topup-result').classList.remove('hidden');
   byId('topup-qr').innerHTML = '';
@@ -2809,15 +2834,136 @@ function saveShamCashSettings() {
 }
 
 async function verifyPayment(requestId, approve) {
-  if (!_0xSCAdmin()) { showToast('Только Главный Администратор может начислять баланс', 'error'); return; }
-  showToast(approve ? 'Платеж подтвержден' : 'Заявка отклонена', 'info');
+  if (!_0xSCAdmin()) { 
+    showToast('Только Главный Администратор может начислять баланс', 'error'); 
+    return; 
+  }
+  
+  const req = TOPUP_REQUESTS[requestId];
+  if (!req) {
+    showToast('Заявка не найдена', 'error');
+    return;
+  }
+
+  if (approve) {
+    const targetUser = users.find(u => (u.uid && u.uid === req.uid) || (u.username && u.username.toLowerCase() === req.username.toLowerCase()));
+    if (!targetUser) {
+      showToast('Пользователь заявки не найден', 'error');
+      return;
+    }
+
+    const addedAmount = Number(req.amount || 0);
+    const newBal = Math.round(((Number(targetUser.avitocashBalance || targetUser.avitocash_balance || 0)) + addedAmount) * 100) / 100;
+    
+    targetUser.avitocashBalance = newBal;
+    targetUser.avitocash_balance = newBal;
+
+    if (!targetUser.receipts) targetUser.receipts = {};
+    const txId = 'TX-' + Date.now();
+    const receiptItem = {
+      id: txId,
+      type: 'topup',
+      amount: addedAmount,
+      senderUsername: 'AvitoSham (Admin)',
+      recipientUsername: targetUser.username,
+      recipientUid: targetUser.uid || '',
+      note: `Пополнение AvitoCash (код ${req.code})`,
+      timestamp: Date.now()
+    };
+    targetUser.receipts[txId] = receiptItem;
+    TRANSACTIONS[txId] = receiptItem;
+
+    if (supabaseClient) {
+      if (targetUser.uid) {
+        await supabaseClient.from('users').update({ avitocash_balance: newBal, receipts: targetUser.receipts }).eq('uid', targetUser.uid);
+      } else {
+        await supabaseClient.from('users').update({ avitocash_balance: newBal, receipts: targetUser.receipts }).eq('username', targetUser.username);
+      }
+    }
+
+    if (currentUser && ((currentUser.uid && currentUser.uid === targetUser.uid) || currentUser.username === targetUser.username)) {
+      currentUser.avitocashBalance = newBal;
+      currentUser.avitocash_balance = newBal;
+      currentUser.receipts = targetUser.receipts;
+      saveUserSession(currentUser, true);
+    }
+
+    req.status = 'approved';
+    showToast(`Платеж подтвержден! Начислено +${addedAmount.toFixed(2)} AC пользователю @${targetUser.username}`, 'success');
+  } else {
+    req.status = 'rejected';
+    showToast('Заявка отклонена', 'info');
+  }
+
+  try {
+    localStorage.setItem('bs_topup_requests', JSON.stringify(TOPUP_REQUESTS));
+  } catch(e) {}
+
+  renderAdminTabContent();
 }
+function getShopTier(adsCount) {
+  const tierUnits = Math.max(1, Math.ceil((adsCount || 1) / 50));
+  return {
+    maxAds: tierUnits * 50,
+    price: tierUnits * 5
+  };
+}
+
 const _0xLegacyCreateAd = handleCreateAdSubmit;
-handleCreateAdSubmit = async function(e) { e.preventDefault(); const uid = currentUser?.uid; const createdCount = ads.filter(a => a.sellerUsername && currentUser?.username && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()).length; const freeLimit = Math.max(0, Math.floor(Number(AVITOCASH_PRICES.freeAdsCount || 0))); const charge = createdCount >= freeLimit ? AVITOCASH_PRICES.adPrice : 0; if (!uid || !(await _0xSCCharge(uid, charge, 'Подача объявления'))) return; _0xLegacyCreateAd(e); };
+handleCreateAdSubmit = async function(e) { 
+  e.preventDefault(); 
+  const uid = currentUser?.uid; 
+  if (!uid) { openAuthModal(); return; }
+
+  const myAdsCount = ads.filter(a => a.sellerUsername && currentUser?.username && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase() && a.status === 'ACTIVE').length;
+
+  // Если у пользователя активен магазин:
+  if (currentUser.shop) {
+    const shopMaxAds = currentUser.shop.maxAds || 50;
+    if (myAdsCount >= shopMaxAds) {
+      const nextTier = getShopTier(myAdsCount + 1);
+      const upgradeCost = nextTier.price - (currentUser.shop.subscriptionPrice || 5);
+      showConfirmModal(
+        t('Лимит объявлений магазина исчерпан'),
+        `${t('У вас размещено')} ${myAdsCount}/${shopMaxAds} ${t('объявлений')}. ${t('Для расширения до')} ${nextTier.maxAds} ${t('объявлений необходимо повысить тариф магазина на')} ${upgradeCost} AC. ${t('Повысить тариф?')}`,
+        async () => {
+          if (await _0xSCCharge(uid, upgradeCost, t('Расширение тарифа магазина'))) {
+            currentUser.shop.maxAds = nextTier.maxAds;
+            currentUser.shop.subscriptionPrice = nextTier.price;
+            if (supabaseClient) {
+              await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', uid);
+            }
+            saveUserSession(currentUser, true);
+            showToast(`${t('Тариф магазина увеличен до')} ${nextTier.maxAds} ${t('объявлений!')}`, 'success');
+            _0xLegacyCreateAd(e);
+          }
+        }
+      );
+      return;
+    }
+    // Внутри лимита магазина публикация бесплатна
+    _0xLegacyCreateAd(e);
+    return;
+  }
+
+  // Для обычных пользователей без магазина
+  const freeLimit = Math.max(0, Math.floor(Number(AVITOCASH_PRICES.freeAdsCount || 0))); 
+  const charge = myAdsCount >= freeLimit ? AVITOCASH_PRICES.adPrice : 0; 
+  if (!(await _0xSCCharge(uid, charge, t('Подача объявления')))) return; 
+  _0xLegacyCreateAd(e); 
+};
 const _0xLegacyEditAd = handleEditAdSubmit;
 handleEditAdSubmit = async function(e) { e.preventDefault(); const uid = currentUser?.uid; if (!uid || !(await _0xSCCharge(uid, AVITOCASH_PRICES.editPrice, 'Редактирование объявления'))) return; _0xLegacyEditAd(e); };
 const _0xLegacyCreateShop = handleCreateShopSubmit;
-handleCreateShopSubmit = async function(e) { e.preventDefault(); const isNewShop = !shopEditTargetUid && !currentUser?.shop; if (isNewShop && !(await _0xSCCharge(currentUser?.uid, AVITOCASH_PRICES.shopSubscription, 'Открытие магазина'))) return; _0xLegacyCreateShop(e); };
+handleCreateShopSubmit = async function(e) { 
+  e.preventDefault(); 
+  const isNewShop = !shopEditTargetUid && !currentUser?.shop; 
+  if (isNewShop) {
+    const initialTier = getShopTier(50); // 50 объявлений = 5 AC
+    if (!(await _0xSCCharge(currentUser?.uid, initialTier.price, `${t('Открытие магазина')} (до ${initialTier.maxAds} объявл.)`))) return; 
+  }
+  _0xLegacyCreateShop(e); 
+};
 /* ================= PROFILE ================= */
 function openProfileModal() {  
     if (!currentUser) return;  
