@@ -1574,29 +1574,31 @@ async function handleCreateShopSubmit(e) {
   renderAds();
   renderCategoryPills();
   showToast(`Магазин "${name}" сохранен и отправлен на проверку!`, 'success');
-}async function adminVerifyShop(userUid, status) {
+}
+async function adminVerifyShop(userUid, status) {
   if (!currentUser) return;
   const u = users.find(x => x.uid === userUid);
   if (!u || !u.shop) return;
+
+  u.verifiedShop = Boolean(status);
+  u.shop.isVerified = Boolean(status);
+
   if (supabaseClient) {
-    const { data: res, error } = await supabaseClient.rpc('admin_manage_user', {
-      p_caller_id: currentUser.uid || currentUser.username,
-      p_target_uid: u.uid,
-      p_verified_shop: status
-    });
-    if (error || !res || !res.success) {
-      showToast(res?.error || 'Ошибка изменения статуса', 'error');
-      return;
-    }
+    supabaseClient
+      .from('users')
+      .update({
+        verified_shop: u.verifiedShop,
+        shop: u.shop
+      })
+      .eq('uid', userUid)
+      .then();
   }
-  u.verifiedShop = status;
-  u.shop.isVerified = status;
+
   renderAdminTabContent();
   renderCategoryPills();
   renderAds();
-  showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success');
+  showToast('Статус магазина "' + (u.shop.name || '') + '" обновлен!', 'success');
 }
-
 async function toggleFreezeUser(uid) {
   if (!currentUser) return;
   const u = users.find(x => x.uid === uid);
