@@ -375,7 +375,7 @@ body { top: 0px !important; }
 </select>
 </div>
 <div id="women-only-container" class="hidden items-center justify-between p-3 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
-<div><div class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div><div class="text-[10px] t2">Объявление будет видно исключительно женщинам</div></div>
+<div><div id="ad-women-label" class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div><div id="ad-women-sublabel" class="text-[10px] t2">Объявление будет видно исключительно женщинам</div></div>
 <input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
 </div>
 <div id="ad-onbehalf-container" class="hidden">
@@ -388,16 +388,16 @@ body { top: 0px !important; }
 </div>
 <input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
 <div>
-<label class="block text-xs t2 mb-1">Местоположение на карте * <span class="t2">(кликните на карту)</span></label>
+<label class="block text-xs t2 mb-1"><span id="ad-map-label">Местоположение на карте *</span> <span id="ad-map-hint" class="t2">(кликните на карту)</span></label>
 <div id="create-map" class="h-36 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
 <input type="hidden" id="ad-lat" value="33.5138"><input type="hidden" id="ad-lng" value="36.2765">
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
-<div><div class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div><div class="text-[10px] t2">Безвозмездно нуждающимся</div></div>
+<div><div id="ad-free-label" class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div><div id="ad-free-sublabel" class="text-[10px] t2">Безвозмездно нуждающимся</div></div>
 <input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#10b981">
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
-<div><div class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div><div class="text-[10px] t2">Покупатели смогут предложить свою цену</div></div>
+<div><div id="ad-neg-label" class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div><div id="ad-neg-sublabel" class="text-[10px] t2">Покупатели смогут предложить свою цену</div></div>
 <input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#3b82f6">
 </div>
 <div id="price-container" class="grid grid-cols-2 gap-3">
@@ -406,14 +406,20 @@ body { top: 0px !important; }
 </div>
 <div>
 <div class="flex items-center justify-between mb-1">
-<label class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
+<label id="ad-photos-label" class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
 <span id="create-photo-count-badge" class="text-[11px] font-mono font-bold t2">0 / 6</span>
 </div>
-<input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
+<label for="ad-image-file" class="w-full py-2.5 px-4 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold t1">
+<i class="fa-solid fa-camera text-[#0095f6] text-sm"></i>
+<span id="ad-upload-btn-text">Выбрать фотографии</span>
+</label>
+<input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" style="display:none !important">
 <div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
 <textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
-<button type="submit" class="ig-btn w-full py-3 text-sm">Опубликовать объявление</button>
+<div class="sticky bottom-0 bg-card pt-2 pb-1">
+<button type="submit" id="create-ad-submit-btn" class="ig-btn w-full py-3 text-sm font-bold shadow-lg">Опубликовать объявление</button>
+</div>
 </form>
 </div>
 </div>
@@ -458,14 +464,20 @@ body { top: 0px !important; }
 </div>
 <div>
 <div class="flex items-center justify-between mb-1">
-<label class="text-xs font-bold t1">Фотографии (до 6 шт.) *</label>
-<span id="edit-photo-count-badge" class="text-[11px] font-mono font-bold t2">0 / 6</span>
+<label id="ad-photos-label" class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
+<span id="create-photo-count-badge" class="text-[11px] font-mono font-bold t2">0 / 6</span>
 </div>
-<input type="file" id="edit-ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d97706] file:text-white cursor-pointer">
-<div id="edit-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
+<label for="ad-image-file" class="w-full py-2.5 px-4 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold t1">
+<i class="fa-solid fa-camera text-blue-500"></i>
+<span id="ad-upload-btn-text">Выбрать фотографии</span>
+</label>
+<input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" class="hidden">
+<div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
 <textarea id="edit-ad-desc" required rows="3" placeholder="Описание и изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
-<button type="submit" class="w-full py-3 rounded-lg text-white text-sm font-semibold" style="background:#d97706">Сохранить изменения</button>
+<div class="sticky bottom-0 bg-card pt-2 pb-1">
+<button type="submit" id="edit-ad-submit-btn" class="w-full py-3 rounded-lg text-white text-sm font-bold shadow-lg" style="background:#d97706">Сохранить изменения</button>
+</div>
 </form>
 </div>
 </div>
@@ -934,7 +946,7 @@ return;
 }
 e.target.value = '';
 }
-function renderPhotoThumbnailsGrid(mode = 'create') { const isC = mode === 'create'; const arr = isC ? pendingCreateImages : pendingEditImages; const g = byId(isC ? 'create-thumbnails-grid' : 'edit-thumbnails-grid'); const b = byId(isC ? 'create-photo-count-badge' : 'edit-photo-count-badge'); if (b) b.innerText = `${arr.length} / 6`; if (!g) return; g.innerHTML = arr.map((d, i) => `<div class="relative h-14 rounded-lg overflow-hidden border b-ig"><img src="${d}" class="w-full h-full object-cover"><button type="button" onclick="removePendingPhoto('${mode}',${i})" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px]" style="background:#ed4956"><i class="fa-solid fa-xmark"></i></button>${i === 0 ? '<span class="absolute bottom-0 inset-x-0 text-[7px] font-bold text-center py-0.5" style="background:rgba(245,158,11,.85);color:#000">ГЛАВНАЯ</span>' : ''}</div>`).join(''); }
+function renderPhotoThumbnailsGrid(mode = 'create') { const isC = mode === 'create'; const arr = isC ? pendingCreateImages : pendingEditImages; const g = byId(isC ? 'create-thumbnails-grid' : 'edit-thumbnails-grid'); const b = byId(isC ? 'create-photo-count-badge' : 'edit-photo-count-badge'); if (b) b.innerText = `${arr.length} / 6`; if (!g) return; g.innerHTML = arr.map((d, i) => `<div class="relative h-14 rounded-lg overflow-hidden border b-ig"><img src="${d}" class="w-full h-full object-cover"><button type="button" onclick="removePendingPhoto('${mode}',${i})" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px]" style="background:#ed4956"><i class="fa-solid fa-xmark"></i></button>${i === 0 ? `<span class="absolute bottom-0 inset-x-0 text-[7px] font-bold text-center py-0.5" style="background:rgba(245,158,11,.85);color:#000">${t('ГЛАВНАЯ')}</span>` : ''}</div>`).join(''); }
 function removePendingPhoto(mode, index) { (mode === 'create' ? pendingCreateImages : pendingEditImages).splice(index, 1); renderPhotoThumbnailsGrid(mode); }
 async function processShopLogoUpload(e) { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 300); byId('shop-logo-data').value = d; byId('shop-logo-preview-img').src = d; byId('shop-logo-preview-box').classList.remove('hidden'); } catch (err) {} }
 /* ================= SUPPORT QR ================= */
@@ -1213,9 +1225,11 @@ if (rSel) {
   });
 }
 
+const upTxt = byId('ad-upload-btn-text');
+if (upTxt) upTxt.innerText = t('Выбрать фотографии');
 openModal('modal-create-ad'); setTimeout(initCreateMap, 200); document.querySelectorAll('.draft-field').forEach(el => { el.addEventListener('input', saveDraft); el.addEventListener('change', saveDraft); }); }
 function openCreateAdModalForUser(username) { onBehalfPreset = username; openCreateAdModal(); }
-function initCreateMap() { const el = byId('create-map'); if (!el || typeof L === 'undefined') return; if (!createMap) { createMap = L.map('create-map').setView([33.5138, 36.2765], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); createMarker = L.marker([33.5138, 36.2765], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else createMap.invalidateSize(); }
+function initCreateMap() { const el = byId('create-map'); if (!el || typeof L === 'undefined') return; if (!createMap) { createMap = L.map('create-map').setView([33.5138, 36.2765], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); createMarker = L.marker([33.5138, 36.2765], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else { createMap.invalidateSize(); } }
 function handleRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('ad-lat').value = c[0]; byId('ad-lng').value = c[1]; if (createMap && createMarker) { createMap.setView(c, 12); createMarker.setLatLng(c); } }
 function toggleFreePriceField(isFree) { const p = byId('ad-price'), c = byId('price-container'); if (isFree) { if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } if (c) c.style.opacity = '.4'; } else { if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } if (c) c.style.opacity = '1'; } }
 function toggleNegotiableField(isNeg) { const p = byId('ad-price'); if (!p) return; if (isNeg) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } }
@@ -3967,22 +3981,32 @@ const DICTIONARY = {
   'Войти': 'دخول',
   'Зарегистрироваться': 'إنشاء الحساب',
   
-  // Создание объявления
+// Создание объявления
   'Подача нового объявления': 'نشر إعلان جديد',
   'Заголовок объявления *': 'عنوان الإعلان *',
   'Категория *': 'القسم *',
   'Регион *': 'المحافظة *',
+  'Только для женщин 🌸': 'للنساء فقط 🌸',
+  'Объявление будет видно исключительно женщинам': 'سيكون الإعلان مرئياً للنساء فقط',
   'Город / Населенный пункт *': 'المدينة أو البلدة *',
-  'Местоположение на карте * (кликните на карту)': 'الموقع على الخريطة * (اضغط لتحديد النقطة)',
+  'Местоположение на карте *': 'الموقع على الخريطة *',
+  '(кликните на карту)': '(اضغط على الخريطة لتحديد المكان)',
   'Отдать даром (Бесплатно) 🎁': 'لوجه الله (مجاناً) 🎁',
   'Безвозмездно нуждающимся': 'بدون مقابل للمحتاجين',
   'Цена договорная 🤝': 'السعر قابل للتفاوض 🤝',
   'Покупатели смогут предложить свою цену': 'يمكن للمشترين اقتراح سعرهم',
   'Цена *': 'السعر *',
   'Фотографии товара (до 6 шт.) *': 'صور المنتج (حتى 6 صور) *',
+  'Выбрать фотографии': 'اختيار الصور وتحديد الملفات',
+  'Ваше местоположение': 'موقعك المحدد',
+  'Выбрать фотографии': 'اختيار الصور',
+  'Загрузить фото': 'رفع الصور',
   'Описание и возможные изъяны *': 'الوصف والعيوب بكل أمانة *',
   'Опубликовать объявление': 'نشر الإعلان الآن',
-
+  'Сохранить изменения': 'حفظ التعديلات',
+  'Редактирование объявления': 'تعديل الإعلان',
+  'ГЛАВНАЯ': 'الرئيسية',
+  
   // Категории и сортировка
   'Новые': 'الأحدث',
   'Дешевые': 'الأرخص',
@@ -4177,20 +4201,53 @@ function translateStaticUI(lang) {
   const supCopy = byId('support-modal-copybtn')?.querySelector('span');
   if (supCopy) supCopy.innerText = lang === 'ar' ? DICTIONARY['Скопировать ID'] : 'Скопировать ID';
 
-  // Модальное окно создания объявления
+// Модальное окно создания объявления
   const createTitle = document.querySelector('#modal-create-ad h3');
-  if (createTitle) createTitle.innerText = lang === 'ar' ? DICTIONARY['Подача нового объявления'] : 'Подача нового объявления';
+  if (createTitle) createTitle.innerText = t('Подача нового объявления');
   const adTitleInp = byId('ad-title');
-  if (adTitleInp) adTitleInp.placeholder = lang === 'ar' ? DICTIONARY['Заголовок объявления *'] : 'Заголовок объявления *';
+  if (adTitleInp) adTitleInp.placeholder = t('Заголовок объявления *');
   const adCityInp = byId('ad-city');
-  if (adCityInp) adCityInp.placeholder = lang === 'ar' ? DICTIONARY['Город / Населенный пункт *'] : 'Город / Населенный пункт *';
+  if (adCityInp) adCityInp.placeholder = t('Город / Населенный пункт *');
   const adPriceInp = byId('ad-price');
-  if (adPriceInp) adPriceInp.placeholder = lang === 'ar' ? DICTIONARY['Цена *'] : 'Цена *';
+  if (adPriceInp) adPriceInp.placeholder = t('Цена *');
   const adDescInp = byId('ad-desc');
-  if (adDescInp) adDescInp.placeholder = lang === 'ar' ? DICTIONARY['Описание и возможные изъяны *'] : 'Описание и возможные изъяны *';
-  const createSubBtn = document.querySelector('#modal-create-ad button[type="submit"]');
-  if (createSubBtn) createSubBtn.innerText = lang === 'ar' ? DICTIONARY['Опубликовать объявление'] : 'Опубликовать объявление';
+  if (adDescInp) adDescInp.placeholder = t('Описание и возможные изъяны *');
+const createSubBtn = byId('create-ad-submit-btn') || document.querySelector('#modal-create-ad button[type="submit"]');
+  if (createSubBtn) createSubBtn.innerText = t('Опубликовать объявление');
 
+  const editSubBtn = byId('edit-ad-submit-btn') || document.querySelector('#modal-edit-ad button[type="submit"]');
+  if (editSubBtn) editSubBtn.innerText = t('Сохранить изменения');
+  const wLbl = byId('ad-women-label'); if (wLbl) wLbl.innerText = t('Только для женщин 🌸');
+  const wSub = byId('ad-women-sublabel'); if (wSub) wSub.innerText = t('Объявление будет видно исключительно женщинам');
+  const mapLbl = byId('ad-map-label'); if (mapLbl) mapLbl.innerText = t('Местоположение на карте *');
+  const mapHnt = byId('ad-map-hint'); if (mapHnt) mapHnt.innerText = t('(кликните на карту)');
+  const freeLbl = byId('ad-free-label'); if (freeLbl) freeLbl.innerText = t('Отдать даром (Бесплатно) 🎁');
+  const freeSub = byId('ad-free-sublabel'); if (freeSub) freeSub.innerText = t('Безвозмездно нуждающимся');
+  const negLbl = byId('ad-neg-label'); if (negLbl) negLbl.innerText = t('Цена договорная 🤝');
+  const negSub = byId('ad-neg-sublabel'); if (negSub) negSub.innerText = t('Покупатели смогут предложить свою цену');
+  const phLbl = byId('ad-photos-label'); if (phLbl) phLbl.innerText = t('Фотографии товара (до 6 шт.) *');
+  const upTxt = byId('ad-upload-btn-text'); if (upTxt) upTxt.innerText = t('Выбрать фотографии');
+
+  // Селектор категорий внутри окна создания
+  const adCatSel = byId('ad-category');
+  if (adCatSel) {
+    fillCategorySelect(adCatSel, adCatSel.value);
+  }
+
+  // Селектор регионов внутри окна создания
+  const adRegSel = byId('ad-region');
+  if (adRegSel) {
+    Array.from(adRegSel.options).forEach(opt => {
+      if (opt.value) {
+        const rawReg = REGION_NAMES[opt.value] || opt.value;
+        opt.text = lang === 'ar' ? (DICTIONARY[rawReg] || rawReg) : rawReg;
+      } else {
+        opt.text = t('Регион *');
+      }
+    });
+  }
+
+  renderPhotoThumbnailsGrid('create');
   // Футер
   const devLbl = byId('ft-dev-label');
   if (devLbl) devLbl.innerText = lang === 'ar' ? DICTIONARY['Разработчик:'] : 'Разработчик:';
