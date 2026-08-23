@@ -2796,21 +2796,57 @@ if (tab === 'overview') { const shopsCount = users.filter(u => u.shop).length; c
 <div class="text-[10px] uppercase font-bold tracking-wide t2">Транзакции</div>
 </button>
 </div>`; }
-else if (tab === 'shops') { const shopsList = users.filter(u => u.shop); const noShop = users.filter(u => !u.shop); c.innerHTML = `<div class="space-y-3">
-<h4 class="font-bold t1 text-xs">Управление и Верификация Магазинов (${shopsList.length})</h4>
-<div class="p-3 rounded-xl border space-y-2" style="border-color:rgba(0,149,246,.3);background:rgba(0,149,246,.06)">
-<div class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-user-plus" style="color:#0095f6"></i> Зарегистрировать магазин для пользователя:</div>
-${noShop.length ? `<div class="flex gap-2"><select id="admin-new-shop-user" class="ig-input flex-1 px-3 py-2 text-xs">${noShop.map(u => `<option value="${u.uid}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join('')}</select><button onclick="adminCreateShopForUser()" class="ig-btn px-3 py-2 text-xs shrink-0">+ Создать</button></div>` : '<div class="text-[11px] t2">Все пользователи уже имеют магазины.</div>'}
-</div>
-<div class="space-y-2 max-h-none overflow-y-auto pr-1">${shopsList.length === 0 ? '<div class="text-center py-8 t2">Магазинов пока нет</div>' : shopsList.map(u => { const s = u.shop; const isVer = u.verifiedShop || s.isVerified; const uCombos = combos.filter(x => x.shopUid === u.uid).length; return `<div class="ig-card p-3 rounded-xl flex flex-col gap-2">
-<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">${s.logo ? `<img src="${s.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store"></i>'}</div>
-<div class="flex-1 min-w-0"><div class="font-bold t1 text-xs flex items-center gap-1.5 flex-wrap"><span>${s.name}</span><span class="px-2 py-0.5 rounded-full text-[9px] border" style="${isVer ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}">${isVer ? 'Подтвержден' : 'На проверке'}</span>${uCombos > 0 ? `<span class="px-2 py-0.5 rounded-full text-[9px] border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.4)"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</div><div class="text-[10px] t2 truncate">Владелец: @${u.username} • ${REGION_NAMES[s.region] || s.region} • ${s.whatsapp}</div></div></div>
-<div class="flex items-center gap-1.5 flex-wrap">
-<button onclick="openCreateShopModal('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(0,149,246,.12);color:#0095f6;border-color:rgba(0,149,246,.4)"><i class="fa-solid fa-pen-to-square"></i> Редактировать магазин</button>
-<button onclick="openComboBuilder('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.4)"><i class="fa-solid fa-fire"></i> Акции</button>
-<button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold ${isVer ? 'border b-ig' : 'text-white'}" style="${isVer ? 'color:#f59e0b;background:rgba(245,158,11,.12)' : 'background:#10b981'}">${isVer ? 'Отменить верификацию' : '<i class="fa-solid fa-check"></i> Верифицировать'}</button>
-<button onclick="deleteShopWithConfirm('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button>
-</div></div>`; }).join('')}</div></div>`; }
+else if (tab === 'shops') { 
+    const shopsList = users.filter(u => u.shop); 
+    const noShop = users.filter(u => !u.shop); 
+    c.innerHTML = `
+    <div class="space-y-3">
+        <h4 class="font-bold t1 text-xs">Магазины (${shopsList.length})</h4>
+        <div class="p-3 rounded-xl border space-y-2 bg-field b-ig">
+            <div class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-store" style="color:#0095f6"></i> Создать магазин для пользователя:</div>
+            ${noShop.length ? `<div class="flex gap-2"><select id="admin-new-shop-user" class="ig-input flex-1 px-3 py-2 text-xs">${noShop.map(u => `<option value="${u.uid}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join('')}</select><button onclick="adminCreateShopForUser()" class="ig-btn px-3 py-2 text-xs shrink-0">Создать</button></div>` : '<div class="text-[11px] t2">Все пользователи уже имеют магазины.</div>'}
+        </div>
+        <div class="space-y-2 max-h-none overflow-y-auto pr-1">
+            ${shopsList.length === 0 ? '<div class="text-center py-8 t2">Магазинов пока нет</div>' : shopsList.map(u => { 
+                const s = u.shop; 
+                const isVer = u.verifiedShop || s.isVerified; 
+                const uCombos = combos.filter(x => x.shopUid === u.uid).length; 
+                return `
+                <div class="ig-card p-3 rounded-xl flex flex-col gap-2.5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">
+                            ${s.logo ? `<img src="${s.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store"></i>'}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold t1 text-xs truncate flex items-center gap-1.5 flex-wrap">
+                                <span>${s.name}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] border" style="${isVer ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}">
+                                    ${isVer ? 'Подтвержден' : 'На проверке'}
+                                </span>
+                                ${uCombos > 0 ? `<span class="px-2 py-0.5 rounded-full text-[9px] border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.4)"><i class="fa-solid fa-fire"></i> ${uCombos}</span>` : ''}
+                            </div>
+                            <div class="text-[10px] t2 truncate">@${u.username} • ${REGION_NAMES[s.region] || s.region} • ${s.whatsapp || '—'}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 pt-2 border-t b-ig justify-end flex-wrap">
+                        <button onclick="openCreateShopModal('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(0,149,246,.1);color:#0095f6;border-color:rgba(0,149,246,.3)" title="Редактировать магазин">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="openComboBuilder('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(249,115,22,.1);color:#f97316;border-color:rgba(249,115,22,.3)" title="Акции магазина">
+                            <i class="fa-solid fa-fire"></i>
+                        </button>
+                        <button onclick="adminVerifyShop('${u.uid}', ${!isVer})" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="${isVer ? 'background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3)' : 'background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)'}" title="${isVer ? 'Отменить верификацию' : 'Верифицировать'}">
+                            <i class="fa-solid ${isVer ? 'fa-ban' : 'fa-check'}"></i>
+                        </button>
+                        <button onclick="deleteShopWithConfirm('${u.uid}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(237,73,86,.1);color:#ed4956;border-color:rgba(237,73,86,.3)" title="Удалить магазин">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`; 
+            }).join('')}
+        </div>
+    </div>`; 
+}
 else if (tab === 'users') { 
     c.innerHTML = `
     <div class="space-y-3">
@@ -2949,24 +2985,36 @@ else if (tab === 'ads') {
         </div>
     </div>`; 
 }else if (tab === 'tx') { const list = collectAllTransactions(); c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Журнал транзакций и чеков (${list.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${list.length === 0 ? '<div class="text-center py-8 t2">Транзакций пока нет</div>' : list.map(t => `<div class="ig-card p-3 rounded-xl space-y-1"><div class="flex items-center justify-between gap-2 flex-wrap"><span class="font-bold t1 text-xs">${txTypeLabel(t, null)} • <span style="color:#f59e0b">${Number(t.amount || 0).toFixed(2)} AC</span></span><span class="text-[10px] t2">${new Date(t.timestamp || Date.now()).toLocaleString()}</span></div><div class="text-[11px] t2">@${t.senderUsername || '—'} → @${t.recipientUsername || '—'}</div>${t.adTitle ? `<div class="text-[11px] t1 truncate">Объявление: ${t.adTitle} (${t.adId || ''})</div>` : ''}${t.note ? `<div class="text-[11px] t2 truncate">${t.note}</div>` : ''}<div class="text-[9px] t2 font-mono">Чек ${t.id}</div></div>`).join('')}</div></div>`; }
-else if (tab === 'reports') { const sortedReports = [...reports].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); c.innerHTML = `<div class="space-y-3">
-<h4 class="font-bold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-flag text-red-500"></i> Жалобы пользователей (${sortedReports.length})</h4>
-<div class="space-y-2 max-h-none overflow-y-auto pr-1">
-${sortedReports.length === 0 ? '<div class="text-center py-8 t2">Жалоб пока нет</div>' : sortedReports.map(r => { const ad = ads.find(a => a.id === r.adId); const reasonMap = { 'scam': 'Мошенничество', 'fake': 'Фейк', 'prohibited': 'Запрещенный товар', 'spam': 'Спам', 'other': 'Другое' }; return `<div class="ig-card p-3 rounded-xl border-l-4 border-red-500">
-<div class="flex justify-between items-start mb-2">
-<div>
-<div class="font-bold t1 text-xs">${reasonMap[r.reason] || r.reason}</div>
-<div class="text-[10px] t2">${new Date(r.timestamp).toLocaleString()} • от @${r.reporterUsername || 'Аноним'}</div>
-</div>
-<button onclick="deleteReport('${r.id}')" class="text-red-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
-</div>
-<div class="bg-field p-2 rounded-lg mb-2">
-<div class="text-[10px] t2 mb-1">Объявление: <span class="t1 font-mono">${r.adId}</span> ${ad ? `(${ad.title})` : '(Удалено)'}</div>
-${r.comment ? `<div class="text-xs t1 italic">"${r.comment}"</div>` : ''}
-</div>
-${ad ? `<button onclick="closeModal('modal-admin-panel'); openAdDetail('${ad.id}')" class="w-full py-1.5 rounded-lg text-xs font-semibold border b-ig t1 hover:bg-field">Открыть объявление</button>` : ''}
-</div>`; }).join('')}
-</div></div>`; }
+else if (tab === 'reports') { 
+    const sortedReports = [...reports].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); 
+    c.innerHTML = `
+    <div class="space-y-3">
+        <h4 class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-flag text-red-500"></i> Жалобы (${sortedReports.length})</h4>
+        <div class="space-y-2 max-h-none overflow-y-auto pr-1">
+            ${sortedReports.length === 0 ? '<div class="text-center py-8 t2">Жалоб пока нет</div>' : sortedReports.map(r => { 
+                const ad = ads.find(a => a.id === r.adId); 
+                const reasonMap = { 'scam': 'Мошенничество', 'fake': 'Фейк', 'prohibited': 'Запрещено', 'spam': 'Спам', 'other': 'Другое' }; 
+                return `
+                <div class="ig-card p-3 rounded-xl border-l-4 border-red-500 flex flex-col gap-2">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0">
+                            <div class="font-bold t1 text-xs truncate">${reasonMap[r.reason] || r.reason}</div>
+                            <div class="text-[10px] t2 truncate">@${r.reporterUsername || 'Аноним'} • ${new Date(r.timestamp).toLocaleDateString()}</div>
+                        </div>
+                        <button onclick="deleteReport('${r.id}')" class="w-7 h-7 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/10 shrink-0" title="Удалить жалобу">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="bg-field p-2 rounded-lg border b-ig text-xs space-y-1">
+                        <div class="text-[10px] t2 truncate">Объявление: <span class="t1 font-mono">${r.adId}</span> ${ad ? `(${ad.title})` : '(Удалено)'}</div>
+                        ${r.comment ? `<div class="t1 italic">"${r.comment}"</div>` : ''}
+                    </div>
+                    ${ad ? `<button onclick="closeModal('modal-admin-panel'); openAdDetail('${ad.id}')" class="w-full py-1.5 rounded-lg text-xs font-semibold border b-ig t1 hover:bg-field">Открыть объявление</button>` : ''}
+                </div>`; 
+            }).join('')}
+        </div>
+    </div>`; 
+}
 else if (tab === 'archive') { c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-xs">Архив пользователей (${archivedUsers.length})</h4><div class="space-y-2 max-h-none overflow-y-auto pr-1">${archivedUsers.length === 0 ? '<div class="text-center py-8 t2">Архив пуст</div>' : archivedUsers.map(u => `<div class="ig-card p-3 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs">${u.kunya || u.username} (@${u.username})</div><div class="text-[10px] t2">${u.role} • ${u.whatsapp || '—'}</div></div><div class="flex gap-1.5 shrink-0"><button onclick="restoreUserFromArchive('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.4)">Вернуть</button><button onclick="deleteUserPermanently('${u.uid}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956">Удалить</button></div></div>`).join('')}</div></div>`; }
 else if (tab === 'cats') { c.innerHTML = `<div class="space-y-3">
 <h4 class="font-bold t1 text-xs">Основные категории ленты (${categories.length})</h4>
@@ -2981,10 +3029,24 @@ else if (tab === 'cats') { c.innerHTML = `<div class="space-y-3">
 <div class="flex items-center gap-3 min-w-0"><div class="w-10 h-10 rounded-lg bg-field border b-ig flex items-center justify-center shrink-0" style="color:#f59e0b"><i class="fa-solid ${cat.icon || 'fa-tag'}"></i></div>
 <div class="min-w-0"><div class="font-bold t1 text-xs truncate">${cat.name}</div><div class="text-[10px] t2">ID: ${cat.id} • Объявлений: ${cnt}</div></div></div>
 <div class="flex gap-1.5 shrink-0"><button onclick="startEditCategory('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteCategoryWithConfirm('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('')}</div></div>`; }
-else if (tab === 'finance') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } c.innerHTML = `<div class="space-y-4">${renderFinanceReport()}
-<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Настройки AvitoCash и тарифов</h4>
-<div class="grid grid-cols-1 sm:grid-cols-4 gap-3"><label class="text-xs t2">Подача объявления, AC<input id="sc-ad-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.adPrice}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Бесплатных объявлений<input id="sc-free-ads" type="number" min="0" step="1" value="${AVITOCASH_PRICES.freeAdsCount}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Магазин / месяц, AC<input id="sc-shop-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.shopSubscription}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Редактирование, AC<input id="sc-edit-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.editPrice}" class="ig-input w-full px-3 py-2 mt-1"></label></div>
-<div class="text-xs t2">Курс AvitoCash к доллару: <b class="t1">1 AC = 1 USD</b></div><button onclick="saveShamCashSettings()" class="ig-btn w-full py-2.5 text-xs font-bold">Сохранить тарифы</button><button onclick="openGiftGenerator()" class="w-full py-3 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fa-solid fa-gift"></i> Создать подарочный код</button></div></div>`; }
+else if (tab === 'finance') { 
+    if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } 
+    c.innerHTML = `
+    <div class="space-y-4">
+        ${renderFinanceReport()}
+        <div class="p-4 rounded-xl border space-y-3 bg-field b-ig">
+            <h4 class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Тарифы AvitoCash</h4>
+            <div class="grid grid-cols-2 gap-2">
+                <label class="text-[10px] t2">Подача, AC<input id="sc-ad-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.adPrice}" class="ig-input w-full px-2 py-1.5 mt-1 text-xs"></label>
+                <label class="text-[10px] t2">Бесплатно шт.<input id="sc-free-ads" type="number" min="0" step="1" value="${AVITOCASH_PRICES.freeAdsCount}" class="ig-input w-full px-2 py-1.5 mt-1 text-xs"></label>
+                <label class="text-[10px] t2">Магазин/мес<input id="sc-shop-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.shopSubscription}" class="ig-input w-full px-2 py-1.5 mt-1 text-xs"></label>
+                <label class="text-[10px] t2">Редакт., AC<input id="sc-edit-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.editPrice}" class="ig-input w-full px-2 py-1.5 mt-1 text-xs"></label>
+            </div>
+            <button onclick="saveShamCashSettings()" class="ig-btn w-full py-2 text-xs font-bold">Сохранить тарифы</button>
+            <button onclick="openGiftGenerator()" class="w-full py-2.5 rounded-lg text-white text-xs font-bold flex items-center justify-center gap-1.5" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fa-solid fa-gift"></i> Создать подарочный код</button>
+        </div>
+    </div>`; 
+}
 else if (tab === 'payments') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; }
 const searchVal = paymentSearchQuery || '';
 c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Верификация платежей</h4><input id="payment-search" oninput="paymentSearchQuery=this.value; renderAdminTabContent()" class="ig-input w-full px-3 py-2 text-xs" placeholder="Поиск по коду или пользователю" value="${searchVal}"><div class="space-y-2">${Object.entries(TOPUP_REQUESTS).filter(([id,r]) => {
