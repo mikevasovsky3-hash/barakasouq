@@ -2511,17 +2511,25 @@ function deleteUserPermanently(uid) {
   if (!u) return;
   if (u.role === 'SUPERUSER') { showToast('Нельзя удалить суперюзера!', 'error'); return; }
   showConfirmModal('Удаление пользователя', `Удалить @${u.username} и все его объявления безвозвратно?`, async () => {
+    if (supabaseClient) {
+      const { data: delRes, error: delErr } = await supabaseClient.rpc('admin_delete_user', {
+        p_target_uid: uid
+      });
+      if (delErr || !delRes || !delRes.success) {
+        showToast(delRes?.error || 'Ошибка удаления из базы', 'error');
+        return;
+      }
+    }
+
     users = users.filter(x => x.uid !== uid);
     archivedUsers = archivedUsers.filter(x => x.uid !== uid);
     ads = ads.filter(a => !(a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()));
     saveCachedAds();
-    if (supabaseClient) {
-      await supabaseClient.from('users').delete().eq('uid', uid);
-    }
+    
     renderAdminTabContent();
     renderAds();
     renderCategoryPills();
-    showToast('Пользователь удален', 'success');
+    showToast('Пользователь и его данные удалены навсегда', 'success');
   });
 }
 
