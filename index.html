@@ -240,7 +240,7 @@ body { top: 0px !important; }
 </div>
 </div>
 <div id="cloud-sync-status" class="hidden items-center justify-center gap-2 text-xs t2 py-1.5">
-<i class="fa-solid fa-arrows-rotate animate-spin"></i><span>Синхронизация с облаком…</span>
+<i class="fa-solid fa-arrows-rotate animate-spin"></i><span id="cloud-sync-label">Синхронизация с облаком…</span>
 </div>
 <div id="listings-view" class="space-y-4"></div>
 <div id="pagination-container" class="flex items-center justify-center gap-2 flex-wrap pt-2 pb-4 text-sm"></div>
@@ -700,8 +700,8 @@ body { top: 0px !important; }
 </div>
 <footer class="hidden sm:block mt-auto border-t b-ig py-3 px-4 text-xs text-center t2">
 <div class="max-w-3xl mx-auto flex items-center justify-between gap-3 text-[11px]">
-<div>Разработчик: <span class="font-bold t1">Салим Нашхо</span> • <a href="https://wa.me/447887280238" target="_blank" class="font-semibold inline-flex items-center gap-1" style="color:#10b981"><i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238</a></div>
-<div class="font-mono text-[10px]">Авито Шам © 2026</div>
+<div><span id="ft-dev-label">Разработчик:</span> <span class="font-bold t1">Салим Нашхо</span> • <a href="https://wa.me/447887280238" target="_blank" class="font-semibold inline-flex items-center gap-1" style="color:#10b981"><i class="fa-brands fa-whatsapp text-xs"></i> +44 7887 280238</a></div>
+<div id="ft-copy-label" class="font-mono text-[10px]">Авито Шам © 2026</div>
 </div>
 </footer>
 <div id="toast-container" class="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4" style="z-index:3000"></div>
@@ -862,6 +862,11 @@ if (donLbl) donLbl.innerText = t('Поддержать проект');
 const thmLbl = byId('sb-theme-label');
 if (thmLbl) thmLbl.innerText = t('Сменить тему');
 
+const devLbl = byId('ft-dev-label');
+if (devLbl) devLbl.innerText = t('Разработчик:');
+
+const cpyLbl = byId('ft-copy-label');
+if (cpyLbl) cpyLbl.innerText = t('Авито Шам © 2026');
 // Перевод кнопки текущей сортировки
 const sortLbl = byId('current-sort-label');
 if (sortLbl) {
@@ -1515,20 +1520,12 @@ async function openAdDetail(adId, countView = true) {
   const priceUsd = adToUSD(ad);
   const canBuyWithBalance = currentUser && !isRealOwner && !ad.isFree && !ad.isNegotiable && priceUsd > 0 && (currentUser.avitocashBalance || 0) >= priceUsd;
 
-  // Динамический автоперевод текстовых полей
+// Мгновенный вывод исходного текста, а перевод подгрузится в фоне за доли секунды
   let displayTitle = ad.title;
   let displayDesc = ad.desc || '';
   let displayCity = ad.city || '';
   let displayKunya = rawKunya;
   let displayRegion = t(rawRegion);
-
-  if (currentLang === 'ar') {
-    displayTitle = await translateDynamic(ad.title, 'ar');
-    if (ad.desc) displayDesc = await translateDynamic(ad.desc, 'ar');
-    if (ad.city) displayCity = await translateDynamic(ad.city, 'ar');
-    if (rawKunya) displayKunya = await translateDynamic(rawKunya, 'ar');
-  }
-
   content.innerHTML = `
   <div class="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 w-full overflow-hidden">
     <!-- Левая колонка: Фото / Слайдер -->
@@ -1617,8 +1614,22 @@ async function openAdDetail(adId, countView = true) {
     </div>
   </div>`;
 
-  openModal('modal-ad-detail');
-  setTimeout(() => initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765), 150);
+openModal('modal-ad-detail');
+  
+  // Карта и фоновый перевод запускаются уже после того, как модальное окно мгновенно открылось
+  setTimeout(async () => {
+    initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765);
+    if (currentLang === 'ar') {
+      const titleEl = document.querySelector('#modal-ad-detail h2');
+      const descEl = document.querySelector('#modal-ad-detail p.whitespace-pre-line');
+      const cityEl = document.getElementById(`detail-city-${ad.id}`);
+      const kunyaEl = document.getElementById(`detail-kunya-${ad.id}`);
+      if (titleEl) titleEl.innerText = await translateDynamic(ad.title, 'ar');
+      if (descEl && ad.desc) descEl.innerText = await translateDynamic(ad.desc, 'ar');
+      if (cityEl && ad.city) cityEl.innerText = await translateDynamic(ad.city, 'ar');
+      if (kunyaEl && rawKunya) kunyaEl.innerText = await translateDynamic(rawKunya, 'ar');
+    }
+  }, 30);
 }
 function openFullscreenViewer(src) { const v = byId('modal-image-viewer'), img = byId('fullscreen-viewer-img'); if (v && img) { img.src = src; openModal('modal-image-viewer'); } }
 function sendPriceOffer(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; const inp = byId('offer-price-input'); const val = inp ? inp.value.trim() : ''; if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) { showToast('Введите вашу предложенную цену', 'warning'); return; } const wa = getSellerWhatsapp(ad); const sender = currentUser ? (currentUser.whatsapp ? `${currentUser.kunya || currentUser.username} (${currentUser.whatsapp})` : currentUser.username) : 'Гость платформы'; const msg = `Здравствуйте! По объявлению "${ad.title}" (${ad.id}) на Авито Шам предлагаю цену: $${parseFloat(val).toFixed(2)}. От: ${sender}`; window.open(`https://wa.me/${wa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank'); showToast('Ваше предложение цены отправляется через WhatsApp', 'success'); }
@@ -2295,7 +2306,7 @@ return 0;
 });
 const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1; if (currentPage > totalPages) currentPage = totalPages;
 const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
-if (!pageAds.length) { grid.innerHTML = '<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>Объявлений пока нет. Будьте первым!</div>'; if (pag) pag.innerHTML = ''; return; }
+if (!pageAds.length) { grid.innerHTML = `<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>${t('Объявлений пока нет. Будьте первым!')}</div>`; if (pag) pag.innerHTML = ''; return; }
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 if (layout === 'grid') {
 grid.className = 'grid grid-cols-2 gap-1';
@@ -3704,7 +3715,29 @@ const DICTIONARY = {
   'Эс-Сувейда': 'السويداء',
   'Эль-Кунейтра': 'القنيطرة',
 
-// Модальные окна и каркас форм
+// Системные уведомления и синхронизация
+  'Синхронизация с облаком…': 'جاري المزامنة مع السحابة...',
+  'Язык переключен на русский': 'تم تحويل اللغة إلى العربية',
+  'تم تحويل اللغة إلى العربية': 'تم تحويل اللغة إلى العربية',
+  'Загрузка фото...': 'جاري رفع الصور...',
+  'Условия приняты. Добро пожаловать!': 'تم قبول الشروط. أهلاً بك!',
+  'Ссылка скопирована!': 'تم نسخ الرابط بنجاح!',
+  'Удалено из избранного': 'تمت الإزالة من المفضلة',
+  'Добавлено в избранное!': 'تمت الإضافة إلى المفضلة!',
+  'Вы успешно заняли очередь!': 'تم حجز دورك بنجاح!',
+  'Вы вышли из очереди': 'تم إلغاء دورك في الانتظار',
+  'Вы вышли из аккаунта': 'تم تسجيل الخروج',
+  'Объявление опубликовано!': 'تم نشر الإعلان بنجاح!',
+  'Объявление обновлено!': 'تم تعديل الإعلان بنجاح!',
+  'Объявление в архиве': 'تم نقل الإعلان للأرشيف',
+  'Объявление удалено': 'تم حذف الإعلان',
+  'Жалоба отправлена. Спасибо!': 'تم إرسال البلاغ بنجاح. شكراً لك!',
+  'Черновик удален': 'تم حذف المسودة',
+
+  // Заглушки и футер
+  'Объявлений пока нет. Будьте первым!': 'لا توجد إعلانات حتى الآن. كن أول المعلنين!',
+  'Авито Шам © 2026': 'أفيتو الشام © 2026',
+  'Разработчик:': 'المطور:',
   'Выберите регион': 'اختر المحافظة',
   'Закрыть': 'إغلاق',
   'Отмена': 'إلغاء',
@@ -3913,7 +3946,11 @@ function changeLanguage(langCode) {
     openProfileModal();
   }
 
-  showToast(langCode === 'ar' ? 'تم تحويل اللغة إلى العربية 🇸🇾' : 'Язык переключен на русский 🇷🇺', 'success');
+  // Обновление надписи статуса синхронизации
+  const syncLbl = byId('cloud-sync-label');
+  if (syncLbl) syncLbl.innerText = t('Синхронизация с облаком…');
+
+  showToast(langCode === 'ar' ? 'تم تحويل اللغة إلى العربية' : 'Язык переключен на русский', 'success');
 }
 function initLanguageState() {
   const savedLang = localStorage.getItem('bs_app_lang') || 'ru';
@@ -3921,9 +3958,10 @@ function initLanguageState() {
     currentLang = 'ar';
     document.documentElement.setAttribute('dir', 'rtl');
     document.documentElement.setAttribute('lang', 'ar');
+    const syncLbl = byId('cloud-sync-label');
+    if (syncLbl) syncLbl.innerText = t('Синхронизация с облаком…');
   }
 }
-
 /* ================= INITIALIZATION ================= */
 window.onload = function () {
 initLanguageState();
