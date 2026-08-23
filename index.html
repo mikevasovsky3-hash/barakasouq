@@ -1052,7 +1052,11 @@ function startEditCategory(catId) { const c = categories.find(x => x.id === catI
 function cancelEditCategory() { editingCatId = null; catNameDraft = ''; catIconChoice = autoPickIcon(); renderAdminTabContent(); }
 function saveCategoryForm() { const inp = byId('cat-name-input'); const name = (inp ? inp.value : catNameDraft).trim(); if (!name) { showToast('Введите название категории', 'warning'); return; } const icon = catIconChoice || autoPickIcon(); if (editingCatId) { const c = categories.find(x => x.id === editingCatId); if (c) { c.name = name; c.icon = icon; } showToast(`Категория "${name}" обновлена!`, 'success'); } else { categories.push({ id: 'cat_' + Date.now(), name, icon }); showToast(`Категория "${name}" добавлена!`, 'success'); } editingCatId = null; catNameDraft = ''; catIconChoice = autoPickIcon(); pushCategoriesToCloud(); renderCategoryPills(); renderAdminTabContent(); }
 function deleteCategoryWithConfirm(catId) { const c = categories.find(x => x.id === catId); if (!c) return; showConfirmModal('Удаление категории', `Удалить категорию "${c.name}"? Объявления останутся в базе, но категория исчезнет из ленты.`, () => { categories = categories.filter(x => x.id !== catId); pushCategoriesToCloud(); if (selectedCategory === catId) selectedCategory = 'all'; renderCategoryPills(); renderAdminTabContent(); renderAds(); showToast('Категория удалена', 'info'); }); }
-function pushCategoriesToCloud() { if (firebaseDb) firebaseDb.ref('categories').set(categories); }
+async function pushCategoriesToCloud() {
+  if (supabaseClient) {
+    await supabaseClient.from('categories').upsert(categories);
+  }
+}
 /* ================= ADS: CREATE / EDIT ================= */
 function fillCategorySelect(sel, selected) { if (!sel) return; sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join(''); if (selected) sel.value = selected; }
 function loadDraftCheck() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { byId('draft-restore-banner').classList.remove('hidden'); } } catch(e){} }
@@ -1446,8 +1450,35 @@ showToast('Ошибка при оплате: ' + err.message, 'error');
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
 function handleShopRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('shop-lat').value = c[0]; byId('shop-lng').value = c[1]; if (shopCreateMap && shopCreateMarker) { shopCreateMap.setView(c, 12); shopCreateMarker.setLatLng(c); } }
-function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) { const u = users.find(x => x.uid === shopEditTargetUid); if (!u) return; u.shop = shopData; if (supabaseClient && u.uid) supabaseClient.from('users').update({ shop: shopData }).eq('uid', u.uid).then(); closeModal('modal-create-shop'); shopEditTargetUid = null; renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast(`Магазин "${name}" сохранен!`, 'success'); } else { currentUser.shop = shopData; currentUser.uid = currentUser.uid || ('u_' + Date.now()); const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (idx !== -1) users[idx] = currentUser; else users.push(currentUser); if (supabaseClient) supabaseClient.from('users').update({ shop: shopData }).eq('uid', currentUser.uid).then(); saveUserSession(currentUser, true); closeModal('modal-create-shop'); showToast(`Магазин "${name}" сохранен!`, 'success'); updateAuthUI(); } }function adminVerifyShop(userUid, status) { const u = users.find(x => x.uid === userUid); if (!u || !u.shop) { showToast('Магазин не найден', 'error'); return; } u.verifiedShop = status; u.shop.isVerified = status; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); renderAdminTabContent(); renderCategoryPills(); renderAds(); showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success'); }
-function deleteShopWithConfirm(userUid) { const u = users.find(x => x.uid === userUid); if (!u || !u.shop) return; showConfirmModal('Удаление магазина', `Удалить магазин "${u.shop.name}" пользователя @${u.username}?`, () => { delete u.shop; u.verifiedShop = false; if (firebaseDb && u.uid) { firebaseDb.ref(`users/${u.uid}/shop`).remove(); firebaseDb.ref(`users/${u.uid}/verifiedShop`).set(false); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Магазин удален', 'info'); }); }
+function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) { const u = users.find(x => x.uid === shopEditTargetUid); if (!u) return; u.shop = shopData; if (supabaseClient && u.uid) supabaseClient.from('users').update({ shop: shopData }).eq('uid', u.uid).then(); closeModal('modal-create-shop'); shopEditTargetUid = null; renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast(`Магазин "${name}" сохранен!`, 'success'); } else { currentUser.shop = shopData; currentUser.uid = currentUser.uid || ('u_' + Date.now()); const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (idx !== -1) users[idx] = currentUser; else users.push(currentUser); if (supabaseClient) supabaseClient.from('users').update({ shop: shopData }).eq('uid', currentUser.uid).then(); saveUserSession(currentUser, true); closeModal('modal-create-shop'); showToast(`Магазин "${name}" сохранен!`, 'success'); updateAuthUI(); } }async function adminVerifyShop(userUid, status) {
+  const u = users.find(x => x.uid === userUid);
+  if (!u || !u.shop) { showToast('Магазин не найден', 'error'); return; }
+  u.verifiedShop = status;
+  u.shop.isVerified = status;
+  if (supabaseClient && u.uid) {
+    await supabaseClient.from('users').update({ verified_shop: status, shop: u.shop }).eq('uid', u.uid);
+  }
+  renderAdminTabContent();
+  renderCategoryPills();
+  renderAds();
+  showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success');
+}
+
+function deleteShopWithConfirm(userUid) {
+  const u = users.find(x => x.uid === userUid);
+  if (!u || !u.shop) return;
+  showConfirmModal('Удаление магазина', `Удалить магазин "${u.shop.name}" пользователя @${u.username}?`, async () => {
+    delete u.shop;
+    u.verifiedShop = false;
+    if (supabaseClient && u.uid) {
+      await supabaseClient.from('users').update({ shop: null, verified_shop: false }).eq('uid', u.uid);
+    }
+    renderAdminTabContent();
+    renderAds();
+    renderCategoryPills();
+    showToast('Магазин удален', 'info');
+  });
+}
 function adminCreateShopForUser() { const sel = byId('admin-new-shop-user'); if (sel && sel.value) openCreateShopModal(sel.value); }
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { const seller = users.find(u => u.uid === shopUserUid); if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } const shop = seller.shop; const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE'); const cats = shop.customCategories || []; const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); const c = byId('shop-showcase-content'); if (!c) return; const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; const shopCombos = combos.filter(x => x.shopUid === shopUserUid || (x.sellerUsername && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())).map(comboToVirtualAd).filter(Boolean); c.innerHTML = `<div class="space-y-4">
 <div class="p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.08)">
@@ -1502,8 +1533,36 @@ ${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex item
 <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пока нет — нажмите «Добавить товар»</div>' : shopAds.map(a => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between"><div class="flex items-center gap-2 min-w-0"><img src="${a.images ? a.images[0] : a.image}" class="w-8 h-8 rounded-lg object-cover"><span class="font-bold t1 truncate">${a.title}</span>${a.storeCategory ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(147,51,234,.15);color:#c084fc">${a.storeCategory}</span>` : ''}${a.status === 'SOLD' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : (a.status === 'WITHDRAWN' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 border b-ig t2">Передумал</span>' : (a.status === 'ARCHIVED' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(147,51,234,.15);color:#c084fc">Архив</span>' : ''))}</div><div class="flex items-center gap-1.5 shrink-0"><span class="text-[9px] t2"><i class="fa-solid fa-eye"></i> ${a.views || 0} • <i class="fa-solid fa-heart" style="${(a.likes && a.likes.length) ? 'color:#ed4956' : ''}"></i> ${(a.likes || []).length}</span><button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="background:rgba(245,158,11,.15);color:#f59e0b">Изменить</button></div></div>`).join('')}</div>
 </div>
 </div>`; openModal('modal-my-shop'); }
-function addShopCustomCategory() { if (!currentUser || !currentUser.shop) return; const input = byId('new-shop-cat-input'); if (!input) return; const val = input.value.trim(); if (!val) return; if (!currentUser.shop.customCategories) currentUser.shop.customCategories = []; if (currentUser.shop.customCategories.includes(val)) { showToast('Такая категория уже есть!', 'warning'); return; } currentUser.shop.customCategories.push(val); if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/shop/customCategories`).set(currentUser.shop.customCategories); saveUserSession(currentUser, true); openMyShopModal(); showToast(`Категория "${val}" добавлена!`, 'success'); }
-function removeShopCustomCategory(index) { if (!currentUser || !currentUser.shop || !currentUser.shop.customCategories) return; currentUser.shop.customCategories.splice(index, 1); if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/shop/customCategories`).set(currentUser.shop.customCategories); saveUserSession(currentUser, true); openMyShopModal(); showToast('Категория удалена', 'info'); }
+async function addShopCustomCategory() {
+  if (!currentUser || !currentUser.shop) return;
+  const input = byId('new-shop-cat-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  if (!currentUser.shop.customCategories) currentUser.shop.customCategories = [];
+  if (currentUser.shop.customCategories.includes(val)) {
+    showToast('Такая категория уже есть!', 'warning');
+    return;
+  }
+  currentUser.shop.customCategories.push(val);
+  if (supabaseClient && currentUser.uid) {
+    await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
+  }
+  saveUserSession(currentUser, true);
+  openMyShopModal();
+  showToast(`Категория "${val}" добавлена!`, 'success');
+}
+
+async function removeShopCustomCategory(index) {
+  if (!currentUser || !currentUser.shop || !currentUser.shop.customCategories) return;
+  currentUser.shop.customCategories.splice(index, 1);
+  if (supabaseClient && currentUser.uid) {
+    await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
+  }
+  saveUserSession(currentUser, true);
+  openMyShopModal();
+  showToast('Категория удалена', 'info');
+}
 function exportShopDatabaseJSON() { if (!currentUser || !currentUser.shop) return; const d = { version: '1.1', type: 'AVITO_SHAM_SHOP_BACKUP', exportDate: new Date().toISOString(), shop: currentUser.shop, products: ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()), combos: combos.filter(x => x.sellerUsername && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) }; const a = document.createElement('a'); a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d, null, 2)); a.download = `Shop_Backup_${Date.now()}.json`; document.body.appendChild(a); a.click(); a.remove(); try { localStorage.setItem(`bs_last_shop_backup_${currentUser.uid}`, d.exportDate); } catch (e) { /* ignore storage errors */ }
 if (firebaseDb && currentUser && currentUser.uid) {
 try {
@@ -1725,7 +1784,7 @@ async function initSupabaseSync() {
 
   try {
     const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('*'),
+      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, shop, receipts, frozen'),
       supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
@@ -1949,44 +2008,40 @@ async function handleAuthSubmit(e) {
     }
 
     const uid = 'u_' + Date.now();
-    
     const nu = {
-      uid: uid,
-      username: username,
+      uid,
+      username,
       password_hash: password,
-      passwordHash: password,
-      kunya: kunya,
-      gender: gender,
-      whatsapp: whatsapp,
-      avatar: avatar,
+      kunya,
+      gender,
+      whatsapp,
+      avatar,
       role: 'USER',
       verified_shop: false,
-      verifiedShop: false,
       avitocash_balance: 0,
-      avitocashBalance: 0,
-      trial_balance: 10,
-      trialBalance: 10
+      trial_balance: 10
     };
 
     if (supabaseClient) {
-      const { error } = await supabaseClient.from('users').insert({
-        uid: nu.uid,
-        username: nu.username,
-        password_hash: nu.password_hash,
-        kunya: nu.kunya,
-        gender: nu.gender,
-        whatsapp: nu.whatsapp,
-        avatar: nu.avatar,
-        role: nu.role,
-        verified_shop: nu.verified_shop,
-        avitocash_balance: nu.avitocash_balance,
-        trial_balance: nu.trial_balance
-      });
+      const { error } = await supabaseClient.from('users').insert(nu);
       if (error) console.error("Ошибка регистрации:", error);
     }
 
-    users.push(nu);
-    saveUserSession(nu, remember);
+    const localUser = {
+      uid,
+      username,
+      kunya,
+      gender,
+      whatsapp,
+      avatar,
+      role: 'USER',
+      verifiedShop: false,
+      avitocashBalance: 0,
+      trialBalance: 10
+    };
+
+    users.push(localUser);
+    saveUserSession(localUser, remember);
     closeModal('modal-auth');
     showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
     btn.disabled = false; btn.innerText = originalText;
@@ -1998,35 +2053,16 @@ async function handleAuthSubmit(e) {
       return;
     }
     try {
-      const { data: matchedUsers, error } = await supabaseClient.from('users').select('*').eq('username', username);
+      // Безопасная авторизация через серверную функцию
+      const { data: res, error } = await supabaseClient.rpc('verify_user_login', {
+        p_username: username,
+        p_password_hash: password
+      });
+
       if (error) throw error;
 
-      let foundUser = null;
-      let needsHashUpdate = false;
-
-      if (matchedUsers && matchedUsers.length > 0) {
-        const u = matchedUsers[0];
-        
-        u.passwordHash = u.password_hash;
-        u.verifiedShop = u.verified_shop;
-        u.avitocashBalance = u.avitocash_balance;
-        u.trialBalance = u.trial_balance;
-        u.showWomenAds = u.show_women_ads;
-
-        if (u.passwordHash === password) {
-          foundUser = u;
-        } else if (u.passwordHash === rawPassword || u.password === rawPassword) {
-          foundUser = u;
-          needsHashUpdate = true;
-        }
-      }
-
-      if (foundUser) {
-        if (needsHashUpdate) {
-          await supabaseClient.from('users').update({ password_hash: password, password: null }).eq('uid', foundUser.uid);
-          foundUser.passwordHash = password;
-          delete foundUser.password;
-        }
+      if (res && res.success && res.user) {
+        const foundUser = res.user;
         const idx = users.findIndex(u => u.uid === foundUser.uid);
         if (idx !== -1) users[idx] = foundUser;
         else users.push(foundUser);
@@ -2035,7 +2071,7 @@ async function handleAuthSubmit(e) {
         closeModal('modal-auth');
         showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
       } else {
-        showToast('Неверный логин или пароль!', 'error');
+        showToast(res?.error || 'Неверный логин или пароль!', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -2144,69 +2180,29 @@ async function transferShamCash() {
     return;
   }
 
-  const currentBal = Number(currentUser.avitocashBalance ?? currentUser.avitocash_balance ?? 0);
-  if (currentBal < amount) {
-    showToast(`Недостаточно AvitoCash. У вас: ${currentBal.toFixed(2)} AC`, 'warning');
-    return;
-  }
-
-  showToast('Выполняется перевод...', 'info');
+  showToast('Выполняется перевод через защищенный сервер...', 'info');
 
   try {
-    const senderQuery = currentUser.uid 
-      ? supabaseClient.from('users').select('avitocash_balance, uid, username').eq('uid', currentUser.uid)
-      : supabaseClient.from('users').select('avitocash_balance, uid, username').eq('username', currentUser.username);
+    const senderId = currentUser.uid || currentUser.username;
+    const recipId = recipient.uid || recipient.username;
 
-    const { data: senderRows, error: senderErr } = await senderQuery;
-    if (senderErr || !senderRows || !senderRows.length) {
-      throw new Error('Отправитель не найден в базе данных');
-    }
-    const senderData = senderRows[0];
-    const realSenderBal = Number(senderData.avitocash_balance || 0);
+    // Вызываем серверную функцию Supabase
+    const { data: res, error } = await supabaseClient.rpc('transfer_avitocash', {
+      sender_identifier: senderId,
+      recipient_identifier: recipId,
+      transfer_amount: amount
+    });
 
-    if (realSenderBal < amount) {
-      throw new Error('Недостаточно средств на балансе');
-    }
-
-    const recipQuery = recipient.uid
-      ? supabaseClient.from('users').select('avitocash_balance, uid, username').eq('uid', recipient.uid)
-      : supabaseClient.from('users').select('avitocash_balance, uid, username').eq('username', recipient.username);
-
-    const { data: recipRows, error: recipErr } = await recipQuery;
-    if (recipErr || !recipRows || !recipRows.length) {
-      throw new Error('Получатель не найден в базе данных');
-    }
-    const recipData = recipRows[0];
-    const realRecipBal = Number(recipData.avitocash_balance || 0);
-
-    const newSenderBal = Math.round((realSenderBal - amount) * 100) / 100;
-    const newRecipBal = Math.round((realRecipBal + amount) * 100) / 100;
-
-    const senderUpdate = currentUser.uid
-      ? supabaseClient.from('users').update({ avitocash_balance: newSenderBal }).eq('uid', currentUser.uid)
-      : supabaseClient.from('users').update({ avitocash_balance: newSenderBal }).eq('username', currentUser.username);
-
-    const { error: updSendErr } = await senderUpdate;
-    if (updSendErr) throw updSendErr;
-
-    const recipUpdate = recipient.uid
-      ? supabaseClient.from('users').update({ avitocash_balance: newRecipBal }).eq('uid', recipient.uid)
-      : supabaseClient.from('users').update({ avitocash_balance: newRecipBal }).eq('username', recipient.username);
-
-    const { error: updRecErr } = await recipUpdate;
-    if (updRecErr) {
-      if (currentUser.uid) {
-        await supabaseClient.from('users').update({ avitocash_balance: realSenderBal }).eq('uid', currentUser.uid);
-      } else {
-        await supabaseClient.from('users').update({ avitocash_balance: realSenderBal }).eq('username', currentUser.username);
-      }
-      throw new Error('Сбой зачисления. Средства возвращены.');
+    if (error) throw error;
+    if (!res || !res.success) {
+      throw new Error(res?.error || 'Ошибка проведения транзакции');
     }
 
-    currentUser.avitocashBalance = newSenderBal;
-    currentUser.avitocash_balance = newSenderBal;
-    recipient.avitocashBalance = newRecipBal;
-    recipient.avitocash_balance = newRecipBal;
+    // Обновляем локальный баланс
+    currentUser.avitocashBalance = res.new_sender_balance;
+    currentUser.avitocash_balance = res.new_sender_balance;
+    recipient.avitocashBalance = res.new_recip_balance;
+    recipient.avitocash_balance = res.new_recip_balance;
 
     saveUserSession(currentUser, true);
 
@@ -2216,7 +2212,7 @@ async function transferShamCash() {
     showToast(`Перевод выполнен: ${amount.toFixed(2)} AC отправлено @${recipient.username}`, 'success');
 
   } catch (err) {
-    console.error('Transfer error:', err);
+    console.error('Transfer RPC error:', err);
     showToast('Ошибка перевода: ' + (err.message || 'Сбой базы данных'), 'error');
   }
 }
@@ -2395,7 +2391,100 @@ function goToAdminSection(tab, sub = null) { if (sub) adminAdsTab = sub; switchA
 function archiveUserWithConfirm(uid) { const u = users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя архивировать суперюзера!', 'error'); return; } if (currentUser && currentUser.uid === uid) { showToast('Нельзя архивировать себя!', 'error'); return; } showConfirmModal('Архивация пользователя', `Переместить @${u.username} в архив? Его объявления будут скрыты из ленты.`, () => { users = users.filter(x => x.uid !== uid); archivedUsers.push(u); ads.forEach(a => { if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) a.status = 'ARCHIVED'; }); saveCachedAds(); if (firebaseDb) { firebaseDb.ref(`users/${uid}`).remove(); firebaseDb.ref(`archivedUsers/${uid}`).set(u); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Пользователь архивирован', 'info'); }); }
 function restoreUserFromArchive(uid) { const u = archivedUsers.find(x => x.uid === uid); if (!u) return; archivedUsers = archivedUsers.filter(x => x.uid !== uid); users.push(u); if (firebaseDb) { firebaseDb.ref(`archivedUsers/${uid}`).remove(); firebaseDb.ref(`users/${uid}`).set(u); } renderAdminTabContent(); showToast('Пользователь восстановлен', 'success'); }
 function deleteUserPermanently(uid) { const u = archivedUsers.find(x => x.uid === uid) || users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя удалить суперюзера!', 'error'); return; } showConfirmModal('Удаление пользователя', `Удалить @${u.username} и все его объявления безвозвратно?`, () => { users = users.filter(x => x.uid !== uid); archivedUsers = archivedUsers.filter(x => x.uid !== uid); ads = ads.filter(a => !(a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase())); saveCachedAds(); if (firebaseDb) { firebaseDb.ref(`users/${uid}`).remove(); firebaseDb.ref(`archivedUsers/${uid}`).remove(); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Пользователь удален', 'success'); }); }
-function toggleFreezeUser(uid) { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) { showToast('Доступ запрещен!', 'error'); return; } const u = users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя заморозить суперюзера!', 'error'); return; } if (currentUser.uid === uid) { showToast('Нельзя заморозить себя!', 'error'); return; } u.frozen = !u.frozen; if (firebaseDb && u.uid) firebaseDb.ref(`users/${u.uid}`).set(u); renderAdminTabContent(); showToast(u.frozen ? `Аккаунт @${u.username} заморожен ❄` : `Аккаунт @${u.username} разморожен`, 'info'); }
+async function toggleFreezeUser(uid) {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен!', 'error');
+    return;
+  }
+  const u = users.find(x => x.uid === uid);
+  if (!u) return;
+  if (u.role === 'SUPERUSER') {
+    showToast('Нельзя заморозить суперюзера!', 'error');
+    return;
+  }
+  if (currentUser.uid === uid) {
+    showToast('Нельзя заморозить себя!', 'error');
+    return;
+  }
+  u.frozen = !u.frozen;
+  if (supabaseClient && u.uid) {
+    await supabaseClient.from('users').update({ frozen: u.frozen }).eq('uid', u.uid);
+  }
+  renderAdminTabContent();
+  showToast(u.frozen ? `Аккаунт @${u.username} заморожен ❄` : `Аккаунт @${u.username} разморожен`, 'info');
+}
+
+async function seizeFunds(violatorUid) {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен!', 'error');
+    return;
+  }
+  if (!supabaseClient) {
+    showToast('Нет соединения с базой данных', 'error');
+    return;
+  }
+
+  const violator = users.find(x => x.uid === violatorUid);
+  if (!violator) {
+    showToast('Нарушитель не найден', 'error');
+    return;
+  }
+
+  const victimInput = prompt('Взыскание в пользу жертвы. Введите логин жертвы (@username):');
+  if (victimInput === null) return;
+  
+  const victimName = String(victimInput).trim().replace(/^@/, '').toLowerCase();
+  const victim = users.find(u => u.username && u.username.toLowerCase() === victimName);
+  
+  if (!victim) {
+    showToast('Жертва не найдена', 'error');
+    return;
+  }
+  if (victim.uid === violator.uid) {
+    showToast('Жертва и нарушитель — один пользователь', 'warning');
+    return;
+  }
+
+  const cloudBalance = Number(violator.avitocashBalance ?? violator.avitocash_balance ?? 0);
+  const amountStr = prompt(`Сумма для взыскания с @${violator.username} (доступно: ${cloudBalance.toFixed(2)} AC):`);
+  if (amountStr === null) return;
+  
+  const amount = _0xSCAmount(amountStr);
+  if (!amount || amount <= 0) {
+    showToast('Некорректная сумма взыскания', 'warning');
+    return;
+  }
+  if (amount > cloudBalance) {
+    showToast(`У нарушителя всего ${cloudBalance.toFixed(2)} AC. Нельзя списать больше.`, 'warning');
+    return;
+  }
+
+  showConfirmModal('Взыскание в пользу жертвы', `Списать ${amount.toFixed(2)} AC с @${violator.username} и перевести @${victim.username}?`, async () => {
+    try {
+      showToast('Выполняется взыскание через защищенный сервер...', 'info');
+
+      const { data: res, error } = await supabaseClient.rpc('transfer_avitocash', {
+        sender_identifier: violator.uid,
+        recipient_identifier: victim.uid,
+        transfer_amount: amount
+      });
+
+      if (error) throw error;
+      if (!res || !res.success) throw new Error(res?.error || 'Ошибка взыскания');
+
+      violator.avitocashBalance = res.new_sender_balance;
+      violator.avitocash_balance = res.new_sender_balance;
+      victim.avitocashBalance = res.new_recip_balance;
+      victim.avitocash_balance = res.new_recip_balance;
+
+      renderAdminTabContent();
+      showToast(`Успешно взыскано ${amount.toFixed(2)} AC с @${violator.username} в пользу @${victim.username}!`, 'success');
+    } catch (err) {
+      console.error('Seize funds error:', err);
+      showToast('Ошибка при выполнении взыскания: ' + err.message, 'error');
+    }
+  });
+}
 async function seizeFunds(violatorUid) {
   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
     showToast('Доступ запрещен!', 'error');
@@ -2731,43 +2820,51 @@ byId('report-reason').value = '';
 byId('report-comment').value = '';
 openModal('modal-report-ad');
 }
-function submitReport(e) {
-e.preventDefault();
-const adId = byId('report-ad-id').value;
-const reason = byId('report-reason').value;
-const comment = byId('report-comment').value.trim();
-if (!reason) {
-showToast('Выберите причину жалобы', 'warning');
-return;
+async function submitReport(e) {
+  e.preventDefault();
+  const adId = byId('report-ad-id').value;
+  const reason = byId('report-reason').value;
+  const comment = byId('report-comment').value.trim();
+  if (!reason) {
+    showToast('Выберите причину жалобы', 'warning');
+    return;
+  }
+  const report = {
+    id: 'REP-' + Date.now(),
+    ad_id: adId,
+    reason: reason,
+    comment: comment,
+    reporter_username: currentUser ? currentUser.username : 'Anonymous',
+    timestamp: Date.now()
+  };
+
+  if (supabaseClient) {
+    const { error } = await supabaseClient.from('reports').insert(report);
+    if (!error) {
+      reports.push({
+        id: report.id,
+        adId: report.ad_id,
+        reason: report.reason,
+        comment: report.comment,
+        reporterUsername: report.reporter_username,
+        timestamp: report.timestamp
+      });
+      showToast('Жалоба отправлена. Спасибо!', 'success');
+      closeModal('modal-report-ad');
+    } else {
+      showToast('Ошибка отправки жалобы: ' + error.message, 'error');
+    }
+  }
 }
-const report = {
-adId: adId,
-reason: reason,
-comment: comment,
-reporterUsername: currentUser ? currentUser.username : 'Anonymous',
-timestamp: Date.now()
-};
-if (firebaseDb) {
-const newKey = firebaseDb.ref('reports').push().key;
-firebaseDb.ref('reports/' + newKey).set(report).then(() => {
-showToast('Жалоба отправлена. Спасибо!', 'success');
-closeModal('modal-report-ad');
-}).catch(err => {
-showToast('Ошибка отправки жалобы', 'error');
-console.error(err);
-});
-} else {
-showToast('Нет соединения с сервером', 'error');
-}
-}
-function deleteReport(reportId) {
-if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
-if (firebaseDb) {
-firebaseDb.ref('reports/' + reportId).remove().then(() => {
-showToast('Жалоба удалена', 'info');
-renderAdminTabContent();
-});
-}
+
+async function deleteReport(reportId) {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
+  if (supabaseClient) {
+    await supabaseClient.from('reports').delete().eq('id', reportId);
+    reports = reports.filter(r => r.id !== reportId);
+    showToast('Жалоба удалена', 'info');
+    renderAdminTabContent();
+  }
 }
 /* ================= MARQUEE CONTROL FUNCTIONS ================= */
 function updateMarqueeText(text) {
@@ -2831,47 +2928,22 @@ const savedText = localStorage.getItem(MARQUEE_STORAGE_KEY);
 if (savedText) updateMarqueeText(savedText);
 }
 function loadMarqueeFromFirebase() {
-if (!firebaseDb) {
-showToast('Firebase ещё не подключён', 'warning');
-return;
+  const saved = localStorage.getItem(MARQUEE_STORAGE_KEY);
+  if (saved) {
+    applyMarqueeSettings({ text: saved });
+    showToast('Текст загружен', 'success');
+  }
 }
-firebaseDb.ref('settings/marquee').once('value').then(snapshot => {
-const settings = snapshot.val();
-if (!settings || typeof settings.text !== 'string' || !settings.text.trim()) {
-showToast('В Firebase пока нет текста бегущей строки', 'warning');
-return;
-}
-hasCloudMarqueeSettings = true;
-localStorage.setItem(MARQUEE_STORAGE_KEY, settings.text);
-applyMarqueeSettings(settings);
-showToast('Текст загружен из Firebase', 'success');
-}).catch(err => {
-showToast('Не удалось загрузить текст из Firebase', 'error');
-console.warn('Marquee cloud read error:', err);
-});
-}
+
 function saveMarqueeSettings() {
-const input = byId('admin-marquee-input');
-if (!input) return;
-const text = input.value.trim();
-if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
-const settings = { ...MARQUEE_SETTINGS, text };
-if (firebaseDb) {
-firebaseDb.ref('settings/marquee').set(settings).then(() => {
-firebaseDb.ref('settings/marqueeText').set(text);
-localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-hasCloudMarqueeSettings = true;
-applyMarqueeSettings(settings);
-showToast('Бегущая строка обновлена!', 'success');
-}).catch(err => {
-showToast('Не удалось сохранить текст в Firebase.', 'error');
-console.warn('Marquee cloud save error:', err);
-});
-} else {
-localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-applyMarqueeSettings(settings);
-showToast('Сохранено локально (нет связи с БД)', 'warning');
-}
+  const input = byId('admin-marquee-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
+  const settings = { ...MARQUEE_SETTINGS, text };
+  localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+  applyMarqueeSettings(settings);
+  showToast('Бегущая строка обновлена!', 'success');
 }
 /* ================= INITIALIZATION ================= */
 window.onload = function () {
