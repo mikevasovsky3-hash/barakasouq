@@ -170,8 +170,9 @@ body { top: 0px !important; }
 <span id="sb-theme-label" class="hidden xl:block text-[15px]">Сменить тему</span>
 </button>
 <div class="flex items-center gap-2 p-2 border-t b-ig">
-  <button type="button" onclick="changeLanguage('ru')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">RU 🇷🇺</button>
-  <button type="button" onclick="changeLanguage('ar')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">عربي 🇸🇾</button>
+<div class="flex items-center gap-2 p-2 border-t b-ig">
+  <button type="button" onclick="changeLanguage('ru')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">RU</button>
+  <button type="button" onclick="changeLanguage('ar')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">عربي</button>
 </div>
 </div>
 </aside>
@@ -2860,9 +2861,9 @@ c.innerHTML = `
 
         <!-- Переключатель языка -->
         <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between">
-            <div>
+<div>
                 <div class="text-[10px] t2">Язык / اللغة</div>
-                <div class="text-xs font-bold t1">${currentLang === 'ar' ? 'العربية 🇸🇾' : 'Русский 🇷🇺'}</div>
+                <div class="text-xs font-bold t1">${currentLang === 'ar' ? 'العربية' : 'Русский'}</div>
             </div>
             <div class="flex gap-1.5">
                 <button type="button" onclick="changeLanguage('ru')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border ${currentLang === 'ru' ? 'text-white' : 'b-ig t2'}" style="${currentLang === 'ru' ? 'background:#0095f6;border-color:#0095f6' : ''}">RU</button>
