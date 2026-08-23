@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1U4izK764SU5tpTS3Wj636SRUX3tUuoUA270N29ZOzp479BRUW+Uo2bg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel/index.css" crossorigin="anonymous">
 <style>
 :root{
@@ -924,8 +924,34 @@ function renderPhotoThumbnailsGrid(mode = 'create') { const isC = mode === 'crea
 function removePendingPhoto(mode, index) { (mode === 'create' ? pendingCreateImages : pendingEditImages).splice(index, 1); renderPhotoThumbnailsGrid(mode); }
 async function processShopLogoUpload(e) { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 300); byId('shop-logo-data').value = d; byId('shop-logo-preview-img').src = d; byId('shop-logo-preview-box').classList.remove('hidden'); } catch (err) {} }
 /* ================= SUPPORT QR ================= */
-function openSupportModal() { openModal('modal-shamcash-qr'); setTimeout(renderSupportQR, 120); }
-function renderSupportQR() { const box = byId('support-qr-box'); if (!box) return; box.innerHTML = ''; if (typeof QRCode === 'undefined') { box.innerHTML = '<i class="fa-solid fa-qrcode text-5xl text-slate-300"></i>'; return; } try { new QRCode(box, { text: AVITOCASH_ID, width: 208, height: 208, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch (e) { box.innerHTML = '<i class="fa-solid fa-qrcode text-5xl text-slate-300"></i>'; } }
+function openSupportModal() { 
+  openModal('modal-shamcash-qr'); 
+  setTimeout(renderSupportQR, 60); 
+  setTimeout(renderSupportQR, 200); 
+}
+
+function renderSupportQR() { 
+  const box = byId('support-qr-box'); 
+  if (!box) return; 
+  box.innerHTML = ''; 
+  if (typeof QRCode !== 'undefined') { 
+    try { 
+      new QRCode(box, { 
+        text: AVITOCASH_ID, 
+        width: 208, 
+        height: 208, 
+        colorDark: '#000000', 
+        colorLight: '#ffffff', 
+        correctLevel: QRCode.CorrectLevel.M 
+      }); 
+      return;
+    } catch (e) { 
+      console.warn('QR render retry:', e); 
+    } 
+  } 
+  // Резервный надежный генератор через прямой URL QR-сервиса
+  box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=208x208&data=${encodeURIComponent(AVITOCASH_ID)}" alt="ShamCash QR" class="w-[208px] h-[208px] rounded-lg">`;
+}
 function copyShamCashCode() { const done = () => showToast('ID код ShamCash скопирован!', 'success'); if (navigator.clipboard) navigator.clipboard.writeText(AVITOCASH_ID).then(done).catch(() => fallbackCopy(AVITOCASH_ID, done)); else fallbackCopy(AVITOCASH_ID, done); }
 function fallbackCopy(text, cb) { const i = document.createElement('input'); i.value = text; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); if (cb) cb(); }
 /* ================= BEAUTIFUL SHARE CARD ================= */
