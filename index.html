@@ -140,9 +140,6 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
   <span class="w-6 h-6 rounded-md text-white flex items-center justify-center bg-[#25D366]"><i class="fa-brands fa-whatsapp text-[13px]"></i></span>
   <span class="hidden xl:block text-[15px] font-semibold">Техподдержка</span>
 </a>
-<a href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" target="_blank" rel="noopener" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 bg-[#25D366]" title="Техподдержка WhatsApp">
-  <i class="fa-brands fa-whatsapp text-sm"></i>
-</a>
 <button onclick="openSupportModal()" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
 <span class="w-6 h-6 rounded-md text-white flex items-center justify-center" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar text-[11px]"></i></span>
 <span class="hidden xl:block text-[15px] font-semibold">Поддержать проект</span>
@@ -256,13 +253,13 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
 <div id="share-preview-state" class="text-center text-xs t2 py-2 hidden">Генерируем красивую карточку...</div>
 <div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1">
-<img id="share-preview-image" class="w-full max-h-[52vh] object-contain rounded-lg" alt="Предпросмотр карточки объявления Авито Шам">
+<img id="share-preview-image" src="" alt="Предпросмотр карточки объявления Авито Шам" class="w-full max-h-[52vh] object-contain rounded-lg">
 </div>
 <button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Поделиться карточкой</button>
 <button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
 <button onclick="shareImageToApp('telegram')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram (с картинкой)</button>
 <button onclick="shareImageToApp('viber')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber (с картинкой)</button>
-<a id="share-wa-link" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
+<a id="share-wa-link" href="#" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
 <button onclick="downloadShareCard()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> Скачать красивую карточку</button>
 <button onclick="copyShareLink()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> Скопировать ссылку</button>
 <button onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
@@ -271,7 +268,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
 <div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2">
 <button onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
-<img id="fullscreen-viewer-img" class="max-w-full max-h-[92vh] object-contain rounded-lg">
+<img id="fullscreen-viewer-img" src="" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg">
 </div>
 <!-- ============ RULES MODAL ============ -->
 <div id="modal-rules-agreement" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
@@ -312,7 +309,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div>
 <input type="file" id="auth-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'auth')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <input type="hidden" id="auth-avatar-data">
-<div id="auth-avatar-preview-box" class="hidden mt-2 w-14 h-14 rounded-full overflow-hidden border b-ig"><img id="auth-avatar-preview-img" class="w-full h-full object-cover"></div>
+<div id="auth-avatar-preview-box" class="hidden mt-2 w-14 h-14 rounded-full overflow-hidden border b-ig"><img id="auth-avatar-preview-img" src="" alt="Превью аватара" class="w-full h-full object-cover"></div>
 </div>
 <div class="grid grid-cols-2 gap-2">
 <label class="flex items-center justify-center gap-2 p-2.5 rounded-lg border b-ig bg-field cursor-pointer text-xs font-semibold"><input type="radio" name="auth-gender" value="MALE" checked class="accent-[#0095f6]"><span>Мужчина</span></label>
@@ -467,7 +464,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <input type="text" id="edit-profile-kunya" required placeholder="Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
 <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <input type="hidden" id="edit-profile-avatar-data">
-<div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" class="w-full h-full object-cover"></div>
+<div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" src="" alt="Превью аватара" class="w-full h-full object-cover"></div>
 <input type="text" id="edit-profile-whatsapp" required placeholder="WhatsApp *" class="ig-input w-full px-3 py-2 text-xs">
 <div id="edit-profile-admin-fields" class="space-y-2.5 pt-2 border-t b-ig hidden">
 <select id="edit-profile-gender" class="ig-input w-full px-3 py-2 text-xs"><option value="MALE">Мужчина</option><option value="FEMALE">Женщина 🌸</option></select>
@@ -509,7 +506,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <label class="block text-xs t2 mb-1">Логотип магазина (1:1) *</label>
 <input type="file" id="shop-logo-file" accept="image/*" onchange="processShopLogoUpload(event)" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#9333ea] file:text-white cursor-pointer">
 <input type="hidden" id="shop-logo-data">
-<div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" class="w-full h-full object-cover"></div>
+<div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" src="" alt="Превью логотипа" class="w-full h-full object-cover"></div>
 </div>
 <div class="p-3 rounded-xl text-xs leading-relaxed border b-ig bg-field t2"><i class="fa-solid fa-circle-info"></i> Магазин будет отправлен на проверку администратору.</div>
 <button type="submit" id="shop-submit-btn" class="w-full py-3 rounded-lg text-white text-sm font-semibold" style="background:#9333ea">Сохранить магазин</button>
@@ -598,7 +595,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button onclick="adminPanelBack()" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color:#0095f6"></i><h3 class="text-sm font-bold t1">Панель управления Главного Администратора</h3></div>
 </div>
-<div class="border-b b-ig overflow-x-auto no-scrollbar text-sm shrink-0 flex gap-4 px-4" aria-label="Разделы админ-панели">
+<div class="border-b b-ig overflow-x-auto no-scrollbar text-sm shrink-0 flex gap-4 px-4" role="tablist" aria-label="Разделы админ-панели">
 <button id="atab-overview" onclick="switchAdminTab('overview')" class="py-3 whitespace-nowrap">Обзор</button>
 <button id="atab-users" onclick="switchAdminTab('users')" class="py-3 whitespace-nowrap">Пользователи</button>
 <button id="atab-ads" onclick="switchAdminTab('ads')" class="py-3 whitespace-nowrap">Объявления</button>
@@ -3389,14 +3386,13 @@ if (digits.length < 10 || digits.length > 15) return { valid: false, error: 'Н�
 return { valid: true, number: digits };
 }
 </script>
-<!-- ============ КНОПКА ТЕХПОДДЕРЖКИ (WHATSAPP) ============ -->
+<!-- ============ КНОПКА ТЕХПОДДЕРЖКИ (ТОЛЬКО НА ТЕЛЕФОНАХ) ============ -->
 <a href="https://wa.me/447887280238?text=%D0%90%D1%81%D1%81%D0%B0%D0%BB%D1%8F%D0%BC%D1%83%20%D0%B0%D0%BB%D0%B5%D0%B9%D0%BA%D1%83%D0%BC!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" 
    target="_blank" 
    rel="noopener"
    title="Техподдержка WhatsApp"
-   class="fixed bottom-20 lg:bottom-6 left-4 z-40 h-10 px-3.5 rounded-full bg-[#25D366] text-white shadow-lg flex items-center gap-2 hover:bg-[#20bd5a] active:scale-95 transition-all">
-  <i class="fa-brands fa-whatsapp text-lg"></i>
-  <span class="text-xs font-bold hidden sm:inline">Поддержка</span>
+   class="fixed bottom-20 left-4 z-40 w-11 h-11 rounded-full bg-[#25D366] text-white shadow-xl flex items-center justify-center hover:bg-[#20bd5a] active:scale-90 transition-all max-lg:flex lg:!hidden">
+  <i class="fa-brands fa-whatsapp text-2xl"></i>
 </a>
 </body>
 </html>
