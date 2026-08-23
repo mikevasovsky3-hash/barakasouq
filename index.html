@@ -1834,15 +1834,19 @@ async function initSupabaseSync() {
     ]);
 
 if (usersRes.data) {
-  users = usersRes.data.map(u => ({
+  const allParsedUsers = usersRes.data.map(u => ({
     ...u,
     passwordHash: u.password_hash,
     verifiedShop: !!u.verified_shop,
     avitocashBalance: Number(u.avitocash_balance || 0),
     trialBalance: Number(u.trial_balance || 0),
     showWomenAds: !!u.show_women_ads,
-    frozen: !!u.frozen
+    frozen: !!u.frozen,
+    isArchived: !!u.is_archived
   }));
+
+  users = allParsedUsers.filter(u => !u.isArchived);
+  archivedUsers = allParsedUsers.filter(u => u.isArchived);
   
       // Мгновенно синхронизируем данные текущей сессии с базой
       if (currentUser) {
@@ -2477,33 +2481,67 @@ function archiveUserWithConfirm(uid) {
   if (!u) return;
   if (u.role === 'SUPERUSER') { showToast('Нельзя архивировать суперюзера!', 'error'); return; }
   if (currentUser && currentUser.uid === uid) { showToast('Нельзя архивировать себя!', 'error'); return; }
+  
   showConfirmModal('Архивация пользователя', `Переместить @${u.username} в архив? Его объявления будут скрыты из ленты.`, async () => {
+    if (supabaseClient) {
+      const { data: res, error } = await supabaseClient.rpc('admin_toggle_archive_user', {
+        p_target_uid: uid,
+        p_archive_status: true
+      });
+      if (error || !res || !res.success) {
+        showToast(res?.error || 'Ошибка архивации в базе', 'error');
+        return;
+      }
+    }
+
+    u.isArchived = true;
     users = users.filter(x => x.uid !== uid);
     archivedUsers.push(u);
+    
     ads.forEach(a => {
-      if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) a.status = 'ARCHIVED';
+      if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) {
+        a.status = 'ARCHIVED';
+      }
     });
+
     saveCachedAds();
-    if (supabaseClient) {
-      await supabaseClient.from('users').update({ frozen: true }).eq('uid', uid);
-    }
     renderAdminTabContent();
     renderAds();
     renderCategoryPills();
-    showToast('Пользователь архивирован', 'info');
+    showToast('Пользователь перемещен в архив', 'info');
   });
 }
 
-function restoreUserFromArchive(uid) {
+async function restoreUserFromArchive(uid) {
   const u = archivedUsers.find(x => x.uid === uid);
   if (!u) return;
+
+  if (supabaseClient) {
+    const { data: res, error } = await supabaseClient.rpc('admin_toggle_archive_user', {
+      p_target_uid: uid,
+      p_archive_status: false
+    });
+    if (error || !res || !res.success) {
+      showToast(res?.error || 'Ошибка восстановления из базы', 'error');
+      return;
+    }
+  }
+
+  u.isArchived = false;
   archivedUsers = archivedUsers.filter(x => x.uid !== uid);
   users.push(u);
-  if (supabaseClient) {
-    supabaseClient.from('users').update({ frozen: false }).eq('uid', uid).then();
-  }
+
+  ads.forEach(a => {
+    if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase() && a.status === 'ARCHIVED') {
+      a.status = 'ACTIVE';
+    }
+  });
+
+  saveCachedAds();
   renderAdminTabContent();
-  showToast('Пользователь восстановлен', 'success');
+  renderAds();
+  renderCategoryPills();
+  showToast('Пользователь восстановлен из архива', 'success');
 }
 
 function deleteUserPermanently(uid) {
