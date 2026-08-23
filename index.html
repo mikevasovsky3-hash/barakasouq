@@ -1616,19 +1616,18 @@ async function openAdDetail(adId, countView = true) {
 
 openModal('modal-ad-detail');
   
-  // Карта и фоновый перевод запускаются уже после того, как модальное окно мгновенно открылось
+// Карта и фоновый перевод запускаются уже после того, как модальное окно мгновенно открылось
   setTimeout(async () => {
     initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765);
-    if (currentLang === 'ar') {
-      const titleEl = document.querySelector('#modal-ad-detail h2');
-      const descEl = document.querySelector('#modal-ad-detail p.whitespace-pre-line');
-      const cityEl = document.getElementById(`detail-city-${ad.id}`);
-      const kunyaEl = document.getElementById(`detail-kunya-${ad.id}`);
-      if (titleEl) titleEl.innerText = await translateDynamic(ad.title, 'ar');
-      if (descEl && ad.desc) descEl.innerText = await translateDynamic(ad.desc, 'ar');
-      if (cityEl && ad.city) cityEl.innerText = await translateDynamic(ad.city, 'ar');
-      if (kunyaEl && rawKunya) kunyaEl.innerText = await translateDynamic(rawKunya, 'ar');
-    }
+    const titleEl = document.querySelector('#modal-ad-detail h2');
+    const descEl = document.querySelector('#modal-ad-detail p.whitespace-pre-line');
+    const cityEl = document.getElementById(`detail-city-${ad.id}`);
+    const kunyaEl = document.getElementById(`detail-kunya-${ad.id}`);
+    
+    if (titleEl) titleEl.innerText = await translateDynamic(ad.title, currentLang);
+    if (descEl && ad.desc) descEl.innerText = await translateDynamic(ad.desc, currentLang);
+    if (cityEl && ad.city) cityEl.innerText = await translateDynamic(ad.city, currentLang);
+    if (kunyaEl && rawKunya) kunyaEl.innerText = await translateDynamic(rawKunya, currentLang);
   }, 30);
 }
 function openFullscreenViewer(src) { const v = byId('modal-image-viewer'), img = byId('fullscreen-viewer-img'); if (v && img) { img.src = src; openModal('modal-image-viewer'); } }
@@ -3888,12 +3887,11 @@ async function translateDynamic(text, targetLang = currentLang) {
   const cacheKey = `${targetLang}_${clean}`;
   if (TRANSLATE_CACHE[cacheKey]) return TRANSLATE_CACHE[cacheKey];
 
-  // Определение языка текста: если уже на арабском при выборе AR, или на русском при RU — не переводим
   const isArabicText = /[\u0600-\u06FF]/.test(clean);
   if (targetLang === 'ar' && isArabicText) return clean;
   if (targetLang === 'ru' && !isArabicText) return clean;
 
-  const sl = targetLang === 'ar' ? 'auto' : 'ar';
+  const sl = isArabicText ? 'ar' : 'ru';
   const tl = targetLang;
 
   try {
@@ -3940,12 +3938,22 @@ function changeLanguage(langCode) {
   updateRegionLabel();
   renderAds();
 
-  // Если открыт профиль — сразу перерисовываем его
+// Если открыт профиль — сразу перерисовываем его
   const profileModal = byId('modal-profile');
   if (profileModal && !profileModal.classList.contains('hidden')) {
     openProfileModal();
   }
 
+  // Если открыто объявление — мгновенно переводим его на выбранный язык
+  const detailModal = byId('modal-ad-detail');
+  if (detailModal && !detailModal.classList.contains('hidden')) {
+    const currentAdId = detailModal.querySelector('.ad-id-badge, .font-mono')?.innerText?.trim();
+    if (currentAdId) {
+      openAdDetail(currentAdId, false);
+    }
+  }
+
+  showToast(langCode === 'ar' ? 'تم تحويل اللغة إلى العربية' : 'Язык переключен на русский', 'success');
   // Обновление надписи статуса синхронизации
   const syncLbl = byId('cloud-sync-label');
   if (syncLbl) syncLbl.innerText = t('Синхронизация с облаком…');
