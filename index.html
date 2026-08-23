@@ -1516,33 +1516,65 @@ const { data: res, error } = await supabaseClient.rpc('purchase_ad_item', {
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
 function handleShopRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('shop-lat').value = c[0]; byId('shop-lng').value = c[1]; if (shopCreateMap && shopCreateMarker) { shopCreateMap.setView(c, 12); shopCreateMarker.setLatLng(c); } }
-function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) {
-  const u = users.find(x => x.uid === shopEditTargetUid);
-  if (!u) return;
-  u.shop = shopData;
-  if (supabaseClient && u.uid) {
-    supabaseClient.rpc('update_user_shop', { p_identifier: u.uid, p_shop_data: shopData }).then();
+async function handleCreateShopSubmit(e) {
+  e.preventDefault();
+  const name = byId('shop-name').value.trim();
+  const isEditTarget = !!shopEditTargetUid;
+  if (!isEditTarget && !currentUser) {
+    showToast('Войдите в аккаунт!', 'warning');
+    return;
   }
+  const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser;
+  const prevShop = existing?.shop;
+  const shopData = {
+    id: prevShop ? prevShop.id : ('SHOP-' + Date.now()),
+    name,
+    slogan: byId('shop-slogan').value.trim(),
+    category: byId('shop-category').value,
+    region: byId('shop-region').value,
+    address: byId('shop-address').value.trim(),
+    hours: byId('shop-hours').value.trim(),
+    whatsapp: byId('shop-whatsapp').value.trim(),
+    desc: byId('shop-desc').value.trim(),
+    logo: byId('shop-logo-data').value || null,
+    lat: parseFloat(byId('shop-lat').value || 33.5138),
+    lng: parseFloat(byId('shop-lng').value || 36.2765),
+    customCategories: prevShop ? (prevShop.customCategories || []) : [],
+    isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false,
+    createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now()
+  };
+
+  const targetUid = isEditTarget ? shopEditTargetUid : (currentUser.uid || currentUser.username);
+
+  if (supabaseClient) {
+    const { data: res, error } = await supabaseClient.rpc('update_user_shop', {
+      p_identifier: targetUid,
+      p_shop_data: shopData
+    });
+    if (error || !res || !res.success) {
+      showToast(res?.error || 'Ошибка сохранения магазина в базе', 'error');
+      return;
+    }
+  }
+
+  if (isEditTarget) {
+    const u = users.find(x => x.uid === shopEditTargetUid);
+    if (u) u.shop = shopData;
+    shopEditTargetUid = null;
+  } else {
+    currentUser.shop = shopData;
+    const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+    if (idx !== -1) users[idx].shop = shopData;
+    saveUserSession(currentUser, true);
+    updateAuthUI();
+  }
+
   closeModal('modal-create-shop');
-  shopEditTargetUid = null;
   renderAdminTabContent();
   renderAds();
   renderCategoryPills();
-  showToast(`Магазин "${name}" сохранен!`, 'success');
-} else {
-  currentUser.shop = shopData;
-  currentUser.uid = currentUser.uid || ('u_' + Date.now());
-  const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
-  if (idx !== -1) users[idx] = currentUser; else users.push(currentUser);
-  if (supabaseClient) {
-    supabaseClient.rpc('update_user_shop', { p_identifier: currentUser.uid, p_shop_data: shopData }).then();
-  }
-  saveUserSession(currentUser, true);
-  closeModal('modal-create-shop');
-  showToast(`Магазин "${name}" сохранен!`, 'success');
-  updateAuthUI();
-} }
-async function adminVerifyShop(userUid, status) {
+  showToast(`Магазин "${name}" сохранен и отправлен на проверку!`, 'success');
+}async function adminVerifyShop(userUid, status) {
   if (!currentUser) return;
   const u = users.find(x => x.uid === userUid);
   if (!u || !u.shop) return;
