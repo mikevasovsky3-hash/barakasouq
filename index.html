@@ -2461,6 +2461,7 @@ function openProfileModal() {
     if (freshMe) {
         currentUser.avitocashBalance = freshMe.avitocashBalance;
         currentUser.trialBalance = freshMe.trialBalance;
+        currentUser.showWomenAds = freshMe.showWomenAds;
     }
     const c = byId('profile-content');  
     if (!c) return; 
@@ -2497,6 +2498,19 @@ function openProfileModal() {
             </div>
         </div>
 
+        <!-- Кнопка-переключатель женских объявлений для Админов и Суперюзеров -->
+        ${isAdmin && currentUser.gender !== 'FEMALE' ? `
+        <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-xs font-bold t1">Женские объявления 🌸</div>
+                <div class="text-[10px] t2 truncate">Видеть спец. предложения в общей ленте</div>
+            </div>
+            <label class="ig-switch shrink-0">
+                <input type="checkbox" id="profile-show-women-ads" onchange="toggleShowWomenAds(this.checked)" ${currentUser.showWomenAds ? 'checked' : ''}>
+                <span class="slider"></span>
+            </label>
+        </div>` : ''}
+
         <!-- Баланс AvitoCash (Компактный блок) -->
         <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
             <div class="flex items-center justify-between">
@@ -2516,9 +2530,8 @@ function openProfileModal() {
             </div>
         </div>
 
-        <!-- Настройки: Валюты, Тема и Вид ленты в одну аккуратную сетку -->
+        <!-- Настройки: Тема и Вид магазина -->
         <div class="grid grid-cols-2 gap-2">
-            <!-- Переключатель темы -->
             <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between">
                 <div>
                     <div class="text-[10px] t2">Тема экрана</div>
@@ -2528,7 +2541,6 @@ function openProfileModal() {
                     ${isLight ? IGSVG.moon() : IGSVG.sun()}
                 </button>
             </div>
-            <!-- Управление магазином -->
             <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border rounded-2xl p-3 text-left flex flex-col justify-center hover:bg-ig-hover transition-colors" style="border-color:rgba(147,51,234,.3)">
                 <div class="text-[10px]" style="color:#c084fc">Магазин</div>
                 <div class="text-xs font-bold t1 truncate"><i class="fa-solid fa-store"></i> ${currentUser.shop ? currentUser.shop.name : 'Открыть'}</div>
@@ -2561,8 +2573,7 @@ function openProfileModal() {
         </div>
     </div>`; 
     openModal('modal-profile'); 
-}
-function setFeedLayout(layout) {
+}function setFeedLayout(layout) {
 localStorage.setItem('bs_feed_layout', layout);
 itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
 renderAds();
