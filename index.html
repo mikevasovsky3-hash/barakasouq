@@ -230,7 +230,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ SUPPORT / AVITOCASH QR ============ -->
 <div id="modal-shamcash-qr" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 text-center space-y-4 relative shadow-2xl">
-<button onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="w-14 h-14 mx-auto rounded-2xl text-white flex items-center justify-center text-2xl" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar"></i></div>
 <div>
 <h3 class="text-base font-bold t1">Поддержка сервера — ShamCash</h3>
@@ -261,12 +261,12 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <a id="share-wa-link" href="#" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
 <button onclick="downloadShareCard()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> Скачать красивую карточку</button>
 <button onclick="copyShareLink()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> Скопировать ссылку</button>
-<button onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
 </div>
 </div>
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
 <div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2">
-<button onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
 <img id="fullscreen-viewer-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg">
 </div>
 <!-- ============ RULES MODAL ============ -->
@@ -294,7 +294,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AUTH MODAL ============ -->
 <div id="modal-auth" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-auth')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-auth')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="text-center pt-2"><span class="ig-logo text-[34px] t1">Avito Sham</span></div>
 <div class="flex border-b b-ig text-sm">
 <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold border-b-2" style="border-color:#0095f6;color:#0095f6">Вход</button>
@@ -325,7 +325,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="modal-create-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
-<button onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Подача нового объявления</h3>
 </div>
 <form onsubmit="handleCreateAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
@@ -391,7 +391,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="modal-edit-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
-<button onclick="closeModal('modal-edit-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-edit-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Редактирование объявления</h3>
 </div>
 <form onsubmit="handleEditAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
@@ -440,21 +440,21 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AD DETAIL MODAL ============ -->
 <div id="modal-ad-detail" class="fixed inset-0 z-30 lg:z-50 ig-modal-blur hidden flex items-center justify-center p-2 sm:p-6">
 <div class="ig-sheet w-full max-w-4xl rounded-2xl overflow-hidden max-h-[94vh] flex flex-col relative max-lg:h-[calc(100vh-104px)] max-lg:max-h-[calc(100vh-104px)] max-lg:rounded-none">
-<button onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="detail-content" class="overflow-y-auto modal-scroll-body"></div>
 </div>
 </div>
 <!-- ============ PROFILE MODAL ============ -->
 <div id="modal-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-md rounded-2xl p-6 relative max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="profile-content" class="space-y-4"></div>
 </div>
 </div>
 <!-- ============ EDIT PROFILE MODAL ============ -->
 <div id="modal-edit-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-3 text-sm max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-edit-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-edit-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="font-bold text-sm t1">Редактирование анкеты</h3>
 <form onsubmit="handleSaveProfile(event)" class="space-y-2.5">
 <input type="hidden" id="edit-profile-username">
@@ -477,7 +477,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="modal-create-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
-<button onclick="closeModal('modal-create-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 id="shop-modal-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i><span>Открытие нового магазина</span></h3>
 </div>
 <form onsubmit="handleCreateShopSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
@@ -515,7 +515,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ SHOP SHOWCASE MODAL ============ -->
 <div id="modal-shop-showcase" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col relative">
-<button onclick="closeModal('modal-shop-showcase')" class="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-shop-showcase')" class="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="shop-showcase-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
 </div>
 </div>
@@ -523,7 +523,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="modal-my-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-2xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
-<button onclick="closeModal('modal-my-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-my-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i> Панель управления магазином</h3>
 </div>
 <div id="my-shop-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
@@ -533,7 +533,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <div id="modal-combo-builder" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col" style="border-color:rgba(249,115,22,.4)">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
-<button onclick="closeModal('modal-combo-builder')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-combo-builder')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 id="combo-builder-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-fire" style="color:#f97316"></i> Новая акция (комбо-набор)</h3>
 </div>
 <form onsubmit="handleComboSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
@@ -566,7 +566,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ REPORT MODAL ============ -->
 <div id="modal-report-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
-<button onclick="closeModal('modal-report-ad')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-report-ad')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="text-center space-y-2">
 <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-xl mx-auto"><i class="fa-solid fa-flag"></i></div>
 <h3 class="text-base font-bold t1">Пожаловаться на объявление</h3>
@@ -608,7 +608,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AVITOCASH TOP-UP ============ -->
 <div id="modal-avitocash-topup" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-avitocash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-avitocash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-base font-bold t1 pt-8">Пополнение баланса AvitoCash через ShamCash</h3>
 <label class="block text-xs font-semibold t2">Сумма пополнения (в AvitoCash / USD)
 <input id="topup-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10">
@@ -625,7 +625,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ GIFT CODE GENERATOR ============ -->
 <div id="modal-gift-code" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-md rounded-2xl p-5 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
-<button onclick="closeModal('modal-gift-code')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-gift-code')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-gift" style="color:#f59e0b"></i> Подарочный код AvitoCash</h3>
 <div id="gift-generator-form" class="space-y-3">
 <label class="block text-xs font-semibold t2">Сумма подарка, AC<input id="gift-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10"></label>
@@ -645,7 +645,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ GIFT CODE REDEEM ============ -->
 <div id="modal-redeem-gift" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
-<button onclick="closeModal('modal-redeem-gift')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-redeem-gift')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-gift" style="color:#f59e0b"></i> Активировать подарок</h3>
 <p class="text-xs t2">Введите подарочный код, чтобы получить AvitoCash на свой баланс.</p>
 <input id="redeem-gift-code" type="text" class="ig-input w-full px-3 py-2.5 font-mono uppercase" placeholder="GIFT-XXXXX-XXXXX" autocomplete="off">
@@ -655,7 +655,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <!-- ============ AVITOCASH TRANSFER ============ -->
 <div id="modal-transfer-shamcash" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
-<button onclick="closeModal('modal-transfer-shamcash')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-transfer-shamcash')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-arrow-right-arrow-left" style="color:#10b981"></i> Оплатить AvitoCash</h3>
 <p class="text-xs t2">Перевод другому пользователю будет сохранен в журнале транзакций.</p>
 <label class="block text-xs font-semibold t2">Получатель<select id="transfer-recipient" class="ig-input w-full px-3 py-2.5 mt-1"></select></label>
@@ -1680,7 +1680,7 @@ function openMyShopModal() { if (!currentUser || !currentUser.shop) return; cons
 </div>
 </div>
 <button onclick="openComboBuilder()" class="w-full py-3.5 rounded-xl text-white font-extrabold text-sm flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Создать акцию (комбо-набор)</button>
-<button onclick="closeModal('modal-my-shop');openCreateAdModal()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар в магазин</button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-my-shop');openCreateAdModal()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар в магазин</button>
 <div class="text-[10px] t2 text-center -mt-2">Шаг 1: создайте свои категории ниже. Шаг 2: добавьте товар. Шаг 3: объедините товары в акцию с общей ценой.</div>
 ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-fire" style="color:#f97316"></i> Мои акции (${myCombos.length})</h4>
@@ -2542,11 +2542,11 @@ function openProfileModal() {
                     <div class="text-[10px] t2">Тема экрана</div>
                     <div class="text-xs font-bold t1">${isLight ? 'Светлая ☀️' : 'Темная 🌙'}</div>
                 </div>
-                <button onclick="toggleTheme()" class="ig-btn-outline w-8 h-8 rounded-xl flex items-center justify-center text-xs">
+                <button type="button" aria-label="Переключить тему" onclick="toggleTheme()" class="ig-btn-outline w-8 h-8 rounded-xl flex items-center justify-center text-xs">
                     ${isLight ? IGSVG.moon() : IGSVG.sun()}
                 </button>
             </div>
-            <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border rounded-2xl p-3 text-left flex flex-col justify-center hover:bg-ig-hover transition-colors" style="border-color:rgba(147,51,234,.3)">
+            <button type="button" aria-label="Закрыть" onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border rounded-2xl p-3 text-left flex flex-col justify-center hover:bg-ig-hover transition-colors" style="border-color:rgba(147,51,234,.3)">
                 <div class="text-[10px]" style="color:#c084fc">Магазин</div>
                 <div class="text-xs font-bold t1 truncate"><i class="fa-solid fa-store"></i> ${currentUser.shop ? currentUser.shop.name : 'Открыть'}</div>
             </button>
@@ -3074,7 +3074,7 @@ else if (tab === 'reports') {
                         <div class="text-[10px] t2 truncate">Объявление: <span class="t1 font-mono">${r.adId}</span> ${ad ? `(${ad.title})` : '(Удалено)'}</div>
                         ${r.comment ? `<div class="t1 italic">"${r.comment}"</div>` : ''}
                     </div>
-                    ${ad ? `<button onclick="closeModal('modal-admin-panel'); openAdDetail('${ad.id}')" class="w-full py-1.5 rounded-lg text-xs font-semibold border b-ig t1 hover:bg-field">Открыть объявление</button>` : ''}
+                    ${ad ? `<button type="button" aria-label="Закрыть" onclick="closeModal('modal-admin-panel'); openAdDetail('${ad.id}')" class="w-full py-1.5 rounded-lg text-xs font-semibold border b-ig t1 hover:bg-field">Открыть объявление</button>` : ''}
                 </div>`; 
             }).join('')}
         </div>
