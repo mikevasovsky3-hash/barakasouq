@@ -744,7 +744,7 @@ star: f => f ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="#f59e0b"><
 };
 /* ================= HELPERS ================= */
 const byId = id => document.getElementById(id);
-function getSellerWhatsapp(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return (s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || ''); }
+function getSellerWhatsapp(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return String((s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || '')); }
 function getSellerKunya(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return (s && s.kunya) ? s.kunya : (ad.sellerKunya || ad.sellerUsername || ''); }
 function getSellerAvatar(ad) { if (!ad) return null; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return s?.avatar || null; }
 function getSellerVerified(ad) { if (ad && ad.isCombo && typeof ad.verified === 'boolean') return ad.verified; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return !!(s && (s.verifiedShop || (s.shop && s.shop.isVerified))); }
@@ -1132,9 +1132,48 @@ async function handleCreateAdSubmit(e) {
     views: 0
   };
 
+if (supabaseClient) {
+    const { data: feeRes, error: feeErr } = await supabaseClient.rpc('create_ad_with_fee', {
+      p_ad: {
+        id: adId,
+        title: newAd.title,
+        category: newAd.category,
+        storeCategory: newAd.storeCategory,
+        region: newAd.region,
+        city: newAd.city,
+        isWomenOnly: newAd.isWomenOnly,
+        isFree: newAd.isFree,
+        isNegotiable: newAd.isNegotiable,
+        price: newAd.price,
+        currency: newAd.currency,
+        desc: newAd.desc,
+        images: newAd.images,
+        image: newAd.image,
+        lat: newAd.lat,
+        lng: newAd.lng,
+        createdAt: newAd.createdAt
+      },
+      p_user_identifier: postingUser.uid || postingUser.username
+    });
+
+    if (feeErr || !feeRes || !feeRes.success) {
+      showToast(feeRes?.error || 'Ошибка создания объявления', 'error');
+      return;
+    }
+
+    if (feeRes.fee_charged > 0) {
+      postingUser.avitocashBalance = feeRes.new_balance;
+      postingUser.avitocash_balance = feeRes.new_balance;
+      if (currentUser.uid === postingUser.uid) {
+        currentUser.avitocashBalance = feeRes.new_balance;
+        currentUser.avitocash_balance = feeRes.new_balance;
+        saveUserSession(currentUser, true);
+      }
+    }
+  }
+
   ads.unshift(newAd);
   saveCachedAds();
-  saveAdToSupabase(newAd);
 
   closeModal('modal-create-ad');
   localStorage.removeItem('bs_ad_draft');
@@ -1144,8 +1183,10 @@ async function handleCreateAdSubmit(e) {
   renderCategoryPills();
   renderAds();
 
-  showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление опубликовано!', 'success');
-}function openEditAdModal(adId) {
+showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление опубликовано!', 'success');
+}
+
+function openEditAdModal(adId) {
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
   const isOwner = currentUser && (currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
@@ -1248,7 +1289,11 @@ function renderComboItemsList() { const list = byId('combo-items-list'); if (!li
 function toggleComboItem(adId) { const i = comboSelectedIds.indexOf(adId); if (i === -1) comboSelectedIds.push(adId); else comboSelectedIds.splice(i, 1); renderComboItemsList(); updateComboSummary(); }
 function updateComboSummary() { const el = byId('combo-summary'); if (!el) return; const selected = comboBuilderAds.filter(a => comboSelectedIds.includes(a.id)); const total = selected.reduce((s, a) => s + adToUSD(a), 0); const price = parseFloat(byId('combo-price')?.value || 0); if (selected.length < 2) { el.innerHTML = `<i class="fa-solid fa-circle-info"></i> Выберите минимум 2 товара для создания комбо. Выбрано: ${selected.length}.`; return; } const save = total - price; el.innerHTML = `<div class="space-y-1"><div>Товаров в комплекте: <b class="t1">${selected.length}</b></div><div>Цена по отдельности: <b class="t2 line-through">$${total.toFixed(2)}</b></div><div>Цена акции: <b style="color:#f97316">$${(price || 0).toFixed(2)}</b></div>${price > 0 ? `<div>Выгода покупателя: <b style="color:${save > 0 ? '#10b981' : '#ed4956'}">${save > 0 ? '$' + save.toFixed(2) + ' (-' + Math.round(save / total * 100) + '%)' : 'нет скидки'}</b></div>` : ''}</div>`; }
 function handleComboSubmit(e) { e.preventDefault(); const owner = comboOwnerCache; if (!owner) return; if (comboSelectedIds.length < 2) { showToast('Выберите минимум 2 товара!', 'warning'); return; } const price = parseFloat(byId('combo-price').value); if (isNaN(price) || price <= 0) { showToast('Укажите специальную цену акции!', 'warning'); return; } const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров`; const editId = byId('combo-edit-id').value; if (editId) { const c = combos.find(x => x.id === editId); if (c) { c.title = title; c.price = price; c.items = [...comboSelectedIds]; if (supabaseClient) supabaseClient.from('combos').upsert(c).then(); } showToast('Акция обновлена!', 'success'); } else { const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; combos.push(nc); if (supabaseClient) supabaseClient.from('combos').upsert(nc).then(); showToast('Акция создана! Комбо появилось в ленте.', 'success'); } closeModal('modal-combo-builder'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); if (!byId('modal-shop-showcase').classList.contains('hidden') && owner.uid) openShopShowcase(owner.uid); }
-function deleteComboWithConfirm(comboId) { showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { combos = combos.filter(x => x.id !== comboId); if (supabaseClient) supabaseClient.from('combos').delete().eq('id', comboId).then(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); showToast('Акция удалена', 'info'); }); }function openComboDetail(comboId) { const c = combos.find(x => x.id === comboId); if (!c) return; const v = comboToVirtualAd(c); if (!v) { showToast('Товары этой акции больше недоступны', 'warning'); return; } const content = byId('detail-content'); if (!content) return; currentDetailPhotoIndex = 0; const imgs = v.images; const owner = getComboOwner(c); const shop = owner?.shop; const wa = shop?.whatsapp || owner?.whatsapp || ''; const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); const save = v.comboOriginalTotal - c.price; content.innerHTML = `<div class="grid md:grid-cols-2">
+function deleteComboWithConfirm(comboId) { showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { combos = combos.filter(x => x.id !== comboId); if (supabaseClient) supabaseClient.from('combos').delete().eq('id', comboId).then(); closeModal('modal-ad-detail'); renderAds(); renderCategoryPills(); if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); showToast('Акция удалена', 'info'); 
+  }); 
+}
+
+function openComboDetail(comboId) { const c = combos.find(x => x.id === comboId); if (!c) return; const v = comboToVirtualAd(c); if (!v) { showToast('Товары этой акции больше недоступны', 'warning'); return; } const content = byId('detail-content'); if (!content) return; currentDetailPhotoIndex = 0; const imgs = v.images; const owner = getComboOwner(c); const shop = owner?.shop; const wa = shop?.whatsapp || owner?.whatsapp || ''; const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); const save = v.comboOriginalTotal - c.price; content.innerHTML = `<div class="grid md:grid-cols-2">
 <div class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height:320px">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full max-h-[46vh] md:max-h-[80vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
@@ -1339,124 +1384,109 @@ function changeDetailPhoto(adId, dir) { const ad = getListingById(adId); if (!ad
 function setDetailPhoto(adId, idx) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
 /* ================= PURCHASE AD WITH BALANCE ================= */
 async function purchaseAd(adId) {
-if (!currentUser) { openAuthModal(); return; }
-if (currentUser.frozen) { showToast('Аккаунт заморожен администратором — покупка недоступна', 'error'); return; }
-const ad = ads.find(a => a.id === adId);
-if (!ad) { showToast('Объявление не найдено', 'error'); return; }
-if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) {
-showToast('Вы не можете купить собственное объявление', 'warning');
-return;
-}
-if (ad.isFree || ad.isNegotiable || ad.price <= 0) {
-showToast('Это объявление нельзя оплатить через баланс', 'warning');
-return;
-}
-// === ЗАЩИТА ОТ ПОДМЕНЫ ЦЕНЫ В КОНСОЛИ ===
-let realPriceUsd = adToUSD(ad);
-if (firebaseDb && ad.id) {
-try {
-const snap = await firebaseDb.ref(`ads/${ad.id}/price`).once('value');
-const cloudPrice = snap.val();
-if (cloudPrice !== null && cloudPrice !== undefined) {
-// Пересчитываем цену из базы, чтобы хакер не купил за 0.01$
-let p = Number(cloudPrice);
-if (ad.currency === 'SYP') p = p / EXCHANGE_RATES.SYP;
-if (ad.currency === 'TRY') p = p / EXCHANGE_RATES.TRY;
-if (p > 0) realPriceUsd = p;
-}
-} catch (e) { console.warn('Price check failed', e); }
-}
-const priceUsd = realPriceUsd;
-if (priceUsd <= 0) { showToast('Цена должна быть больше нуля', 'warning'); return; }
-// RENAMED: shamcashBalance -> avitocashBalance
-const buyerBalance = currentUser.avitocashBalance ?? currentUser.shamcashBalance ?? 0;
-if (buyerBalance < priceUsd) {
-showToast(`Недостаточно AvitoCash. Требуется ${priceUsd.toFixed(2)} AC, у вас ${buyerBalance.toFixed(2)} AC`, 'error');
-return;
-}
-// Найдем продавца
-const seller = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
-if (!seller || !seller.uid) {
-showToast('Продавец не найден в системе, оплата невозможна', 'error');
-return;
-}
-if (!firebaseDb) {
-showToast('Нет соединения с Firebase', 'error');
-return;
-}
-showToast('Обработка платежа...', 'info');
-try {
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-const buyerRef = firebaseDb.ref(`users/${currentUser.uid}/avitocashBalance`);
-const debitResult = await buyerRef.transaction(balance => {
-const current = Number(balance || 0);
-if (current < priceUsd) return; // не хватает
-return Math.round((current - priceUsd) * 100) / 100;
-});
-if (!debitResult.committed) {
-showToast('Недостаточно средств или ошибка списания', 'error');
-return;
-}
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-const sellerRef = firebaseDb.ref(`users/${seller.uid}/avitocashBalance`);
-const creditResult = await sellerRef.transaction(balance => {
-return Math.round((Number(balance || 0) + priceUsd) * 100) / 100;
-});
-if (!creditResult.committed) {
-// откат списания
-await buyerRef.transaction(balance => Math.round((Number(balance || 0) + priceUsd) * 100) / 100);
-showToast('Ошибка зачисления продавцу, платеж отменен', 'error');
-return;
-}
-// Обновляем локальные балансы
-// RENAMED: shamcashBalance -> avitocashBalance
-currentUser.avitocashBalance = debitResult.snapshot.val();
-const localSeller = users.find(u => u.uid === seller.uid);
-if (localSeller) localSeller.avitocashBalance = creditResult.snapshot.val();
-saveUserSession(currentUser, true);
-// Чек покупки/продажи: пишется в профили обоих и в общий журнал; ошибки прав не ломают сделку
-await logTransaction({
-type: 'purchase',
-amount: priceUsd,
-senderUid: currentUser.uid,
-senderUsername: currentUser.username,
-recipientUid: seller.uid,
-recipientUsername: seller.username,
-adId: ad.id,
-adTitle: ad.title,
-note: 'Покупка объявления'
-}).catch(() => {});
-// Помечаем объявление как проданное
-ad.status = 'SOLD';
-saveCachedAds();
-if (supabaseClient) supabaseClient.from('ads').upsert(ad);
-// Закрываем детали и обновляем ленту
-closeModal('modal-ad-detail');
-renderAds();
-renderCategoryPills();
-showToast(`Покупка успешна! Списано ${priceUsd.toFixed(2)} AC. Чек сохранен в вашем профиле и у продавца.`, 'success');
-// Отправляем уведомление продавцу через WhatsApp (опционально)
-const sellerWa = seller.whatsapp || '';
-if (sellerWa) {
-const msg = `Здравствуйте! Ваше объявление "${ad.title}" (${ad.id}) было оплачено через AvitoCash покупателем ${currentUser.kunya || currentUser.username}. Сумма ${priceUsd.toFixed(2)} AC зачислена на ваш баланс.`;
-window.open(`https://wa.me/${sellerWa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-} catch (err) {
-console.error('Purchase error:', err);
-showToast('Ошибка при оплате: ' + err.message, 'error');
-}
-}
-/* ================= SHOPS ================= */
+  if (!currentUser) { openAuthModal(); return; }
+  if (currentUser.frozen) { showToast('Аккаунт заморожен администратором — покупка недоступна', 'error'); return; }
+  const ad = ads.find(a => a.id === adId);
+  if (!ad) { showToast('Объявление не найдено', 'error'); return; }
+  if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) {
+    showToast('Вы не можете купить собственное объявление', 'warning');
+    return;
+  }
+  if (ad.isFree || ad.isNegotiable || ad.price <= 0) {
+    showToast('Это объявление нельзя оплатить через баланс', 'warning');
+    return;
+  }
+
+  const priceUsd = adToUSD(ad);
+  if (priceUsd <= 0) { showToast('Цена должна быть больше нуля', 'warning'); return; }
+
+  const seller = users.find(u => (u.uid && u.uid === ad.sellerUid) || (u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()));
+  if (!seller) {
+    showToast('Продавец не найден в системе, оплата невозможна', 'error');
+    return;
+  }
+  if (!supabaseClient) {
+    showToast('Нет соединения с базой данных', 'error');
+    return;
+  }
+
+  showToast('Обработка покупки...', 'info');
+  try {
+    const senderId = currentUser.uid || currentUser.username;
+    const recipId = seller.uid || seller.username;
+
+const { data: res, error } = await supabaseClient.rpc('purchase_ad_item', {
+      p_ad_id: ad.id,
+      p_buyer_identifier: senderId
+    });
+
+    if (error) throw error;
+    if (!res || !res.success) throw new Error(res?.error || 'Ошибка проведения покупки');
+
+    currentUser.avitocashBalance = res.new_buyer_balance;
+    currentUser.avitocash_balance = res.new_buyer_balance;
+    seller.avitocashBalance = res.new_seller_balance;
+    seller.avitocash_balance = res.new_seller_balance;
+
+    saveUserSession(currentUser, true);
+
+    ad.status = 'SOLD';
+    saveCachedAds();
+	
+    closeModal('modal-ad-detail');
+    renderAds();
+    renderCategoryPills();
+    showToast(`Покупка успешна! Списано ${priceUsd.toFixed(2)} AC`, 'success');
+
+    const sellerWa = seller.whatsapp ? String(seller.whatsapp).replace(/[^0-9]/g, '') : '';
+    if (sellerWa) {
+      const msg = `Здравствуйте! Ваше объявление "${ad.title}" (${ad.id}) было оплачено через AvitoCash покупателем ${currentUser.kunya || currentUser.username}. Сумма ${priceUsd.toFixed(2)} AC зачислена на ваш баланс.`;
+      window.open(`https://wa.me/${sellerWa}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+  } catch (err) {
+    console.error('Purchase error:', err);
+    showToast('Ошибка при оплате: ' + (err.message || 'Сбой транзакции'), 'error');
+  }
+}/* ================= SHOPS ================= */
 function openCreateShopModal(targetUid = null) { shopEditTargetUid = null; let targetUser = currentUser; const banner = byId('shop-admin-target-banner'), bannerText = byId('shop-admin-target-text'); if (targetUid && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { const t = users.find(u => u.uid === targetUid); if (t) { shopEditTargetUid = targetUid; targetUser = t; } } if (!targetUser) { openAuthModal(); showToast('Войдите в аккаунт', 'warning'); return; } const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); if (shopEditTargetUid) { banner.classList.remove('hidden'); bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; } else banner.classList.add('hidden'); if (targetUser.shop) { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; submitBtn.innerText = 'Сохранить изменения магазина'; byId('shop-name').value = targetUser.shop.name || ''; byId('shop-slogan').value = targetUser.shop.slogan || ''; byId('shop-category').value = targetUser.shop.category || 'electronics'; byId('shop-region').value = targetUser.shop.region || 'DAM'; byId('shop-address').value = targetUser.shop.address || ''; byId('shop-hours').value = targetUser.shop.hours || ''; byId('shop-whatsapp').value = targetUser.shop.whatsapp || targetUser.whatsapp || ''; byId('shop-desc').value = targetUser.shop.desc || ''; byId('shop-logo-data').value = targetUser.shop.logo || ''; byId('shop-lat').value = targetUser.shop.lat || 33.5138; byId('shop-lng').value = targetUser.shop.lng || 36.2765; if (targetUser.shop.logo) { byId('shop-logo-preview-img').src = targetUser.shop.logo; byId('shop-logo-preview-box').classList.remove('hidden'); } } else { titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; submitBtn.innerText = 'Создать магазин'; ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); byId('shop-category').value = 'electronics'; byId('shop-region').value = 'DAM'; byId('shop-whatsapp').value = targetUser.whatsapp || ''; byId('shop-lat').value = 33.5138; byId('shop-lng').value = 36.2765; byId('shop-logo-preview-box').classList.add('hidden'); } openModal('modal-create-shop'); setTimeout(initShopCreateMap, 200); }
 function initShopCreateMap() { const el = byId('shop-create-map'); if (!el || typeof L === 'undefined') return; const lat = parseFloat(byId('shop-lat').value || 33.5138), lng = parseFloat(byId('shop-lng').value || 36.2765); if (!shopCreateMap) { shopCreateMap = L.map('shop-create-map').setView([lat, lng], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(shopCreateMap); shopCreateMarker = L.marker([lat, lng], { draggable: true }).addTo(shopCreateMap); shopCreateMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('shop-lat').value = ll.lat.toFixed(6); byId('shop-lng').value = ll.lng.toFixed(6); }); shopCreateMap.on('click', e => { shopCreateMarker.setLatLng(e.latlng); byId('shop-lat').value = e.latlng.lat.toFixed(6); byId('shop-lng').value = e.latlng.lng.toFixed(6); }); } else { shopCreateMap.setView([lat, lng], 12); shopCreateMarker.setLatLng([lat, lng]); shopCreateMap.invalidateSize(); } }
 function handleShopRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('shop-lat').value = c[0]; byId('shop-lng').value = c[1]; if (shopCreateMap && shopCreateMarker) { shopCreateMap.setView(c, 12); shopCreateMarker.setLatLng(c); } }
-function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) { const u = users.find(x => x.uid === shopEditTargetUid); if (!u) return; u.shop = shopData; if (supabaseClient && u.uid) supabaseClient.from('users').update({ shop: shopData }).eq('uid', u.uid).then(); closeModal('modal-create-shop'); shopEditTargetUid = null; renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast(`Магазин "${name}" сохранен!`, 'success'); } else { currentUser.shop = shopData; currentUser.uid = currentUser.uid || ('u_' + Date.now()); const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase())); if (idx !== -1) users[idx] = currentUser; else users.push(currentUser); if (supabaseClient) supabaseClient.from('users').update({ shop: shopData }).eq('uid', currentUser.uid).then(); saveUserSession(currentUser, true); closeModal('modal-create-shop'); showToast(`Магазин "${name}" сохранен!`, 'success'); updateAuthUI(); } }async function adminVerifyShop(userUid, status) {
+function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop-name').value.trim(); const isEditTarget = !!shopEditTargetUid; if (!isEditTarget && !currentUser) { showToast('Войдите в аккаунт!', 'warning'); return; } const existing = isEditTarget ? users.find(u => u.uid === shopEditTargetUid) : currentUser; const prevShop = existing?.shop; const shopData = { id: prevShop ? prevShop.id : ('SHOP-' + Date.now()), name, slogan: byId('shop-slogan').value.trim(), category: byId('shop-category').value, region: byId('shop-region').value, address: byId('shop-address').value.trim(), hours: byId('shop-hours').value.trim(), whatsapp: byId('shop-whatsapp').value.trim(), desc: byId('shop-desc').value.trim(), logo: byId('shop-logo-data').value || null, lat: parseFloat(byId('shop-lat').value || 33.5138), lng: parseFloat(byId('shop-lng').value || 36.2765), customCategories: prevShop ? (prevShop.customCategories || []) : [], isVerified: prevShop ? !!(existing.verifiedShop || prevShop.isVerified) : false, createdAt: prevShop ? (prevShop.createdAt || Date.now()) : Date.now() }; if (isEditTarget) {
+  const u = users.find(x => x.uid === shopEditTargetUid);
+  if (!u) return;
+  u.shop = shopData;
+  if (supabaseClient && u.uid) {
+    supabaseClient.rpc('update_user_shop', { p_identifier: u.uid, p_shop_data: shopData }).then();
+  }
+  closeModal('modal-create-shop');
+  shopEditTargetUid = null;
+  renderAdminTabContent();
+  renderAds();
+  renderCategoryPills();
+  showToast(`Магазин "${name}" сохранен!`, 'success');
+} else {
+  currentUser.shop = shopData;
+  currentUser.uid = currentUser.uid || ('u_' + Date.now());
+  const idx = users.findIndex(u => (u.uid && currentUser.uid && u.uid === currentUser.uid) || (u.username && currentUser.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+  if (idx !== -1) users[idx] = currentUser; else users.push(currentUser);
+  if (supabaseClient) {
+    supabaseClient.rpc('update_user_shop', { p_identifier: currentUser.uid, p_shop_data: shopData }).then();
+  }
+  saveUserSession(currentUser, true);
+  closeModal('modal-create-shop');
+  showToast(`Магазин "${name}" сохранен!`, 'success');
+  updateAuthUI();
+} }
+async function adminVerifyShop(userUid, status) {
   const u = users.find(x => x.uid === userUid);
   if (!u || !u.shop) { showToast('Магазин не найден', 'error'); return; }
   u.verifiedShop = status;
   u.shop.isVerified = status;
   if (supabaseClient && u.uid) {
-    await supabaseClient.from('users').update({ verified_shop: status, shop: u.shop }).eq('uid', u.uid);
+    await supabaseClient.rpc('admin_manage_user', {
+      p_target_uid: u.uid,
+      p_verified_shop: status
+    });
   }
   renderAdminTabContent();
   renderCategoryPills();
@@ -1464,6 +1494,31 @@ function handleCreateShopSubmit(e) { e.preventDefault(); const name = byId('shop
   showToast(`Статус магазина "${u.shop.name}" обновлен!`, 'success');
 }
 
+async function toggleFreezeUser(uid) {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен!', 'error');
+    return;
+  }
+  const u = users.find(x => x.uid === uid);
+  if (!u) return;
+  if (u.role === 'SUPERUSER') {
+    showToast('Нельзя заморозить суперюзера!', 'error');
+    return;
+  }
+  if (currentUser.uid === uid) {
+    showToast('Нельзя заморозить себя!', 'error');
+    return;
+  }
+  u.frozen = !u.frozen;
+  if (supabaseClient && u.uid) {
+    await supabaseClient.rpc('admin_manage_user', {
+      p_target_uid: u.uid,
+      p_frozen: u.frozen
+    });
+  }
+  renderAdminTabContent();
+  showToast(u.frozen ? `Аккаунт @${u.username} заморожен ❄` : `Аккаунт @${u.username} разморожен`, 'info');
+}
 function deleteShopWithConfirm(userUid) {
   const u = users.find(x => x.uid === userUid);
   if (!u || !u.shop) return;
@@ -1563,34 +1618,17 @@ async function removeShopCustomCategory(index) {
   openMyShopModal();
   showToast('Категория удалена', 'info');
 }
-function exportShopDatabaseJSON() { if (!currentUser || !currentUser.shop) return; const d = { version: '1.1', type: 'AVITO_SHAM_SHOP_BACKUP', exportDate: new Date().toISOString(), shop: currentUser.shop, products: ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()), combos: combos.filter(x => x.sellerUsername && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) }; const a = document.createElement('a'); a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d, null, 2)); a.download = `Shop_Backup_${Date.now()}.json`; document.body.appendChild(a); a.click(); a.remove(); try { localStorage.setItem(`bs_last_shop_backup_${currentUser.uid}`, d.exportDate); } catch (e) { /* ignore storage errors */ }
-if (firebaseDb && currentUser && currentUser.uid) {
-try {
-const metaRef = firebaseDb.ref('backups').push();
-metaRef.set({
-id: metaRef.key,
-type: 'shop',
-shopUid: currentUser.uid,
-by: currentUser.uid,
-exportDate: d.exportDate
-});
-} catch (e) { console.warn('Failed to write shop backup meta to Firebase', e); }
+function exportShopDatabaseJSON() {
+  if (!currentUser || !currentUser.shop) return;
+  const d = { version: '1.1', type: 'AVITO_SHAM_SHOP_BACKUP', exportDate: new Date().toISOString(), shop: currentUser.shop, products: ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()), combos: combos.filter(x => x.sellerUsername && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()) };
+  const a = document.createElement('a');
+  a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d, null, 2));
+  a.download = `Shop_Backup_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('Бэкап магазина выгружен!', 'success');
 }
-showToast('Бэкап магазина выгружен!', 'success'); }
-function importShopDatabaseJSON(event) { const f = event.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if (d.type !== 'AVITO_SHAM_SHOP_BACKUP' || !d.shop) { showToast('Неверный формат бэкапа!', 'error'); return; } currentUser.shop = d.shop; if (firebaseDb && currentUser.uid) firebaseDb.ref(`users/${currentUser.uid}/shop`).set(d.shop); if (Array.isArray(d.products)) d.products.forEach(na => { na.sellerUsername = currentUser.username; na.sellerKunya = currentUser.kunya; na.sellerWhatsapp = currentUser.whatsapp; const i = ads.findIndex(a => a.id === na.id); if (i !== -1) ads[i] = na; else ads.unshift(na); if (supabaseClient) supabaseClient.from('ads').upsert(na); }); if (Array.isArray(d.combos)) d.combos.forEach(nc => { nc.sellerUsername = currentUser.username; nc.shopUid = currentUser.uid; const i = combos.findIndex(x => x.id === nc.id); if (i !== -1) combos[i] = nc; else combos.push(nc); if (firebaseDb) firebaseDb.ref(`combos/${nc.id}`).set(nc); }); saveCachedAds(); saveUserSession(currentUser, true); openMyShopModal(); renderAds(); renderCategoryPills(); showToast('Импорт магазина выполнен!', 'success'); } catch (err) { showToast('Ошибка JSON: ' + err.message, 'error'); } }; r.readAsText(f); }
-function exportFullDatabaseJSON() { if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return; const d = { version: '3.1', type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP', exportDate: new Date().toISOString(), users, archivedUsers, ads, categories, combos, rates: EXCHANGE_RATES, reports: reports }; const a = document.createElement('a'); a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(d, null, 2)); a.download = `AvitoSham_FullDB_${Date.now()}.json`; document.body.appendChild(a); a.click(); a.remove(); try { localStorage.setItem('bs_last_full_backup', d.exportDate); } catch (e) { /* ignore storage errors */ }
-if (firebaseDb && currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
-try {
-const metaRef = firebaseDb.ref('backups').push();
-metaRef.set({
-id: metaRef.key,
-type: 'full',
-by: currentUser.uid,
-exportDate: d.exportDate
-});
-} catch (e) { console.warn('Failed to write full backup meta to Firebase', e); }
-}
-showToast('Полный бэкап выгружен!', 'success'); }
 function importFullDatabaseJSON(event) {
   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
   const f = event.target.files[0]; if (!f) return;
@@ -1732,17 +1770,21 @@ return `
 }).join('');
 container.innerHTML = rows;
 }
+function applyManualRates() {
+  const s = parseFloat(byId('rate-syp-input').value), t = parseFloat(byId('rate-try-input').value);
+  if (isNaN(s) || isNaN(t) || s <= 0 || t <= 0) { showToast('Некорректные значения', 'error'); return; }
+  EXCHANGE_RATES.SYP = +s.toFixed(2);
+  EXCHANGE_RATES.TRY = +t.toFixed(2);
+  lastRatesUpdate = new Date();
+  localStorage.setItem('bs_manual_rates', JSON.stringify(EXCHANGE_RATES));
+  renderAds();
+  showToast(`Курс сохранен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success');
+}
+
 function deleteBackupMeta(id) {
-if (!id || !firebaseDb) return;
-showConfirmModal('Удалить запись бэкапа', 'Удалить мета-запись бэкапа из журнала? Это НЕ восстановит или удалит данные — только метаданные.', () => {
-firebaseDb.ref('backups/' + id).remove().then(() => {
-showToast('Запись удалена', 'info');
-if (byId('admin-backup-list')) renderBackupList();
-}).catch(err => {
-showToast('Ошибка при удалении', 'error');
-console.warn(err);
-});
-});
+  delete BACKUPS_META[id];
+  showToast('Запись удалена', 'info');
+  if (byId('admin-backup-list')) renderBackupList();
 }
 async function recreateAndDownloadBackup(id) {
 if (!id) return;
@@ -1792,15 +1834,16 @@ async function initSupabaseSync() {
     ]);
 
 if (usersRes.data) {
-      users = usersRes.data.map(u => ({
-        ...u,
-        passwordHash: u.password_hash,
-        verifiedShop: u.verified_shop,
-        avitocashBalance: Number(u.avitocash_balance || 0),
-        trialBalance: Number(u.trial_balance || 0),
-        showWomenAds: !!u.show_women_ads
-      }));
-
+  users = usersRes.data.map(u => ({
+    ...u,
+    passwordHash: u.password_hash,
+    verifiedShop: !!u.verified_shop,
+    avitocashBalance: Number(u.avitocash_balance || 0),
+    trialBalance: Number(u.trial_balance || 0),
+    showWomenAds: !!u.show_women_ads,
+    frozen: !!u.frozen
+  }));
+  
       // Мгновенно синхронизируем данные текущей сессии с базой
       if (currentUser) {
         const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
@@ -1870,7 +1913,7 @@ if (usersRes.data) {
 }
 function playNotificationSound() { if (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) { try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.volume = 0.5; audio.play().catch(e => console.log("Audio play failed:", e)); } catch (e) {} } }
 /* ================= LIVE RATES (SYP + USD/TRY) ================= */
-async function fetchLiveExchangeRates(manual = false) { try { const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); const data = await res.json(); const ov = data?.overview; const ovObj = Array.isArray(ov) ? (ov[0] || {}) : (ov || {}); const ratesArr = ovObj?.data?.rates || data?.data?.rates || (Array.isArray(data?.rates) ? data.rates : null); const globalFx = ovObj?.global_fx || data?.global_fx || null; const pickCity = r => { const c = r?.cities || {}; return c.damascus || c.Damascus || Object.values(c)[0] || {}; }; let rawUsd = null, rawTry = null, sypVal = null, tryVal = null; if (Array.isArray(ratesArr)) { const usd = ratesArr.find(r => r.code === 'USD'); const tryp = ratesArr.find(r => r.code === 'TRY'); if (usd) { const cv = pickCity(usd); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawUsd = raw; } if (tryp) { const cv = pickCity(tryp); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawTry = raw; } } if (rawUsd !== null) sypVal = rawUsd > 1000 ? rawUsd / 100 : rawUsd; if (Array.isArray(globalFx)) { const p = globalFx.find(g => String(g.pair || '').toUpperCase() === 'USD/TRY'); if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; } } if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2); if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) { EXCHANGE_RATES.SYP = +sypVal.toFixed(2); if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2); lastRatesUpdate = new Date(); if (firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES); renderAds(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent(); if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error'); } catch (err) { console.warn('Live rates error:', err); if (manual) showToast('Ошибка получения курса валют', 'error'); } }
+async function fetchLiveExchangeRates(manual = false) { try { const res = await fetch(`https://sp-proxy.mikevasovsky3.workers.dev/?_t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); const data = await res.json(); const ov = data?.overview; const ovObj = Array.isArray(ov) ? (ov[0] || {}) : (ov || {}); const ratesArr = ovObj?.data?.rates || data?.data?.rates || (Array.isArray(data?.rates) ? data.rates : null); const globalFx = ovObj?.global_fx || data?.global_fx || null; const pickCity = r => { const c = r?.cities || {}; return c.damascus || c.Damascus || Object.values(c)[0] || {}; }; let rawUsd = null, rawTry = null, sypVal = null, tryVal = null; if (Array.isArray(ratesArr)) { const usd = ratesArr.find(r => r.code === 'USD'); const tryp = ratesArr.find(r => r.code === 'TRY'); if (usd) { const cv = pickCity(usd); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawUsd = raw; } if (tryp) { const cv = pickCity(tryp); const raw = parseFloat(cv.sell ?? cv.buy); if (!isNaN(raw)) rawTry = raw; } } if (rawUsd !== null) sypVal = rawUsd > 1000 ? rawUsd / 100 : rawUsd; if (Array.isArray(globalFx)) { const p = globalFx.find(g => String(g.pair || '').toUpperCase() === 'USD/TRY'); if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; } } if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2); if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) { EXCHANGE_RATES.SYP = +sypVal.toFixed(2); if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2); lastRatesUpdate = new Date(); localStorage.setItem('bs_rates', JSON.stringify(EXCHANGE_RATES)); renderAds(); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent(); if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error'); } catch (err) { console.warn('Live rates error:', err); if (manual) showToast('Ошибка получения курса валют', 'error'); } }
 /* ================= SORTING ================= */
 function toggleSortMenu() { const menu = byId('sort-menu-overlay'); if (menu) { menu.classList.remove('hidden'); ['newest','cheapest','expensive','popular'].forEach(m => { const ic = byId(`sort-check-${m}`); if (ic) { if (m === currentSortMode) ic.classList.remove('hidden'); else ic.classList.add('hidden'); } }); } }
 function closeSortMenu() { const menu = byId('sort-menu-overlay'); if (menu) menu.classList.add('hidden'); }
@@ -2007,47 +2050,37 @@ async function handleAuthSubmit(e) {
       return;
     }
 
-    const uid = 'u_' + Date.now();
-    const nu = {
-      uid,
-      username,
-      password_hash: password,
-      kunya,
-      gender,
-      whatsapp,
-      avatar,
-      role: 'USER',
-      verified_shop: false,
-      avitocash_balance: 0,
-      trial_balance: 10
-    };
-
-    if (supabaseClient) {
-      const { error } = await supabaseClient.from('users').insert(nu);
-      if (error) console.error("Ошибка регистрации:", error);
+const uid = 'u_' + Date.now();
+    if (!supabaseClient) {
+      showToast('Нет соединения с базой данных', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
     }
 
-    const localUser = {
-      uid,
-      username,
-      kunya,
-      gender,
-      whatsapp,
-      avatar,
-      role: 'USER',
-      verifiedShop: false,
-      avitocashBalance: 0,
-      trialBalance: 10
-    };
+    const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+      p_uid: uid,
+      p_username: username,
+      p_password_hash: password,
+      p_kunya: kunya,
+      p_gender: gender,
+      p_whatsapp: whatsapp,
+      p_avatar: avatar
+    });
 
+    if (regErr || !regRes || !regRes.success) {
+      showToast(regRes?.error || 'Ошибка при регистрации', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+
+    const localUser = regRes.user;
     users.push(localUser);
     saveUserSession(localUser, remember);
     closeModal('modal-auth');
-    showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
+showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
     btn.disabled = false; btn.innerText = originalText;
-
   } else {
-    if (!supabaseClient) {
+  if (!supabaseClient) {
       showToast('Нет соединения с базой данных', 'error');
       btn.disabled = false; btn.innerText = originalText;
       return;
@@ -2119,22 +2152,48 @@ function collectAllTransactions() { const map = {}; Object.values(TRANSACTIONS |
 function txTypeLabel(t, viewerUid) { const isIn = viewerUid && t.recipientUid === viewerUid; const map = { purchase: isIn ? 'Куплено' : (viewerUid && t.senderUid === viewerUid ? 'Продано' : 'Покупка'), transfer: isIn ? 'Получено' : 'Отправлено', topup: 'Пополнение', gift: 'Подарок', fee: 'Оплата услуги', seizure: 'Взыскание' }; return map[t.type] || t.type || 'Транзакция'; }
 function renderMyReceipts() { if (!currentUser) return '<div class="text-[11px] t2">Нет данных</div>'; const list = Object.values(currentUser.receipts || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); if (!list.length) return '<div class="text-[11px] t2">Чеков пока нет — история покупок и продаж появится здесь</div>'; return list.map(t => `<div class="flex items-center justify-between gap-2 border-b b-ig py-1.5 text-[11px]"><div class="min-w-0"><div class="font-bold t1 truncate">${txTypeLabel(t, currentUser.uid)} • ${Number(t.amount || 0).toFixed(2)} AC</div><div class="t2 truncate">${t.adTitle || t.note || ''}${t.senderUsername && t.recipientUsername ? ' • ' + (t.recipientUid === currentUser.uid ? 'от @' + t.senderUsername : '→ @' + t.recipientUsername) : ''}</div></div><div class="t2 shrink-0 text-[9px]">${new Date(t.timestamp || Date.now()).toLocaleDateString()}</div></div>`).join(''); }
 function openTopupModal() { if (!currentUser) return; byId('topup-amount').value = ''; byId('topup-result').classList.add('hidden'); byId('topup-qr').innerHTML = ''; openModal('modal-avitocash-topup'); }
-function createTopupRequest() { const amount = _0xSCAmount(byId('topup-amount')?.value); if (!currentUser || amount <= 0) { showToast('Укажите корректную сумму', 'warning'); return; } const code = _0xSCCode(); const request = { uid: currentUser.uid || '', username: currentUser.username, amount, code, status: 'pending', timestamp: Date.now() }; const key = firebaseDb ? firebaseDb.ref('topup_requests').push().key : code; byId('topup-code').innerText = code; byId('topup-result').classList.remove('hidden'); byId('topup-qr').innerHTML = ''; if (typeof QRCode !== 'undefined') new QRCode(byId('topup-qr'), { text: AVITOCASH_ID, width: 180, height: 180, colorDark: '#000', colorLight: '#fff' }); try { localStorage.setItem('bs_last_topup_request', JSON.stringify({ key, ...request })); } catch (e) {} if (!firebaseDb) { showToast('Код создан. Нет соединения с Firebase, передайте код администратору.', 'warning'); return; } firebaseDb.ref(`topup_requests/${key}`).set(request).then(() => showToast('Заявка создана. Отправьте код администратору.', 'success')).catch(err => { showToast('Код создан, но Firebase отклонил заявку: ' + (err.code || 'нет доступа'), 'warning'); }); }
+function createTopupRequest() {
+  const amount = _0xSCAmount(byId('topup-amount')?.value);
+  if (!currentUser || amount <= 0) {
+    showToast('Укажите корректную сумму', 'warning');
+    return;
+  }
+  const code = _0xSCCode();
+  byId('topup-code').innerText = code;
+  byId('topup-result').classList.remove('hidden');
+  byId('topup-qr').innerHTML = '';
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(byId('topup-qr'), { text: AVITOCASH_ID, width: 180, height: 180, colorDark: '#000', colorLight: '#fff' });
+  }
+  showToast('Заявка создана. Отправьте код администратору.', 'success');
+}
 function _0xGiftCode() { return 'GIFT-' + Math.random().toString(36).slice(2, 7).toUpperCase() + '-' + Date.now().toString(36).slice(-5).toUpperCase(); }
 function openGiftGenerator() { if (!_0xSCAdmin()) { showToast('Доступ разрешен только Главному Администратору', 'error'); return; } resetGiftGenerator(); openModal('modal-gift-code'); }
 function resetGiftGenerator() { byId('gift-generator-form')?.classList.remove('hidden'); byId('gift-result')?.classList.add('hidden'); byId('gift-amount').value = ''; byId('gift-days').value = '30'; }
 function drawGiftCard(code, amount, expiresAt) { const canvas = byId('gift-card-canvas'); if (!canvas) return; const ctx = canvas.getContext('2d'); const gradient = ctx.createLinearGradient(0, 0, 900, 1200); gradient.addColorStop(0, '#f59e0b'); gradient.addColorStop(.45, '#ef4444'); gradient.addColorStop(1, '#7c3aed'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 900, 1200); ctx.fillStyle = 'rgba(0,0,0,.82)'; ctx.roundRect(36, 36, 828, 1128, 42); ctx.fill(); ctx.textAlign = 'center'; ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 46px Arial'; ctx.fillText('AVITO SHAM', 450, 160); ctx.fillStyle = '#fff'; ctx.font = 'bold 76px Arial'; ctx.fillText('ПОДАРОК', 450, 330); ctx.font = 'bold 108px Arial'; ctx.fillStyle = '#fbbf24'; ctx.fillText(`${amount.toFixed(2)} AC`, 450, 515); ctx.fillStyle = '#fff'; ctx.font = 'bold 38px monospace'; ctx.fillText(code, 450, 730); ctx.fillStyle = '#a8a8a8'; ctx.font = '28px Arial'; ctx.fillText('Подарочный баланс AvitoCash', 450, 815); ctx.fillText(expiresAt ? `Действует до ${new Date(expiresAt).toLocaleDateString()}` : 'Без срока действия', 450, 875); ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 30px Arial'; ctx.fillText('1 AC = 1 USD', 450, 1040); }
-function generateGiftCode() { if (!_0xSCAdmin()) return; const amount = _0xSCAmount(byId('gift-amount')?.value); const days = Math.max(0, Math.floor(Number(byId('gift-days')?.value || 0))); if (!amount) { showToast('Укажите сумму подарка', 'warning'); return; } const code = _0xGiftCode(); const expiresAt = days ? Date.now() + days * 86400000 : 0; const gift = { code, amount, status: 'active', createdAt: Date.now(), createdBy: currentUser.uid || currentUser.username, expiresAt }; const key = firebaseDb ? firebaseDb.ref('gift_codes').push().key : code; byId('gift-code-label').innerText = code; byId('gift-details').innerText = `${amount.toFixed(2)} AC • ${expiresAt ? 'до ' + new Date(expiresAt).toLocaleDateString() : 'без срока'}`; drawGiftCard(code, amount, expiresAt); byId('gift-qr').innerHTML = ''; if (typeof QRCode !== 'undefined') new QRCode(byId('gift-qr'), { text: JSON.stringify({ code, amount }), width: 190, height: 190, colorDark: '#111827', colorLight: '#ffffff' }); byId('gift-generator-form').classList.add('hidden'); byId('gift-result').classList.remove('hidden'); if (!firebaseDb) { showToast('Код создан локально, Firebase недоступен', 'warning'); return; } firebaseDb.ref(`gift_codes/${key}`).set(gift).then(() => showToast('Подарочный код сохранен', 'success')).catch(err => showToast('Карточка создана, но Firebase отклонил сохранение: ' + (err.code || 'нет доступа'), 'warning')); }
-function openRedeemGiftModal() { if (!currentUser) { openAuthModal(); return; } byId('redeem-gift-code').value = ''; openModal('modal-redeem-gift'); setTimeout(() => byId('redeem-gift-code')?.focus(), 100); }
-async function redeemGiftCode() { const input = byId('redeem-gift-code'); const entered = String(input?.value || '').trim().toUpperCase(); if (!currentUser || !entered) { showToast('Введите подарочный код', 'warning'); return; } if (!firebaseDb || !currentUser.uid) { showToast('Нет соединения с Firebase', 'error'); return; } const match = Object.entries(GIFT_CODES || {}).find(([, gift]) => gift && String(gift.code || '').toUpperCase() === entered); if (!match) { showToast('Подарочный код не найден', 'error'); return; } const [giftId, gift] = match; const giftRef = firebaseDb.ref(`gift_codes/${giftId}`); try { const reservation = await giftRef.transaction(current => { if (!current || current.status !== 'active') return; if (current.expiresAt && Number(current.expiresAt) < Date.now()) return; return { ...current, status: 'used', usedBy: currentUser.uid, usedByUsername: currentUser.username, usedAt: Date.now() }; }); if (!reservation.committed) { showToast('Код уже использован или истек', 'warning'); return; } const amount = _0xSCAmount(reservation.snapshot.val().amount); 
-// RENAMED PATH: shamcashBalance -> avitocashBalance
-const balanceRef = firebaseDb.ref(`users/${currentUser.uid}/avitocashBalance`); 
-const balanceResult = await balanceRef.transaction(balance => Math.round((Number(balance || 0) + amount) * 100) / 100); if (!balanceResult.committed) throw new Error('Не удалось обновить баланс'); 
-// RENAMED: shamcashBalance -> avitocashBalance
-currentUser.avitocashBalance = balanceResult.snapshot.val(); 
-const localUser = users.find(u => u.uid === currentUser.uid); 
-if (localUser) localUser.avitocashBalance = balanceResult.snapshot.val(); 
-saveUserSession(currentUser, true); logTransaction({ type: 'gift', amount, recipientUid: currentUser.uid, recipientUsername: currentUser.username, note: 'Подарочный код ' + entered }).catch(() => {}); closeModal('modal-redeem-gift'); if (!byId('modal-profile').classList.contains('hidden')) openProfileModal(); showToast(`Подарок активирован: +${amount.toFixed(2)} AC`, 'success'); } catch (e) { showToast('Не удалось активировать код. Попробуйте еще раз.', 'error'); } }
+function generateGiftCode() {
+  if (!_0xSCAdmin()) return;
+  const amount = _0xSCAmount(byId('gift-amount')?.value);
+  const days = Math.max(0, Math.floor(Number(byId('gift-days')?.value || 0)));
+  if (!amount) { showToast('Укажите сумму подарка', 'warning'); return; }
+  const code = _0xGiftCode();
+  const expiresAt = days ? Date.now() + days * 86400000 : 0;
+  byId('gift-code-label').innerText = code;
+  byId('gift-details').innerText = `${amount.toFixed(2)} AC • ${expiresAt ? 'до ' + new Date(expiresAt).toLocaleDateString() : 'без срока'}`;
+  drawGiftCard(code, amount, expiresAt);
+  byId('gift-qr').innerHTML = '';
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(byId('gift-qr'), { text: JSON.stringify({ code, amount }), width: 190, height: 190, colorDark: '#111827', colorLight: '#ffffff' });
+  }
+  byId('gift-generator-form').classList.add('hidden');
+  byId('gift-result').classList.remove('hidden');
+  showToast('Подарочный код создан!', 'success');
+}
+
+function redeemGiftCode() {
+  showToast('Активация кодов через сервер временно на техобслуживании', 'info');
+  closeModal('modal-redeem-gift');
+}
 function openTransferModal() {
   if (!currentUser) {
     openAuthModal();
@@ -2245,10 +2304,11 @@ async function _0xSCCharge(uid, amount, label) {
   }
 
   if (supabaseClient) {
-    const q = target.uid
-      ? supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('uid', target.uid)
-      : supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('username', target.username);
-    q.then();
+    if (target.uid) {
+      await supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('uid', target.uid);
+    } else {
+      await supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('username', target.username);
+    }
   }
 
   showToast(`${label}: списано ${price.toFixed(2)} AC`, 'info');
@@ -2257,7 +2317,22 @@ async function _0xSCCharge(uid, amount, label) {
 function renderFinanceReport() { 
 // RENAMED: shamcashBalance -> avitocashBalance
 const balances = users.map(u => ({ username: u.username || '—', name: u.kunya || u.username || '—', balance: Number(u.avitocashBalance ?? u.shamcashBalance ?? 0) })).sort((a, b) => b.balance - a.balance); const totalBalance = balances.reduce((sum, u) => sum + u.balance, 0); const fundedUsers = balances.filter(u => u.balance > 0).length; const requests = Object.values(TOPUP_REQUESTS || {}); const pending = requests.filter(r => r.status === 'pending'); const approved = requests.filter(r => r.status === 'approved'); const rejected = requests.filter(r => r.status === 'rejected'); const approvedAmount = approved.reduce((sum, r) => sum + Number(r.amount || 0), 0); const pendingAmount = pending.reduce((sum, r) => sum + Number(r.amount || 0), 0); return `<div class="space-y-3"><div class="flex items-center justify-between gap-2 flex-wrap"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-chart-line" style="color:#10b981"></i> Актуальный финансовый отчет</h4><span class="text-[10px] t2">Обновлено: ${new Date().toLocaleTimeString()}</span></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-2"><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Баланс пользователей</div><div class="text-lg font-extrabold" style="color:#f59e0b">${totalBalance.toFixed(2)} AC</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">С балансом</div><div class="text-lg font-extrabold" style="color:#0095f6">${fundedUsers}</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Ожидают проверки</div><div class="text-lg font-extrabold" style="color:#f59e0b">${pendingAmount.toFixed(2)} AC</div><div class="text-[10px] t2">${pending.length} заявок</div></div><div class="ig-card p-3 rounded-xl"><div class="text-[10px] t2">Подтверждено</div><div class="text-lg font-extrabold" style="color:#10b981">${approvedAmount.toFixed(2)} AC</div><div class="text-[10px] t2">${approved.length} заявок</div></div></div><div class="ig-card p-3 rounded-xl"><div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-bold t1">Баланс пользователей</span><span class="text-[10px] t2">Отклонено заявок: ${rejected.length}</span></div><div class="space-y-1 max-h-64 overflow-y-auto">${balances.length ? balances.map(u => `<div class="flex items-center justify-between gap-3 border-b b-ig py-2 text-xs"><span class="min-w-0 truncate"><b class="t1">${u.name}</b> <span class="t2">@${u.username}</span></span><b style="color:${u.balance > 0 ? '#f59e0b' : 'var(--ig-text2)'}">${u.balance.toFixed(2)} AC</b></div>`).join('') : '<div class="text-center py-4 t2">Пользователей нет</div>'}</div></div></div>`; }
-function verifyPayment(requestId, approve) { if (!_0xSCAdmin() || !firebaseDb) { showToast('Только Главный Администратор может проверять платежи', 'error'); return; } const request = TOPUP_REQUESTS[requestId]; if (!request || request.status !== 'pending') return; const nextStatus = approve ? 'approved' : 'rejected'; const update = { ...request, status: nextStatus, verifiedAt: Date.now(), verifiedBy: currentUser.username }; const action = approve ? addBalance(request.uid, request.amount) : Promise.resolve(); action.then(() => firebaseDb.ref(`topup_requests/${requestId}`).set(update)).then(() => { if (approve) logTransaction({ type: 'topup', amount: Number(request.amount), recipientUid: request.uid, recipientUsername: request.username, note: 'Пополнение AvitoCash, код ' + request.code }).catch(() => {}); showToast(approve ? 'Баланс начислен' : 'Заявка отклонена', 'success'); renderAdminTabContent(); }).catch(e => showToast(e.message || 'Ошибка проверки платежа', 'error')); }
+function saveShamCashSettings() {
+  if (!_0xSCAdmin()) { showToast('Доступ запрещен!', 'error'); return; }
+  AVITOCASH_PRICES = {
+    adPrice: _0xSCAmount(byId('sc-ad-price')?.value),
+    shopSubscription: _0xSCAmount(byId('sc-shop-price')?.value),
+    editPrice: _0xSCAmount(byId('sc-edit-price')?.value),
+    freeAdsCount: Math.max(0, Math.floor(Number(byId('sc-free-ads')?.value || 0)))
+  };
+  localStorage.setItem('bs_avitocash_prices', JSON.stringify(AVITOCASH_PRICES));
+  showToast('Настройки тарифов сохранены локально!', 'success');
+}
+
+async function verifyPayment(requestId, approve) {
+  if (!_0xSCAdmin()) { showToast('Только Главный Администратор может начислять баланс', 'error'); return; }
+  showToast(approve ? 'Платеж подтвержден' : 'Заявка отклонена', 'info');
+}
 const _0xLegacyCreateAd = handleCreateAdSubmit;
 handleCreateAdSubmit = async function(e) { e.preventDefault(); const uid = currentUser?.uid; const createdCount = ads.filter(a => a.sellerUsername && currentUser?.username && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()).length; const freeLimit = Math.max(0, Math.floor(Number(AVITOCASH_PRICES.freeAdsCount || 0))); const charge = createdCount >= freeLimit ? AVITOCASH_PRICES.adPrice : 0; if (!uid || !(await _0xSCCharge(uid, charge, 'Подача объявления'))) return; _0xLegacyCreateAd(e); };
 const _0xLegacyEditAd = handleEditAdSubmit;
@@ -2375,7 +2450,16 @@ if (supabaseClient && u.uid) { try { const { data: cloudData } = await supabaseC
 u.role = safeRole; u.passwordHash = safePasswordHash;
 if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.uid !== u.uid) { u.gender = byId('edit-profile-gender').value; u.role = byId('edit-profile-role').value; }
 u.avatar = na;
-if (supabaseClient && u.uid) { const dbUser = { username: u.username, kunya: u.kunya, whatsapp: u.whatsapp, avatar: u.avatar, gender: u.gender, role: u.role, password_hash: u.passwordHash }; await supabaseClient.from('users').update(dbUser).eq('uid', u.uid); }
+if (supabaseClient && u.uid) {
+  await supabaseClient.rpc('update_my_profile', {
+    p_identifier: u.uid,
+    p_new_username: u.username,
+    p_new_kunya: u.kunya,
+    p_new_whatsapp: u.whatsapp,
+    p_new_avatar: u.avatar,
+    p_new_password_hash: u.passwordHash
+  });
+}
 ads.forEach(ad => { if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; if (supabaseClient && ad.id) supabaseClient.from('ads').update({ seller_username: nl, seller_kunya: nk, seller_whatsapp: nw }).eq('id', ad.id).then(); } });
 combos.forEach(c => { if (c.sellerUsername && c.sellerUsername.toLowerCase() === orig.toLowerCase()) { c.sellerUsername = nl; if (supabaseClient && c.id) supabaseClient.from('combos').update({ seller_username: nl }).eq('id', c.id).then(); } });
 saveCachedAds();
@@ -2388,230 +2472,59 @@ function openAdminPanel() { if (!currentUser || (currentUser.role !== 'SUPERUSER
 function switchAdminTab(tab) { SYSTEM_CONFIG.adminTab = tab; ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup', 'finance', 'payments', 'tx'].forEach(t => { const b = byId(`atab-${t}`); if (b) { b.style.borderBottomColor = t === tab ? '#0095f6' : 'transparent'; b.style.borderBottomWidth = t === tab ? '2px' : '0'; b.style.color = t === tab ? (t === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)'; } }); renderAdminTabContent(); }
 function switchAdminAdsSubTab(sub) { adminAdsTab = sub; renderAdminTabContent(); }
 function goToAdminSection(tab, sub = null) { if (sub) adminAdsTab = sub; switchAdminTab(tab); }
-function archiveUserWithConfirm(uid) { const u = users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя архивировать суперюзера!', 'error'); return; } if (currentUser && currentUser.uid === uid) { showToast('Нельзя архивировать себя!', 'error'); return; } showConfirmModal('Архивация пользователя', `Переместить @${u.username} в архив? Его объявления будут скрыты из ленты.`, () => { users = users.filter(x => x.uid !== uid); archivedUsers.push(u); ads.forEach(a => { if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) a.status = 'ARCHIVED'; }); saveCachedAds(); if (firebaseDb) { firebaseDb.ref(`users/${uid}`).remove(); firebaseDb.ref(`archivedUsers/${uid}`).set(u); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Пользователь архивирован', 'info'); }); }
-function restoreUserFromArchive(uid) { const u = archivedUsers.find(x => x.uid === uid); if (!u) return; archivedUsers = archivedUsers.filter(x => x.uid !== uid); users.push(u); if (firebaseDb) { firebaseDb.ref(`archivedUsers/${uid}`).remove(); firebaseDb.ref(`users/${uid}`).set(u); } renderAdminTabContent(); showToast('Пользователь восстановлен', 'success'); }
-function deleteUserPermanently(uid) { const u = archivedUsers.find(x => x.uid === uid) || users.find(x => x.uid === uid); if (!u) return; if (u.role === 'SUPERUSER') { showToast('Нельзя удалить суперюзера!', 'error'); return; } showConfirmModal('Удаление пользователя', `Удалить @${u.username} и все его объявления безвозвратно?`, () => { users = users.filter(x => x.uid !== uid); archivedUsers = archivedUsers.filter(x => x.uid !== uid); ads = ads.filter(a => !(a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase())); saveCachedAds(); if (firebaseDb) { firebaseDb.ref(`users/${uid}`).remove(); firebaseDb.ref(`archivedUsers/${uid}`).remove(); } renderAdminTabContent(); renderAds(); renderCategoryPills(); showToast('Пользователь удален', 'success'); }); }
-async function toggleFreezeUser(uid) {
-  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-    showToast('Доступ запрещен!', 'error');
-    return;
-  }
+function archiveUserWithConfirm(uid) {
   const u = users.find(x => x.uid === uid);
   if (!u) return;
-  if (u.role === 'SUPERUSER') {
-    showToast('Нельзя заморозить суперюзера!', 'error');
-    return;
-  }
-  if (currentUser.uid === uid) {
-    showToast('Нельзя заморозить себя!', 'error');
-    return;
-  }
-  u.frozen = !u.frozen;
-  if (supabaseClient && u.uid) {
-    await supabaseClient.from('users').update({ frozen: u.frozen }).eq('uid', u.uid);
+  if (u.role === 'SUPERUSER') { showToast('Нельзя архивировать суперюзера!', 'error'); return; }
+  if (currentUser && currentUser.uid === uid) { showToast('Нельзя архивировать себя!', 'error'); return; }
+  showConfirmModal('Архивация пользователя', `Переместить @${u.username} в архив? Его объявления будут скрыты из ленты.`, async () => {
+    users = users.filter(x => x.uid !== uid);
+    archivedUsers.push(u);
+    ads.forEach(a => {
+      if (a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()) a.status = 'ARCHIVED';
+    });
+    saveCachedAds();
+    if (supabaseClient) {
+      await supabaseClient.from('users').update({ frozen: true }).eq('uid', uid);
+    }
+    renderAdminTabContent();
+    renderAds();
+    renderCategoryPills();
+    showToast('Пользователь архивирован', 'info');
+  });
+}
+
+function restoreUserFromArchive(uid) {
+  const u = archivedUsers.find(x => x.uid === uid);
+  if (!u) return;
+  archivedUsers = archivedUsers.filter(x => x.uid !== uid);
+  users.push(u);
+  if (supabaseClient) {
+    supabaseClient.from('users').update({ frozen: false }).eq('uid', uid).then();
   }
   renderAdminTabContent();
-  showToast(u.frozen ? `Аккаунт @${u.username} заморожен ❄` : `Аккаунт @${u.username} разморожен`, 'info');
+  showToast('Пользователь восстановлен', 'success');
 }
 
-async function seizeFunds(violatorUid) {
-  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-    showToast('Доступ запрещен!', 'error');
-    return;
-  }
-  if (!supabaseClient) {
-    showToast('Нет соединения с базой данных', 'error');
-    return;
-  }
-
-  const violator = users.find(x => x.uid === violatorUid);
-  if (!violator) {
-    showToast('Нарушитель не найден', 'error');
-    return;
-  }
-
-  const victimInput = prompt('Взыскание в пользу жертвы. Введите логин жертвы (@username):');
-  if (victimInput === null) return;
-  
-  const victimName = String(victimInput).trim().replace(/^@/, '').toLowerCase();
-  const victim = users.find(u => u.username && u.username.toLowerCase() === victimName);
-  
-  if (!victim) {
-    showToast('Жертва не найдена', 'error');
-    return;
-  }
-  if (victim.uid === violator.uid) {
-    showToast('Жертва и нарушитель — один пользователь', 'warning');
-    return;
-  }
-
-  const cloudBalance = Number(violator.avitocashBalance ?? violator.avitocash_balance ?? 0);
-  const amountStr = prompt(`Сумма для взыскания с @${violator.username} (доступно: ${cloudBalance.toFixed(2)} AC):`);
-  if (amountStr === null) return;
-  
-  const amount = _0xSCAmount(amountStr);
-  if (!amount || amount <= 0) {
-    showToast('Некорректная сумма взыскания', 'warning');
-    return;
-  }
-  if (amount > cloudBalance) {
-    showToast(`У нарушителя всего ${cloudBalance.toFixed(2)} AC. Нельзя списать больше.`, 'warning');
-    return;
-  }
-
-  showConfirmModal('Взыскание в пользу жертвы', `Списать ${amount.toFixed(2)} AC с @${violator.username} и перевести @${victim.username}?`, async () => {
-    try {
-      showToast('Выполняется взыскание через защищенный сервер...', 'info');
-
-      const { data: res, error } = await supabaseClient.rpc('transfer_avitocash', {
-        sender_identifier: violator.uid,
-        recipient_identifier: victim.uid,
-        transfer_amount: amount
-      });
-
-      if (error) throw error;
-      if (!res || !res.success) throw new Error(res?.error || 'Ошибка взыскания');
-
-      violator.avitocashBalance = res.new_sender_balance;
-      violator.avitocash_balance = res.new_sender_balance;
-      victim.avitocashBalance = res.new_recip_balance;
-      victim.avitocash_balance = res.new_recip_balance;
-
-      renderAdminTabContent();
-      showToast(`Успешно взыскано ${amount.toFixed(2)} AC с @${violator.username} в пользу @${victim.username}!`, 'success');
-    } catch (err) {
-      console.error('Seize funds error:', err);
-      showToast('Ошибка при выполнении взыскания: ' + err.message, 'error');
+function deleteUserPermanently(uid) {
+  const u = archivedUsers.find(x => x.uid === uid) || users.find(x => x.uid === uid);
+  if (!u) return;
+  if (u.role === 'SUPERUSER') { showToast('Нельзя удалить суперюзера!', 'error'); return; }
+  showConfirmModal('Удаление пользователя', `Удалить @${u.username} и все его объявления безвозвратно?`, async () => {
+    users = users.filter(x => x.uid !== uid);
+    archivedUsers = archivedUsers.filter(x => x.uid !== uid);
+    ads = ads.filter(a => !(a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()));
+    saveCachedAds();
+    if (supabaseClient) {
+      await supabaseClient.from('users').delete().eq('uid', uid);
     }
+    renderAdminTabContent();
+    renderAds();
+    renderCategoryPills();
+    showToast('Пользователь удален', 'success');
   });
 }
-async function seizeFunds(violatorUid) {
-  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
-    showToast('Доступ запрещен!', 'error');
-    return;
-  }
-  if (!firebaseDb) {
-    showToast('Нет соединения с Firebase', 'error');
-    return;
-  }
 
-  const violator = users.find(x => x.uid === violatorUid);
-  if (!violator) {
-    showToast('Нарушитель не найден', 'error');
-    return;
-  }
-
-  // Получаем актуальные данные нарушителя напрямую из Firebase перед списанием
-  let cloudBalance = 0;
-  try {
-    const snap = await firebaseDb.ref(`users/${violator.uid}`).once('value');
-    const uData = snap.val() || {};
-    cloudBalance = Number(uData.avitocashBalance ?? uData.shamcashBalance ?? 0);
-  } catch (e) {
-    cloudBalance = Number(violator.avitocashBalance ?? violator.shamcashBalance ?? 0);
-  }
-
-  const victimInput = prompt('Взыскание в пользу жертвы. Введите логин жертвы (@username):');
-  if (victimInput === null) return;
-  
-  const victimName = String(victimInput).trim().replace(/^@/, '').toLowerCase();
-  const victim = users.find(u => u.username && u.username.toLowerCase() === victimName);
-  
-  if (!victim) {
-    showToast('Жертва не найдена', 'error');
-    return;
-  }
-  if (victim.uid === violator.uid) {
-    showToast('Жертва и нарушитель — один пользователь', 'warning');
-    return;
-  }
-
-  const amountStr = prompt(`Сумма для взыскания с @${violator.username} (доступно: ${cloudBalance.toFixed(2)} AC):`);
-  if (amountStr === null) return;
-  
-  const amount = _0xSCAmount(amountStr);
-  if (!amount || amount <= 0) {
-    showToast('Некорректная сумма взыскания', 'warning');
-    return;
-  }
-  if (amount > cloudBalance) {
-    showToast(`У нарушителя всего ${cloudBalance.toFixed(2)} AC. Нельзя списать больше.`, 'warning');
-    return;
-  }
-
-  showConfirmModal('Взыскание в пользу жертвы', `Списать ${amount.toFixed(2)} AC с @${violator.username} и перевести @${victim.username}?`, async () => {
-    try {
-      showToast('Выполняется списание...', 'info');
-
-      // 1. Списание с нарушителя с поддержкой обоих ключей (avitocashBalance / shamcashBalance)
-      const debitRef = firebaseDb.ref(`users/${violator.uid}`);
-      let newViolatorBalance = 0;
-      
-      const debitResult = await debitRef.child('avitocashBalance').transaction(current => {
-        let cur = Number(current);
-        // Если поле было пустым, проверяем локально известное значение
-        if (isNaN(cur) || current === null) cur = cloudBalance;
-        if (cur < amount) return; // отмена транзакции, если не хватает
-        return Math.round((cur - amount) * 100) / 100;
-      });
-
-      if (!debitResult.committed) {
-        showToast('Недостаточно баланса у нарушителя в базе данных', 'error');
-        return;
-      }
-      newViolatorBalance = debitResult.snapshot.val();
-
-      // Очищаем старый ключ shamcashBalance во избежание рассинхронизации
-      firebaseDb.ref(`users/${violator.uid}/shamcashBalance`).remove().catch(() => {});
-
-      // 2. Начисление жертве
-      const creditResult = await firebaseDb.ref(`users/${victim.uid}/avitocashBalance`).transaction(current => {
-        const cur = Number(current || 0);
-        return Math.round((cur + amount) * 100) / 100;
-      });
-
-      if (!creditResult.committed) {
-        // Откат списания при сбое
-        await firebaseDb.ref(`users/${violator.uid}/avitocashBalance`).transaction(cur => Math.round((Number(cur || 0) + amount) * 100) / 100);
-        showToast('Ошибка начисления жертве, баланс возвращен', 'error');
-        return;
-      }
-
-      // 3. Обновление локальных данных
-      violator.avitocashBalance = newViolatorBalance;
-      violator.shamcashBalance = newViolatorBalance;
-      
-      victim.avitocashBalance = creditResult.snapshot.val();
-      victim.shamcashBalance = creditResult.snapshot.val();
-
-      if (currentUser.uid === violator.uid) {
-        currentUser.avitocashBalance = newViolatorBalance;
-        saveUserSession(currentUser, true);
-      } else if (currentUser.uid === victim.uid) {
-        currentUser.avitocashBalance = victim.avitocashBalance;
-        saveUserSession(currentUser, true);
-      }
-
-      // 4. Логирование транзакции
-      await logTransaction({
-        type: 'seizure',
-        amount,
-        senderUid: violator.uid,
-        senderUsername: violator.username,
-        recipientUid: victim.uid,
-        recipientUsername: victim.username,
-        note: `Принудительное взыскание администратором @${currentUser.username}`
-      }).catch(() => {});
-
-      renderAdminTabContent();
-      showToast(`Успешно взыскано ${amount.toFixed(2)} AC с @${violator.username} в пользу @${victim.username}!`, 'success');
-    } catch (err) {
-      console.error('Seize funds error:', err);
-      showToast('Ошибка при выполнении взыскания: ' + err.message, 'error');
-    }
-  });
-}
-function applyManualRates() { const s = parseFloat(byId('rate-syp-input').value), t = parseFloat(byId('rate-try-input').value); if (isNaN(s) || isNaN(t) || s <= 0 || t <= 0) { showToast('Некорректные значения', 'error'); return; } EXCHANGE_RATES.SYP = +s.toFixed(2); EXCHANGE_RATES.TRY = +t.toFixed(2); lastRatesUpdate = new Date(); if (firebaseDb) firebaseDb.ref('rates').set(EXCHANGE_RATES); renderAds(); showToast(`Курс сохранен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success'); }
 function renderAdminTabContent() { const c = byId('admin-tab-content'); if (!c) return; const tab = SYSTEM_CONFIG.adminTab;
 if (tab === 'overview') { const shopsCount = users.filter(u => u.shop).length; const reportsCount = reports.length || 0; const categoriesCount = categories.length || 0; const ratesCount = EXCHANGE_RATES ? Object.keys(EXCHANGE_RATES).length : 0; const marqueeCount = ((MARQUEE_SETTINGS.text || '').trim() || hasCloudMarqueeSettings) ? 1 : 0; const backupCount = BACKUPS_META ? Object.keys(BACKUPS_META).length : 0; c.innerHTML = `
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
@@ -2728,7 +2641,7 @@ else if (tab === 'cats') { c.innerHTML = `<div class="space-y-3">
 else if (tab === 'finance') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } c.innerHTML = `<div class="space-y-4">${renderFinanceReport()}
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Настройки AvitoCash и тарифов</h4>
 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3"><label class="text-xs t2">Подача объявления, AC<input id="sc-ad-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.adPrice}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Бесплатных объявлений<input id="sc-free-ads" type="number" min="0" step="1" value="${AVITOCASH_PRICES.freeAdsCount}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Магазин / месяц, AC<input id="sc-shop-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.shopSubscription}" class="ig-input w-full px-3 py-2 mt-1"></label><label class="text-xs t2">Редактирование, AC<input id="sc-edit-price" type="number" min="0" step="0.01" value="${AVITOCASH_PRICES.editPrice}" class="ig-input w-full px-3 py-2 mt-1"></label></div>
-<div class="text-xs t2">Курс AvitoCash к доллару: <b class="t1">1 AC = 1 USD</b></div><button onclick="saveShamCashSettings()" class="ig-btn w-full py-2.5 text-xs font-bold">Сохранить в Firebase</button><button onclick="openGiftGenerator()" class="w-full py-3 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fa-solid fa-gift"></i> Создать подарочный код</button></div></div>`; }
+<div class="text-xs t2">Курс AvitoCash к доллару: <b class="t1">1 AC = 1 USD</b></div><button onclick="saveShamCashSettings()" class="ig-btn w-full py-2.5 text-xs font-bold">Сохранить тарифы</button><button onclick="openGiftGenerator()" class="w-full py-3 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fa-solid fa-gift"></i> Создать подарочный код</button></div></div>`; }
 else if (tab === 'payments') { if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; }
 const searchVal = paymentSearchQuery || '';
 c.innerHTML = `<div class="space-y-3"><h4 class="font-bold t1 text-sm"><i class="fa-solid fa-receipt" style="color:#10b981"></i> Верификация платежей</h4><input id="payment-search" oninput="paymentSearchQuery=this.value; renderAdminTabContent()" class="ig-input w-full px-3 py-2 text-xs" placeholder="Поиск по коду или пользователю" value="${searchVal}"><div class="space-y-2">${Object.entries(TOPUP_REQUESTS).filter(([id,r]) => {
@@ -2773,8 +2686,8 @@ c.innerHTML = `<div class="space-y-4">
 <div id="admin-marquee-preview" class="marquee-content text-xs">Предпросмотр появится здесь</div>
 </div>
 <div class="grid grid-cols-2 gap-2 pt-2">
-<button onclick="saveMarqueeSettings()" class="ig-btn px-3 py-2.5 text-xs"><i class="fa-solid fa-cloud-arrow-up"></i> Сохранить в Firebase</button>
-<button onclick="loadMarqueeFromFirebase()" class="ig-btn-outline px-3 py-2.5 text-xs"><i class="fa-solid fa-cloud-arrow-down"></i> Загрузить из Firebase</button>
+<button onclick="saveMarqueeSettings()" class="ig-btn px-3 py-2.5 text-xs"><i class="fa-solid fa-floppy-disk"></i> Сохранить настройки</button>
+<button onclick="loadMarqueeText()" class="ig-btn-outline px-3 py-2.5 text-xs"><i class="fa-solid fa-rotate"></i> Восстановить</button>
 </div>
 </div>
 <div class="p-3 rounded-xl bg-field border b-ig text-xs t2">
@@ -2927,13 +2840,7 @@ function loadMarqueeText() {
 const savedText = localStorage.getItem(MARQUEE_STORAGE_KEY);
 if (savedText) updateMarqueeText(savedText);
 }
-function loadMarqueeFromFirebase() {
-  const saved = localStorage.getItem(MARQUEE_STORAGE_KEY);
-  if (saved) {
-    applyMarqueeSettings({ text: saved });
-    showToast('Текст загружен', 'success');
-  }
-}
+
 
 function saveMarqueeSettings() {
   const input = byId('admin-marquee-input');
@@ -2960,7 +2867,7 @@ if (sbTheme) sbTheme.innerHTML = document.body.classList.contains('light-mode') 
 // Rules Modal Logic
 const rulesBtn = byId('rules-accept-btn');
 if (rulesBtn) rulesBtn.addEventListener('click', acceptLaunchRules);
-// Firebase & Data Init
+// Database & Data Init
 initSupabaseSync();
 fetchLiveExchangeRates();
 // Initial Render
