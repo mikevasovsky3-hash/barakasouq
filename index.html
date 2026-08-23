@@ -2454,65 +2454,114 @@ handleEditAdSubmit = async function(e) { e.preventDefault(); const uid = current
 const _0xLegacyCreateShop = handleCreateShopSubmit;
 handleCreateShopSubmit = async function(e) { e.preventDefault(); const isNewShop = !shopEditTargetUid && !currentUser?.shop; if (isNewShop && !(await _0xSCCharge(currentUser?.uid, AVITOCASH_PRICES.shopSubscription, 'Открытие магазина'))) return; _0xLegacyCreateShop(e); };
 /* ================= PROFILE ================= */
-function openProfileModal() { 
-  if (!currentUser) return; 
-  // Подтягиваем свежие данные перед отрисовкой
-  const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
-  if (freshMe) {
-    currentUser.avitocashBalance = freshMe.avitocashBalance;
-    currentUser.trialBalance = freshMe.trialBalance;
-  }
-  const c = byId('profile-content'); 
-  if (!c) return; const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; const isLight = document.body.classList.contains('light-mode'); const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
-const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
-c.innerHTML = `<div class="space-y-4">
-<div class="flex items-center gap-4">
-<div class="story-ring rounded-full p-[3px] shrink-0"><div class="rounded-full bg-card p-[3px]"><div class="w-[72px] h-[72px] rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-2xl">${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}</div></div></div>
-<div class="flex-1 space-y-1">
-<div class="text-base font-bold t1 flex items-center gap-2 flex-wrap">${currentUser.kunya || currentUser.username} <span class="text-xs font-semibold px-2 py-0.5 rounded-full border b-ig t2">${currentUser.role}</span></div>
-<div class="text-xs t2">@${currentUser.username}</div>
-<div class="flex gap-4 text-sm pt-1"><span><b class="t1">${myAds.length}</b> <span class="t2 text-xs">объявл.</span></span><span><b class="t1">${totalLikes}</b> <span class="t2 text-xs">лайков</span></span><span><b class="t1">${totalViews}</b> <span class="t2 text-xs">просмотров</span></span></div>
-</div>
-</div>
-<div class="bg-field border b-ig rounded-xl p-3 text-xs space-y-1.5">
-<div class="flex justify-between"><span class="t2">WhatsApp:</span><b class="t1">${currentUser.whatsapp || '—'}</b></div>
-<div class="flex justify-between"><span class="t2">Пол:</span><b class="t1">${currentUser.gender === 'FEMALE' ? 'Женщина 🌸' : 'Мужчина'}</b></div>
-${(currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.gender !== 'FEMALE' ? `<div class="flex items-center justify-between pt-1 border-t b-ig mt-1"><div class="text-xs t2 leading-tight"><div class="font-bold t1">Показывать женские объявления</div><div class="text-[10px]">Видеть «Только для женщин» в общей ленте</div></div><label class="ig-switch"><input type="checkbox" id="profile-show-women-ads" onchange="toggleShowWomenAds(this.checked)" ${currentUser.showWomenAds ? 'checked' : ''}><span class="slider"></span></label></div>` : ''}
-</div>
-<div class="bg-field border rounded-xl p-3 space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)">
-<div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs font-bold t1"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Баланс AvitoCash</span><b class="text-base font-extrabold" style="color:#f59e0b">${Number(currentUser.avitocashBalance || 0).toFixed(2)} AC</b></div>
-${Number(currentUser.trialBalance || 0) > 0 ? `<div class="text-[10px] t2">Из них подарочные (нельзя передавать): ${Number(currentUser.trialBalance).toFixed(2)} AC — только на объявления и магазин</div>` : ''}
-<button onclick="openTopupModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#f59e0b;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)"><i class="fa-solid fa-qrcode"></i> Пополнить баланс</button>
-<button onclick="openRedeemGiftModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#a78bfa;border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.1)"><i class="fa-solid fa-gift"></i> Активировать подарочный код</button>
-<button onclick="openTransferModal()" class="w-full py-2 rounded-lg text-xs font-bold border" style="color:#10b981;border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Передать баланс за товар</button>
-</div>
-<div class="bg-field border b-ig rounded-xl p-3 space-y-2">
-<div class="text-xs font-bold t1"><i class="fa-solid fa-receipt" style="color:#10b981"></i> История сделок (чеки)</div>
-<div class="space-y-1 max-h-44 overflow-y-auto pr-1">${renderMyReceipts()}</div>
-</div>
-<div class="bg-field border b-ig rounded-xl p-3 space-y-2.5 text-left">
-<div class="flex items-center justify-between"><span class="text-xs font-bold t1">Тема оформления:</span><button onclick="toggleTheme()" class="ig-btn-outline w-9 h-9 flex items-center justify-center" id="theme-icon">${isLight ? IGSVG.moon() : IGSVG.sun()}</button></div>
-<div class="border-t b-ig pt-2.5 flex items-center justify-between text-xs">
-<span class="font-mono font-bold" style="color:#f59e0b"><i class="fa-solid fa-coins"></i> $1 = <span class="t1">${Number(EXCHANGE_RATES.SYP).toLocaleString()} SYP</span> / <span class="t1">${EXCHANGE_RATES.TRY} TRY</span></span>
-<button onclick="fetchLiveExchangeRates(true)" class="ig-btn-outline px-2 py-1 text-[10px] flex items-center gap-1"><i class="fa-solid fa-arrows-rotate"></i> Обновить</button>
-</div>
-${lastRatesUpdate ? `<div class="text-[10px] t2 text-right">Обновлено: ${lastRatesUpdate.toLocaleTimeString()}</div>` : ''}
-</div>
-<div class="bg-field border b-ig rounded-xl p-3 space-y-2">
-<div class="text-xs font-bold t1 mb-2">Вид ленты объявлений:</div>
-<div class="grid grid-cols-3 gap-2">
-<button onclick="setFeedLayout('grid')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'grid' ? 'text-white' : 'b-ig t2'}" style="${layout === 'grid' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-solid fa-table-cells-large block mb-1"></i>Сетка</button>
-<button onclick="setFeedLayout('list')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'list' ? 'text-white' : 'b-ig t2'}" style="${layout === 'list' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-solid fa-list block mb-1"></i>Список</button>
-<button onclick="setFeedLayout('instagram')" class="p-2 rounded-lg text-xs font-bold border ${layout === 'instagram' ? 'text-white' : 'b-ig t2'}" style="${layout === 'instagram' ? 'background:#0095f6;border-color:#0095f6' : ''}"><i class="fa-brands fa-instagram block mb-1"></i>Лента</button>
-</div>
-</div>
-<button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2" style="color:#9333ea;border-color:rgba(147,51,234,.4);background:rgba(147,51,234,.1)"><i class="fa-solid fa-store"></i> ${currentUser.shop ? 'Мой магазин' : 'Открыть магазин'}</button>
-${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> Панель Администратора</button>` : ''}
-<div class="flex gap-2 pt-1 border-t b-ig">
-<button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2.5 text-xs"><i class="fa-solid fa-pen-to-square"></i> Изменить анкету</button>
-<button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs">Выйти</button>
-</div>
-</div>`; openModal('modal-profile'); }
+function openProfileModal() {  
+    if (!currentUser) return;  
+    // Подтягиваем свежие данные перед отрисовкой
+    const freshMe = users.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+    if (freshMe) {
+        currentUser.avitocashBalance = freshMe.avitocashBalance;
+        currentUser.trialBalance = freshMe.trialBalance;
+    }
+    const c = byId('profile-content');  
+    if (!c) return; 
+    
+    const isAdmin = currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'; 
+    const isLight = document.body.classList.contains('light-mode'); 
+    const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); 
+    const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); 
+    const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
+    const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+
+    c.innerHTML = `
+    <div class="space-y-3 pt-2">
+        <!-- Шапка профиля: Аватар и Статистика -->
+        <div class="flex items-center gap-3.5 bg-field p-3 rounded-2xl border b-ig">
+            <div class="story-ring rounded-full p-[2px] shrink-0">
+                <div class="rounded-full bg-card p-[2px]">
+                    <div class="w-14 h-14 rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xl font-bold">
+                        ${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold t1 flex items-center gap-1.5 truncate">
+                    <span class="truncate">${currentUser.kunya || currentUser.username}</span> 
+                    <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full border b-ig t2 shrink-0">${currentUser.role}</span>
+                </div>
+                <div class="text-xs t2 truncate">@${currentUser.username} • ${currentUser.whatsapp || 'Без WhatsApp'}</div>
+                <div class="flex gap-3 text-xs pt-1.5 t1">
+                    <span><b>${myAds.length}</b> <span class="t2 text-[10px]">объявл.</span></span>
+                    <span><b>${totalLikes}</b> <span class="t2 text-[10px]">лайков</span></span>
+                    <span><b>${totalViews}</b> <span class="t2 text-[10px]">просмотров</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Баланс AvitoCash (Компактный блок) -->
+        <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Баланс AvitoCash</span>
+                <b class="text-sm font-extrabold" style="color:#f59e0b">${Number(currentUser.avitocashBalance || 0).toFixed(2)} AC</b>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 pt-1">
+                <button onclick="openTopupModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#f59e0b;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)">
+                    <i class="fa-solid fa-qrcode"></i> Пополнить
+                </button>
+                <button onclick="openRedeemGiftModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#a78bfa;border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.08)">
+                    <i class="fa-solid fa-gift"></i> Код
+                </button>
+                <button onclick="openTransferModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#10b981;border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Перевод
+                </button>
+            </div>
+        </div>
+
+        <!-- Настройки: Валюты, Тема и Вид ленты в одну аккуратную сетку -->
+        <div class="grid grid-cols-2 gap-2">
+            <!-- Переключатель темы -->
+            <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] t2">Тема экрана</div>
+                    <div class="text-xs font-bold t1">${isLight ? 'Светлая ☀️' : 'Темная 🌙'}</div>
+                </div>
+                <button onclick="toggleTheme()" class="ig-btn-outline w-8 h-8 rounded-xl flex items-center justify-center text-xs">
+                    ${isLight ? IGSVG.moon() : IGSVG.sun()}
+                </button>
+            </div>
+            <!-- Управление магазином -->
+            <button onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border rounded-2xl p-3 text-left flex flex-col justify-center hover:bg-ig-hover transition-colors" style="border-color:rgba(147,51,234,.3)">
+                <div class="text-[10px]" style="color:#c084fc">Магазин</div>
+                <div class="text-xs font-bold t1 truncate"><i class="fa-solid fa-store"></i> ${currentUser.shop ? currentUser.shop.name : 'Открыть'}</div>
+            </button>
+        </div>
+
+        <!-- Вид ленты -->
+        <div class="bg-field border b-ig rounded-2xl p-3 space-y-2">
+            <div class="text-[10px] t2 uppercase tracking-wide font-semibold">Вид ленты объявлений</div>
+            <div class="grid grid-cols-3 gap-1.5">
+                <button onclick="setFeedLayout('grid')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'grid' ? 'text-white' : 'b-ig t2'}" style="${layout === 'grid' ? 'background:#0095f6;border-color:#0095f6' : ''}">Сетка</button>
+                <button onclick="setFeedLayout('list')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'list' ? 'text-white' : 'b-ig t2'}" style="${layout === 'list' ? 'background:#0095f6;border-color:#0095f6' : ''}">Список</button>
+                <button onclick="setFeedLayout('instagram')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'instagram' ? 'text-white' : 'b-ig t2'}" style="${layout === 'instagram' ? 'background:#0095f6;border-color:#0095f6' : ''}">Лента</button>
+            </div>
+        </div>
+
+        <!-- История чеков -->
+        <div class="bg-field border b-ig rounded-2xl p-3 space-y-1.5">
+            <div class="text-xs font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-receipt" style="color:#10b981"></i> История сделок (чеки)</div>
+            <div class="space-y-1 max-h-32 overflow-y-auto pr-1">${renderMyReceipts()}</div>
+        </div>
+
+        <!-- Кнопки управления профилем и Админка -->
+        <div class="space-y-2 pt-1">
+            ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-md"><i class="fa-solid fa-user-shield"></i> Панель Администратора</button>` : ''}
+            <div class="flex gap-2">
+                <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2.5 text-xs font-semibold"><i class="fa-solid fa-pen-to-square"></i> Изменить анкету</button>
+                <button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs font-semibold"><i class="fa-solid fa-right-from-bracket"></i> Выйти</button>
+            </div>
+        </div>
+    </div>`; 
+    openModal('modal-profile'); 
+}
 function setFeedLayout(layout) {
 localStorage.setItem('bs_feed_layout', layout);
 itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
