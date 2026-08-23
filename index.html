@@ -136,6 +136,13 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 <button id="sb-profile" onclick="handleNavClick('profile')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Профиль</span></button>
 </nav>
 <div class="space-y-1 pt-3 border-t b-ig">
+<a href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" target="_blank" rel="noopener" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
+  <span class="w-6 h-6 rounded-md text-white flex items-center justify-center bg-[#25D366]"><i class="fa-brands fa-whatsapp text-[13px]"></i></span>
+  <span class="hidden xl:block text-[15px] font-semibold">Техподдержка</span>
+</a>
+<a href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" target="_blank" rel="noopener" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 bg-[#25D366]" title="Техподдержка WhatsApp">
+  <i class="fa-brands fa-whatsapp text-sm"></i>
+</a>
 <button onclick="openSupportModal()" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
 <span class="w-6 h-6 rounded-md text-white flex items-center justify-center" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar text-[11px]"></i></span>
 <span class="hidden xl:block text-[15px] font-semibold">Поддержать проект</span>
@@ -3382,5 +3389,14 @@ if (digits.length < 10 || digits.length > 15) return { valid: false, error: 'Н�
 return { valid: true, number: digits };
 }
 </script>
+<!-- ============ КНОПКА ТЕХПОДДЕРЖКИ (WHATSAPP) ============ -->
+<a href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" 
+   target="_blank" 
+   rel="noopener"
+   title="Техподдержка WhatsApp"
+   class="fixed bottom-20 lg:bottom-6 left-4 z-40 h-10 px-3.5 rounded-full bg-[#25D366] text-white shadow-lg flex items-center gap-2 hover:bg-[#20bd5a] active:scale-95 transition-all">
+  <i class="fa-brands fa-whatsapp text-lg"></i>
+  <span class="text-xs font-bold hidden sm:inline">Поддержка</span>
+</a>
 </body>
 </html>
