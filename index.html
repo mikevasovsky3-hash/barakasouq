@@ -263,17 +263,17 @@ body { top: 0px !important; }
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div class="w-14 h-14 mx-auto rounded-2xl text-white flex items-center justify-center text-2xl" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar"></i></div>
 <div>
-<h2 class="text-base font-bold t1">Поддержка сервера — ShamCash</h2>
-<p class="text-xs t2 mt-1 leading-relaxed">Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.</p>
+<h2 id="support-modal-title" class="text-base font-bold t1">Поддержка сервера — ShamCash</h2>
+<p id="support-modal-desc" class="text-xs t2 mt-1 leading-relaxed">Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.</p>
 </div>
 <div class="bg-white p-3 rounded-2xl w-fit mx-auto shadow-inner">
 <div id="support-qr-box" class="w-[208px] h-[208px] flex items-center justify-center"><i class="fa-solid fa-qrcode text-5xl text-slate-300"></i></div>
 </div>
 <div class="space-y-1">
-<div class="text-[10px] t2 uppercase tracking-wide font-semibold">ID счёта ShamCash</div>
+<div id="support-modal-idlabel" class="text-[10px] t2 uppercase tracking-wide font-semibold">ID счёта ShamCash</div>
 <div class="font-mono text-xs t1 bg-field border b-ig rounded-lg px-3 py-2 break-all select-all">3adfe36abcbe52f1a4b008cd324082fb</div>
 </div>
-<button type="button" onclick="copyShamCashCode()" class="ig-btn w-full py-2.5 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-copy"></i> Скопировать ID</button>
+<button type="button" id="support-modal-copybtn" onclick="copyShamCashCode()" class="ig-btn w-full py-2.5 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-copy"></i> <span>Скопировать ID</span></button>
 </div>
 </div>
 <!-- ============ SHARE SHEET ============ -->
@@ -939,11 +939,20 @@ function removePendingPhoto(mode, index) { (mode === 'create' ? pendingCreateIma
 async function processShopLogoUpload(e) { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 300); byId('shop-logo-data').value = d; byId('shop-logo-preview-img').src = d; byId('shop-logo-preview-box').classList.remove('hidden'); } catch (err) {} }
 /* ================= SUPPORT QR ================= */
 function openSupportModal() { 
+  const titleEl = byId('support-modal-title');
+  const descEl = byId('support-modal-desc');
+  const idLbl = byId('support-modal-idlabel');
+  const copySpan = byId('support-modal-copybtn')?.querySelector('span');
+
+  if (titleEl) titleEl.innerText = t('Поддержка сервера — ShamCash');
+  if (descEl) descEl.innerText = t('Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.');
+  if (idLbl) idLbl.innerText = t('ID счёта ShamCash');
+  if (copySpan) copySpan.innerText = t('Скопировать ID');
+
   openModal('modal-shamcash-qr'); 
   setTimeout(renderSupportQR, 60); 
   setTimeout(renderSupportQR, 200); 
 }
-
 function renderSupportQR() { 
   const box = byId('support-qr-box'); 
   if (!box) return; 
@@ -3914,6 +3923,14 @@ const DICTIONARY = {
   'Объявление удалено': 'تم حذف الإعلان',
   'Жалоба отправлена. Спасибо!': 'تم إرسال البلاغ بنجاح. شكراً لك!',
   'Черновик удален': 'تم حذف المسودة',
+
+  // Поддержка проекта и ShamCash
+  'Поддержка проекта': 'دعم المشروع',
+  'Поддержать проект': 'دعم المشروع',
+  'Поддержка сервера — ShamCash': 'دعم السيرفر — شام كاش',
+  'Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.': 'امسح رمز QR عبر تطبيق شام كاش للدفع ودعم منصة أفيتو الشام.',
+  'ID счёта ShamCash': 'معرف حساب شام كاش',
+  'Скопировать ID': 'نسخ المعرف',
 
   // Заглушки и футер
   'Объявлений пока нет. Будьте первым!': 'لا توجد إعلانات حتى الآن. كن أول المعلنين!',
