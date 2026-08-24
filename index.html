@@ -946,11 +946,16 @@ async function renewAdExpiry(adId) {
 }
 
 function requestPushPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
+  if (!('Notification' in window)) return;
+  if (localStorage.getItem('bs_push_asked')) return;
+  
+  if (Notification.permission === 'default') {
+    localStorage.setItem('bs_push_asked', 'true');
     Notification.requestPermission();
+  } else {
+    localStorage.setItem('bs_push_asked', 'true');
   }
 }
-
 function sendBrowserPush(title, body, icon = null) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
@@ -2572,7 +2577,7 @@ console.error(e);
 }
 /* ================= SUPABASE SYNC ================= */
 async function initSupabaseSync() {
-  // Сначала мгновенно загружаем кеш, чтобы экран не висел
+  // 1. Мгновенная отрисовка из локального кеша (0 секунд задержки)
   loadCachedAds();
   renderCategoryPills();
   renderAds();
@@ -2581,13 +2586,19 @@ async function initSupabaseSync() {
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
   try {
-    const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, is_dnd, shop, frozen, is_archived').limit(200),
-      supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, currency, description, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, queue, likes, views').order('created_at', { ascending: false }).limit(60),
-      supabaseClient.from('combos').select('*').limit(50),
-      supabaseClient.from('categories').select('*'),
-      (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) ? supabaseClient.from('reports').select('*').limit(50) : Promise.resolve({ data: [] })
+    // 2. Быстрый параллельный запрос только самого важного
+    const [usersRes, adsRes] = await Promise.all([
+      supabaseClient.from('users').select('*'),
+      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(60)
     ]);
+
+    // Фоновая догрузка второстепенных данных без блокировки
+    const combosPromise = supabaseClient.from('combos').select('*');
+    const catsPromise = supabaseClient.from('categories').select('*');
+    const reportsPromise = (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) 
+      ? supabaseClient.from('reports').select('*') 
+      : Promise.resolve({ data: [] });
+    const [combosRes, catsRes, reportsRes] = await Promise.all([combosPromise, catsPromise, reportsPromise]);
     if (usersRes.data) {
       const allParsedUsers = usersRes.data.map(u => ({
         ...u,
