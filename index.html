@@ -1972,28 +1972,28 @@ ${(() => {
       })()}
 
 <div class="flex items-start justify-between gap-2 shrink-0">
-        <h2 class="text-base font-bold t1 leading-snug">${displayTitle}</h2>
+        <h2 id="detail-ad-title" class="text-base font-bold t1 leading-snug">${displayTitle}</h2>
         <div class="text-right shrink-0">
-          ${(ad.oldPrice && ad.oldPrice > ad.price) ? `
+		${(ad.oldPrice && ad.oldPrice > ad.price) ? `
             <div class="text-xs t2 line-through font-semibold">$${Number(ad.oldPrice).toFixed(2)}</div>
             <div class="text-lg font-black" style="color:#ef4444">${converted}</div>
           ` : `<div class="text-base font-extrabold t1">${converted}</div>`}
         </div>
       </div>
 
-      ${(ad.oldPrice && ad.oldPrice > ad.price) ? `
+${(ad.oldPrice && ad.oldPrice > ad.price) ? `
       <div class="p-3 rounded-2xl border flex items-center justify-between shadow-inner shrink-0" style="border-color:rgba(239,68,68,.5);background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05))">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-black text-sm shadow-md">
             -${Math.round((1 - ad.price / ad.oldPrice) * 100)}%
           </div>
           <div>
-            <div class="font-black text-xs" style="color:#ef4444">🔥 ГОРЯЧЕЕ ПРЕДЛОЖЕНИЕ!</div>
-            <div class="text-[10px] t2">Специальная цена со скидкой</div>
+            <div class="font-black text-xs" style="color:#ef4444">🔥 ${currentLang === 'ar' ? 'عرض خاص ومميز!' : 'ГОРЯЧЕЕ ПРЕДЛОЖЕНИЕ!'}</div>
+            <div class="text-[10px] t2">${currentLang === 'ar' ? 'سعر خاص ومخفض لفترة محدودة' : 'Специальная цена со скидкой'}</div>
           </div>
         </div>
         <div class="text-right bg-field px-3 py-1.5 rounded-xl border b-ig">
-          <div class="text-[9px] t2 uppercase font-bold">Экономия:</div>
+          <div class="text-[9px] t2 uppercase font-bold">${currentLang === 'ar' ? 'التوفير:' : 'Экономия:'}</div>
           <div class="text-xs font-black" style="color:#10b981">$${(ad.oldPrice - ad.price).toFixed(2)}</div>
         </div>
       </div>` : ''}
@@ -2021,11 +2021,10 @@ ${(() => {
         ` : ''}
       </div>
 
-      <div class="shrink-0">
+<div class="shrink-0">
         <div class="text-xs font-bold t2 uppercase tracking-wide mb-1">${t('Описание и изъяны')}</div>
-        <p class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${displayDesc}</p>
+        <p id="detail-ad-desc" class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${displayDesc}</p>
       </div>
-
 <div class="flex items-center gap-2 pt-2 shrink-0">
         ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg shrink-0"></i><span class="truncate">${t('Связаться через WhatsApp')}</span></a>` : ''}
         ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#f59e0b"><i class="fa-solid fa-coins shrink-0"></i><span class="truncate">${t('Оплатить из баланса')}</span></button>` : ''}
@@ -2067,20 +2066,24 @@ ${(() => {
 
 openModal('modal-ad-detail');
   
-// Карта и фоновый перевод запускаются уже после того, как модальное окно мгновенно открылось
+// Карта и фоновый автоперевод через Google API
   setTimeout(async () => {
     initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765);
-    const titleEl = document.querySelector('#modal-ad-detail h2');
-    const descEl = document.querySelector('#modal-ad-detail p.whitespace-pre-line');
-    const cityEl = document.getElementById(`detail-city-${ad.id}`);
-    const kunyaEl = document.getElementById(`detail-kunya-${ad.id}`);
+    const titleEl = byId('detail-ad-title');
+    const descEl = byId('detail-ad-desc');
     
-    if (titleEl) titleEl.innerText = await translateDynamic(ad.title, currentLang);
-    if (descEl && ad.desc) descEl.innerText = await translateDynamic(ad.desc, currentLang);
-    if (cityEl && ad.city) cityEl.innerText = await translateDynamic(ad.city, currentLang);
-    if (kunyaEl && rawKunya) kunyaEl.innerText = await translateDynamic(rawKunya, currentLang);
-  }, 30);
-}
+    if (currentLang === 'ar') {
+      if (titleEl && ad.title) {
+        const transTitle = await translateDynamic(ad.title, 'ar');
+        titleEl.innerText = transTitle;
+      }
+      if (descEl && ad.desc) {
+        const transDesc = await translateDynamic(ad.desc, 'ar');
+        descEl.innerText = transDesc;
+      }
+    }
+  }, 10);
+  }
 function openFullscreenViewer(src) { const v = byId('modal-image-viewer'), img = byId('fullscreen-viewer-img'); if (v && img) { img.src = src; openModal('modal-image-viewer'); } }
 function sendPriceOffer(adId) { const ad = ads.find(a => a.id === adId); if (!ad) return; const inp = byId('offer-price-input'); const val = inp ? inp.value.trim() : ''; if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) { showToast('Введите вашу предложенную цену', 'warning'); return; } const wa = getSellerWhatsapp(ad); const sender = currentUser ? (currentUser.whatsapp ? `${currentUser.kunya || currentUser.username} (${currentUser.whatsapp})` : currentUser.username) : 'Гость платформы'; const msg = `Здравствуйте! По объявлению "${ad.title}" (${ad.id}) на Авито Шам предлагаю цену: $${parseFloat(val).toFixed(2)}. От: ${sender}`; window.open(`https://wa.me/${wa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank'); showToast('Ваше предложение цены отправляется через WhatsApp', 'success'); }
 function initDetailMap(lat, lng) { const el = byId('detail-map'); if (!el || typeof L === 'undefined') return; if (detailMap) { detailMap.remove(); detailMap = null; } detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(detailMap); L.marker([lat, lng]).addTo(detailMap); }
@@ -5068,10 +5071,13 @@ const DICTIONARY = {
   'Передумал': 'تراجع عن البيع',
   'Редактировать': 'تعديل الإعلان',
   'В архив': 'نقل للأرشيف',
-  'Рейтинг:': 'التقييم:',
+'Рейтинг:': 'التقييم:',
   'Лайк': 'إعجاب',
-  'Лайк поставлен': 'تم الإعجاب'
-};
+  'Лайк поставлен': 'تم الإعجاب',
+  'ГОРЯЧЕЕ ПРЕДЛОЖЕНИЕ!': 'عرض خاص ومميز!',
+  'Специальная цена со скидкой': 'سعر خاص ومخفض لفترة محدودة',
+  'Экономия:': 'التوفير:'
+  };
 
 function t(text) {
   if (!text || currentLang !== 'ar') return text;
@@ -5095,17 +5101,34 @@ async function translateDynamic(text, targetLang = currentLang) {
   const sl = isArabicText ? 'ar' : 'ru';
   const tl = targetLang;
 
+  // 1. Быстрый надежный перевод через Google API
   try {
-    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(clean)}`);
-    const data = await res.json();
-    if (data && data[0]) {
-      const result = data[0].map(x => x[0]).join('');
-      TRANSLATE_CACHE[cacheKey] = result;
-      return result;
+    const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(clean)}`;
+    const res = await fetch(googleUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0]) {
+        const result = data[0].map(x => x[0]).join('');
+        TRANSLATE_CACHE[cacheKey] = result;
+        return result;
+      }
     }
-  } catch (e) {
-    console.warn('Translation API error:', e);
-  }
+  } catch (e) {}
+
+  // 2. Резервный прокси без CORS-ограничений
+  try {
+    const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean.slice(0, 450))}&langpair=${sl}|${tl}`;
+    const res = await fetch(proxyUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.responseData?.translatedText && !data.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
+        const result = data.responseData.translatedText;
+        TRANSLATE_CACHE[cacheKey] = result;
+        return result;
+      }
+    }
+  } catch (e) {}
+
   return clean;
 }
 function triggerGoogleTranslate(lang) {
