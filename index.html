@@ -1976,25 +1976,43 @@ ${(() => {
         <p class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${displayDesc}</p>
       </div>
 
-      <div class="flex gap-2 pt-2 shrink-0">
-        ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> ${t('Связаться через WhatsApp')}</a>` : ''}
-        ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#f59e0b"><i class="fa-solid fa-coins"></i> ${t('Оплатить из баланса')}</button>` : ''}
-        <button onclick="shareAd('${ad.id}')" class="ig-btn-outline py-3 px-4" title="${t('Поделиться')}">${IGSVG.send()}</button>
+<div class="flex items-center gap-2 pt-2 shrink-0">
+        ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg shrink-0"></i><span class="truncate">${t('Связаться через WhatsApp')}</span></a>` : ''}
+        ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#f59e0b"><i class="fa-solid fa-coins shrink-0"></i><span class="truncate">${t('Оплатить из баланса')}</span></button>` : ''}
+        <button onclick="shareAd('${ad.id}')" class="h-11 w-11 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center text-blue-500 shrink-0 transition active:scale-95 shadow-sm" title="${t('Поделиться')}"><i class="fa-solid fa-paper-plane text-base"></i></button>
       </div>
 
-      <div class="pt-2 border-t b-ig flex gap-2 flex-wrap shrink-0">
-        ${!isOwner ? `<button onclick="openReportModal('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold border b-ig t2 flex items-center justify-center gap-1.5 hover:bg-field"><i class="fa-solid fa-flag text-red-500"></i> ${t('Пожаловаться')}</button>` : ''}
+      <div class="pt-2 border-t b-ig shrink-0">
+        ${!isOwner ? `<button onclick="openReportModal('${ad.id}')" class="w-full py-2.5 rounded-xl text-xs font-semibold border b-ig t2 flex items-center justify-center gap-1.5 hover:bg-field transition"><i class="fa-solid fa-flag text-red-500"></i> ${t('Пожаловаться')}</button>` : ''}
         ${isOwner ? `
-          <button onclick="markAdSold('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold" style="background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.4)"><i class="fa-solid fa-circle-check"></i> ${t('Продано')}</button>
-          <button onclick="markAdWithdrawn('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold border b-ig t2"><i class="fa-solid fa-ban"></i> ${t('Передумал')}</button>
-          ${(ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 * 60 * 1000)) ? `
-          <button onclick="renewAdExpiry('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold text-white" style="background:#10b981"><i class="fa-solid fa-arrows-rotate"></i> ${t('Продлить бесплатно')}</button>` : ''}
-          <button onclick="openEditAdModal('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.4)"><i class="fa-solid fa-pen-to-square"></i> ${t('Редактировать')}</button>
-          <button onclick="archiveAdWithConfirm('${ad.id}')" class="flex-1 min-w-[95px] py-2.5 rounded-lg text-xs font-semibold" style="background:rgba(147,51,234,.15);color:#a855f7;border:1px solid rgba(147,51,234,.4)"><i class="fa-solid fa-box-archive"></i> ${t('В архив')}</button>
-          <button onclick="deleteAdWithConfirm('${ad.id}')" class="ig-btn-danger py-2.5 px-3 text-xs"><i class="fa-solid fa-trash"></i></button>
-        ` : ''}
+          <div class="flex items-center gap-1 w-full overflow-x-auto no-scrollbar py-0.5">
+            <button onclick="markAdSold('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-0.5 transition shrink-0" style="background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.4)" title="${t('Продано')}">
+              <i class="fa-solid fa-circle-check text-xs"></i>
+              <span class="truncate w-full text-center">${t('Продано')}</span>
+            </button>
+            <button onclick="markAdWithdrawn('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-semibold border b-ig t2 flex flex-col items-center justify-center gap-0.5 hover:bg-field transition shrink-0" title="${t('Передумал')}">
+              <i class="fa-solid fa-ban text-xs"></i>
+              <span class="truncate w-full text-center">${t('Передумал')}</span>
+            </button>
+            ${(ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 * 60 * 1000)) ? `
+              <button onclick="renewAdExpiry('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-bold text-white flex flex-col items-center justify-center gap-0.5 shadow-sm transition shrink-0" style="background:#10b981" title="${t('Продлить бесплатно')}">
+                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span class="truncate w-full text-center">${t('Продлить')}</span>
+              </button>` : ''}
+            <button onclick="openEditAdModal('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-0.5 transition shrink-0" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.4)" title="${t('Редактировать')}">
+              <i class="fa-solid fa-pen-to-square text-xs"></i>
+              <span class="truncate w-full text-center">${t('Редакт.')}</span>
+            </button>
+            <button onclick="archiveAdWithConfirm('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-0.5 transition shrink-0" style="background:rgba(147,51,234,.15);color:#a855f7;border:1px solid rgba(147,51,234,.4)" title="${t('В архив')}">
+              <i class="fa-solid fa-box-archive text-xs"></i>
+              <span class="truncate w-full text-center">${t('В архив')}</span>
+            </button>
+            <button onclick="deleteAdWithConfirm('${ad.id}')" class="h-10 px-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center shadow-sm transition shrink-0" style="background:#ed4956" title="${t('Удалить навсегда')}">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>` : ''}
       </div>
-    </div>
+	  </div>
   </div>`;
 
 openModal('modal-ad-detail');
