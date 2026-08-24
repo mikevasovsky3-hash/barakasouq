@@ -1710,14 +1710,30 @@ async function handleEditAdSubmit(e) {
   checkFavoritesAndQueueAlerts(ad, updatedData);
   
   if (supabaseClient) {
-    const { data: res, error } = await supabaseClient.rpc('secure_manage_ad', {
-      p_ad_id: adId,
-      p_caller_id: currentUser.uid || currentUser.username,
-      p_action: 'UPDATE',
-      p_ad_data: updatedData
-    });
-    if (error || !res || !res.success) {
-      showToast(res?.error || 'Ошибка обновления', 'error');
+    const dbPayload = {
+      title: updatedData.title,
+      category: updatedData.category,
+      region: updatedData.region,
+      city: updatedData.city,
+      is_women_only: updatedData.isWomenOnly,
+      is_free: updatedData.isFree,
+      is_negotiable: updatedData.isNegotiable,
+      price: updatedData.price,
+      old_price: updatedData.oldPrice,
+      currency: updatedData.currency,
+      description: updatedData.desc,
+      images: updatedData.images,
+      image: updatedData.image,
+      seller_username: updatedData.sellerUsername,
+      seller_uid: updatedData.sellerUid,
+      seller_kunya: updatedData.sellerKunya,
+      seller_whatsapp: updatedData.sellerWhatsapp
+    };
+
+    const { error } = await supabaseClient.from('ads').update(dbPayload).eq('id', adId);
+    if (error) {
+      console.error("Supabase update error:", error);
+      showToast('Ошибка обновления в базе: ' + error.message, 'error');
       return;
     }
   }
@@ -1728,8 +1744,7 @@ async function handleEditAdSubmit(e) {
   renderCategoryPills();
   renderAds();
   showToast('Объявление обновлено!', 'success');
-}
-async function setAdStatusSecure(adId, newStatus, successMsg) {
+}async function setAdStatusSecure(adId, newStatus, successMsg) {
   const ad = ads.find(a => a.id === adId);
   if (!ad || !currentUser) return;
   if (supabaseClient) {
