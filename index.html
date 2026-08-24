@@ -1684,7 +1684,7 @@ async function handleEditAdSubmit(e) {
   const imgs = [...pendingEditImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
 
-const isDisc = byId('edit-ad-has-discount')?.checked;
+  const isDisc = byId('edit-ad-has-discount')?.checked;
   const oldPriceVal = isDisc ? parseFloat(byId('edit-ad-old-price').value || 0) : null;
 
   const updatedData = {
