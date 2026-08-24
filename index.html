@@ -2331,14 +2331,13 @@ async function saveQuickDiscountSubmit() {
     ad.price = newP;
   }
 
-  if (supabaseClient) {
+if (supabaseClient) {
     try {
-      await supabaseClient.from('ads').update({ price: ad.price }).eq('id', ad.id);
+      await supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice }).eq('id', ad.id);
     } catch(err) {
       console.warn('Supabase discount update:', err);
     }
   }
-
   saveCachedAds();
   closeModal('modal-quick-discount');
   renderCategoryPills();
@@ -2887,8 +2886,8 @@ async function initSupabaseSync() {
           isWomenOnly: !!a.is_women_only,
           isFree: !!a.is_free,
           isNegotiable: !!a.is_negotiable,
-          price: Number(a.price || 0),
-          oldPrice: (a.old_price && Number(a.old_price) > Number(a.price)) ? Number(a.old_price) : (a.oldPrice ? Number(a.oldPrice) : null),
+price: Number(a.price || 0),
+          oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
           currency: a.currency,
           desc: a.description || a.desc || '',
           images: Array.isArray(a.images) ? a.images : [a.image || ''],
