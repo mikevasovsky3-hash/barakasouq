@@ -637,6 +637,36 @@ body { top: 0px !important; }
 </form>
 </div>
 </div>
+<!-- ============ QUICK DISCOUNT MODAL ============ -->
+<div id="modal-quick-discount" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-5 relative space-y-4">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-quick-discount')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-6 flex items-center gap-2"><i class="fa-solid fa-tags" style="color:#ef4444"></i> Установить скидку / Акцию</h3>
+<input type="hidden" id="quick-discount-ad-id">
+<div>
+  <div id="quick-discount-ad-title" class="text-xs font-bold t1 truncate"></div>
+  <div id="quick-discount-ad-current" class="text-[11px] t2"></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+  <label class="text-[10px] t2 font-semibold">Новая цена ($)<input type="number" id="quick-discount-price" step="0.01" min="0.01" class="ig-input w-full px-3 py-2 text-xs mt-1 font-bold"></label>
+  <label class="text-[10px] t2 font-semibold">Срок действия
+    <select id="quick-discount-duration" class="ig-input w-full px-2 py-2 text-xs mt-1">
+      <option value="forever">Бессрочно</option>
+      <option value="24h">24 часа (Скидка дня)</option>
+      <option value="3d">3 дня (Выходные)</option>
+      <option value="7d">7 дней (Неделя скидок)</option>
+    </select>
+  </label>
+</div>
+<div class="grid grid-cols-3 gap-1.5 pt-1">
+  <button type="button" onclick="applyPresetDiscountPercent(10)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-10%</button>
+  <button type="button" onclick="applyPresetDiscountPercent(20)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-20%</button>
+  <button type="button" onclick="applyPresetDiscountPercent(30)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-30%</button>
+</div>
+<button type="button" onclick="saveQuickDiscountSubmit()" class="w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-md" style="background:linear-gradient(45deg,#ef4444,#dc2626)">Применить скидку</button>
+<button type="button" onclick="removeQuickDiscountSubmit()" class="w-full py-1.5 text-xs font-semibold t2 hover:text-white border-t b-ig">Отменить скидку (вернуть старую цену)</button>
+</div>
+</div>
 <!-- ============ CONFIRM MODAL ============ -->
 <div id="modal-confirm" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 text-center space-y-4">
@@ -1943,11 +1973,15 @@ ${(() => {
         `;
       })()}
 
-      <div class="flex items-start justify-between gap-2 shrink-0">
+<div class="flex items-start justify-between gap-2 shrink-0">
         <h2 class="text-base font-bold t1 leading-snug">${displayTitle}</h2>
-        <div class="text-right shrink-0"><div class="text-base font-extrabold t1">${converted}</div></div>
-      </div>
-	  
+        <div class="text-right shrink-0">
+          ${ad.oldPrice && ad.oldPrice > ad.price ? `
+            <div class="text-xs t2 line-through font-medium">$${Number(ad.oldPrice).toFixed(2)}</div>
+            <div class="text-base font-extrabold" style="color:#ef4444">${converted}</div>
+          ` : `<div class="text-base font-extrabold t1">${converted}</div>`}
+        </div>
+      </div>	  
       <div class="flex items-center gap-3 text-[11px] t2 flex-wrap bg-field p-2.5 rounded-xl border b-ig shrink-0">
         <span><i class="fa-solid fa-eye"></i> ${viewsCount}</span>
         <span class="${userLiked ? 'font-bold' : ''}" style="${userLiked ? 'color:#ed4956' : ''}"><i class="fa-solid fa-heart"></i> ${likesCount}</span>
@@ -2237,21 +2271,150 @@ function deleteShopWithConfirm(userUid) {
   });
 }
 function adminCreateShopForUser() { const sel = byId('admin-new-shop-user'); if (sel && sel.value) openCreateShopModal(sel.value); }
-function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { const seller = users.find(u => u.uid === shopUserUid); if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } const shop = seller.shop; const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE'); const cats = shop.customCategories || []; const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); const c = byId('shop-showcase-content'); if (!c) return; const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; const shopCombos = combos.filter(x => x.shopUid === shopUserUid || (x.sellerUsername && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())).map(comboToVirtualAd).filter(Boolean); c.innerHTML = `<div class="space-y-4">
+let currentDiscountTargetAd = null;
+
+function openQuickDiscountModal(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad) return;
+  currentDiscountTargetAd = ad;
+  byId('quick-discount-ad-id').value = ad.id;
+  byId('quick-discount-ad-title').innerText = ad.title;
+  byId('quick-discount-ad-current').innerText = `Текущая цена: $${Number(ad.price || 0).toFixed(2)}`;
+  byId('quick-discount-price').value = ad.price || '';
+  byId('quick-discount-duration').value = 'forever';
+  openModal('modal-quick-discount');
+}
+
+function applyPresetDiscountPercent(pct) {
+  if (!currentDiscountTargetAd) return;
+  const basePrice = currentDiscountTargetAd.oldPrice || currentDiscountTargetAd.price || 0;
+  if (basePrice <= 0) return;
+  const newPrice = Math.max(0.1, basePrice * (1 - pct / 100));
+  byId('quick-discount-price').value = newPrice.toFixed(2);
+}
+
+async function saveQuickDiscountSubmit() {
+  if (!currentDiscountTargetAd || !currentUser) return;
+  const newP = parseFloat(byId('quick-discount-price').value);
+  if (isNaN(newP) || newP <= 0) {
+    showToast('Укажите корректную новую цену', 'warning');
+    return;
+  }
+  const ad = currentDiscountTargetAd;
+  const oldP = ad.oldPrice || ad.price;
+  
+  ad.oldPrice = oldP > newP ? oldP : null;
+  ad.price = newP;
+  
+  if (supabaseClient) {
+    await supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice }).eq('id', ad.id);
+  }
+  
+  saveCachedAds();
+  closeModal('modal-quick-discount');
+  renderCategoryPills();
+  renderAds();
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(ad.sellerUid || ad.sellerUsername);
+  }
+  if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+    openMyShopModal();
+  }
+  showToast(`Скидка на "${ad.title}" успешно установлена!`, 'success');
+}
+
+async function removeQuickDiscountSubmit() {
+  if (!currentDiscountTargetAd) return;
+  const ad = currentDiscountTargetAd;
+  if (ad.oldPrice) {
+    ad.price = ad.oldPrice;
+    ad.oldPrice = null;
+    if (supabaseClient) {
+      await supabaseClient.from('ads').update({ price: ad.price, old_price: null }).eq('id', ad.id);
+    }
+    saveCachedAds();
+    renderCategoryPills();
+    renderAds();
+    showToast('Скидка отменена, возвращена базовая цена', 'info');
+  }
+  closeModal('modal-quick-discount');
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(ad.sellerUid || ad.sellerUsername);
+  }
+}
+
+function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { 
+  const seller = users.find(u => u.uid === shopUserUid || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
+  if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } 
+  const shop = seller.shop; 
+  const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE'); 
+  const cats = shop.customCategories || []; 
+  const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); 
+  const c = byId('shop-showcase-content'); 
+  if (!c) return; 
+  const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; 
+  const shopCombos = combos.filter(x => x.shopUid === shopUserUid || (x.sellerUsername && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())).map(comboToVirtualAd).filter(Boolean); 
+
+  // Проверка прав владельца или администратора
+  const isShopOwner = !!(currentUser && ((currentUser.uid && seller.uid && currentUser.uid === seller.uid) || (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
+
+  c.innerHTML = `<div class="space-y-4">
 <div class="p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.08)">
-<div class="flex items-center gap-3">
-<div class="w-16 h-16 rounded-2xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store text-2xl"></i>'}</div>
-<div><h3 class="text-base font-extrabold t1 flex items-center gap-1.5"><span>${shop.name}</span> ${IGSVG.verified()}</h3>
-<p class="text-xs t2">${shop.slogan || ''}</p>
-<div class="flex items-center gap-2 text-[10px] t2 mt-1 flex-wrap"><span><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}${shop.address ? ', ' + shop.address : ''}</span>${shop.hours ? `<span>• <i class="fa-solid fa-clock"></i> ${shop.hours}</span>` : ''}<span>• <i class="fa-solid fa-boxes-stacked"></i> ${shopAds.length} товаров</span></div>
-<p class="text-[11px] t1 mt-1.5 leading-relaxed bg-field p-2.5 rounded-xl border b-ig">${shop.desc || ''}</p></div>
+  <div class="flex items-center gap-3">
+    <div class="w-16 h-16 rounded-2xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store text-2xl"></i>'}</div>
+    <div>
+      <h3 class="text-base font-extrabold t1 flex items-center gap-1.5"><span>${shop.name}</span> ${IGSVG.verified()}</h3>
+      <p class="text-xs t2">${shop.slogan || ''}</p>
+      <div class="flex items-center gap-2 text-[10px] t2 mt-1 flex-wrap"><span><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}${shop.address ? ', ' + shop.address : ''}</span>${shop.hours ? `<span>• <i class="fa-solid fa-clock"></i> ${shop.hours}</span>` : ''}<span>• <i class="fa-solid fa-boxes-stacked"></i> ${shopAds.length} товаров</span></div>
+      <p class="text-[11px] t1 mt-1.5 leading-relaxed bg-field p-2.5 rounded-xl border b-ig">${shop.desc || ''}</p>
+    </div>
+  </div>
+  <div class="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
+    <a href="https://wa.me/${(shop.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2.5 text-white text-xs font-bold rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-base"></i> Связаться</a>
+    ${isShopOwner ? `<button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold border b-ig bg-field hover:bg-ig t1 flex items-center justify-center gap-1.5"><i class="fa-solid fa-gear text-purple-400"></i> Настройки</button>` : ''}
+  </div>
 </div>
-<a href="https://wa.me/${(shop.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2 text-white text-xs font-bold rounded-lg shrink-0 flex items-center gap-1.5" style="background:#25D366"><i class="fa-brands fa-whatsapp"></i> Связаться</a>
-</div>
+
+${isShopOwner ? `
+<!-- Панель быстрого управления владельца магазина -->
+<div class="p-3.5 rounded-2xl border space-y-2.5 bg-field" style="border-color:rgba(147,51,234,.35)">
+  <div class="flex items-center justify-between text-xs font-bold">
+    <span class="t1 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Управление магазином</span>
+    <button onclick="openMyShopModal()" class="text-xs text-purple-400 font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-sliders"></i> Полная панель</button>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+    <button onclick="closeModal('modal-shop-showcase'); openCreateAdModal();" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#10b981,#14b8a6)">
+      <i class="fa-solid fa-plus"></i> Добавить товар
+    </button>
+    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#f97316,#ef4444)">
+      <i class="fa-solid fa-fire"></i> Создать комбо
+    </button>
+    <button onclick="exportShopDatabaseJSON()" class="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:#9333ea">
+      <i class="fa-solid fa-download"></i> Бэкап (JSON)
+    </button>
+  </div>
+</div>` : ''}
 <div id="showcase-shop-map" class="h-36 rounded-2xl border b-ig overflow-hidden bg-field z-0"></div>
 ${shopCombos.length > 0 ? `<div class="space-y-2"><div class="font-bold text-xs flex items-center gap-1.5" style="color:#f97316"><i class="fa-solid fa-fire"></i> Акции магазина:</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${shopCombos.map(v => `<div onclick="openAdDetail('${v.id}')" class="ig-card p-3 rounded-xl cursor-pointer hover:bg-field"><div class="flex items-center gap-3"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate flex items-center gap-1"><i class="fa-solid fa-fire" style="color:#f97316"></i> ${v.title}</div><div class="text-[11px] font-extrabold" style="color:#f97316">$${Number(v.price).toFixed(2)} <span class="t2 line-through font-normal">$${v.comboOriginalTotal.toFixed(2)}</span></div><div class="text-[10px] t2">${v.comboItems.length} товаров в комплекте</div></div></div></div>`).join('')}</div></div>` : ''}
 ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"><button onclick="openShopShowcase('${shopUserUid}','ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === 'ALL' ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === 'ALL' ? 'background:#9333ea;border-color:#9333ea' : ''}">Все товары (${shopAds.length})</button>${cats.map(cn => `<button onclick="openShopShowcase('${shopUserUid}','${String(cn).replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === cn ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === cn ? 'background:#9333ea;border-color:#9333ea' : ''}">${cn} (${shopAds.filter(a => a.storeCategory === cn).length})</button>`).join('')}</div>` : ''}
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? '<div class="col-span-full py-8 text-center t2">Товаров пока нет</div>' : list.map(ad => `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-2.5 rounded-xl cursor-pointer hover:bg-field space-y-2"><div class="h-28 rounded-lg overflow-hidden bg-black relative"><img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">${ad.storeCategory ? `<span class="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style="background:rgba(147,51,234,.85)">${ad.storeCategory}</span>` : ''}</div><div><div class="font-bold t1 text-xs truncate">${ad.title}</div><div class="text-[11px] font-extrabold mt-0.5" style="color:#f59e0b">${convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable)}</div></div></div>`).join('')}</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? '<div class="col-span-full py-8 text-center t2">Товаров пока нет</div>' : list.map(ad => `<div class="ig-card p-2.5 rounded-xl hover:bg-field space-y-2 flex flex-col justify-between">
+  <div onclick="openAdDetail('${ad.id}')" class="cursor-pointer space-y-2">
+    <div class="h-28 rounded-lg overflow-hidden bg-black relative">
+      <img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">
+      ${ad.storeCategory ? `<span class="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style="background:rgba(147,51,234,.85)">${ad.storeCategory}</span>` : ''}
+      ${ad.oldPrice && ad.oldPrice > ad.price ? `<span class="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style="background:#ef4444">-%${Math.round((1 - ad.price / ad.oldPrice) * 100)}</span>` : ''}
+    </div>
+    <div>
+      <div class="font-bold t1 text-xs truncate">${ad.title}</div>
+      <div class="text-[11px] font-extrabold mt-0.5" style="color:#f59e0b">${convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable)}</div>
+    </div>
+  </div>
+  ${isShopOwner ? `
+  <div class="pt-1.5 border-t b-ig flex items-center gap-1">
+    <button onclick="openQuickDiscountModal('${ad.id}')" class="flex-1 py-1 rounded-lg text-[10px] font-bold border transition active:scale-95" style="background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)"><i class="fa-solid fa-tag"></i> Скидка</button>
+    <button onclick="openEditAdModal('${ad.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field"><i class="fa-solid fa-pen"></i></button>
+  </div>` : ''}
+</div>`).join('')}</div>
 </div>`; openModal('modal-shop-showcase'); setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); }
 function initShowcaseShopMap(lat, lng, storeName) { const el = byId('showcase-shop-map'); if (!el || typeof L === 'undefined') return; if (showcaseMap) { showcaseMap.remove(); showcaseMap = null; } showcaseMap = L.map('showcase-shop-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(showcaseMap); L.marker([lat, lng]).addTo(showcaseMap).bindPopup(`<b>${storeName}</b>`).openPopup(); }
 async function upgradeShopLimitNow() {
@@ -2288,7 +2451,10 @@ function openMyShopModal() { if (!currentUser || !currentUser.shop) return; cons
 <button onclick="openCreateShopModal()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border b-ig t1"><i class="fa-solid fa-gear"></i> Редактировать магазин</button>
 </div>
 </div>
-<button onclick="openComboBuilder()" class="w-full py-3.5 rounded-xl text-white font-extrabold text-sm flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Создать акцию (комбо-набор)</button>
+<div class="grid grid-cols-2 gap-2">
+  <button onclick="openComboBuilder()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Комбо-набор</button>
+  <button onclick="closeModal('modal-my-shop'); openShopShowcase(currentUser.uid);" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm" style="background:linear-gradient(45deg,#dc2626,#ef4444)"><i class="fa-solid fa-tags"></i> Скидки на витрине</button>
+</div>
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-my-shop');openCreateAdModal()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар в магазин</button>
 <div class="text-[10px] t2 text-center -mt-2">Шаг 1: создайте свои категории ниже. Шаг 2: добавьте товар. Шаг 3: объедините товары в акцию с общей ценой.</div>
 ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
@@ -2784,7 +2950,19 @@ function closeRegionMenu() { const menu = byId('region-menu-overlay'); if (menu)
 function updateRegionLabel() { const select = byId('region-filter'); const lbl = byId('current-region-label'); if (select && lbl) { const text = select.options[select.selectedIndex].text.replace(' (Сирия)', ''); lbl.innerText = t(text); } }
 /* ================= FEED (INSTAGRAM) ================= */
 function getCategoryAdsCount(catId) { if (catId === 'combos') return combos.map(comboToVirtualAd).filter(Boolean).length; return ads.filter(ad => { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; if (catId === 'free') return ad.isFree || (ad.price === 0 && !ad.isNegotiable); if (catId === 'women_only') return ad.isWomenOnly; return ad.category === catId; }).length; }
-function renderCategoryPills() { const c = byId('categories-container'); if (!c) return; let pills = [{ id: 'all', icon: 'fa-border-all', name: t('Все') }]; if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) pills.push({ id: 'women_only', icon: 'fa-venus', name: t('Для женщин 🌸') }); pills.push({ id: 'free', icon: 'fa-gift', name: t('Даром 🎁') }); pills.push({ id: 'combos', icon: 'fa-fire', name: t('Акции') }); pills = pills.concat(categories.map(x => ({ id: x.id, icon: x.icon || 'fa-tag', name: t(x.name) }))); c.innerHTML = pills.map(p => { const count = p.id === 'all' ? ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role === 'ADMIN')))).length : getCategoryAdsCount(p.id); const active = selectedCategory === p.id; return `<button onclick="handleCategoryClick('${p.id}')" class="flex flex-col items-center gap-1 shrink-0 w-[48px] group">
+function getCategoryAdsCount(catId) { 
+  if (catId === 'combos') return combos.length; 
+  if (catId === 'discounts') return ads.filter(a => a.status === 'ACTIVE' && a.oldPrice && a.oldPrice > a.price).length;
+  return ads.filter(ad => { 
+    if (ad.status !== 'ACTIVE') return false; 
+    if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; 
+    if (catId === 'free') return ad.isFree || (ad.price === 0 && !ad.isNegotiable); 
+    if (catId === 'women_only') return ad.isWomenOnly; 
+    return ad.category === catId; 
+  }).length; 
+}
+
+function renderCategoryPills() { const c = byId('categories-container'); if (!c) return; let pills = [{ id: 'all', icon: 'fa-border-all', name: t('Все') }]; if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) pills.push({ id: 'women_only', icon: 'fa-venus', name: t('Для женщин 🌸') }); pills.push({ id: 'free', icon: 'fa-gift', name: t('Даром 🎁') }); pills.push({ id: 'discounts', icon: 'fa-percent', name: t('Скидки') }); pills.push({ id: 'combos', icon: 'fa-fire', name: t('Акции') }); pills = pills.concat(categories.map(x => ({ id: x.id, icon: x.icon || 'fa-tag', name: t(x.name) }))); c.innerHTML = pills.map(p => { const count = p.id === 'all' ? (ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role === 'ADMIN')))).length + combos.length) : getCategoryAdsCount(p.id); const active = selectedCategory === p.id; return `<button onclick="handleCategoryClick('${p.id}')" class="flex flex-col items-center gap-1 shrink-0 w-[48px] group">
 <div class="w-8 h-8 rounded-full p-[2px] ${active ? 'story-ring shadow-md' : ''}" style="${active ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1px]"><div class="w-full h-full rounded-full bg-field flex items-center justify-center t1 text-sm"><i class="fa-solid ${p.icon}"></i></div></div></div>
 <span class="text-[10px] ${active ? 'font-bold t1' : 't2'} truncate w-12 text-center">${p.name}</span><span class="text-[8px] t2 -mt-1">${count}</span></button>`; }).join(''); }
 function handleCategoryClick(catId) { selectedCategory = catId; currentPage = 1; renderCategoryPills(); renderAds(); }
@@ -2888,7 +3066,7 @@ if (selectedCategory === 'shops_dir') { const shops = users.filter(u => u.shop &
 <p class="text-xs t1 line-clamp-2 bg-field p-2 rounded-lg border b-ig">${s.desc || ''}</p>
 <div class="pt-2 border-t b-ig flex items-center justify-between"><span class="text-[10px] font-bold" style="color:#f59e0b"><i class="fa-solid fa-boxes-stacked"></i> ${cnt} товаров ${uCombos > 0 ? `• <span style="color:#f97316"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</span><button onclick="openShopShowcase('${u.uid}')" class="ig-btn px-4 py-1.5 text-xs">Смотреть магазин</button></div></div>`; }).join(''); if (pag) pag.innerHTML = ''; return; }
 const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
-const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false;
+const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'discounts') { if (isCombo || !ad.oldPrice || ad.oldPrice <= ad.price) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false;
 if (activeRadiusKm > 0 && userCurrentCoords) {
   if (!ad.lat || !ad.lng) return false;
   const dist = calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng));
@@ -2952,7 +3130,7 @@ return `
 <div class="relative bg-black overflow-hidden cursor-pointer" style="aspect-ratio:4/5" onclick="openAdDetail('${ad.id}')">
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
 <img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onload="this.style.opacity='1'" style="opacity:0.85">
-${ad.isCombo ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> АКЦИЯ</span>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`}
+${ad.isCombo ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')}</span>` : (ad.oldPrice && ad.oldPrice > ad.price ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#dc2626)"><i class="fa-solid fa-percent"></i> ${t('СКИДКА')} -${Math.round((1 - ad.price / ad.oldPrice) * 100)}%</span>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
 ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
 ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
 </div>
