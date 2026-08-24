@@ -3780,7 +3780,7 @@ handleCreateAdSubmit = async function(e) {
 
   const myAdsCount = ads.filter(a => a.sellerUsername && currentUser?.username && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase() && a.status === 'ACTIVE').length;
 
-  // Если у пользователя активен магазин:
+  // Если у пользователя активен магазин — проверяем лимит пакета
   if (currentUser.shop) {
     const shopMaxAds = currentUser.shop.maxAds || 50;
     if (myAdsCount >= shopMaxAds) {
@@ -3804,17 +3804,18 @@ handleCreateAdSubmit = async function(e) {
       );
       return;
     }
-    // Внутри лимита магазина публикация бесплатна
+    // Внутри пакета магазина (до 50 объявлений) публикация бесплатна!
     _0xLegacyCreateAd(e);
     return;
   }
 
-  // Для обычных пользователей без магазина
+  // Для обычных пользователей без магазина работает стандартная плата за каждое объявление
   const freeLimit = Math.max(0, Math.floor(Number(AVITOCASH_PRICES.freeAdsCount || 0))); 
   const charge = myAdsCount >= freeLimit ? AVITOCASH_PRICES.adPrice : 0; 
   if (!(await _0xSCCharge(uid, charge, t('Подача объявления')))) return; 
   _0xLegacyCreateAd(e); 
 };
+
 const _0xLegacyEditAd = handleEditAdSubmit;
 handleEditAdSubmit = async function(e) { e.preventDefault(); const uid = currentUser?.uid; if (!uid || !(await _0xSCCharge(uid, AVITOCASH_PRICES.editPrice, 'Редактирование объявления'))) return; _0xLegacyEditAd(e); };
 const _0xLegacyCreateShop = handleCreateShopSubmit;
