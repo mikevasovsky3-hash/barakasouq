@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Avito Sham — Авито Шам</title> <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='ig' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%23feda75'/%3E%3Cstop offset='25%25' stop-color='%23fa7e1e'/%3E%3Cstop offset='50%25' stop-color='%23d62976'/%3E%3Cstop offset='75%25' stop-color='%23962fbf'/%3E%3Cstop offset='100%25' stop-color='%234f5bd5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23ig)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-weight='900' font-size='56' fill='%23ffffff' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<title>Avito Sham — Авито Шам</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='ig' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%23feda75'/%3E%3Cstop offset='25%25' stop-color='%23fa7e1e'/%3E%3Cstop offset='50%25' stop-color='%23d62976'/%3E%3Cstop offset='75%25' stop-color='%23962fbf'/%3E%3Cstop offset='100%25' stop-color='%234f5bd5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23ig)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-weight='900' font-size='56' fill='%23ffffff' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -199,15 +200,32 @@ body { top: 0px !important; }
 <div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
 </div>
 <div class="ig-card rounded-xl flex flex-col gap-2 px-3 py-2">
-<div class="flex items-center justify-between">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
 <button onclick="toggleRegionMenu()" class="flex items-center gap-2 text-sm font-semibold t1 hover:opacity-70 transition-opacity">
 <i class="fa-solid fa-location-dot text-xs t2"></i>
 <span id="current-region-label">Все регионы</span>
 <i class="fa-solid fa-chevron-down text-[10px] t2"></i>
 </button>
+<button id="near-me-btn" onclick="openRadiusMenu()" title="Поиск рядом по GPS" class="px-2.5 py-1 rounded-lg border b-ig bg-field text-xs font-semibold t1 flex items-center gap-1 transition active:scale-95">
+<i class="fa-solid fa-location-crosshairs text-blue-500 text-[11px]"></i>
+<span id="near-me-label">Рядом</span>
+</button>
+</div>
 <button onclick="toggleSortMenu()" class="text-xs font-bold t1 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-field transition-colors">
 <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
 </button>
+</div>
+<div id="radius-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div id="radius-menu-title" class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Радиус поиска:</div>
+<button id="radius-btn-5" onclick="setRadiusFilter(5)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 5 км</span> <i id="radius-check-5" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button id="radius-btn-15" onclick="setRadiusFilter(15)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 15 км</span> <i id="radius-check-15" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button id="radius-btn-30" onclick="setRadiusFilter(30)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 30 км</span> <i id="radius-check-30" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button id="radius-btn-50" onclick="setRadiusFilter(50)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 50 км</span> <i id="radius-check-50" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between border-t b-ig" style="color:#ed4956"><span>❌ Отключить поиск рядом</span></button>
+</div>
 </div>
 <select id="region-filter" onchange="resetPageAndRender(); updateRegionLabel()" class="hidden">
 <option value="ALL">Все регионы (Сирия)</option>
@@ -459,8 +477,29 @@ body { top: 0px !important; }
 <input type="checkbox" id="edit-ad-is-negotiable" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
 </div>
 <div class="grid grid-cols-2 gap-3">
-<input type="number" id="edit-ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="number" id="edit-ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
 <select id="edit-ad-currency" class="ig-input w-full px-3 py-2.5 text-xs"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
+</div>
+<div class="p-3 rounded-xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
+  <div class="flex items-center justify-between text-xs font-bold" style="color:#f97316">
+    <span><i class="fa-solid fa-percent"></i> Сделать скидку на товар</span>
+    <input type="checkbox" id="edit-ad-has-discount" onchange="byId('discount-fields-wrap').classList.toggle('hidden', !this.checked)" class="w-4 h-4 cursor-pointer" style="accent-color:#f97316">
+  </div>
+  <div id="discount-fields-wrap" class="hidden grid grid-cols-2 gap-2 pt-1">
+    <div>
+      <label class="text-[10px] t2">Старая цена (зачеркнутая)</label>
+      <input type="number" id="edit-ad-old-price" step="0.01" placeholder="Напр. 50" class="ig-input w-full px-2.5 py-1.5 text-xs mt-0.5">
+    </div>
+    <div>
+      <label class="text-[10px] t2">Срок действия скидки</label>
+      <select id="edit-ad-discount-duration" class="ig-input w-full px-2 py-1.5 text-xs mt-0.5">
+        <option value="forever">Бессрочно</option>
+        <option value="24h">24 часа</option>
+        <option value="3d">3 дня</option>
+        <option value="7d">7 дней</option>
+      </select>
+    </div>
+  </div>
 </div>
 <div>
 <div class="flex items-center justify-between mb-1">
@@ -834,6 +873,124 @@ modalStack.pop();
 if (modalStack.length === 0) document.body.classList.remove('overflow-hidden');
 }
 });
+function checkExpiredAdsStatus() {
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  let changed = false;
+
+  ads.forEach(a => {
+    if (a.status === 'ACTIVE' && a.createdAt && (now - a.createdAt > THIRTY_DAYS)) {
+      a.status = 'EXPIRED';
+      changed = true;
+      if (supabaseClient) {
+        supabaseClient.from('ads').update({ status: 'EXPIRED' }).eq('id', a.id).then();
+      }
+    }
+  });
+
+  if (changed) saveCachedAds();
+}
+
+async function renewAdExpiry(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad || !currentUser) return;
+
+  ad.createdAt = Date.now();
+  ad.status = 'ACTIVE';
+
+  if (supabaseClient) {
+    await supabaseClient.from('ads').update({ created_at: ad.createdAt, status: 'ACTIVE' }).eq('id', ad.id);
+  }
+
+  saveCachedAds();
+  renderAds();
+  renderCategoryPills();
+  openProfileModal();
+  showToast(t('Объявление успешно продлено и поднято в топ!'), 'success');
+}
+
+function checkExpiredAdsStatus() {
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  let changed = false;
+
+  ads.forEach(a => {
+    if (a.status === 'ACTIVE' && a.createdAt && (now - a.createdAt > THIRTY_DAYS)) {
+      a.status = 'EXPIRED';
+      changed = true;
+      if (supabaseClient) {
+        supabaseClient.from('ads').update({ status: 'EXPIRED' }).eq('id', a.id).then();
+      }
+    }
+  });
+
+  if (changed) saveCachedAds();
+}
+
+async function renewAdExpiry(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad || !currentUser) return;
+
+  ad.createdAt = Date.now();
+  ad.status = 'ACTIVE';
+
+  if (supabaseClient) {
+    await supabaseClient.from('ads').update({ created_at: ad.createdAt, status: 'ACTIVE' }).eq('id', ad.id);
+  }
+
+  saveCachedAds();
+  renderAds();
+  renderCategoryPills();
+  openProfileModal();
+  showToast(t('Объявление успешно продлено и поднято в топ!'), 'success');
+}
+
+function requestPushPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function sendBrowserPush(title, body, icon = null) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const notif = new Notification(title, {
+      body: body,
+      icon: icon || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%230095f6\'/%3E%3Ctext x=\'50\' y=\'68\' font-family=\'Arial\' font-weight=\'900\' font-size=\'56\' fill=\'%23ffffff\' text-anchor=\'middle\'%3EA%3C/text%3E%3C/svg%3E',
+      badge: icon
+    });
+    playNotificationSound();
+  } catch(e) {}
+}
+
+function checkFavoritesAndQueueAlerts(oldAd, newAd) {
+  if (!currentUser) return;
+  
+  // 1. Оповещение о снижении цены в избранном
+  if (favorites.includes(newAd.id)) {
+    const oldP = adToUSD(oldAd);
+    const newP = adToUSD(newAd);
+    if (newP < oldP && newP > 0) {
+      sendBrowserPush(
+        `🔥 ${t('Снижение цены!')}`,
+        `${t('Цена на товар из избранного снижена до')} $${newP.toFixed(2)}: ${newAd.title}`
+      );
+    }
+  }
+
+  // 2. Оповещение о продвижении в очереди
+  if (Array.isArray(newAd.queue) && Array.isArray(oldAd.queue)) {
+    const oldRank = oldAd.queue.findIndex(q => q.username === currentUser.username) + 1;
+    const newRank = newAd.queue.findIndex(q => q.username === currentUser.username) + 1;
+    if (oldRank > 1 && newRank === 1) {
+      sendBrowserPush(
+        `🎉 ${t('Ваша очередь подошла!')}`,
+        `${t('Вы стали первым в очереди на')} "${newAd.title}". ${t('Свяжитесь с продавцом!')}`
+      );
+    }
+  }
+}
+
 function saveCachedAds() {
 try {
 localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
@@ -918,8 +1075,48 @@ if (sp) { sp.querySelector('.nav-ic').innerHTML = `<span class="w-6 h-6 rounded-
 if (bp) { bp.innerHTML = avHtml; if (active === 'profile') bp.style.borderColor = '#f5f5f5'; else bp.style.borderColor = ''; }
 }
 /* ================= IMAGES ================= */
-function compressSingleImageFile(file, maxDim = 480, quality = 0.55) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); let d = c.toDataURL('image/webp', quality); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
-function processSquareImageCrop(file, size = 300) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror = () => reject(new Error('read')); r.onload = ev => { const img = new Image(); img.onerror = () => reject(new Error('img')); img.onload = () => { const c = document.createElement('canvas'); c.width = size; c.height = size; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size); let d = c.toDataURL('image/webp', 0.75); if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.75); resolve(d); }; img.src = ev.target.result; }; r.readAsDataURL(file); }); }
+function compressSingleImageFile(file, maxDim = 1280, quality = 0.82) { 
+  return new Promise((resolve, reject) => { 
+    const r = new FileReader(); 
+    r.onerror = () => reject(new Error('read')); 
+    r.onload = ev => { 
+      const img = new Image(); 
+      img.onerror = () => reject(new Error('img')); 
+      img.onload = () => { 
+        const c = document.createElement('canvas'); 
+        let w = img.width, h = img.height; 
+        if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } 
+        else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } 
+        c.width = w; c.height = h; 
+        c.getContext('2d').drawImage(img, 0, 0, w, h); 
+        let d = c.toDataURL('image/webp', quality); 
+        if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); 
+        resolve(d); 
+      }; 
+      img.src = ev.target.result; 
+    }; 
+    r.readAsDataURL(file); 
+  }); 
+}
+
+function generateFastThumbnail(base64Data, size = 320) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > h) { h = Math.round(h * (size / w)); w = size; }
+      else { w = Math.round(w * (size / h)); h = size; }
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      let d = c.toDataURL('image/webp', 0.55);
+      if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', 0.55);
+      resolve(d);
+    };
+    img.onerror = () => resolve(base64Data);
+    img.src = base64Data;
+  });
+}
 async function processAvatarUpload(e, mode = 'auth') { const f = e.target.files[0]; if (!f) return; try { const d = await processSquareImageCrop(f, 250); byId(mode === 'auth' ? 'auth-avatar-data' : 'edit-profile-avatar-data').value = d; const box = byId(mode === 'auth' ? 'auth-avatar-preview-box' : 'edit-profile-avatar-preview-box'); const img = byId(mode === 'auth' ? 'auth-avatar-preview-img' : 'edit-profile-avatar-preview-img'); if (box && img) { img.src = d; box.classList.remove('hidden'); } } catch (err) { console.warn('Avatar processing error:', err); showToast('Не удалось обработать аватарку', 'error'); } }
 async function handleMultiImageCompressUpload(e, mode = 'create') {
 const files = Array.from(e.target.files || []);
@@ -1214,7 +1411,24 @@ function loadDraftCheck() { try { const d = localStorage.getItem('bs_ad_draft');
 function saveDraft() { try { const data = { title: byId('ad-title').value, category: byId('ad-category').value, region: byId('ad-region').value, city: byId('ad-city').value, price: byId('ad-price').value, currency: byId('ad-currency').value, desc: byId('ad-desc').value }; localStorage.setItem('bs_ad_draft', JSON.stringify(data)); } catch(e){} }
 function restoreDraft() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { const data = JSON.parse(d); byId('ad-title').value = data.title || ''; byId('ad-category').value = data.category || 'electronics'; byId('ad-region').value = data.region || 'DAM'; byId('ad-city').value = data.city || ''; byId('ad-price').value = data.price || ''; byId('ad-currency').value = data.currency || 'USD'; byId('ad-desc').value = data.desc || ''; byId('draft-restore-banner').classList.add('hidden'); } } catch(e){} }
 function clearDraft(silent) { localStorage.removeItem('bs_ad_draft'); byId('draft-restore-banner').classList.add('hidden'); if(!silent) showToast('Черновик удален', 'info'); }
-function openCreateAdModal() { if (!currentUser) { openAuthModal(); return; } pendingCreateImages = []; renderPhotoThumbnailsGrid('create'); fillCategorySelect(byId('ad-category')); loadDraftCheck(); const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); sc.classList.remove('hidden'); } else sc.classList.add('hidden'); const wb = byId('women-only-container'); if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { wb.classList.remove('hidden'); wb.classList.add('flex'); } else { wb.classList.add('hidden'); wb.classList.remove('flex'); } const neg = byId('ad-is-negotiable'); if (neg) { neg.checked = false; toggleNegotiableField(false); } const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); if (onbC && onbS) { if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } onbC.classList.remove('hidden'); } else onbC.classList.add('hidden'); } const mHead = document.querySelector('#modal-create-ad h3');
+function openCreateAdModal() { 
+  if (!currentUser) { openAuthModal(); return; } 
+  pendingCreateImages = []; 
+  renderPhotoThumbnailsGrid('create'); 
+  fillCategorySelect(byId('ad-category')); 
+  loadDraftCheck();
+
+  // Автоподстановка последнего сохраненного местоположения продавца
+  const savedLocation = localStorage.getItem('bs_last_seller_location');
+  if (savedLocation && (!localStorage.getItem('bs_ad_draft'))) {
+    try {
+      const loc = JSON.parse(savedLocation);
+      if (loc.region) byId('ad-region').value = loc.region;
+      if (loc.city) byId('ad-city').value = loc.city;
+      if (loc.lat) byId('ad-lat').value = loc.lat;
+      if (loc.lng) byId('ad-lng').value = loc.lng;
+    } catch (e) {}
+  } const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); sc.classList.remove('hidden'); } else sc.classList.add('hidden'); const wb = byId('women-only-container'); if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { wb.classList.remove('hidden'); wb.classList.add('flex'); } else { wb.classList.add('hidden'); wb.classList.remove('flex'); } const neg = byId('ad-is-negotiable'); if (neg) { neg.checked = false; toggleNegotiableField(false); } const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); if (onbC && onbS) { if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } onbC.classList.remove('hidden'); } else onbC.classList.add('hidden'); } const mHead = document.querySelector('#modal-create-ad h3');
 if (mHead) mHead.innerText = t('Подача нового объявления');
 
 const tInp = byId('ad-title'), cInp = byId('ad-city'), pInp = byId('ad-price'), dInp = byId('ad-desc');
@@ -1238,7 +1452,16 @@ const upTxt = byId('ad-upload-btn-text');
 if (upTxt) upTxt.innerText = t('Выбрать фотографии');
 openModal('modal-create-ad'); setTimeout(initCreateMap, 200); document.querySelectorAll('.draft-field').forEach(el => { el.addEventListener('input', saveDraft); el.addEventListener('change', saveDraft); }); }
 function openCreateAdModalForUser(username) { onBehalfPreset = username; openCreateAdModal(); }
-function initCreateMap() { const el = byId('create-map'); if (!el || typeof L === 'undefined') return; if (!createMap) { createMap = L.map('create-map').setView([33.5138, 36.2765], 12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); createMarker = L.marker([33.5138, 36.2765], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else { createMap.invalidateSize(); } }
+function initCreateMap() { 
+  const el = byId('create-map'); 
+  if (!el || typeof L === 'undefined') return; 
+  const curLat = parseFloat(byId('ad-lat')?.value || 33.5138);
+  const curLng = parseFloat(byId('ad-lng')?.value || 36.2765);
+
+  if (!createMap) { 
+    createMap = L.map('create-map').setView([curLat, curLng], 12); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); 
+    createMarker = L.marker([curLat, curLng], { draggable: true }).addTo(createMap); createMarker.on('dragend', e => { const ll = e.target.getLatLng(); byId('ad-lat').value = ll.lat.toFixed(6); byId('ad-lng').value = ll.lng.toFixed(6); }); createMap.on('click', e => { createMarker.setLatLng(e.latlng); byId('ad-lat').value = e.latlng.lat.toFixed(6); byId('ad-lng').value = e.latlng.lng.toFixed(6); }); } else { createMap.invalidateSize(); } }
 function handleRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138, 36.2765]; byId('ad-lat').value = c[0]; byId('ad-lng').value = c[1]; if (createMap && createMarker) { createMap.setView(c, 12); createMarker.setLatLng(c); } }
 function toggleFreePriceField(isFree) { const p = byId('ad-price'), c = byId('price-container'); if (isFree) { if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } if (c) c.style.opacity = '.4'; } else { if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } if (c) c.style.opacity = '1'; } }
 function toggleNegotiableField(isNeg) { const p = byId('ad-price'); if (!p) return; if (isNeg) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } }
@@ -1345,12 +1568,21 @@ if (supabaseClient) {
     }
   }
 
+// Сохраняем локацию продавца для будущих публикаций
+  try {
+    localStorage.setItem('bs_last_seller_location', JSON.stringify({
+      region: newAd.region,
+      city: newAd.city,
+      lat: newAd.lat,
+      lng: newAd.lng
+    }));
+  } catch(err) {}
+
   ads.unshift(newAd);
   saveCachedAds();
 
   closeModal('modal-create-ad');
   localStorage.removeItem('bs_ad_draft');
-
   selectedCategory = 'all';
   currentPage = 1;
   renderCategoryPills();
@@ -1391,9 +1623,14 @@ function openEditAdModal(adId) {
   byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly;
   byId('edit-ad-is-free').checked = !!ad.isFree;
   byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable;
-  byId('edit-ad-price').value = ad.price || 0;
+byId('edit-ad-price').value = ad.price || 0;
   byId('edit-ad-currency').value = ad.currency || 'USD';
   byId('edit-ad-desc').value = ad.desc || '';
+  
+  const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
+  byId('edit-ad-has-discount').checked = hasDisc;
+  byId('discount-fields-wrap').classList.toggle('hidden', !hasDisc);
+  byId('edit-ad-old-price').value = hasDisc ? ad.oldPrice : '';
   closeModal('modal-ad-detail');
   openModal('modal-edit-ad');
 }
@@ -1414,6 +1651,9 @@ async function handleEditAdSubmit(e) {
   const imgs = [...pendingEditImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
 
+const isDisc = byId('edit-ad-has-discount')?.checked;
+  const oldPriceVal = isDisc ? parseFloat(byId('edit-ad-old-price').value || 0) : null;
+
   const updatedData = {
     title: byId('edit-ad-title').value.trim(),
     category: byId('edit-ad-category').value,
@@ -1423,6 +1663,7 @@ async function handleEditAdSubmit(e) {
     isFree: byId('edit-ad-is-free').checked,
     isNegotiable: byId('edit-ad-is-negotiable')?.checked || false,
     price: byId('edit-ad-is-free').checked || byId('edit-ad-is-negotiable')?.checked ? 0 : parseFloat(byId('edit-ad-price').value || 0),
+    oldPrice: oldPriceVal,
     currency: byId('edit-ad-currency').value,
     desc: byId('edit-ad-desc').value.trim(),
     images: imgs,
@@ -1433,6 +1674,8 @@ async function handleEditAdSubmit(e) {
     sellerWhatsapp: targetUser.whatsapp || ''
   };
 
+  checkFavoritesAndQueueAlerts(ad, updatedData);
+  
   if (supabaseClient) {
     const { data: res, error } = await supabaseClient.rpc('secure_manage_ad', {
       p_ad_id: adId,
@@ -1560,6 +1803,34 @@ ${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openC
 </div>
 </div>`; openModal('modal-ad-detail'); }
 /* ================= AD DETAIL ================= */
+function buildWhatsAppMessage(ad, inQ, rank) {
+  const isAr = currentLang === 'ar';
+  const kunya = currentUser ? (currentUser.kunya || currentUser.username) : (isAr ? 'زائر' : 'Гость');
+  const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
+  const url = base + '#ad-' + ad.id;
+  const priceStr = ad.isNegotiable ? (isAr ? 'قابل للتفاوض' : 'Договорная') : (ad.isFree ? (isAr ? 'مجاناً' : 'Бесплатно') : '$' + adToUSD(ad).toFixed(2));
+
+  if (isAr) {
+    let msg = `السلام عليكم ورحمة الله!\n`;
+    msg += `أنا مهتم بإعلانك على منصة *أفيتو الشام*:\n`;
+    msg += `📦 *${ad.title}* (كود: ${ad.id})\n`;
+    msg += `💰 *السعر:* ${priceStr}\n`;
+    if (inQ && rank > 0) msg += `👥 *دوري في قائمة الانتظار:* رقم ${rank}\n`;
+    msg += `🔗 *رابط الإعلان:* ${url}\n`;
+    msg += `👤 *المشتري:* ${kunya}`;
+    return encodeURIComponent(msg);
+  } else {
+    let msg = `Здравствуйте!\n`;
+    msg += `Меня заинтересовало ваше объявление на *Avito Sham*:\n`;
+    msg += `📦 *${ad.title}* (ID: ${ad.id})\n`;
+    msg += `💰 *Цена:* ${priceStr}\n`;
+    if (inQ && rank > 0) msg += `👥 *Мой номер в очереди:* №${rank}\n`;
+    msg += `🔗 *Ссылка:* ${url}\n`;
+    msg += `👤 *Покупатель:* ${kunya}`;
+    return encodeURIComponent(msg);
+  }
+}
+
 async function openAdDetail(adId, countView = true) {
   if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; }
   const ad = ads.find(a => a.id === adId);
@@ -1598,12 +1869,12 @@ async function openAdDetail(adId, countView = true) {
   let displayCity = ad.city || '';
   let displayKunya = rawKunya;
   let displayRegion = t(rawRegion);
-  content.innerHTML = `
-  <div class="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 w-full overflow-hidden">
+content.innerHTML = `
+  <div class="flex flex-col md:flex-row flex-1 min-h-0 w-full h-full overflow-hidden">
     <!-- Левая колонка: Фото / Слайдер -->
-    <div class="relative bg-black flex items-center justify-center overflow-hidden min-h-[280px] md:min-h-[480px] max-h-[45vh] md:max-h-[85vh]">
+    <div class="relative bg-black flex items-center justify-center overflow-hidden w-full md:w-1/2 h-[340px] md:h-full shrink-0">
       <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
-      <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[45vh] md:max-h-[85vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
+      <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
       <span class="absolute top-3 right-3 z-10 bg-black/70 text-white text-xs font-mono font-bold px-2.5 py-1 rounded-lg border border-white/10">${ad.id}</span>
       ${imgs.length > 1 ? `
         <button onclick="changeDetailPhoto('${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevL()}</button>
@@ -1613,21 +1884,34 @@ async function openAdDetail(adId, countView = true) {
     </div>
 
     <!-- Правая колонка: Детали, Описание, Кнопки -->
-    <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto max-h-[50vh] md:max-h-[85vh] modal-scroll-body bg-card">
-      <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
-        <div class="w-9 h-9 rounded-full p-[2px] ${verified ? 'story-ring' : 'bg-field'}">
-          <div class="w-full h-full rounded-full bg-card p-[1.5px]">
-            <div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
-              ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
+    <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto w-full md:w-1/2 h-full modal-scroll-body bg-card flex-1 min-w-0">
+${(() => {
+        const sellerObj = users.find(u => (u.uid && u.uid === ad.sellerUid) || (u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()));
+        const isSellerDnd = !!(sellerObj && sellerObj.isDnd);
+        return `
+        <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
+          <div class="relative w-9 h-9 rounded-full p-[2px] ${verified ? 'story-ring' : 'bg-field'}">
+            <div class="w-full h-full rounded-full bg-card p-[1.5px]">
+              <div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
+                ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
+              </div>
             </div>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-black ${isSellerDnd ? 'bg-slate-400' : 'bg-emerald-500'}"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold t1 flex items-center justify-between gap-2">
+              <span class="truncate">${displayKunya} ${verified ? IGSVG.verified() : ''}</span>
+              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1 ${isSellerDnd ? 'bg-slate-500/15 text-slate-400 border border-slate-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}">
+                <span class="w-1.5 h-1.5 rounded-full ${isSellerDnd ? 'bg-slate-400' : 'bg-emerald-500'}"></span>
+                <span>${isSellerDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}</span>
+              </span>
+            </div>
+            <div class="text-xs t2 truncate">${displayRegion} • ${displayCity}</div>
           </div>
         </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-semibold t1 flex items-center gap-1.5">${displayKunya} ${verified ? IGSVG.verified() : ''}</div>
-          <div class="text-xs t2">${displayRegion} • ${displayCity}</div>
-        </div>
-      </div>
-
+        ${isSellerDnd ? `<div class="p-2.5 rounded-xl border text-[11px] leading-relaxed flex items-center gap-2" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.08);color:#94a3b8"><i class="fa-solid fa-moon text-sm"></i><span>${t('Продавец сейчас отдыхает. Пожалуйста, отправьте сообщение и не звоните.')}</span></div>` : ''}
+        `;
+      })()}
       ${imgs.length > 1 ? `
         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0">
           ${imgs.map((img, idx) => `<button onclick="setDetailPhoto('${ad.id}',${idx})" id="detail-thumb-${idx}" class="w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 ${idx === 0 ? '' : 'opacity-60'}" style="border-color:${idx === 0 ? '#0095f6' : 'var(--ig-border)'}"><img src="${img}" class="w-full h-full object-cover"></button>`).join('')}
@@ -1668,7 +1952,7 @@ async function openAdDetail(adId, countView = true) {
       </div>
 
       <div class="flex gap-2 pt-2 shrink-0">
-        ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> ${t('Связаться через WhatsApp')}</a>` : ''}
+        ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> ${t('Связаться через WhatsApp')}</a>` : ''}
         ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#f59e0b"><i class="fa-solid fa-coins"></i> ${t('Оплатить из баланса')}</button>` : ''}
         <button onclick="shareAd('${ad.id}')" class="ig-btn-outline py-3 px-4" title="${t('Поделиться')}">${IGSVG.send()}</button>
       </div>
@@ -1925,6 +2209,29 @@ ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? '<div class="col-span-full py-8 text-center t2">Товаров пока нет</div>' : list.map(ad => `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-2.5 rounded-xl cursor-pointer hover:bg-field space-y-2"><div class="h-28 rounded-lg overflow-hidden bg-black relative"><img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">${ad.storeCategory ? `<span class="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style="background:rgba(147,51,234,.85)">${ad.storeCategory}</span>` : ''}</div><div><div class="font-bold t1 text-xs truncate">${ad.title}</div><div class="text-[11px] font-extrabold mt-0.5" style="color:#f59e0b">${convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable)}</div></div></div>`).join('')}</div>
 </div>`; openModal('modal-shop-showcase'); setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); }
 function initShowcaseShopMap(lat, lng, storeName) { const el = byId('showcase-shop-map'); if (!el || typeof L === 'undefined') return; if (showcaseMap) { showcaseMap.remove(); showcaseMap = null; } showcaseMap = L.map('showcase-shop-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(showcaseMap); L.marker([lat, lng]).addTo(showcaseMap).bindPopup(`<b>${storeName}</b>`).openPopup(); }
+async function upgradeShopLimitNow() {
+  if (!currentUser || !currentUser.shop) return;
+  const curMax = currentUser.shop.maxAds || 50;
+  const upgradeCost = 5;
+
+  showConfirmModal(
+    t('Расширение тарифа магазина'),
+    `${t('Увеличить лимит магазина с')} ${curMax} ${t('до')} ${curMax + 50} ${t('объявлений за')} ${upgradeCost} AC?`,
+    async () => {
+      if (await _0xSCCharge(currentUser.uid, upgradeCost, t('Расширение тарифа магазина'))) {
+        currentUser.shop.maxAds = curMax + 50;
+        currentUser.shop.subscriptionPrice = (currentUser.shop.subscriptionPrice || 5) + upgradeCost;
+        if (supabaseClient) {
+          await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
+        }
+        saveUserSession(currentUser, true);
+        openMyShopModal();
+        showToast(t('Лимит магазина успешно увеличен!'), 'success');
+      }
+    }
+  );
+}
+
 function openMyShopModal() { if (!currentUser || !currentUser.shop) return; const shop = currentUser.shop; const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()); const content = byId('my-shop-content'); if (!content) return; const isVerified = currentUser.verifiedShop || shop.isVerified; const cats = shop.customCategories || []; const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; const myCombos = combos.filter(x => x.sellerUsername && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()); content.innerHTML = `<div class="space-y-4">
 <div class="flex items-center justify-between border-b b-ig pb-3">
 <div class="flex items-center gap-3">
@@ -1943,14 +2250,29 @@ ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="bo
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-fire" style="color:#f97316"></i> Мои акции (${myCombos.length})</h4>
 ${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs truncate">${x.title}</div><div class="text-[10px] t2">${x.items.length} товаров • Цена акции: <b style="color:#f97316">$${Number(x.price).toFixed(2)}</b></div></div><div class="flex gap-1.5 shrink-0"><button onclick="openComboBuilder(null,'${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteComboWithConfirm('${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
 </div>` : ''}
-<div class="grid grid-cols-2 gap-3">
-<div class="bg-field p-3 rounded-2xl border b-ig">
-  <div class="text-[10px] t2">${t('Товаров в магазине / Лимит:')}</div>
-  <div class="text-lg font-extrabold" style="color:#f59e0b">${shopAds.length} / ${shop.maxAds || 50} ${t('шт.')}</div>
-  <div class="text-[9px] t2 mt-0.5">${t('Тариф:')} ${shop.subscriptionPrice || 5} AC/мес</div>
-</div>
-<div class="bg-field p-3 rounded-2xl border b-ig"><div class="text-[10px] t2">WhatsApp:</div><div class="text-xs font-extrabold" style="color:#10b981">${shop.whatsapp}</div></div>
-</div>
+${(() => {
+  const max = shop.maxAds || 50;
+  const cur = shopAds.length;
+  const percent = Math.min(100, Math.round((cur / max) * 100));
+  const left = Math.max(0, max - cur);
+  const barColor = percent >= 90 ? '#ef4444' : (percent >= 75 ? '#f59e0b' : '#9333ea');
+  return `
+  <div class="p-3.5 rounded-2xl bg-field border b-ig space-y-2">
+    <div class="flex items-center justify-between text-xs">
+      <span class="font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-boxes-stacked" style="color:${barColor}"></i> ${t('Заполненность магазина')}</span>
+      <span class="font-mono font-extrabold t1">${cur} / ${max} <span class="t2 font-normal text-[10px]">(${percent}%)</span></span>
+    </div>
+    <div class="w-full h-2.5 rounded-full bg-black/40 border b-ig overflow-hidden p-0.5">
+      <div class="h-full rounded-full transition-all duration-300" style="width:${percent}%; background:${barColor}"></div>
+    </div>
+    <div class="flex items-center justify-between text-[10px] pt-0.5">
+      <span class="t2">${left === 0 ? `<b style="color:#ef4444">${t('Лимит исчерпан')}</b>` : `${t('Осталось мест')}: <b class="t1">${left}</b>`}</span>
+      <button onclick="upgradeShopLimitNow()" class="font-bold text-[10px] px-2.5 py-1 rounded-lg text-white transition-all active:scale-95" style="background:linear-gradient(45deg,#9333ea,#7c3aed)">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i> ${t('Расширить лимит (+50 мест / 5 AC)')}
+      </button>
+    </div>
+  </div>`;
+})()}
 <div class="p-4 rounded-2xl bg-field border b-ig space-y-3">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-list-check" style="color:#9333ea"></i> Личные категории магазина</h4>
 <div class="flex gap-2"><input type="text" id="new-shop-cat-input" placeholder="Например: Запчасти или Чехлы" class="ig-input flex-1 px-3 py-2 text-xs"><button onclick="addShopCustomCategory()" class="px-3 py-2 text-white font-bold text-xs rounded-lg shrink-0" style="background:#9333ea"><i class="fa-solid fa-plus"></i> Добавить</button></div>
@@ -2250,18 +2572,22 @@ console.error(e);
 }
 /* ================= SUPABASE SYNC ================= */
 async function initSupabaseSync() {
+  // Сначала мгновенно загружаем кеш, чтобы экран не висел
+  loadCachedAds();
+  renderCategoryPills();
+  renderAds();
+
   const st = byId('cloud-sync-status');
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
   try {
     const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, shop, receipts, frozen, is_archived'),
-      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
-      supabaseClient.from('combos').select('*'),
+      supabaseClient.from('users').select('uid, username, kunya, gender, whatsapp, avatar, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, is_dnd, shop, frozen, is_archived').limit(200),
+      supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, currency, description, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, queue, likes, views').order('created_at', { ascending: false }).limit(60),
+      supabaseClient.from('combos').select('*').limit(50),
       supabaseClient.from('categories').select('*'),
-      supabaseClient.from('reports').select('*')
+      (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) ? supabaseClient.from('reports').select('*').limit(50) : Promise.resolve({ data: [] })
     ]);
-
     if (usersRes.data) {
       const allParsedUsers = usersRes.data.map(u => ({
         ...u,
@@ -2414,6 +2740,94 @@ function handleCategoryClick(catId) { selectedCategory = catId; currentPage = 1;
 let searchDebounceTimer = null;
 function onSearchInput(el) { searchQuery = el.value; const other = byId(el.id === 'search-input' ? 'search-input-desktop' : 'search-input'); if (other) other.value = el.value; clearTimeout(searchDebounceTimer); searchDebounceTimer = setTimeout(resetPageAndRender, 250); }
 function cardNav(e, adId, dir) { e.stopPropagation(); const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; const idx = ((cardPhotoIndex[adId] || 0) + dir + imgs.length) % imgs.length; cardPhotoIndex[adId] = idx; const img = byId('cimg-' + adId), bg = byId('cbg-' + adId), dots = byId('cdot-' + adId); if (img) img.src = imgs[idx]; if (bg) bg.style.backgroundImage = `url('${imgs[idx]}')`; if (dots) dots.innerHTML = imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === idx ? 'bg-white' : 'bg-white/40'}"></span>`).join(''); }
+let userCurrentCoords = null; // { lat, lng }
+let activeRadiusKm = 0; // 0 = выключен
+
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Радиус Земли в км
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function openRadiusMenu() {
+  const menu = byId('radius-menu-overlay');
+  if (!menu) return;
+  menu.classList.remove('hidden');
+
+  const titleEl = byId('radius-menu-title');
+  const closeBtn = byId('radius-menu-close');
+  if (titleEl) titleEl.innerText = t('Радиус поиска:');
+  if (closeBtn) closeBtn.innerText = t('Закрыть');
+
+  const offSpan = byId('radius-btn-off')?.querySelector('span');
+  if (offSpan) offSpan.innerText = `❌ ${t('Отключить поиск рядом')}`;
+
+  [5, 15, 30, 50].forEach(r => {
+    const span = byId(`radius-btn-${r}`)?.querySelector('span');
+    if (span) span.innerText = `📍 ${r} ${t('км')}`;
+    const ic = byId(`radius-check-${r}`);
+    if (ic) {
+      if (r === activeRadiusKm) ic.classList.remove('hidden');
+      else ic.classList.add('hidden');
+    }
+  });
+}
+function closeRadiusMenu() {
+  const menu = byId('radius-menu-overlay');
+  if (menu) menu.classList.add('hidden');
+}
+
+function setRadiusFilter(radius) {
+  closeRadiusMenu();
+  if (radius === 0) {
+    activeRadiusKm = 0;
+    const btn = byId('near-me-btn');
+    const lbl = byId('near-me-label');
+    if (btn) {
+      btn.classList.remove('bg-blue-600', 'text-white');
+      btn.classList.add('bg-field', 't1');
+    }
+    if (lbl) lbl.innerText = t('Рядом');
+    renderAds();
+    showToast(t('Все расстояния'), 'info');
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    showToast(t('Геолокация недоступна'), 'error');
+    return;
+  }
+
+  showToast(currentLang === 'ar' ? 'جاري تحديد موقعك الجغرافي...' : 'Определение местоположения...', 'info');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userCurrentCoords = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+      activeRadiusKm = radius;
+      const btn = byId('near-me-btn');
+      const lbl = byId('near-me-label');
+      if (btn) {
+        btn.classList.add('bg-blue-600', 'text-white');
+        btn.classList.remove('bg-field', 't1');
+      }
+      if (lbl) lbl.innerText = `${radius} ${t('км')}`;
+      showToast(`${t('Поиск в радиусе')} ${radius} ${t('км от вас')}`, 'success');
+      renderAds();
+    },
+    (err) => {
+      showToast(t('Геолокация недоступна'), 'error');
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
 function renderAds() { const grid = byId('listings-view'), pag = byId('pagination-container'); if (!grid) return; const q = (byId('search-input')?.value || '').toLowerCase(); const region = byId('region-filter')?.value || 'ALL';
 if (selectedCategory === 'shops_dir') { const shops = users.filter(u => u.shop && (u.verifiedShop || u.shop.isVerified) && (region === 'ALL' || u.shop.region === region)); if (!shops.length) { grid.innerHTML = '<div class="py-16 text-center t2"><i class="fa-solid fa-store text-4xl mb-3 block opacity-40" style="color:#9333ea"></i>Подтвержденных магазинов в данном регионе пока нет.</div>'; if (pag) pag.innerHTML = ''; return; } grid.innerHTML = shops.map(u => { const s = u.shop; const cnt = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === u.username.toLowerCase() && a.status === 'ACTIVE').length; const uCombos = combos.filter(x => x.shopUid === u.uid).length; return `<div class="ig-card rounded-xl p-3 space-y-2 card-in">
 <div class="flex items-center gap-3">
@@ -2423,7 +2837,13 @@ if (selectedCategory === 'shops_dir') { const shops = users.filter(u => u.shop &
 <p class="text-xs t1 line-clamp-2 bg-field p-2 rounded-lg border b-ig">${s.desc || ''}</p>
 <div class="pt-2 border-t b-ig flex items-center justify-between"><span class="text-[10px] font-bold" style="color:#f59e0b"><i class="fa-solid fa-boxes-stacked"></i> ${cnt} товаров ${uCombos > 0 ? `• <span style="color:#f97316"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</span><button onclick="openShopShowcase('${u.uid}')" class="ig-btn px-4 py-1.5 text-xs">Смотреть магазин</button></div></div>`; }).join(''); if (pag) pag.innerHTML = ''; return; }
 const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
-const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false; if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false; return true; });
+const filtered = merged.filter(ad => { const isCombo = !!ad.isCombo; if (!isCombo) { if (ad.status !== 'ACTIVE') return false; if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; } if (selectedCategory === 'favorites') { if (!favorites.includes(ad.id)) return false; } else if (selectedCategory === 'combos') { if (!isCombo) return false; } else if (selectedCategory === 'women_only') { if (isCombo || !ad.isWomenOnly) return false; } else if (selectedCategory === 'free') { if (isCombo || (!ad.isFree && ad.price > 0)) return false; } else if (selectedCategory !== 'all') { if (isCombo || ad.category !== selectedCategory) return false; } if (region !== 'ALL' && ad.region !== region) return false;
+if (activeRadiusKm > 0 && userCurrentCoords) {
+  if (!ad.lat || !ad.lng) return false;
+  const dist = calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng));
+  ad._distance = dist;
+  if (dist === null || dist > activeRadiusKm) return false;
+} if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false; return true; });
 filtered.sort((a, b) => {
 if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
 if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
@@ -2471,13 +2891,16 @@ return `
 <div class="w-9 h-9 rounded-full p-[2px] shrink-0 ${verified ? 'story-ring' : ''}" style="${verified ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1.5px]"><div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold cursor-pointer" onclick="openAdDetail('${ad.id}')">${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.isCombo ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : (ad.sellerUsername || '?').charAt(0).toUpperCase())}</div></div></div>
 <div class="flex-1 min-w-0 cursor-pointer" onclick="openAdDetail('${ad.id}')">
 <div class="flex items-center gap-1.5 text-sm font-semibold t1">${kunya} ${verified ? IGSVG.verified() : ''} <span class="t2 font-normal text-xs">• ${timeAgo(ad.createdAt)}</span></div>
-<div class="text-xs t2 truncate">${regionName} • ${ad.city}</div>
+<div class="text-xs t2 truncate">
+  ${regionName} • ${ad.city}
+  ${(userCurrentCoords && ad.lat && ad.lng) ? ` · <b class="text-blue-500 font-mono font-bold">${calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng)).toFixed(1)} ${t('км от вас')}</b>` : ''}
+</div>
 </div>
 <button onclick="openAdDetail('${ad.id}')" class="ig-btn-nav t1"><i class="fa-solid fa-ellipsis"></i></button>
 </div>
 <div class="relative bg-black overflow-hidden cursor-pointer" style="aspect-ratio:4/5" onclick="openAdDetail('${ad.id}')">
-<div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
-<img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" class="relative w-full h-full object-contain z-[1]">
+<div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
+<img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onload="this.style.opacity='1'" style="opacity:0.85">
 ${ad.isCombo ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> АКЦИЯ</span>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`}
 ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
 ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
@@ -3059,6 +3482,20 @@ handleCreateShopSubmit = async function(e) {
   _0xLegacyCreateShop(e); 
 };
 /* ================= PROFILE ================= */
+async function toggleSellerStatus(isDnd) {
+  if (!currentUser) return;
+  currentUser.isDnd = isDnd;
+  const idx = users.findIndex(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+  if (idx !== -1) users[idx].isDnd = isDnd;
+  saveUserSession(currentUser, true);
+
+  if (supabaseClient && currentUser.uid) {
+    await supabaseClient.from('users').update({ is_dnd: isDnd }).eq('uid', currentUser.uid);
+  }
+  showToast(t('Статус доступности обновлен'), 'success');
+  openProfileModal();
+}
+
 function openProfileModal() {  
     if (!currentUser) return;  
     // Подтягиваем свежие данные перед отрисовкой
@@ -3103,7 +3540,21 @@ c.innerHTML = `
             </div>
         </div>
 
-        <!-- Кнопка-переключатель женских объявлений -->
+        <!-- Статус продавца: В сети / Не беспокоить -->
+        <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-xs font-bold t1 flex items-center gap-1.5">
+                    <span>${currentUser.isDnd ? '🌙 ' + t('Не беспокоить 🌙') : '🟢 ' + t('На связи 🟢')}</span>
+                </div>
+                <div class="text-[10px] t2 truncate">${currentUser.isDnd ? t('Сейчас не на связи') : t('Принимаю звонки и сообщения')}</div>
+            </div>
+            <label class="ig-switch shrink-0">
+                <input type="checkbox" onchange="toggleSellerStatus(this.checked)" ${currentUser.isDnd ? 'checked' : ''}>
+                <span class="slider" style="${currentUser.isDnd ? 'background:#64748b' : ''}"></span>
+            </label>
+        </div>
+
+<!-- Кнопка-переключатель женских объявлений -->
         ${isAdmin && currentUser.gender !== 'FEMALE' ? `
         <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between gap-3">
             <div class="min-w-0">
@@ -3115,6 +3566,52 @@ c.innerHTML = `
                 <span class="slider"></span>
             </label>
         </div>` : ''}
+
+        <!-- Баннер истекших объявлений продавца -->
+        ${(() => {
+          const expiredList = myAds.filter(a => a.status === 'EXPIRED');
+          if (!expiredList.length) return '';
+          return `
+          <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(237,73,86,.4);background:rgba(237,73,86,.08)">
+            <div class="text-xs font-bold flex items-center justify-between" style="color:#ed4956">
+              <span><i class="fa-solid fa-clock-rotate-left"></i> ${t('У вас есть объявления с истекшим сроком:')}</span>
+              <span class="font-extrabold">${expiredList.length}</span>
+            </div>
+            <div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+              ${expiredList.map(a => `
+                <div class="bg-card p-2 rounded-xl border b-ig flex items-center justify-between gap-2 text-xs">
+                  <span class="truncate t1 font-medium">${a.title}</span>
+                  <button onclick="renewAdExpiry('${a.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0" style="background:#10b981">
+                    <i class="fa-solid fa-arrows-rotate"></i> ${t('Продлить на 30 дней')}
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+        })()}
+
+        <!-- Баннер истекших объявлений продавца -->
+        ${(() => {
+          const expiredList = myAds.filter(a => a.status === 'EXPIRED');
+          if (!expiredList.length) return '';
+          return `
+          <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(237,73,86,.4);background:rgba(237,73,86,.08)">
+            <div class="text-xs font-bold flex items-center justify-between" style="color:#ed4956">
+              <span><i class="fa-solid fa-clock-rotate-left"></i> ${t('У вас есть объявления с истекшим сроком:')}</span>
+              <span class="font-extrabold">${expiredList.length}</span>
+            </div>
+            <div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+              ${expiredList.map(a => `
+                <div class="bg-card p-2 rounded-xl border b-ig flex items-center justify-between gap-2 text-xs">
+                  <span class="truncate t1 font-medium">${a.title}</span>
+                  <button onclick="renewAdExpiry('${a.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0" style="background:#10b981">
+                    <i class="fa-solid fa-arrows-rotate"></i> ${t('Продлить на 30 дней')}
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+        })()}
 
         <!-- Баланс AvitoCash -->
         <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
@@ -4022,6 +4519,27 @@ const DICTIONARY = {
   'ID счёта ShamCash': 'معرف حساب شام كاش',
   'Скопировать ID': 'نسخ المعرف',
 
+  // Истекшие объявления
+  'Срок публикации истек': 'انتهت مدة صلاحية الإعلان',
+  'Истек срок': 'منتهي الصلاحية',
+  'Продлить на 30 дней': 'تجديد لمدة 30 يوماً',
+  'Объявление успешно продлено и поднято в топ!': 'تم تجديد الإعلان ورفعه للأعلى بنجاح!',
+  'У вас есть объявления с истекшим сроком:': 'لديك إعلانات انتهت مدة نشرها:',
+
+  // Лимиты магазина
+  'Заполненность магазина': 'سعة منتجات المتجر',
+  'Осталось мест': 'الأماكن المتبقية',
+  'Лимит исчерпан': 'تم استهلاك كامل الباقة',
+  'Расширить лимит (+50 мест / 5 AC)': 'ترقية الباقة (+50 منتج / 5 AC)',
+  'Лимит магазина успешно увеличен!': 'تمت ترقية سعة المتجر بنجاح!',
+
+  // Истекшие объявления
+  'Срок публикации истек': 'انتهت مدة صلاحية الإعلان',
+  'Истек срок': 'منتهي الصلاحية',
+  'Продлить на 30 дней': 'تجديد لمدة 30 يوماً',
+  'Объявление успешно продлено и поднято в топ!': 'تم تجديد الإعلان ورفعه للأعلى بنجاح!',
+  'У вас есть объявления с истекшим сроком:': 'لديك إعلانات انتهت مدة نشرها:',
+
   // Заглушки и футер
   'Объявлений пока нет. Будьте первым!': 'لا توجد إعلانات حتى الآن. كن أول المعلنين!',
   'Авито Шам © 2026': 'أفيتو الشام © 2026',
@@ -4067,6 +4585,27 @@ const DICTIONARY = {
   'Сохранить изменения': 'حفظ التعديلات',
   'Редактирование объявления': 'تعديل الإعلان',
   'ГЛАВНАЯ': 'الرئيسية',
+  
+// Статус продавца
+  'На связи 🟢': 'متاح للرد 🟢',
+  'Не беспокоить 🌙': 'يرجى عدم الإزعاج 🌙',
+  'Режим доступности:': 'حالة التواجد والرد:',
+  'Принимаю звонки и сообщения': 'مستعد لاستقبال المكالمات والرسائل',
+  'Сейчас не на связи': 'غير متاح للاتصال حالياً',
+  'Часы для звонков': 'أوقات الاتصال المناسبة',
+  'Продавец сейчас отдыхает. Пожалуйста, отправьте сообщение и не звоните.': 'البائع غير متاح حالياً. يرجى إرسال رسالة نصية وعدم الاتصال.',
+  'Статус доступности обновлен': 'تم تحديث حالة التواجد بنجاح',
+
+  // Геолокация и радиус
+  'Рядом': 'بالقرب مني',
+  'Рядом со мной': 'بالقرب مني',
+  'Радиус поиска:': 'نطاق البحث:',
+  'км': 'كم',
+  'км от вас': 'كم عنك',
+  'Отключить поиск рядом': 'إلغاء البحث بالقرب مني',
+  'Геолокация недоступна': 'تعذر تحديد الموقع الجغرافي',
+  'Поиск в радиусе': 'البحث ضمن نطاق',
+  'Все расстояния': 'كل المسافات',
   
   // Категории и сортировка
   'Новые': 'الأحدث',
@@ -4147,6 +4686,14 @@ const DICTIONARY = {
   'Изменить анкету': 'تعديل الحساب',
   'Выйти': 'تسجيل الخروج',
   'Разработчик:': 'المطور:',
+
+  // Шаблоны сообщений WhatsApp
+  'wa_msg_hello': 'Здравствуйте!',
+  'wa_msg_interest': 'Меня заинтересовало ваше объявление на Avito Sham:',
+  'wa_msg_price': 'Цена:',
+  'wa_msg_queue': 'Мой номер в очереди:',
+  'wa_msg_link': 'Ссылка на товар:',
+  'wa_msg_from': 'Покупатель:',
 
   // Детальная страница объявления
   'В очереди:': 'في الانتظار:',
@@ -4237,6 +4784,9 @@ function translateStaticUI(lang) {
 
   const thmLbl = byId('sb-theme-label');
   if (thmLbl) thmLbl.innerText = lang === 'ar' ? DICTIONARY['Сменить тему'] : 'Сменить тему';
+
+  const nearLbl = byId('near-me-label');
+  if (nearLbl) nearLbl.innerText = activeRadiusKm > 0 ? `${activeRadiusKm} ${t('км')}` : t('Рядом');
 
   const regLbl = byId('current-region-label');
   if (regLbl) {
@@ -4391,12 +4941,21 @@ const sbSearch = byId('sb-search-ic'), hdSearch = byId('hd-search-ic'), sbTheme 
 if (sbSearch) sbSearch.innerHTML = IGSVG.search();
 if (hdSearch) hdSearch.innerHTML = IGSVG.search();
 if (sbTheme) sbTheme.innerHTML = document.body.classList.contains('light-mode') ? IGSVG.moon() : IGSVG.sun();
+// Запрос на Push-уведомления
+requestPushPermission();
+
 // Rules Modal Logic
 const rulesBtn = byId('rules-accept-btn');
 if (rulesBtn) rulesBtn.addEventListener('click', acceptLaunchRules);
 // Database & Data Init
 initSupabaseSync();
 fetchLiveExchangeRates();
+// Проверка срока давности объявлений (> 30 дней)
+checkExpiredAdsStatus();
+
+// Проверка срока давности объявлений (> 30 дней)
+checkExpiredAdsStatus();
+
 // Initial Render
 renderCategoryPills();
 renderAds();
