@@ -747,6 +747,15 @@ let lastShareObjectUrl = null;
 let hasCloudMarqueeSettings = false;
 let MARQUEE_SETTINGS = { text: '', color: '#a8a8a8', fontSize: 13, speed: 20, direction: 'left', pauseOnHover: false };
 let BACKUPS_META = {};
+try {
+  const savedBackups = localStorage.getItem('bs_backups_meta');
+  if (savedBackups) BACKUPS_META = JSON.parse(savedBackups);
+} catch(e) {}
+function saveBackupsMeta() {
+  try {
+    localStorage.setItem('bs_backups_meta', JSON.stringify(BACKUPS_META));
+  } catch(e) {}
+}
 let AVITOCASH_PRICES = { adPrice: 1, shopSubscription: 5, editPrice: 0, freeAdsCount: 0 };
 let AVITOCASH_RATE = 1;
 let TOPUP_REQUESTS = {};
@@ -1997,7 +2006,58 @@ function exportShopDatabaseJSON() {
   a.remove();
   showToast('Бэкап магазина выгружен!', 'success');
 }
-function exportFullDatabaseJSON() {   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {     showToast('Доступ запрещен', 'error');     return;   }   try {     const backupData = {       version: '3.1',       type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP',       exportDate: new Date().toISOString(),       users: users,       archivedUsers: archivedUsers,       ads: ads,       categories: categories,       combos: combos,       rates: EXCHANGE_RATES,       reports: reports     };      const jsonString = JSON.stringify(backupData, null, 2);     const blob = new Blob([jsonString], { type: 'application/json' });     const url = URL.createObjectURL(blob);     const link = document.createElement('a');     link.href = url;     link.download = `AvitoSham_FullDB_${new Date().toISOString().slice(0, 10)}_${Date.now()}.json`;     document.body.appendChild(link);     link.click();     link.remove();     URL.revokeObjectURL(url);      showToast('Полный бэкап базы данных успешно выгружен!', 'success');   } catch (err) {     console.error('Export error:', err);     showToast('Ошибка создания бэкапа', 'error');   } }  function importFullDatabaseJSON(event) {
+function exportFullDatabaseJSON() {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен', 'error');
+    return;
+  }
+  try {
+    const backupId = 'BK-' + Date.now();
+    const exportDate = new Date().toISOString();
+    const backupData = {
+      version: '3.1',
+      type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP',
+      exportDate: exportDate,
+      users: users,
+      archivedUsers: archivedUsers,
+      ads: ads,
+      categories: categories,
+      combos: combos,
+      rates: EXCHANGE_RATES,
+      reports: reports
+    };
+
+    if (typeof BACKUPS_META === 'object') {
+      BACKUPS_META[backupId] = {
+        type: 'full',
+        exportDate: exportDate,
+        by: currentUser.uid || currentUser.username || 'admin'
+      };
+      if (typeof saveBackupsMeta === 'function') saveBackupsMeta();
+    }
+
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `AvitoSham_FullDB_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    if (byId('admin-backup-list') && typeof renderBackupList === 'function') {
+      renderBackupList();
+    }
+    showToast('Полный бэкап выгружен и сохранен в журнале!', 'success');
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('Ошибка создания бэкапа', 'error');
+  }
+}
+
+function importFullDatabaseJSON(event) {
   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
   const f = event.target.files[0]; if (!f) return;
   showConfirmModal('Импорт полной БД', 'Восстановить базу данных из бэкапа? Это перенесет все данные и восстановит привязки.', () => {
@@ -2151,7 +2211,8 @@ function applyManualRates() {
 
 function deleteBackupMeta(id) {
   delete BACKUPS_META[id];
-  showToast('Запись удалена', 'info');
+  saveBackupsMeta();
+  showToast('Запись удалена из журнала', 'info');
   if (byId('admin-backup-list')) renderBackupList();
 }
 async function recreateAndDownloadBackup(id) {
