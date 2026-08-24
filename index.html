@@ -128,8 +128,8 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 [dir="rtl"] .search-wrapper input { padding-left: 0.75rem !important; padding-right: 2.25rem !important; }
 [dir="rtl"] #sb-search-ic, [dir="rtl"] #hd-search-ic { left: auto !important; right: 0.75rem !important; }
 [dir="rtl"] .app-back i, [dir="rtl"] .fa-arrow-left, [dir="rtl"] .fa-chevron-left { transform: scaleX(-1); }
-#modal-ad-detail .ig-sheet { display: flex; flex-direction: column; overflow: hidden; height: 88vh !important; max-height: 88vh !important; }
-#modal-ad-detail #detail-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; overflow: hidden; }
+#modal-ad-detail .ig-sheet { display: flex; flex-direction: column; overflow: hidden; width: 100%; max-width: 900px; height: 85vh !important; max-height: 85vh !important; border-radius: 16px; }
+#modal-ad-detail #detail-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; width: 100%; overflow: hidden; }
 .goog-te-banner-frame.skiptranslate { display: none !important; }
 body { top: 0px !important; }
 .skiptranslate iframe { display: none !important; }
@@ -522,7 +522,7 @@ body { top: 0px !important; }
 </div>
 <!-- ============ AD DETAIL MODAL ============ -->
 <div id="modal-ad-detail" class="fixed inset-0 z-30 lg:z-50 ig-modal-blur hidden flex items-center justify-center p-0 sm:p-4 lg:p-6">
-<div class="ig-sheet w-full max-w-4xl rounded-none sm:rounded-2xl overflow-hidden h-full sm:h-auto max-h-full sm:max-h-[90vh] flex flex-col relative">
+<div class="ig-sheet w-full max-w-4xl rounded-none sm:rounded-2xl overflow-hidden h-full sm:h-[88vh] max-h-full sm:max-h-[88vh] flex flex-col relative bg-card">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-30 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="detail-content" class="w-full h-full overflow-hidden flex flex-col"></div>
 </div>
@@ -1976,14 +1976,32 @@ ${(() => {
 <div class="flex items-start justify-between gap-2 shrink-0">
         <h2 class="text-base font-bold t1 leading-snug">${displayTitle}</h2>
         <div class="text-right shrink-0">
-          ${ad.oldPrice && ad.oldPrice > ad.price ? `
-            <div class="text-xs t2 line-through font-medium">$${Number(ad.oldPrice).toFixed(2)}</div>
-            <div class="text-base font-extrabold" style="color:#ef4444">${converted}</div>
+          ${(ad.oldPrice && ad.oldPrice > ad.price) ? `
+            <div class="text-xs t2 line-through font-semibold">$${Number(ad.oldPrice).toFixed(2)}</div>
+            <div class="text-lg font-black" style="color:#ef4444">${converted}</div>
           ` : `<div class="text-base font-extrabold t1">${converted}</div>`}
         </div>
-      </div>	  
+      </div>
+
+      ${(ad.oldPrice && ad.oldPrice > ad.price) ? `
+      <div class="p-3 rounded-2xl border flex items-center justify-between shadow-inner shrink-0" style="border-color:rgba(239,68,68,.5);background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05))">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center font-black text-sm shadow-md">
+            -${Math.round((1 - ad.price / ad.oldPrice) * 100)}%
+          </div>
+          <div>
+            <div class="font-black text-xs" style="color:#ef4444">🔥 ГОРЯЧЕЕ ПРЕДЛОЖЕНИЕ!</div>
+            <div class="text-[10px] t2">Специальная цена со скидкой</div>
+          </div>
+        </div>
+        <div class="text-right bg-field px-3 py-1.5 rounded-xl border b-ig">
+          <div class="text-[9px] t2 uppercase font-bold">Экономия:</div>
+          <div class="text-xs font-black" style="color:#10b981">$${(ad.oldPrice - ad.price).toFixed(2)}</div>
+        </div>
+      </div>` : ''}
+      
       <div class="flex items-center gap-3 text-[11px] t2 flex-wrap bg-field p-2.5 rounded-xl border b-ig shrink-0">
-        <span><i class="fa-solid fa-eye"></i> ${viewsCount}</span>
+	  <span><i class="fa-solid fa-eye"></i> ${viewsCount}</span>
         <span class="${userLiked ? 'font-bold' : ''}" style="${userLiked ? 'color:#ed4956' : ''}"><i class="fa-solid fa-heart"></i> ${likesCount}</span>
         <span class="font-bold" style="color:#f59e0b"><i class="fa-solid fa-fire"></i> ${t('Рейтинг:')} ${rating}</span>
         <button onclick="toggleLikeDetail('${ad.id}')" class="ml-auto px-3 py-1.5 rounded-lg font-bold text-[11px] border ${userLiked ? '' : 'b-ig'}" style="${userLiked ? 'background:rgba(237,73,86,.15);color:#ed4956;border-color:rgba(237,73,86,.4)' : ''}">
@@ -2294,43 +2312,68 @@ function applyPresetDiscountPercent(pct) {
 }
 
 async function saveQuickDiscountSubmit() {
-  if (!currentDiscountTargetAd || !currentUser) return;
-  const newP = parseFloat(byId('quick-discount-price').value);
+  const adId = byId('quick-discount-ad-id')?.value;
+  const ad = ads.find(a => a.id === adId) || currentDiscountTargetAd;
+  if (!ad || !currentUser) return;
+
+  const newP = parseFloat(byId('quick-discount-price')?.value);
   if (isNaN(newP) || newP <= 0) {
     showToast('Укажите корректную новую цену', 'warning');
     return;
   }
-  const ad = currentDiscountTargetAd;
-  const oldP = ad.oldPrice || ad.price;
-  
-  ad.oldPrice = oldP > newP ? oldP : null;
-  ad.price = newP;
-  
-  if (supabaseClient) {
-    await supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice }).eq('id', ad.id);
+
+  const basePrice = Number(ad.oldPrice || ad.price || 0);
+  if (newP >= basePrice && !ad.oldPrice) {
+    ad.price = newP;
+    ad.oldPrice = null;
+  } else {
+    ad.oldPrice = basePrice;
+    ad.price = newP;
   }
-  
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('ads').update({ price: ad.price }).eq('id', ad.id);
+    } catch(err) {
+      console.warn('Supabase discount update:', err);
+    }
+  }
+
   saveCachedAds();
   closeModal('modal-quick-discount');
   renderCategoryPills();
   renderAds();
-  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+
+  const showcaseModal = byId('modal-shop-showcase');
+  if (showcaseModal && !showcaseModal.classList.contains('hidden')) {
     openShopShowcase(ad.sellerUid || ad.sellerUsername);
   }
-  if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+  const myShopModal = byId('modal-my-shop');
+  if (myShopModal && !myShopModal.classList.contains('hidden')) {
     openMyShopModal();
   }
-  showToast(`Скидка на "${ad.title}" успешно установлена!`, 'success');
-}
+  const detailModal = byId('modal-ad-detail');
+  if (detailModal && !detailModal.classList.contains('hidden')) {
+    openAdDetail(ad.id, false);
+  }
 
+  showToast(`Скидка на "${ad.title}" установлена: $${ad.price.toFixed(2)}`, 'success');
+}
 async function removeQuickDiscountSubmit() {
-  if (!currentDiscountTargetAd) return;
-  const ad = currentDiscountTargetAd;
+  const adId = byId('quick-discount-ad-id')?.value;
+  const ad = ads.find(a => a.id === adId) || currentDiscountTargetAd;
+  if (!ad) {
+    closeModal('modal-quick-discount');
+    return;
+  }
+
   if (ad.oldPrice) {
     ad.price = ad.oldPrice;
     ad.oldPrice = null;
     if (supabaseClient) {
-      await supabaseClient.from('ads').update({ price: ad.price, old_price: null }).eq('id', ad.id);
+      try {
+        await supabaseClient.from('ads').update({ price: ad.price }).eq('id', ad.id);
+      } catch(err) {}
     }
     saveCachedAds();
     renderCategoryPills();
@@ -2341,8 +2384,10 @@ async function removeQuickDiscountSubmit() {
   if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
     openShopShowcase(ad.sellerUid || ad.sellerUsername);
   }
+  if (byId('modal-ad-detail') && !byId('modal-ad-detail').classList.contains('hidden')) {
+    openAdDetail(ad.id, false);
+  }
 }
-
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { 
   const seller = users.find(u => u.uid === shopUserUid || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
   if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } 
@@ -2843,6 +2888,7 @@ async function initSupabaseSync() {
           isFree: !!a.is_free,
           isNegotiable: !!a.is_negotiable,
           price: Number(a.price || 0),
+          oldPrice: (a.old_price && Number(a.old_price) > Number(a.price)) ? Number(a.old_price) : (a.oldPrice ? Number(a.oldPrice) : null),
           currency: a.currency,
           desc: a.description || a.desc || '',
           images: Array.isArray(a.images) ? a.images : [a.image || ''],
@@ -3114,8 +3160,12 @@ setTimeout(async () => {
     if (dEl && ad.desc) dEl.innerText = await translateDynamic(ad.desc, 'ar');
   }
 }, 10);
+const hasDiscount = !!(ad.oldPrice && ad.oldPrice > ad.price);
+const discPercent = hasDiscount ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
+const saveAmount = hasDiscount ? (ad.oldPrice - ad.price) : 0;
+
 return `
-<article class="card-in border-b b-ig bg-card pb-3">
+<article class="card-in border-b b-ig bg-card pb-3 rounded-2xl transition-all ${hasDiscount || ad.isCombo ? 'border-2 shadow-lg my-2' : ''}" style="${hasDiscount ? 'border-color:rgba(239,68,68,.6);box-shadow:0 0 15px rgba(239,68,68,.18);background:linear-gradient(180deg,rgba(239,68,68,.04) 0%,rgba(0,0,0,0) 100%)' : (ad.isCombo ? 'border-color:rgba(249,115,22,.6);box-shadow:0 0 15px rgba(249,115,22,.18)' : '')}">
 <div class="flex items-center gap-3 px-3.5 py-2.5">
 <div class="w-9 h-9 rounded-full p-[2px] shrink-0 ${verified ? 'story-ring' : ''}" style="${verified ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1.5px]"><div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold cursor-pointer" onclick="openAdDetail('${ad.id}')">${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.isCombo ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : (ad.sellerUsername || '?').charAt(0).toUpperCase())}</div></div></div>
 <div class="flex-1 min-w-0 cursor-pointer" onclick="openAdDetail('${ad.id}')">
@@ -3130,7 +3180,13 @@ return `
 <div class="relative bg-black overflow-hidden cursor-pointer" style="aspect-ratio:4/5" onclick="openAdDetail('${ad.id}')">
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
 <img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onload="this.style.opacity='1'" style="opacity:0.85">
-${ad.isCombo ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')}</span>` : (ad.oldPrice && ad.oldPrice > ad.price ? `<span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#dc2626)"><i class="fa-solid fa-percent"></i> ${t('СКИДКА')} -${Math.round((1 - ad.price / ad.oldPrice) * 100)}%</span>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
+${ad.isCombo ? `
+  <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-xl border border-white/20" style="background:linear-gradient(45deg,#f97316,#ef4444)">
+    <i class="fa-solid fa-fire animate-pulse text-sm"></i> АКЦИЯ • КОМБО
+  </div>` : (hasDiscount ? `
+  <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-2xl border border-white/25" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
+    <i class="fa-solid fa-fire-flame-curved animate-bounce"></i> СКИДКА -${discPercent}%
+  </div>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
 ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
 ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
 </div>
@@ -3140,6 +3196,17 @@ ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absol
 <button onclick="shareAd('${ad.id}')" class="ig-btn-nav" title="Поделиться">${IGSVG.send()}</button>
 ${ad.isCombo ? `<span class="ml-auto text-[11px] font-extrabold flex items-center gap-1" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${ad.comboItems.length} товаров</span>` : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav ml-auto" title="Занять очередь">${IGSVG.bookmark(isFav)}</button>`}
 </div>
+${hasDiscount ? `
+<div class="mx-3.5 mt-2 p-2.5 rounded-xl border flex items-center justify-between" style="border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)">
+  <div>
+    <div class="text-[11px] t2 line-through font-semibold">$${Number(ad.oldPrice).toFixed(2)}</div>
+    <div class="text-base font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)} <span class="text-[10px] font-bold text-white px-1.5 py-0.5 rounded ml-1" style="background:#ef4444">-${discPercent}%</span></div>
+  </div>
+  <div class="text-right">
+    <div class="text-[10px] uppercase font-bold t2">Ваша выгода:</div>
+    <div class="text-xs font-black" style="color:#10b981">+$${saveAmount.toFixed(2)}</div>
+  </div>
+</div>` : ''}
 <div class="px-3.5 pt-2 text-sm font-semibold t1">${likesCount > 0 ? `Нравится: ${likesCount}` : 'Будьте первым, кому понравилось'}</div>
 ${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 Цена по акции: <span style="color:#f97316">$${Number(ad.price).toFixed(2)}</span> <s class="t2 font-normal">$${ad.comboOriginalTotal.toFixed(2)}</s>${ad.comboOriginalTotal > ad.price ? ` <span style="color:#10b981">выгода $${(ad.comboOriginalTotal - ad.price).toFixed(2)}</span>` : ''}</div>` : ''}
 <div class="px-3.5 pt-1 text-sm t1 leading-snug"><span class="font-semibold">${kunya}</span> <span id="feed-title-${ad.id}" class="font-semibold">${ad.title}</span> <span id="feed-desc-${ad.id}" class="t2 line-clamp-2">${ad.desc || ''}</span> <button onclick="openAdDetail('${ad.id}')" class="t2">… ${currentLang === 'ar' ? 'المزيد' : 'ещё'}</button></div>
