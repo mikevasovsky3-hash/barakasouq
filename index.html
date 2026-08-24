@@ -1501,21 +1501,20 @@ function handleRegionMapUpdate(code) { const c = REGION_COORDS[code] || [33.5138
 function toggleFreePriceField(isFree) { const p = byId('ad-price'), c = byId('price-container'); if (isFree) { if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } if (c) c.style.opacity = '.4'; } else { if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } if (c) c.style.opacity = '1'; } }
 function toggleNegotiableField(isNeg) { const p = byId('ad-price'); if (!p) return; if (isNeg) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } }
 async function saveAdToSupabase(ad) {
-  if (!supabaseClient) return;
-  const dbAd = {
-    id: ad.id, title: ad.title, category: ad.category, store_category: ad.storeCategory || '',
-    region: ad.region, city: ad.city, is_women_only: !!ad.isWomenOnly, is_free: !!ad.isFree,
-    is_negotiable: !!ad.isNegotiable, price: Number(ad.price || 0), currency: ad.currency,
-    description: ad.desc || '', images: ad.images || [], image: ad.image || '',
-    lat: Number(ad.lat || 33.5138), lng: Number(ad.lng || 36.2765),
-    seller_username: ad.sellerUsername || '', seller_uid: ad.sellerUid || '',
-    seller_kunya: ad.sellerKunya || '', seller_whatsapp: ad.sellerWhatsapp || '',
-    status: ad.status || 'ACTIVE', created_at: Number(ad.createdAt || Date.now()),
-    queue: ad.queue || [], likes: ad.likes || [], views: Number(ad.views || 0)
-  };
-  await supabaseClient.from('ads').upsert(dbAd);
+if (!supabaseClient) return;
+const dbAd = {
+id: ad.id, title: ad.title, category: ad.category, store_category: ad.storeCategory || '',
+region: ad.region, city: ad.city, is_women_only: !!ad.isWomenOnly, is_free: !!ad.isFree,
+is_negotiable: !!ad.isNegotiable, price: Number(ad.price || 0), old_price: ad.oldPrice !== null && ad.oldPrice !== undefined ? Number(ad.oldPrice) : null, currency: ad.currency,
+description: ad.desc || '', images: ad.images || [], image: ad.image || '',
+lat: Number(ad.lat || 33.5138), lng: Number(ad.lng || 36.2765),
+seller_username: ad.sellerUsername || '', seller_uid: ad.sellerUid || '',
+seller_kunya: ad.sellerKunya || '', seller_whatsapp: ad.sellerWhatsapp || '',
+status: ad.status || 'ACTIVE', created_at: Number(ad.createdAt || Date.now()),
+queue: ad.queue || [], likes: ad.likes || [], views: Number(ad.views || 0)
+};
+await supabaseClient.from('ads').upsert(dbAd);
 }
-
 async function handleCreateAdSubmit(e) {
   e.preventDefault();
   if (!currentUser) return;
@@ -2681,10 +2680,10 @@ function importFullDatabaseJSON(event) {
                 is_women_only: !!a.isWomenOnly,
                 is_free: !!a.isFree,
                 is_negotiable: !!a.isNegotiable,
-                price: Number(a.price || 0),
+price: Number(a.price || 0),
           oldPrice: (a.old_price && Number(a.old_price) > Number(a.price)) ? Number(a.old_price) : null,
           currency: a.currency,
-                description: a.desc || a.description || '',
+		  description: a.desc || a.description || '',
                 images: Array.isArray(a.images) ? a.images : [a.image || ''],
                 image: a.image || (Array.isArray(a.images) ? a.images[0] : ''),
                 lat: Number(a.lat || 33.5138),
@@ -3131,24 +3130,67 @@ const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, (currentPage - 
 if (!pageAds.length) { grid.innerHTML = `<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>${t('Объявлений пока нет. Будьте первым!')}</div>`; if (pag) pag.innerHTML = ''; return; }
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 if (layout === 'grid') {
-grid.className = 'grid grid-cols-2 gap-1';
+grid.className = 'grid grid-cols-2 gap-2 p-1';
 grid.innerHTML = pageAds.map(ad => {
 const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
-// Динамическая подстановка перевода карточки
+const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
+const discPercent = hasDisc ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
+
 setTimeout(async () => {
   if (currentLang === 'ar') {
     const el = document.getElementById(`grid-title-${ad.id}`);
     if (el) el.innerText = await translateDynamic(ad.title, 'ar');
   }
 }, 10);
-return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-black cursor-pointer overflow-hidden"><img src="${img}" class="w-full h-full object-cover"><div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2"><div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div><div class="text-white text-[10px] font-bold">${priceBadge(ad)}</div></div></div>`;
+
+return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden border-2 transition-all hover:scale-[1.01] ${hasDisc ? 'shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.7);box-shadow:0 0 12px rgba(239,68,68,.25)' : ''}">
+  <img src="${img}" class="w-full h-full object-cover">
+  ${hasDisc ? `
+    <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
+      <i class="fa-solid fa-fire-flame-curved"></i> -${discPercent}%
+    </div>` : ''}
+  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-2.5 space-y-0.5">
+    <div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div>
+    <div class="flex items-center gap-1.5 flex-wrap">
+      ${hasDisc ? `
+        <span class="text-white text-[11px] font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</span>
+        <span class="text-slate-400 text-[9px] line-through">$${Number(ad.oldPrice).toFixed(2)}</span>
+      ` : `<span class="text-white text-xs font-bold">${priceBadge(ad)}</span>`}
+    </div>
+  </div>
+</div>`;
 }).join('');
 } else if (layout === 'list') {
-grid.className = 'space-y-2';
+grid.className = 'space-y-2.5';
 grid.innerHTML = pageAds.map(ad => {
 const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
-return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-2 rounded-xl flex gap-3 cursor-pointer"><img src="${img}" class="w-20 h-20 rounded-lg object-cover shrink-0"><div class="flex-1 min-w-0 flex flex-col justify-center"><div class="font-bold t1 text-sm truncate">${ad.title}</div><div class="text-xs t2 truncate">${ad.city}</div><div class="text-sm font-bold mt-1" style="color:#f59e0b">${priceBadge(ad)}</div></div></div>`;
+const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
+const discPercent = hasDisc ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
+const saveAmount = hasDisc ? (ad.oldPrice - ad.price) : 0;
+
+return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:border-red-500/50 ${hasDisc ? 'border-2 shadow-md' : ''}" style="${hasDisc ? 'border-color:rgba(239,68,68,.6);background:linear-gradient(90deg,rgba(239,68,68,.05) 0%,transparent 100%)' : ''}">
+  <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
+    <img src="${img}" class="w-full h-full object-cover">
+    ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white" style="background:#ef4444">-${discPercent}%</span>` : ''}
+  </div>
+  <div class="flex-1 min-w-0 flex flex-col justify-between">
+    <div>
+      <div class="font-bold t1 text-sm truncate">${ad.title}</div>
+      <div class="text-xs t2 truncate">${ad.city} • ${timeAgo(ad.createdAt)}</div>
+    </div>
+    <div class="flex items-center justify-between pt-1">
+      <div>
+        ${hasDisc ? `
+          <div class="text-[10px] t2 line-through">$${Number(ad.oldPrice).toFixed(2)}</div>
+          <div class="text-sm font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</div>
+        ` : `<div class="text-sm font-bold" style="color:#f59e0b">${priceBadge(ad)}</div>`}
+      </div>
+      ${hasDisc ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
+    </div>
+  </div>
+</div>`;
 }).join('');
+
 } else {
 grid.className = 'space-y-4';
 grid.innerHTML = pageAds.map(ad => { cardPhotoIndex[ad.id] = 0; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; const kunya = getSellerKunya(ad); const avatar = getSellerAvatar(ad); const verified = getSellerVerified(ad); const qc = (ad.queue || []).length; const isFav = favorites.includes(ad.id); const liked = currentUser && (ad.likes || []).includes(currentUser.username); const likesCount = (ad.likes || []).length; const viewsCount = ad.views || 0; const regionName = t(REGION_NAMES[ad.region] || ad.region || 'Сирия');
