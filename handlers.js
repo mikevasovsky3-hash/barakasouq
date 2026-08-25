@@ -1,5 +1,22 @@
 /* ================= EVENT HANDLERS & APP CONTROLLER ================= */
 
+// Реестр локально удаленных ID для защиты от возврата при обновлении
+function getDeletedAdsList() {
+  try {
+    return JSON.parse(localStorage.getItem('bs_deleted_ad_ids') || '[]');
+  } catch(e) { return []; }
+}
+
+function markAdDeletedLocally(adId) {
+  try {
+    const list = getDeletedAdsList();
+    if (!list.includes(adId)) {
+      list.push(adId);
+      localStorage.setItem('bs_deleted_ad_ids', JSON.stringify(list));
+    }
+  } catch(e) {}
+}
+
 function showToast(message, type = 'info') { 
   const c = byId('toast-container'); 
   if (!c) return; 
@@ -859,15 +876,7 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   const ad = ads.find(a => a.id === adId);
   if (!ad || !currentUser) return;
 
-  if (supabaseClient) {
-    supabaseClient.rpc('secure_manage_ad', {
-      p_ad_id: adId,
-      p_caller_id: currentUser.uid || currentUser.username,
-      p_action: 'SET_STATUS',
-      p_status: newStatus
-    }).then().catch(err => console.warn('Supabase status sync:', err));
-  }
-
+  // 1. Мгновенно меняем статус локально
   ad.status = newStatus;
   saveCachedAds();
   closeModal('modal-ad-detail');
@@ -875,30 +884,56 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   renderCategoryPills();
   if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
   showToast(successMsg, 'success');
+
+  // 2. Фоновая синхронизация с Supabase без блокировок
+  if (supabaseClient) {
+    supabaseClient.rpc('secure_manage_ad', {
+      p_ad_id: adId,
+      p_caller_id: currentUser.uid || currentUser.username,
+      p_action: 'SET_STATUS',
+      p_status: newStatus
+    }).then(res => {
+      if (!res || !res.data || !res.data.success) {
+        supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId).then().catch(() => {});
+      }
+    }).catch(() => {
+      supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId).then().catch(() => {});
+    });
+  }
 }
 
 function deleteAdWithConfirm(adId) {
   if (!currentUser) return;
   showConfirmModal('Удаление объявления', 'Удалить объявление навсегда?', () => {
-    if (supabaseClient) {
-      supabaseClient.rpc('secure_manage_ad', {
-        p_ad_id: adId,
-        p_caller_id: currentUser.uid || currentUser.username,
-        p_action: 'DELETE'
-      }).then().catch(err => {
-        supabaseClient.from('ads').delete().eq('id', adId).then().catch(e => console.warn('Supabase delete sync:', e));
-      });
-    }
-
+    // 1. Помечаем в черном списке и удаляем из локального массива
+    markAdDeletedLocally(adId);
     ads = ads.filter(a => a.id !== adId);
     saveCachedAds();
+
+    // 2. Мгновенно обновляем экран
     closeModal('modal-ad-detail');
     renderAds();
     renderCategoryPills();
     if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
     showToast('Объявление удалено', 'success');
+
+    // 3. Отправляем в Supabase в фоне без прерывания программы
+    if (supabaseClient) {
+      supabaseClient.rpc('secure_manage_ad', {
+        p_ad_id: adId,
+        p_caller_id: currentUser.uid || currentUser.username,
+        p_action: 'DELETE'
+      }).then(res => {
+        if (!res || !res.data || !res.data.success) {
+          supabaseClient.from('ads').delete().eq('id', adId).then().catch(() => {});
+        }
+      }).catch(() => {
+        supabaseClient.from('ads').delete().eq('id', adId).then().catch(() => {});
+      });
+    }
   });
 }
+
 function doToggleLike(adId) { 
   if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } 
   const ad = ads.find(a => a.id === adId); 

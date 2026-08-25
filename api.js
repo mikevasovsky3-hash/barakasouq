@@ -15,7 +15,9 @@ function saveBackupsMeta() {
 
 function saveCachedAds() {
   try {
-    localStorage.setItem('bs_cached_ads', JSON.stringify(ads));
+    const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+    const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
+    localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
   } catch (e) {
     console.warn('LocalStorage quota exceeded. Clearing cache...');
     try {
@@ -28,7 +30,13 @@ function saveCachedAds() {
 function loadCachedAds() {
   try {
     const c = localStorage.getItem('bs_cached_ads');
-    if (c) ads = JSON.parse(c);
+    if (c) {
+      const parsed = JSON.parse(c);
+      if (Array.isArray(parsed)) {
+        const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+        ads = parsed.filter(a => !deletedIds.includes(a.id));
+      }
+    }
     const f = localStorage.getItem('bs_favorites');
     if (f) favorites = JSON.parse(f);
   } catch (e) {}
@@ -211,37 +219,41 @@ async function initSupabaseSync() {
     }	
 
     if (adsRes.data) {
-      ads = adsRes.data.map(a => {
-        const owner = users.find(u => u.uid === a.seller_uid || (u.username && a.seller_username && u.username.toLowerCase() === a.seller_username.toLowerCase()));
-        return {
-          id: a.id,
-          title: a.title,
-          category: a.category,
-          storeCategory: a.store_category,
-          region: a.region,
-          city: a.city,
-          isWomenOnly: !!a.is_women_only,
-          isFree: !!a.is_free,
-          isNegotiable: !!a.is_negotiable,
-          price: Number(a.price || 0),
-          oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
-          currency: a.currency,
-          desc: a.description || a.desc || '',
-          images: Array.isArray(a.images) ? a.images : [a.image || ''],
-          image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
-          lat: Number(a.lat) || 33.5138,
-          lng: Number(a.lng) || 36.2765,
-          sellerUsername: a.seller_username || owner?.username || '',
-          sellerUid: a.seller_uid || owner?.uid || '',
-          sellerKunya: a.seller_kunya || owner?.kunya || owner?.username || '',
-          sellerWhatsapp: a.seller_whatsapp || owner?.whatsapp || '',
-          status: a.status || 'ACTIVE',
-          createdAt: Number(a.created_at) || Date.now(),
-          queue: Array.isArray(a.queue) ? a.queue : [],
-          likes: Array.isArray(a.likes) ? a.likes : [],
-          views: Number(a.views || 0)
-        };
-      });
+      const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+
+      ads = adsRes.data
+        .filter(a => !deletedIds.includes(a.id))
+        .map(a => {
+          const owner = users.find(u => u.uid === a.seller_uid || (u.username && a.seller_username && u.username.toLowerCase() === a.seller_username.toLowerCase()));
+          return {
+            id: a.id,
+            title: a.title,
+            category: a.category,
+            storeCategory: a.store_category,
+            region: a.region,
+            city: a.city,
+            isWomenOnly: !!a.is_women_only,
+            isFree: !!a.is_free,
+            isNegotiable: !!a.is_negotiable,
+            price: Number(a.price || 0),
+            oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
+            currency: a.currency,
+            desc: a.description || a.desc || '',
+            images: Array.isArray(a.images) ? a.images : [a.image || ''],
+            image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
+            lat: Number(a.lat) || 33.5138,
+            lng: Number(a.lng) || 36.2765,
+            sellerUsername: a.seller_username || owner?.username || '',
+            sellerUid: a.seller_uid || owner?.uid || '',
+            sellerKunya: a.seller_kunya || owner?.kunya || owner?.username || '',
+            sellerWhatsapp: a.seller_whatsapp || owner?.whatsapp || '',
+            status: a.status || 'ACTIVE',
+            createdAt: Number(a.created_at) || Date.now(),
+            queue: Array.isArray(a.queue) ? a.queue : [],
+            likes: Array.isArray(a.likes) ? a.likes : [],
+            views: Number(a.views || 0)
+          };
+        });
     }
 
     if (combosRes.data) {
@@ -441,7 +453,9 @@ async function saveMarqueeSettings() {
   applyMarqueeSettings(settings);
   await updateMarqueeText(text);
   showToast('Бегущая строка сохранена и автоматически переведена!', 'success');
-}function translateStaticUI(lang) {
+}
+
+function translateStaticUI(lang) {
   const navMap = {
     'sb-home': 'Главная', 'sb-shops': 'Магазины', 'sb-create': 'Создать',
     'sb-fav': 'Избранное', 'sb-profile': 'Профиль'
