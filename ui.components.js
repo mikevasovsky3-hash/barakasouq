@@ -1484,7 +1484,7 @@ function openProfileModal() {
 
 function setFeedLayout(layout) {
   localStorage.setItem('bs_feed_layout', layout);
-  itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 4);
+  itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 12);
   renderAds();
   openProfileModal();
   showToast('Вид ленты изменен', 'success');
