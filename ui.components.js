@@ -2554,16 +2554,26 @@ async function removeQuickDiscountSubmit() {
 }
 
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { 
-  const seller = users.find(u => u.uid === shopUserUid || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
+  const seller = users.find(u => (u.uid && String(u.uid) === String(shopUserUid)) || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
   if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } 
   const shop = seller.shop; 
-  const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === seller.username.toLowerCase() && a.status === 'ACTIVE'); 
+  
+  // Универсальный подсчет активных товаров витрины
+  const shopAds = ads.filter(a => 
+    ((a.sellerUid && seller.uid && String(a.sellerUid) === String(seller.uid)) ||
+     (a.sellerUsername && seller.username && a.sellerUsername.toLowerCase() === seller.username.toLowerCase())) &&
+    a.status === 'ACTIVE'
+  ); 
+  
   const cats = shop.customCategories || []; 
   const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); 
   const c = byId('shop-showcase-content'); 
   if (!c) return; 
   const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; 
-  const shopCombos = combos.filter(x => x.shopUid === shopUserUid || (x.sellerUsername && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())).map(comboToVirtualAd).filter(Boolean); 
+  const shopCombos = combos.filter(x => 
+    (x.shopUid && seller.uid && String(x.shopUid) === String(seller.uid)) ||
+    (x.sellerUsername && seller.username && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())
+  ).map(comboToVirtualAd).filter(Boolean); 
 
   const isShopOwner = !!(currentUser && ((currentUser.uid && seller.uid && currentUser.uid === seller.uid) || (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
 
@@ -2627,7 +2637,6 @@ ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 
   openModal('modal-shop-showcase'); 
   setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); 
 }
-
 function initShowcaseShopMap(lat, lng, storeName) { 
   const el = byId('showcase-shop-map'); 
   if (!el || typeof L === 'undefined') return; 
@@ -2666,13 +2675,22 @@ async function upgradeShopLimitNow() {
 function openMyShopModal() { 
   if (!currentUser || !currentUser.shop) return; 
   const shop = currentUser.shop; 
-  const shopAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()); 
+  
+  // Универсальный подсчет объявлений владельца: по UID и по username
+  const shopAds = ads.filter(a => 
+    (a.sellerUid && currentUser.uid && String(a.sellerUid) === String(currentUser.uid)) ||
+    (a.sellerUsername && currentUser.username && a.sellerUsername.toLowerCase() === currentUser.username.toLowerCase())
+  );
+  
   const content = byId('my-shop-content'); 
   if (!content) return; 
   const isVerified = currentUser.verifiedShop || shop.isVerified; 
   const cats = shop.customCategories || []; 
   const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; 
-  const myCombos = combos.filter(x => x.sellerUsername && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase()); 
+  const myCombos = combos.filter(x => 
+    (x.shopUid && currentUser.uid && String(x.shopUid) === String(currentUser.uid)) ||
+    (x.sellerUsername && currentUser.username && x.sellerUsername.toLowerCase() === currentUser.username.toLowerCase())
+  ); 
   
   content.innerHTML = `<div class="space-y-4">
 <div class="flex items-center justify-between border-b b-ig pb-3">
@@ -2697,7 +2715,8 @@ ${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex item
 </div>` : ''}
 ${(() => {
   const max = shop.maxAds || 50;
-  const cur = shopAds.length;
+  const activeOnly = shopAds.filter(a => a.status === 'ACTIVE').length;
+  const cur = activeOnly;
   const percent = Math.min(100, Math.round((cur / max) * 100));
   const left = Math.max(0, max - cur);
   const barColor = percent >= 90 ? '#ef4444' : (percent >= 75 ? '#f59e0b' : '#9333ea');
@@ -2734,7 +2753,6 @@ ${(() => {
 </div>`; 
   openModal('modal-my-shop'); 
 }
-
 async function addShopCustomCategory() {
   if (!currentUser || !currentUser.shop) return;
   const input = byId('new-shop-cat-input');
