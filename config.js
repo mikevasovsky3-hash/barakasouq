@@ -5,7 +5,7 @@ const SUPABASE_URL = "https://wykjwznojmzlbrujikft.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5a2p3em5vam16bGJydWppa2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczODUwNTksImV4cCI6MjEwMjk2MTA1OX0.5wfUCVKV9yQan1nz2BLLLzzzy9JrBBovzVeEePg09x4";
 
 const _savedLayout = localStorage.getItem('bs_feed_layout') || 'instagram';
-let selectedCategory = 'all', currentPage = 1, itemsPerPage = _savedLayout === 'list' ? 10 : (_savedLayout === 'grid' ? 12 : 4), favorites = [];
+let selectedCategory = 'all', currentPage = 1, itemsPerPage = _savedLayout === 'list' ? 10 : (_savedLayout === 'grid' ? 12 : 12), favorites = [];
 let adminAdsTab = 'active', LAST_NAV = 'home', searchQuery = '';
 let currentSortMode = localStorage.getItem('bs_sort_mode') || 'newest';
 let createMap = null, createMarker = null, detailMap = null, shopCreateMap = null, shopCreateMarker = null, showcaseMap = null;
