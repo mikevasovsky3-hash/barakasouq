@@ -686,13 +686,10 @@ async function handleCreateAdSubmit(e) {
       showToast(`Лимит объявлений магазина (${shopLimit} шт.) исчерпан. Расширьте тариф в настройках магазина!`, 'warning');
       return;
     }
-    // Магазин в пределах лимита: плата за публикацию не взимается
   } else {
-    // Обычный пользователь без магазина: списание 1 AC (из стартовых 10 AC)
     const adPrice = AVITOCASH_PRICES.adPrice || 1;
     const charged = await _0xSCCharge(postingUser.uid || postingUser.username, adPrice, 'Публикация объявления');
     if (!charged) {
-      // Недостаточно AC на балансе
       return;
     }
   }
@@ -907,7 +904,6 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   const ad = ads.find(a => a.id === adId);
   if (!ad || !currentUser) return;
 
-  // 1. Мгновенно меняем статус локально
   ad.status = newStatus;
   saveCachedAds();
   closeModal('modal-ad-detail');
@@ -916,7 +912,6 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
   showToast(successMsg, 'success');
 
-  // 2. Фоновая синхронизация с Supabase без блокировок
   if (supabaseClient) {
     supabaseClient.rpc('secure_manage_ad', {
       p_ad_id: adId,
@@ -936,19 +931,16 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
 function deleteAdWithConfirm(adId) {
   if (!currentUser) return;
   showConfirmModal('Удаление объявления', 'Удалить объявление навсегда?', () => {
-    // 1. Помечаем в черном списке и удаляем из локального массива
     markAdDeletedLocally(adId);
     ads = ads.filter(a => a.id !== adId);
     saveCachedAds();
 
-    // 2. Мгновенно обновляем экран
     closeModal('modal-ad-detail');
     renderAds();
     renderCategoryPills();
     if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
     showToast('Объявление удалено', 'success');
 
-    // 3. Отправляем в Supabase в фоне без прерывания программы
     if (supabaseClient) {
       supabaseClient.rpc('secure_manage_ad', {
         p_ad_id: adId,
@@ -1163,7 +1155,6 @@ async function handleAuthSubmit(e) {
     showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
     btn.disabled = false; btn.innerText = originalText;
   } else {
-    // Проверка на архивный аккаунт перед входом
     const isArchivedLocally = archivedUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
     if (isArchivedLocally) {
       showToast('Этот аккаунт перенесен в архив администратором. Доступ заблокирован.', 'error');
@@ -1244,3 +1235,124 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
   requestPushPermission();
 });
+
+// 1. Расчет расстояния между точками (для фильтра «Рядом»)
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Радиус Земли в км
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// 2. Навигация по фотографиям прямо в ленте карточки (Instagram-стиль)
+function cardNav(event, adId, dir) {
+  if (event) event.stopPropagation();
+  const ad = ads.find(a => a.id === adId) || combos.find(c => c.id === adId);
+  if (!ad) return;
+  const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
+  if (imgs.length <= 1) return;
+  
+  if (cardPhotoIndex[adId] === undefined) cardPhotoIndex[adId] = 0;
+  cardPhotoIndex[adId] = (cardPhotoIndex[adId] + dir + imgs.length) % imgs.length;
+  
+  const imgEl = byId(`cimg-${adId}`);
+  const dotsEl = byId(`cdot-${adId}`);
+  const bgEl = byId(`cbg-${adId}`);
+  
+  const idx = cardPhotoIndex[adId];
+  if (imgEl) imgEl.src = imgs[idx];
+  if (bgEl) bgEl.style.backgroundImage = `url('${imgs[idx]}')`;
+  if (dotsEl) {
+    dotsEl.innerHTML = imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === idx ? 'bg-white' : 'bg-white/40'}"></span>`).join('');
+  }
+}
+
+// 3. Смена статуса продавцом: «Продано»
+function markAdSold(adId) {
+  setAdStatusSecure(adId, 'SOLD', 'Объявление отмечено как проданное');
+}
+
+// 4. Смена статуса продавцом: «Передумал»
+function markAdWithdrawn(adId) {
+  setAdStatusSecure(adId, 'WITHDRAWN', 'Статус изменен: передумал продавать');
+}
+
+// 5. Архивация объявления с подтверждением
+function archiveAdWithConfirm(adId) {
+  showConfirmModal('Архивация', 'Перенести объявление в архив?', () => {
+    setAdStatusSecure(adId, 'ARCHIVED', 'Объявление перенесено в архив');
+  });
+}
+
+// 6. Восстановление объявления из архива
+function restoreAd(adId) {
+  setAdStatusSecure(adId, 'ACTIVE', 'Объявление успешно восстановлено');
+}
+
+// 7. Рабочая функция активации подарочных кодов
+async function redeemGiftCode() {
+  if (!currentUser) {
+    openAuthModal();
+    showToast('Войдите в аккаунт для активации кода', 'warning');
+    return;
+  }
+  if (currentUser.frozen) {
+    showToast('Аккаунт заморожен администратором', 'error');
+    return;
+  }
+
+  const inputEl = byId('redeem-gift-code');
+  const code = inputEl ? inputEl.value.trim().toUpperCase() : '';
+  if (!code) {
+    showToast('Введите подарочный код', 'warning');
+    return;
+  }
+
+  showToast('Проверка подарочного кода...', 'info');
+
+  try {
+    if (!supabaseClient) {
+      showToast('Нет соединения с базой данных', 'error');
+      return;
+    }
+
+    const { data: res, error } = await supabaseClient.rpc('redeem_gift_code', {
+      p_code: code,
+      p_user_identifier: currentUser.uid || currentUser.username
+    });
+
+    if (error) throw error;
+    if (!res || !res.success) {
+      throw new Error(res?.error || 'Неверный или уже использованный код');
+    }
+
+    currentUser.avitocashBalance = res.new_balance;
+    currentUser.avitocash_balance = res.new_balance;
+    saveUserSession(currentUser, true);
+
+    closeModal('modal-redeem-gift');
+    if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
+    
+    showToast(`Успешно! На ваш баланс зачислено +${Number(res.amount || 0).toFixed(2)} AC`, 'success');
+  } catch (err) {
+    console.error('Redeem gift error:', err);
+    showToast(err.message || 'Ошибка при активации кода', 'error');
+  }
+}
+
+// 8. Заглушки для меню сортировки/регионов/радиуса (чтобы не было ошибок клика)
+function toggleRegionMenu() {}
+function closeRegionMenu() {}
+function updateRegionLabel() {}
+function openRadiusMenu() {}
+function closeRadiusMenu() {}
+function setRadiusFilter() {}
+function toggleSortMenu() {}
+function closeSortMenu() {}
+function applySort() {}

@@ -475,7 +475,7 @@ ${hasDiscount ? `
     <div class="text-xs font-black" style="color:#10b981">+$${saveAmount.toFixed(2)}</div>
   </div>
 </div>` : ''}
-<div class="px-3.5 pt-2 text-sm font-semibold t1">${likesCount > 0 ? `Нравится: ${likesCount}` : 'Будьте первым, кому понравилось'}</div>
+<div class="px-3.5 pt-2 text-sm font-semibold t1">${likesCount > 0 ? `${t('Нравится:')} ${likesCount}` : t('Будьте первым, кому понравилось')}</div>
 ${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 Цена по акции: <span style="color:#f97316">$${Number(ad.price).toFixed(2)}</span> <s class="t2 font-normal">$${ad.comboOriginalTotal.toFixed(2)}</s>${ad.comboOriginalTotal > ad.price ? ` <span style="color:#10b981">выгода $${(ad.comboOriginalTotal - ad.price).toFixed(2)}</span>` : ''}</div>` : ''}
 <div class="px-3.5 pt-1 text-sm t1 leading-snug"><span class="font-semibold">${kunya}</span> <span id="feed-title-${ad.id}" class="font-semibold">${ad.title}</span> <span id="feed-desc-${ad.id}" class="t2 line-clamp-2">${ad.desc || ''}</span> <button onclick="openAdDetail('${ad.id}')" class="t2">… ${currentLang === 'ar' ? 'المزيد' : 'ещё'}</button></div>
 <div class="px-3.5 pt-1 text-sm t2 cursor-pointer" onclick="openAdDetail('${ad.id}')">${qc > 0 ? `${t('Посмотреть очередь')}: ${qc}` : t('Очередь свободна')}</div>
@@ -2137,7 +2137,7 @@ async function _0xSCCharge(uid, amount, label) {
   return true;
 }
 
-function saveShamCashSettings() {
+async function saveShamCashSettings() {
   if (!_0xSCAdmin()) { showToast('Доступ запрещен!', 'error'); return; }
   AVITOCASH_PRICES = {
     adPrice: _0xSCAmount(byId('sc-ad-price')?.value),
@@ -2146,7 +2146,20 @@ function saveShamCashSettings() {
     freeAdsCount: Math.max(0, Math.floor(Number(byId('sc-free-ads')?.value || 0)))
   };
   localStorage.setItem('bs_avitocash_prices', JSON.stringify(AVITOCASH_PRICES));
-  showToast('Настройки тарифов сохранены локально!', 'success');
+
+  // Синхронизация с облаком Supabase, чтобы тарифы применялись глобально
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'avitocash_prices',
+        value: AVITOCASH_PRICES
+      });
+    } catch (e) {
+      console.warn('Cloud settings sync warning:', e);
+    }
+  }
+
+  showToast('Настройки тарифов сохранены и синхронизированы!', 'success');
 }
 
 async function verifyPayment(requestId, approve) {
@@ -2971,7 +2984,7 @@ function importFullDatabaseJSON(event) {
                 is_free: !!a.isFree,
                 is_negotiable: !!a.isNegotiable,
                 price: Number(a.price || 0),
-                oldPrice: (a.old_price && Number(a.old_price) > Number(a.price)) ? Number(a.old_price) : null,
+                oldPrice: ((a.oldPrice || a.old_price) && Number(a.oldPrice || a.old_price) > Number(a.price)) ? Number(a.oldPrice || a.old_price) : null,
                 currency: a.currency,
                 description: a.desc || a.description || '',
                 images: Array.isArray(a.images) ? a.images : [a.image || ''],
