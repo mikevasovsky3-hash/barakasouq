@@ -84,6 +84,14 @@ function restoreUserSession() {
     const s = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user'); 
     if (s) { 
       const p = JSON.parse(s); 
+      const isArchived = archivedUsers.some(u => (u.uid && p.uid && u.uid === p.uid) || (u.username && p.username && u.username.toLowerCase() === p.username.toLowerCase()));
+      if (isArchived) {
+        currentUser = null;
+        localStorage.removeItem('bs_current_user');
+        sessionStorage.removeItem('bs_current_user');
+        updateAuthUI();
+        return;
+      }
       currentUser = users.find(u => u.username && p.username && u.username.toLowerCase() === p.username.toLowerCase()) || p; 
     } 
   } catch (e) {} 
@@ -1081,7 +1089,7 @@ async function handleAuthSubmit(e) {
     const whatsappRaw = byId('auth-whatsapp').value.trim();
     const avatar = byId('auth-avatar-data')?.value || null;
 
-    if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+    if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase()) || archivedUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
       showToast('Логин уже занят!', 'error');
       btn.disabled = false; btn.innerText = originalText;
       return;
@@ -1095,7 +1103,7 @@ async function handleAuthSubmit(e) {
     }
     const whatsapp = whatsappCheck.number;
 
-    const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
+    const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,'')) || archivedUsers.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
     if (waExists) {
       showToast('Этот номер WhatsApp уже зарегистрирован!', 'error');
       btn.disabled = false; btn.innerText = originalText;
@@ -1132,6 +1140,14 @@ async function handleAuthSubmit(e) {
     showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
     btn.disabled = false; btn.innerText = originalText;
   } else {
+    // Проверка на архивный аккаунт перед входом
+    const isArchivedLocally = archivedUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+    if (isArchivedLocally) {
+      showToast('Этот аккаунт перенесен в архив администратором. Доступ заблокирован.', 'error');
+      btn.disabled = false; btn.innerText = originalText;
+      return;
+    }
+
     if (!supabaseClient) {
       showToast('Нет соединения с базой данных', 'error');
       btn.disabled = false; btn.innerText = originalText;
@@ -1147,6 +1163,12 @@ async function handleAuthSubmit(e) {
 
       if (res && res.success && res.user) {
         const foundUser = res.user;
+        if (foundUser.is_archived || foundUser.isArchived) {
+          showToast('Этот аккаунт заблокирован и находится в архиве.', 'error');
+          btn.disabled = false; btn.innerText = originalText;
+          return;
+        }
+
         const idx = users.findIndex(u => u.uid === foundUser.uid);
         if (idx !== -1) users[idx] = foundUser;
         else users.push(foundUser);
