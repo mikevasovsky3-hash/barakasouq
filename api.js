@@ -16,14 +16,18 @@ function saveBackupsMeta() {
 function saveCachedAds() {
   try {
     const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-    const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
+    // Сохраняем в локальный кэш только последние 35 объявлений для мгновенного старта приложения
+    const cleanAds = ads.filter(a => !deletedIds.includes(a.id)).slice(0, 35);
     localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
   } catch (e) {
-    console.warn('LocalStorage quota exceeded. Clearing cache...');
+    console.warn('LocalStorage quota exceeded. Trimming cache...');
     try {
-      localStorage.removeItem('bs_cached_ads');
-      showToast('Память браузера переполнена, кеш очищен', 'warning');
-    } catch(err) {}
+      const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+      const minimalAds = ads.filter(a => !deletedIds.includes(a.id)).slice(0, 15);
+      localStorage.setItem('bs_cached_ads', JSON.stringify(minimalAds));
+    } catch(err) {
+      try { localStorage.removeItem('bs_cached_ads'); } catch(e2) {}
+    }
   }
 }
 
@@ -207,20 +211,19 @@ async function saveAdToSupabase(ad) {
 async function _0xSCTransaction(uid, amount, direction) {
   if (!supabaseClient || !uid) throw new Error('Нет соединения с БД');
   const value = _0xSCAmount(amount); 
-  if (!value) throw new Error('Некорректная сумма');
+  if (!value || value <= 0) throw new Error('Некорректная сумма');
 
-  const { data: user, error: fetchErr } = await supabaseClient.from('users').select('avitocash_balance').eq('uid', uid).single();
-  if (fetchErr || !user) throw new Error('Пользователь не найден');
+  const { data: res, error } = await supabaseClient.rpc('charge_avitocash', {
+    p_user_identifier: uid,
+    p_amount: value,
+    p_action: direction === 'deduct' ? 'DEDUCT' : 'ADD',
+    p_reason: direction === 'deduct' ? 'Списание средств' : 'Начисление баланса'
+  });
 
-  let current = Number(user.avitocash_balance || 0);
-  if (direction === 'deduct' && current < value) throw new Error('Недостаточно AvitoCash');
+  if (error) throw error;
+  if (!res || !res.success) throw new Error(res?.error || 'Сбой биллинговой операции');
 
-  let newBalance = Math.round((direction === 'deduct' ? current - value : current + value) * 100) / 100;
-
-  const { error: updateErr } = await supabaseClient.from('users').update({ avitocash_balance: newBalance }).eq('uid', uid);
-  if (updateErr) throw new Error('Ошибка обновления баланса');
-
-  return newBalance;
+  return Number(res.new_balance || 0);
 }
 
 async function deductBalance(uid, amount) {
@@ -240,12 +243,12 @@ async function initSupabaseSync() {
   const st = byId('cloud-sync-status');
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
-  try {
+try {
     const [usersRes, adsRes] = await Promise.all([
       supabaseClient.from('users').select('*'),
-      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(60)
+      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(1000)
     ]);
-
+	
     const combosPromise = supabaseClient.from('combos').select('*');
     const catsPromise = supabaseClient.from('categories').select('*');
     const reportsPromise = (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) 

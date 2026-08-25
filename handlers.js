@@ -290,26 +290,47 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
   if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; }
   const IMGBB_KEY = '77bb343baa9af19a82ccde09deb73a05';
   showToast(`Загрузка ${Math.min(files.length, slots)} фото...`, 'info');
+
   for (const f of files.slice(0, slots)) {
     try {
       const compressedFile = await compressSingleImageFile(f, 1280, 1280, 0.75);
-      const formData = new FormData();
-      formData.append("image", compressedFile);
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      if (data.success) {
-        const directImageUrl = data.data.display_url || (data.data.image && data.data.image.url) || data.data.url;
+      let directImageUrl = null;
+
+      // Контур 1: Быстрая загрузка через ImgBB
+      try {
+        const formData = new FormData();
+        formData.append("image", compressedFile);
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        if (data && data.success) {
+          directImageUrl = data.data.display_url || (data.data.image && data.data.image.url) || data.data.url;
+        }
+      } catch (imgbbErr) {
+        console.warn('ImgBB fallback triggering...', imgbbErr);
+      }
+
+      // Контур 2: Резервная загрузка в Supabase Storage (если ImgBB недоступен)
+      if (!directImageUrl && supabaseClient) {
+        const filePath = `public/${compressedFile.name}`;
+        const { error: sbErr } = await supabaseClient.storage.from('listings').upload(filePath, compressedFile, { upsert: false });
+        if (!sbErr) {
+          const { data: pubData } = supabaseClient.storage.from('listings').getPublicUrl(filePath);
+          directImageUrl = pubData?.publicUrl;
+        }
+      }
+
+      if (directImageUrl) {
         arr.push(directImageUrl);
         renderPhotoThumbnailsGrid(mode);
       } else {
-        throw new Error('ImgBB error');
+        throw new Error('Все шлюзы загрузки фото недоступны');
       }
     } catch (err) {
-      console.error(err);
-      showToast('Ошибка загрузки фото. Проверьте интернет.', 'error');
+      console.error('Upload critical error:', err);
+      showToast('Ошибка загрузки фото. Проверьте соединение с сетью.', 'error');
       e.target.value = '';
       return;
     }
@@ -606,23 +627,31 @@ function initCreateMap() {
   const curLat = parseFloat(byId('ad-lat')?.value || 33.5138);
   const curLng = parseFloat(byId('ad-lng')?.value || 36.2765);
 
-  if (!createMap) { 
-    createMap = L.map('create-map').setView([curLat, curLng], 12); 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); 
-    createMarker = L.marker([curLat, curLng], { draggable: true }).addTo(createMap); 
-    createMarker.on('dragend', e => { 
-      const ll = e.target.getLatLng(); 
-      byId('ad-lat').value = ll.lat.toFixed(6); 
-      byId('ad-lng').value = ll.lng.toFixed(6); 
-    }); 
-    createMap.on('click', e => { 
-      createMarker.setLatLng(e.latlng); 
-      byId('ad-lat').value = e.latlng.lat.toFixed(6); 
-      byId('ad-lng').value = e.latlng.lng.toFixed(6); 
-    }); 
-  } else { 
-    createMap.invalidateSize(); 
-  } 
+  if (createMap) {
+    createMap.remove();
+    createMap = null;
+    createMarker = null;
+  }
+
+  createMap = L.map('create-map').setView([curLat, curLng], 12); 
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(createMap); 
+  createMarker = L.marker([curLat, curLng], { draggable: true }).addTo(createMap); 
+  
+  createMarker.on('dragend', e => { 
+    const ll = e.target.getLatLng(); 
+    byId('ad-lat').value = ll.lat.toFixed(6); 
+    byId('ad-lng').value = ll.lng.toFixed(6); 
+  }); 
+  
+  createMap.on('click', e => { 
+    createMarker.setLatLng(e.latlng); 
+    byId('ad-lat').value = e.latlng.lat.toFixed(6); 
+    byId('ad-lng').value = e.latlng.lng.toFixed(6); 
+  });
+
+  setTimeout(() => {
+    if (createMap) createMap.invalidateSize();
+  }, 100);
 }
 
 function handleRegionMapUpdate(code) { 
@@ -1016,45 +1045,76 @@ function toggleFavorite(adId, e) {
   renderAds(); 
 }
 
-function joinQueue(adId) { 
+async function joinQueue(adId) { 
   if (!currentUser) { openAuthModal(); return; } 
   const ad = ads.find(a => a.id === adId); 
   if (!ad) return; 
   if (!ad.queue) ad.queue = []; 
   if (ad.queue.some(q => q.username === currentUser.username)) return; 
-  ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); 
+
+  const queueItem = { 
+    username: currentUser.username, 
+    kunya: currentUser.kunya || currentUser.username, 
+    whatsapp: currentUser.whatsapp || '', 
+    timestamp: Date.now() 
+  }; 
+
+  ad.queue.push(queueItem); 
   saveCachedAds(); 
-  saveAdToSupabase(ad); 
   openAdDetail(adId, false); 
   showToast('Вы успешно заняли очередь!', 'success'); 
+
+  if (supabaseClient) {
+    try {
+      const { data: fresh } = await supabaseClient.from('ads').select('queue').eq('id', adId).single();
+      let latestQueue = Array.isArray(fresh?.queue) ? fresh.queue : [];
+      if (!latestQueue.some(q => q.username === currentUser.username)) {
+        latestQueue.push(queueItem);
+        await supabaseClient.from('ads').update({ queue: latestQueue }).eq('id', adId);
+        ad.queue = latestQueue;
+        saveCachedAds();
+      }
+    } catch (err) {
+      console.warn('Queue join sync warning:', err);
+    }
+  }
 }
 
-function leaveQueue(adId) { 
+async function leaveQueue(adId) { 
   if (!currentUser) return; 
   const ad = ads.find(a => a.id === adId); 
-  if (!ad || !ad.queue) return; 
+  if (!ad) return; 
+  if (!ad.queue) ad.queue = []; 
   ad.queue = ad.queue.filter(q => q.username !== currentUser.username); 
   saveCachedAds(); 
-  saveAdToSupabase(ad); 
   openAdDetail(adId, false); 
   showToast('Вы вышли из очереди', 'info'); 
+
+  if (supabaseClient) {
+    try {
+      const { data: fresh } = await supabaseClient.from('ads').select('queue').eq('id', adId).single();
+      let latestQueue = Array.isArray(fresh?.queue) ? fresh.queue : [];
+      latestQueue = latestQueue.filter(q => q.username !== currentUser.username);
+      await supabaseClient.from('ads').update({ queue: latestQueue }).eq('id', adId);
+      ad.queue = latestQueue;
+      saveCachedAds();
+    } catch (err) {
+      console.warn('Queue leave sync warning:', err);
+    }
+  }
 }
 
-function queueToggleCard(adId) { 
+async function queueToggleCard(adId) { 
   if (!currentUser) { openAuthModal(); return; } 
   const ad = ads.find(a => a.id === adId); 
   if (!ad) { openAdDetail(adId); return; } 
   if (!ad.queue) ad.queue = []; 
   const idx = ad.queue.findIndex(q => q.username === currentUser.username); 
   if (idx !== -1) { 
-    ad.queue.splice(idx, 1); 
-    showToast('Вы вышли из очереди', 'info'); 
+    await leaveQueue(adId);
   } else { 
-    ad.queue.push({ username: currentUser.username, kunya: currentUser.kunya || currentUser.username, whatsapp: currentUser.whatsapp || '', timestamp: Date.now() }); 
-    showToast('Вы успешно заняли очередь!', 'success'); 
+    await joinQueue(adId);
   } 
-  saveCachedAds(); 
-  saveAdToSupabase(ad); 
   renderAds(); 
 }
 

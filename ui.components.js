@@ -2114,21 +2114,42 @@ async function _0xSCCharge(uid, amount, label) {
     return false;
   }
 
-  const newBal = Math.round((currentBal - price) * 100) / 100;
-  target.avitocashBalance = newBal;
-  target.avitocash_balance = newBal;
-
-  if (currentUser && ((currentUser.uid && currentUser.uid === target.uid) || currentUser.username === target.username)) {
-    currentUser.avitocashBalance = newBal;
-    currentUser.avitocash_balance = newBal;
-    saveUserSession(currentUser, true);
-  }
-
   if (supabaseClient) {
-    if (target.uid) {
-      await supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('uid', target.uid);
-    } else {
-      await supabaseClient.from('users').update({ avitocash_balance: newBal }).eq('username', target.username);
+    try {
+      const { data: res, error } = await supabaseClient.rpc('charge_avitocash', {
+        p_user_identifier: target.uid || target.username,
+        p_amount: price,
+        p_action: 'DEDUCT',
+        p_reason: label || 'Оплата услуги'
+      });
+
+      if (error || !res || !res.success) {
+        showToast(res?.error || 'Ошибка списания средств в базе данных', 'error');
+        return false;
+      }
+
+      const verifiedBal = Number(res.new_balance);
+      target.avitocashBalance = verifiedBal;
+      target.avitocash_balance = verifiedBal;
+
+      if (currentUser && ((currentUser.uid && currentUser.uid === target.uid) || currentUser.username === target.username)) {
+        currentUser.avitocashBalance = verifiedBal;
+        currentUser.avitocash_balance = verifiedBal;
+        saveUserSession(currentUser, true);
+      }
+    } catch (err) {
+      console.error('Charge transaction error:', err);
+      showToast('Ошибка биллинга: соединение отклонено', 'error');
+      return false;
+    }
+  } else {
+    const newBal = Math.round((currentBal - price) * 100) / 100;
+    target.avitocashBalance = newBal;
+    target.avitocash_balance = newBal;
+    if (currentUser) {
+      currentUser.avitocashBalance = newBal;
+      currentUser.avitocash_balance = newBal;
+      saveUserSession(currentUser, true);
     }
   }
 
