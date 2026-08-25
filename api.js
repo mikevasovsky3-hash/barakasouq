@@ -49,30 +49,6 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function compressSingleImageFile(file, maxDim = 1280, quality = 0.82) { 
-  return new Promise((resolve, reject) => { 
-    const r = new FileReader(); 
-    r.onerror = () => reject(new Error('read')); 
-    r.onload = ev => { 
-      const img = new Image(); 
-      img.onerror = () => reject(new Error('img')); 
-      img.onload = () => { 
-        const c = document.createElement('canvas'); 
-        let w = img.width, h = img.height; 
-        if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } } 
-        else { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } } 
-        c.width = w; c.height = h; 
-        c.getContext('2d').drawImage(img, 0, 0, w, h); 
-        let d = c.toDataURL('image/webp', quality); 
-        if (!d.startsWith('data:image/webp')) d = c.toDataURL('image/jpeg', quality); 
-        resolve(d); 
-      }; 
-      img.src = ev.target.result; 
-    }; 
-    r.readAsDataURL(file); 
-  }); 
-}
-
 function processSquareImageCrop(file, size = 300) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -128,6 +104,89 @@ async function pushCategoriesToCloud() {
     await supabaseClient.from('categories').upsert(categories);
   }
 }
+
+// ==========================================
+// БЛОК ОПТИМИЗАЦИИ И ЗАГРУЗКИ ФОТО
+// ==========================================
+
+async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, width ? width : 0, 0, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            return reject(new Error('Canvas toBlob failed'));
+          }
+          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`, {
+            type: 'image/webp'
+          });
+          resolve(compressedFile);
+        }, 'image/webp', quality);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+async function uploadListingImages(filesArray, bucketName = 'listings') {
+  if (!filesArray || filesArray.length === 0) return [];
+  
+  const uploadPromises = Array.from(filesArray).map(async (file) => {
+    // Если передан уже готовый URL (строка), не трогаем его
+    if (typeof file === 'string') return file;
+
+    const compressed = await compressSingleImageFile(file);
+    const filePath = `public/${compressed.name}`;
+
+    const { data, error } = await supabaseClient.storage
+      .from(bucketName)
+      .upload(filePath, compressed, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Ошибка загрузки в Supabase Storage:', error);
+      throw error;
+    }
+
+    const { data: publicUrlData } = supabaseClient.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  });
+
+  return await Promise.all(uploadPromises);
+}
+
+// ==========================================
 
 async function saveAdToSupabase(ad) {
   if (!supabaseClient) return;

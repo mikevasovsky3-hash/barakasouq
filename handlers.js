@@ -81,6 +81,15 @@ window.addEventListener('popstate', function () {
 
 function restoreUserSession() { 
   try { 
+    const favs = localStorage.getItem('bs_favorites');
+    if (favs) {
+      favorites = JSON.parse(favs);
+    }
+  } catch (e) {
+    favorites = [];
+  }
+
+  try { 
     const s = localStorage.getItem('bs_current_user') || sessionStorage.getItem('bs_current_user'); 
     if (s) { 
       const p = JSON.parse(s); 
@@ -154,17 +163,9 @@ function updateNavState() {
   const spLabel = byId('sb-profile')?.querySelector('.nav-label');
   if (spLabel) spLabel.innerText = navTitles.profile;
 
-  const supLbl = byId('sb-support-label');
-  if (supLbl) supLbl.innerText = t('Техподдержка');
-  const donLbl = byId('sb-donate-label');
-  if (donLbl) donLbl.innerText = t('Поддержать проект');
-  const thmLbl = byId('sb-theme-label');
-  if (thmLbl) thmLbl.innerText = t('Сменить тему');
-  const devLbl = byId('ft-dev-label');
-  if (devLbl) devLbl.innerText = t('Разработчик:');
-  const cpyLbl = byId('ft-copy-label');
-  if (cpyLbl) cpyLbl.innerText = t('Авито Шам © 2026');
-
+if (typeof translateStaticUI === 'function') {
+    translateStaticUI(currentLang);
+  }
   const devSpan = byId('ft-dev-label')?.nextElementSibling?.querySelector('span');
   if (devSpan) {
     if (currentLang === 'ar') {
@@ -291,17 +292,15 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
   showToast(`Загрузка ${Math.min(files.length, slots)} фото...`, 'info');
   for (const f of files.slice(0, slots)) {
     try {
-      const compressedData = await compressSingleImageFile(f, 1600, 0.9);
+      const compressedFile = await compressSingleImageFile(f, 1280, 1280, 0.75);
       const formData = new FormData();
-      const base64Data = compressedData.split(',')[1];
-      formData.append("image", base64Data);
+      formData.append("image", compressedFile);
       const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
         method: "POST",
         body: formData
       });
       const data = await response.json();
       if (data.success) {
-        // Берем прямой URL на исходную картинку (display_url или url)
         const directImageUrl = data.data.display_url || (data.data.image && data.data.image.url) || data.data.url;
         arr.push(directImageUrl);
         renderPhotoThumbnailsGrid(mode);
@@ -657,6 +656,52 @@ function toggleNegotiableField(isNeg) {
   } 
 }
 
+// Вспомогательная функция сжатия изображений
+async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            return reject(new Error('Canvas toBlob failed'));
+          }
+          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`, {
+            type: 'image/jpeg'
+          });
+          resolve(compressedFile);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 async function handleCreateAdSubmit(e) {
   e.preventDefault();
   if (!currentUser) return;
@@ -847,14 +892,16 @@ async function handleEditAdSubmit(e) {
   const oldPriceVal = isDisc ? parseFloat(byId('edit-ad-old-price').value || 0) : null;
 
   const updatedData = {
+    id: adId,
     title: byId('edit-ad-title').value.trim(),
     category: byId('edit-ad-category').value,
+    storeCategory: ad.storeCategory || '',
     region: byId('edit-ad-region').value,
     city: byId('edit-ad-city').value.trim(),
     isWomenOnly: byId('edit-ad-is-women-only').checked,
     isFree: byId('edit-ad-is-free').checked,
     isNegotiable: byId('edit-ad-is-negotiable')?.checked || false,
-    price: byId('edit-ad-is-free').checked || byId('edit-ad-is-negotiable')?.checked ? 0 : parseFloat(byId('edit-ad-price').value || 0),
+    price: (byId('edit-ad-is-free').checked || byId('edit-ad-is-negotiable')?.checked) ? 0 : parseFloat(byId('edit-ad-price').value || 0),
     oldPrice: oldPriceVal,
     currency: byId('edit-ad-currency').value,
     desc: byId('edit-ad-desc').value.trim(),
@@ -863,7 +910,8 @@ async function handleEditAdSubmit(e) {
     sellerUsername: targetUser.username,
     sellerUid: targetUser.uid || '',
     sellerKunya: targetUser.kunya || targetUser.username,
-    sellerWhatsapp: targetUser.whatsapp || ''
+    sellerWhatsapp: targetUser.whatsapp || '',
+    queue: ad.queue || []
   };
 
   checkFavoritesAndQueueAlerts(ad, updatedData);
@@ -872,6 +920,7 @@ async function handleEditAdSubmit(e) {
     const dbPayload = {
       title: updatedData.title,
       category: updatedData.category,
+      store_category: updatedData.storeCategory,
       region: updatedData.region,
       city: updatedData.city,
       is_women_only: updatedData.isWomenOnly,
@@ -1216,9 +1265,23 @@ document.addEventListener('DOMContentLoaded', () => {
   requestPushPermission();
 });
 
+// Безопасная конвертация цены объявления в USD
+function adToUSD(ad) {
+  if (!ad) return 0;
+  const rawPrice = typeof ad.price === 'number' ? ad.price : parseFloat(ad.price);
+  if (isNaN(rawPrice) || rawPrice <= 0) return 0;
+  const curr = (ad.currency || 'USD').toUpperCase();
+  if (curr === 'USD') return rawPrice;
+  const fallbackRates = { USD: 1, SYP: 14000, TRY: 33, SAR: 3.75 };
+  const activeRates = (typeof EXCHANGE_RATES !== 'undefined' && EXCHANGE_RATES) ? EXCHANGE_RATES : fallbackRates;
+  const rate = parseFloat(activeRates[curr] || fallbackRates[curr]);
+  if (!rate || isNaN(rate) || rate <= 0) return rawPrice;
+  return rawPrice / rate;
+}
+
 // 1. Расчет расстояния между точками (для фильтра «Рядом»)
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+	if (!lat1 || !lon1 || !lat2 || !lon2) return null;
   const R = 6371; // Радиус Земли в км
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -1275,6 +1338,78 @@ function restoreAd(adId) {
   setAdStatusSecure(adId, 'ACTIVE', 'Объявление успешно восстановлено');
 }
 
+// Обработчик живого поиска и синхронизации Desktop / Mobile инпутов
+function onSearchInput(el) {
+  const val = (el ? el.value : '').trim();
+  const desktop = byId('search-input-desktop');
+  const mobile = byId('search-input');
+  if (desktop && desktop !== el) desktop.value = el.value;
+  if (mobile && mobile !== el) mobile.value = el.value;
+  searchQuery = val;
+  resetPageAndRender();
+}
+
+// 6.1. Полное удаление объявления (с подтверждением и защитой от возврата)
+function deleteAdWithConfirm(adId) {
+  deleteAdPermanently(adId);
+}
+
+function deleteAdPermanently(adId) {
+	const ad = ads.find(a => a.id === adId);
+  if (!ad) return;
+
+  const isOwner = currentUser && (
+    currentUser.username.toLowerCase() === (ad.sellerUsername || '').toLowerCase() ||
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'ADMIN'
+  );
+
+  if (!isOwner) {
+    showToast('У вас нет прав для удаления этого объявления', 'error');
+    return;
+  }
+
+  showConfirmModal('Удаление объявления', 'Вы уверены, что хотите навсегда удалить это объявление? Восстановить его будет невозможно.', async () => {
+    // 1. Фиксируем удаление в локальном черном списке (чтобы не вернулось из кэша)
+    markAdDeletedLocally(adId);
+
+    // 2. Удаляем из памяти
+    ads = ads.filter(a => a.id !== adId);
+    favorites = favorites.filter(id => id !== adId);
+    try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (e) {}
+    saveCachedAds();
+
+    // 3. Закрываем модалки и обновляем UI
+    closeModal('modal-ad-detail');
+    closeModal('modal-edit-ad');
+    closeModal('modal-my-shop');
+    renderCategoryPills();
+    renderAds();
+    if (typeof SYSTEM_CONFIG !== 'undefined' && SYSTEM_CONFIG.adminTab === 'ads') {
+      renderAdminTabContent();
+    }
+
+    showToast('Объявление удалено навсегда', 'info');
+
+    // 4. Удаляем из Supabase базы
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('ads').delete().eq('id', adId);
+        
+        if (currentUser) {
+          supabaseClient.rpc('secure_manage_ad', {
+            p_ad_id: adId,
+            p_caller_id: currentUser.uid || currentUser.username,
+            p_action: 'DELETE'
+          }).then().catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Ошибка удаления из Supabase:', err);
+      }
+    }
+  });
+}
+
 // 7. Рабочая функция активации подарочных кодов
 async function redeemGiftCode() {
   if (!currentUser) {
@@ -1326,13 +1461,153 @@ async function redeemGiftCode() {
   }
 }
 
-// 8. Заглушки для меню сортировки/регионов/радиуса (чтобы не было ошибок клика)
-function toggleRegionMenu() {}
-function closeRegionMenu() {}
-function updateRegionLabel() {}
-function openRadiusMenu() {}
-function closeRadiusMenu() {}
-function setRadiusFilter() {}
-function toggleSortMenu() {}
-function closeSortMenu() {}
-function applySort() {}
+// 8. Рабочие контроллеры меню сортировки, региона и радиуса
+function toggleRegionMenu() {
+  const m = byId('region-menu-overlay');
+  if (m) {
+    const list = byId('region-list-container');
+    if (list && list.children.length === 0) {
+      const currentVal = byId('region-filter')?.value || 'ALL';
+      const regions = [
+        { code: 'ALL', name: 'Все регионы (Сирия)' },
+        { code: 'DAM', name: 'Дамаск' },
+        { code: 'RIF_DAM', name: 'Риф-Дамаск' },
+        { code: 'ALEP', name: 'Алеппо' },
+        { code: 'IDL', name: 'Идлиб' },
+        { code: 'HOMS', name: 'Хомс' },
+        { code: 'HAMA', name: 'Хама' },
+        { code: 'LAT', name: 'Латакия' },
+        { code: 'TAR', name: 'Тартус' },
+        { code: 'RAQ', name: 'Ракка' },
+        { code: 'DEIR', name: 'Дейр-эз-Зор' },
+        { code: 'HAS', name: 'Хасеке' },
+        { code: 'DAR', name: 'Дараа' },
+        { code: 'SUW', name: 'Эс-Сувейда' },
+        { code: 'QUN', name: 'Эль-Кунейтра' }
+      ];
+      list.innerHTML = regions.map(r => `
+        <button onclick="selectRegion('${r.code}')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between items-center">
+          <span>${t(r.name)}</span>
+          ${currentVal === r.code ? '<i class="fa-solid fa-check text-blue-500"></i>' : ''}
+        </button>
+      `).join('');
+    }
+    m.classList.remove('hidden');
+  }
+}
+
+function closeRegionMenu() {
+  byId('region-menu-overlay')?.classList.add('hidden');
+}
+
+function selectRegion(code) {
+  const sel = byId('region-filter');
+  if (sel) {
+    sel.value = code;
+    resetPageAndRender();
+    updateRegionLabel();
+  }
+  closeRegionMenu();
+}
+
+function updateRegionLabel() {
+  const lbl = byId('current-region-label');
+  const sel = byId('region-filter');
+  if (lbl && sel) {
+    const val = sel.value;
+    const raw = val === 'ALL' ? 'Все регионы' : (REGION_NAMES[val] || 'Все регионы');
+    lbl.innerText = t(raw);
+  }
+}
+
+function openRadiusMenu() {
+  const m = byId('radius-menu-overlay');
+  if (m) {
+    [5, 15, 30, 50].forEach(km => {
+      const chk = byId(`radius-check-${km}`);
+      if (chk) chk.classList.toggle('hidden', activeRadiusKm !== km);
+    });
+    const offChk = byId('radius-btn-off');
+    if (offChk) {
+      offChk.style.opacity = activeRadiusKm === 0 ? '1' : '0.7';
+      const offCheckIcon = byId('radius-check-off');
+      if (offCheckIcon) offCheckIcon.classList.toggle('hidden', activeRadiusKm !== 0);
+    }
+    m.classList.remove('hidden');
+  }
+}
+
+function closeRadiusMenu() {
+  byId('radius-menu-overlay')?.classList.add('hidden');
+}
+
+function applyRadiusState(km) {
+  activeRadiusKm = km;
+  const lbl = byId('near-me-label');
+  const btn = byId('btn-near-me') || lbl?.closest('button');
+  if (lbl) lbl.innerText = `${km} ${t('км')}`;
+  if (btn) btn.classList.add('text-blue-500', 'border-blue-500');
+  closeRadiusMenu();
+  resetPageAndRender();
+  showToast(`${t('Поиск в радиусе')} ${km} ${t('км активирован')}`, 'success');
+}
+
+function setRadiusFilter(km) {
+  if (km > 0) {
+    // Если координаты уже определены в текущей сессии — переключаем радиус мгновенно
+    if (userCurrentCoords && userCurrentCoords.lat && userCurrentCoords.lng) {
+      applyRadiusState(km);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      showToast('Геолокация не поддерживается вашим браузером', 'error');
+      closeRadiusMenu();
+      return;
+    }
+
+    showToast('Определение вашего местоположения...', 'info');
+    navigator.geolocation.getCurrentPosition(pos => {
+      userCurrentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      applyRadiusState(km);
+    }, err => {
+      console.warn(err);
+      showToast('Не удалось получить координаты GPS. Проверьте разрешения.', 'error');
+      closeRadiusMenu();
+    }, { timeout: 10000, enableHighAccuracy: true });
+  } else {
+    activeRadiusKm = 0;
+    const lbl = byId('near-me-label');
+    const btn = byId('btn-near-me') || lbl?.closest('button');
+    if (lbl) lbl.innerText = t('Рядом');
+    if (btn) btn.classList.remove('text-blue-500', 'border-blue-500');
+    closeRadiusMenu();
+    resetPageAndRender();
+    showToast('Поиск рядом отключен', 'info');
+  }
+}
+
+function toggleSortMenu() {
+  const m = byId('sort-menu-overlay');
+  if (m) {
+    ['newest', 'cheapest', 'expensive', 'popular'].forEach(mode => {
+      const chk = byId(`sort-check-${mode}`);
+      if (chk) chk.classList.toggle('hidden', currentSortMode !== mode);
+    });
+    m.classList.remove('hidden');
+  }
+}
+
+function closeSortMenu() {
+  byId('sort-menu-overlay')?.classList.add('hidden');
+}
+
+function applySort(mode) {
+  currentSortMode = mode;
+  localStorage.setItem('bs_sort_mode', mode);
+  const sortLabels = { newest: 'Новые', cheapest: 'Дешевые', expensive: 'Дорогие', popular: 'Популярные' };
+  const lbl = byId('current-sort-label');
+  if (lbl) lbl.innerText = t(sortLabels[mode] || 'Новые');
+  closeSortMenu();
+  resetPageAndRender();
+}

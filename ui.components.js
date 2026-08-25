@@ -1987,11 +1987,6 @@ function generateGiftCode() {
   showToast('Подарочный код создан!', 'success');
 }
 
-function redeemGiftCode() {
-  showToast('Активация кодов через сервер временно на техобслуживании', 'info');
-  closeModal('modal-redeem-gift');
-}
-
 function openRedeemGiftModal() {
   byId('redeem-gift-code').value = '';
   openModal('modal-redeem-gift');
