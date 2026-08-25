@@ -456,7 +456,7 @@ function renderAds() {
 </div>
 <button onclick="openAdDetail('${ad.id}')" class="ig-btn-nav t1"><i class="fa-solid fa-ellipsis"></i></button>
 </div>
-<div class="relative bg-black overflow-hidden cursor-pointer" style="aspect-ratio:4/5" onclick="openAdDetail('${ad.id}')">
+<div class="relative bg-black overflow-hidden cursor-pointer select-none" style="aspect-ratio:4/5" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => cardNav(event, '${ad.id}', dir))" onclick="openAdDetail('${ad.id}')">
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
 <img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onload="this.style.opacity='1'" style="opacity:0.85">
 ${ad.isCombo ? `
@@ -1058,10 +1058,10 @@ async function openAdDetail(adId, countView = true) {
   content.innerHTML = `
   <div class="flex flex-col md:flex-row flex-1 min-h-0 w-full h-full overflow-hidden items-stretch">
     <!-- Левая колонка: Фото / Слайдер -->
-    <div class="relative bg-black flex items-center justify-center overflow-hidden w-full md:w-1/2 h-[320px] md:h-auto min-h-[300px] shrink-0">
-      <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
-      <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
-      <span class="absolute top-3 right-3 z-10 bg-black/70 text-white text-xs font-mono font-bold px-2.5 py-1 rounded-lg border border-white/10">${ad.id}</span>
+<div class="relative bg-black flex items-center justify-center overflow-hidden w-full md:w-1/2 h-[320px] md:h-auto min-h-[300px] shrink-0 select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${ad.id}', dir))">
+  <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
+  <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
+  <span class="absolute top-3 right-3 z-10 bg-black/70 text-white text-xs font-mono font-bold px-2.5 py-1 rounded-lg border border-white/10">${ad.id}</span>
       ${imgs.length > 1 ? `
         <button onclick="changeDetailPhoto('${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevL()}</button>
         <button onclick="changeDetailPhoto('${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevR()}</button>

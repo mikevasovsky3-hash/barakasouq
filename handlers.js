@@ -1670,4 +1670,25 @@ function applySort(mode) {
   if (lbl) lbl.innerText = t(sortLabels[mode] || 'Новые');
   closeSortMenu();
   resetPageAndRender();
+}// Обработка горизонтального свайпа фотографий на смартфонах
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchSwipeStart(e) {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}
+
+function handleTouchSwipeEnd(e, callback) {
+  const diffX = e.changedTouches[0].screenX - touchStartX;
+  const diffY = e.changedTouches[0].screenY - touchStartY;
+  
+  // Проверяем, что свайп был горизонтальным и длиннее 40px
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+    if (diffX < 0) {
+      callback(1); // свайп влево -> следующее фото
+    } else {
+      callback(-1); // свайп вправо -> предыдущее фото
+    }
+  }
 }
