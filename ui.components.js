@@ -2628,15 +2628,26 @@ ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 
     </div>
   </div>
   ${isShopOwner ? `
-  <div class="pt-1.5 border-t b-ig flex items-center gap-1">
-    <button onclick="openQuickDiscountModal('${ad.id}')" class="flex-1 py-1 rounded-lg text-[10px] font-bold border transition active:scale-95" style="background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)"><i class="fa-solid fa-tag"></i> Скидка</button>
-    <button onclick="openEditAdModal('${ad.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field"><i class="fa-solid fa-pen"></i></button>
+  <div class="pt-1.5 border-t b-ig grid grid-cols-2 gap-1">
+    <button onclick="openQuickDiscountModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
+      <i class="fa-solid fa-tag"></i> Скидка
+    </button>
+    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо">
+      <i class="fa-solid fa-fire"></i> В комбо
+    </button>
+    <button onclick="startShopAuction('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
+      <i class="fa-solid fa-gavel"></i> Аукцион
+    </button>
+    <button onclick="openEditAdModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="Редактировать">
+      <i class="fa-solid fa-pen"></i> Изменить
+    </button>
   </div>` : ''}
 </div>`).join('')}</div>
 </div>`; 
   openModal('modal-shop-showcase'); 
   setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); 
 }
+
 function initShowcaseShopMap(lat, lng, storeName) { 
   const el = byId('showcase-shop-map'); 
   if (!el || typeof L === 'undefined') return; 
@@ -2672,6 +2683,36 @@ async function upgradeShopLimitNow() {
   );
 }
 
+function startShopAuction(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad) return;
+  const currentPrice = Number(ad.price || 0);
+  const startPriceStr = prompt(`Укажите начальную цену для аукциона товара "${ad.title}" ($):`, currentPrice ? (currentPrice * 0.8).toFixed(2) : '10');
+  if (!startPriceStr) return;
+  const startPrice = parseFloat(startPriceStr);
+  if (isNaN(startPrice) || startPrice <= 0) {
+    showToast('Некорректная начальная цена', 'warning');
+    return;
+  }
+
+  const hoursStr = prompt('Длительность аукциона в часах (например, 24 или 48):', '24');
+  const hours = Math.max(1, parseInt(hoursStr || '24', 10));
+  const endsAt = Date.now() + hours * 60 * 60 * 1000;
+
+  ad.oldPrice = ad.price;
+  ad.price = startPrice;
+  ad.desc = `🔨 АУКЦИОН! Начальная цена: $${startPrice.toFixed(2)}. Окончание: ${new Date(endsAt).toLocaleString()}. Предлагайте вашу ставку в WhatsApp!\n\n` + (ad.desc || '');
+
+  if (supabaseClient) {
+    supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice, description: ad.desc }).eq('id', ad.id).then();
+  }
+  saveCachedAds();
+  renderAds();
+  renderCategoryPills();
+  openMyShopModal();
+  showToast(`Аукцион запущен со стартовой цены $${startPrice.toFixed(2)}!`, 'success');
+}
+
 function openMyShopModal() { 
   if (!currentUser || !currentUser.shop) return; 
   const shop = currentUser.shop; 
@@ -2703,16 +2744,18 @@ function openMyShopModal() {
 <button onclick="openCreateShopModal()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border b-ig t1"><i class="fa-solid fa-gear"></i> Редактировать магазин</button>
 </div>
 </div>
-<div class="grid grid-cols-2 gap-2">
-  <button onclick="openComboBuilder()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Комбо-набор</button>
-  <button onclick="closeModal('modal-my-shop'); openShopShowcase(currentUser.uid);" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm" style="background:linear-gradient(45deg,#dc2626,#ef4444)"><i class="fa-solid fa-tags"></i> Скидки на витрине</button>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+  <button onclick="openComboBuilder()" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Создать комбо</button>
+  <button onclick="closeModal('modal-my-shop'); openShopShowcase(currentUser.uid);" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#dc2626,#ef4444)"><i class="fa-solid fa-tags"></i> Скидки витрины</button>
+  <button onclick="closeModal('modal-my-shop'); openCreateAdModal();" class="col-span-2 sm:col-span-1 w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар</button>
 </div>
-<button type="button" aria-label="Закрыть" onclick="closeModal('modal-my-shop');openCreateAdModal()" class="w-full py-3 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-2" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар в магазин</button>
-<div class="text-[10px] t2 text-center -mt-2">Шаг 1: создайте свои категории ниже. Шаг 2: добавьте товар. Шаг 3: объедините товары в акцию с общей ценой.</div>
+
 ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-fire" style="color:#f97316"></i> Мои акции (${myCombos.length})</h4>
 ${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs truncate">${x.title}</div><div class="text-[10px] t2">${x.items.length} товаров • Цена акции: <b style="color:#f97316">$${Number(x.price).toFixed(2)}</b></div></div><div class="flex gap-1.5 shrink-0"><button onclick="openComboBuilder(null,'${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteComboWithConfirm('${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
 </div>` : ''}
+
 ${(() => {
   const max = shop.maxAds || 50;
   const activeOnly = shopAds.filter(a => a.status === 'ACTIVE').length;
@@ -2737,22 +2780,58 @@ ${(() => {
     </div>
   </div>`;
 })()}
+
 <div class="p-4 rounded-2xl bg-field border b-ig space-y-3">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-list-check" style="color:#9333ea"></i> Личные категории магазина</h4>
 <div class="flex gap-2"><input type="text" id="new-shop-cat-input" placeholder="Например: Запчасти или Чехлы" class="ig-input flex-1 px-3 py-2 text-xs"><button onclick="addShopCustomCategory()" class="px-3 py-2 text-white font-bold text-xs rounded-lg shrink-0" style="background:#9333ea"><i class="fa-solid fa-plus"></i> Добавить</button></div>
 <div class="flex flex-wrap gap-1.5 pt-1">${cats.length === 0 ? '<div class="text-[11px] t2">Собственных категорий пока нет</div>' : cats.map((cat, idx) => `<span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-2 border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.35)"><span>${cat}</span><button onclick="removeShopCustomCategory(${idx})" style="color:#ed4956"><i class="fa-solid fa-xmark"></i></button></span>`).join('')}</div>
 </div>
+
 <div class="p-4 rounded-2xl border space-y-3" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.06)">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Бэкап магазина (JSON)</h4>
 <div class="grid grid-cols-2 gap-2"><button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5" style="background:#9333ea"><i class="fa-solid fa-download"></i> Экспорт</button><label class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> Импорт<input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden"></label></div>
 </div>
+
 <div class="space-y-2 pt-2 border-t b-ig">
 <h4 class="font-bold t1 text-xs">Товары Вашего магазина:</h4>
-<div class="space-y-2 max-h-48 overflow-y-auto pr-1">${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пока нет — нажмите «Добавить товар»</div>' : shopAds.map(a => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between"><div class="flex items-center gap-2 min-w-0"><img src="${a.images ? a.images[0] : a.image}" class="w-8 h-8 rounded-lg object-cover"><span class="font-bold t1 truncate">${a.title}</span>${a.storeCategory ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(147,51,234,.15);color:#c084fc">${a.storeCategory}</span>` : ''}${a.status === 'SOLD' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : (a.status === 'WITHDRAWN' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 border b-ig t2">Передумал</span>' : (a.status === 'ARCHIVED' ? '<span class="text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background:rgba(147,51,234,.15);color:#c084fc">Архив</span>' : ''))}</div><div class="flex items-center gap-1.5 shrink-0"><span class="text-[9px] t2"><i class="fa-solid fa-eye"></i> ${a.views || 0} • <i class="fa-solid fa-heart" style="${(a.likes && a.likes.length) ? 'color:#ed4956' : ''}"></i> ${(a.likes || []).length}</span><button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="background:rgba(245,158,11,.15);color:#f59e0b">Изменить</button></div></div>`).join('')}</div>
+<div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пока нет — нажмите «Добавить товар»</div>' : shopAds.map(a => `
+  <div class="bg-field p-2.5 rounded-xl border b-ig flex flex-col gap-2">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <img src="${a.images ? a.images[0] : a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0">
+        <div class="min-w-0">
+          <div class="font-bold t1 text-xs truncate">${a.title}</div>
+          <div class="text-[10px] font-semibold" style="color:#f59e0b">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        ${a.storeCategory ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(147,51,234,.15);color:#c084fc">${a.storeCategory}</span>` : ''}
+        ${a.status === 'SOLD' ? '<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : ''}
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 pt-1.5 border-t b-ig justify-end flex-wrap">
+      <button onclick="openQuickDiscountModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
+        <i class="fa-solid fa-tag"></i> Скидка
+      </button>
+      <button onclick="openComboBuilder('${currentUser.uid}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо-набор">
+        <i class="fa-solid fa-fire"></i> В комбо
+      </button>
+      <button onclick="startShopAuction('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
+        <i class="fa-solid fa-gavel"></i> Аукцион
+      </button>
+      <button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field" title="Редактировать">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+    </div>
+  </div>
+`).join('')}
+</div>
 </div>
 </div>`; 
   openModal('modal-my-shop'); 
 }
+
 async function addShopCustomCategory() {
   if (!currentUser || !currentUser.shop) return;
   const input = byId('new-shop-cat-input');
