@@ -138,7 +138,7 @@ body.overflow-hidden{
 [dir="rtl"] .search-wrapper input { padding-left: 0.75rem !important; padding-right: 2.25rem !important; }
 [dir="rtl"] #sb-search-ic, [dir="rtl"] #hd-search-ic { left: auto !important; right: 0.75rem !important; }
 [dir="rtl"] .app-back i, [dir="rtl"] .fa-arrow-left, [dir="rtl"] .fa-chevron-left { transform: scaleX(-1); }
-#modal-ad-detail .ig-sheet { display: flex; flex-direction: column; overflow: hidden; width: 100%; max-width: 900px; height: 85vh !important; max-height: 85vh !important; border-radius: 16px; }
+#modal-ad-detail .ig-sheet { display: flex; flex-direction: column; overflow: hidden; width: 100%; max-height: 88vh; }
 #modal-ad-detail #detail-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; width: 100%; overflow: hidden; }
 .goog-te-banner-frame.skiptranslate { display: none !important; }
 body { top: 0px !important; }
@@ -206,8 +206,8 @@ body { top: 0px !important; }
 </header>
 
 <!-- ============ MAIN FEED ============ -->
-<main class="lg:ml-[73px] xl:ml-[244px] pt-[68px] lg:pt-4 pb-1">
-<div class="max-w-[470px] mx-auto sm:px-1 space-y-3">
+<main class="lg:ml-[73px] xl:ml-[244px] pt-[68px] lg:pt-6 pb-6 px-3 sm:px-8">
+<div class="max-w-[1600px] mx-auto space-y-4">
 <div class="ig-card rounded-xl px-2 py-3">
 <div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
 </div>
@@ -329,9 +329,9 @@ body { top: 0px !important; }
 </div>
 
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
-<div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2">
+<div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2 select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, handleFullscreenSwipe)">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
-<img id="fullscreen-viewer-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg">
+<img id="fullscreen-viewer-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Просмотр фотографии" class="max-w-full max-h-[92vh] object-contain rounded-lg pointer-events-none">
 </div>
 
 <!-- ============ RULES MODAL ============ -->
@@ -390,7 +390,7 @@ body { top: 0px !important; }
 
 <!-- ============ CREATE AD MODAL ============ -->
 <div id="modal-create-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
-<div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Подача нового объявления</h3>
@@ -463,7 +463,7 @@ body { top: 0px !important; }
 
 <!-- ============ EDIT AD MODAL ============ -->
 <div id="modal-edit-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
-<div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-edit-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <h3 class="text-sm font-bold t1">Редактирование объявления</h3>
@@ -542,7 +542,7 @@ body { top: 0px !important; }
 
 <!-- ============ AD DETAIL MODAL ============ -->
 <div id="modal-ad-detail" class="fixed inset-0 z-30 lg:z-50 ig-modal-blur hidden flex items-center justify-center p-0 sm:p-4 lg:p-6">
-<div class="ig-sheet w-full max-w-4xl rounded-none sm:rounded-2xl overflow-hidden h-full sm:h-[88vh] max-h-full sm:max-h-[88vh] flex flex-col relative bg-card">
+<div class="ig-sheet w-full max-w-5xl rounded-none sm:rounded-2xl overflow-hidden h-full sm:h-[88vh] max-h-full sm:max-h-[88vh] flex flex-col relative bg-card">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-30 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="detail-content" class="w-full h-full overflow-hidden flex flex-col"></div>
 </div>
@@ -550,7 +550,7 @@ body { top: 0px !important; }
 
 <!-- ============ PROFILE MODAL ============ -->
 <div id="modal-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
-<div class="ig-sheet w-full max-w-md rounded-2xl p-6 relative max-h-[92vh] overflow-y-auto modal-scroll-body">
+<div class="ig-sheet w-full max-w-2xl rounded-2xl p-6 relative max-h-[92vh] overflow-y-auto modal-scroll-body">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
 <div id="profile-content" class="space-y-4"></div>
 </div>

@@ -352,12 +352,12 @@ function renderAds() {
     return;
   }
 
-  const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 
   if (layout === 'grid') {
-    grid.className = 'grid grid-cols-2 gap-2 p-1';
+    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-1';
     grid.innerHTML = pageAds.map(ad => {
-      const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
+		const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
       const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
       const discPercent = hasDisc ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
 
@@ -385,8 +385,8 @@ function renderAds() {
   </div>
 </div>`;
     }).join('');
-  } else if (layout === 'list') {
-    grid.className = 'space-y-2.5';
+ } else if (layout === 'list') {
+    grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3';
     grid.innerHTML = pageAds.map(ad => {
       const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
       const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
@@ -415,10 +415,10 @@ function renderAds() {
   </div>
 </div>`;
     }).join('');
-  } else {
-    grid.className = 'space-y-4';
+} else {
+    grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
     grid.innerHTML = pageAds.map(ad => {
-      cardPhotoIndex[ad.id] = 0;
+		cardPhotoIndex[ad.id] = 0;
       const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
       const kunya = getSellerKunya(ad);
       const avatar = getSellerAvatar(ad);
@@ -1057,18 +1057,18 @@ async function openAdDetail(adId, countView = true) {
 
   content.innerHTML = `
   <div class="flex flex-col md:flex-row flex-1 min-h-0 w-full h-full overflow-hidden items-stretch">
-    <!-- Левая колонка: Фото / Слайдер -->
-<div class="relative bg-black flex items-center justify-center overflow-hidden w-full md:w-1/2 h-[320px] md:h-auto min-h-[300px] shrink-0 select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${ad.id}', dir))">
-  <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
-  <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
-  <span class="absolute top-3 right-3 z-10 bg-black/70 text-white text-xs font-mono font-bold px-2.5 py-1 rounded-lg border border-white/10">${ad.id}</span>
+<!-- Левая колонка: Фото / Слайдер -->
+    <div class="relative bg-black flex items-center justify-center overflow-hidden w-full md:w-1/2 h-[320px] md:h-auto min-h-[300px] shrink-0 select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${ad.id}', dir))">
+      <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
+      <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src, '${ad.id}')">
+      <span class="absolute top-3 right-3 z-10 bg-black/70 text-white text-xs font-mono font-bold px-2.5 py-1 rounded-lg border border-white/10">${ad.id}</span>
       ${imgs.length > 1 ? `
         <button onclick="changeDetailPhoto('${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevL()}</button>
         <button onclick="changeDetailPhoto('${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevR()}</button>
         <div id="detail-photo-counter" class="absolute bottom-3 right-3 z-10 bg-black/70 text-white px-2.5 py-1 rounded-lg text-[11px] font-mono">1 / ${imgs.length}</div>
       ` : ''}
     </div>
-
+	
     <!-- Правая колонка: Детали, Описание, Кнопки -->
     <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto max-h-[88vh] modal-scroll-body bg-card w-full md:w-1/2 flex-1 min-w-0">
       ${(() => {
@@ -1238,7 +1238,29 @@ async function openAdDetail(adId, countView = true) {
   }, 10);
 }
 
-function openFullscreenViewer(src) { const v = byId('modal-image-viewer'), img = byId('fullscreen-viewer-img'); if (v && img) { img.src = src; openModal('modal-image-viewer'); } }
+let currentFullscreenAdId = null;
+
+function openFullscreenViewer(src, adId = null) { 
+  const v = byId('modal-image-viewer'), img = byId('fullscreen-viewer-img'); 
+  if (v && img) { 
+    currentFullscreenAdId = adId;
+    img.src = src; 
+    openModal('modal-image-viewer'); 
+  } 
+}
+
+function handleFullscreenSwipe(dir) {
+  if (!currentFullscreenAdId) return;
+  changeDetailPhoto(currentFullscreenAdId, dir);
+  const ad = getListingById(currentFullscreenAdId);
+  if (ad) {
+    const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image];
+    const img = byId('fullscreen-viewer-img');
+    if (img && imgs[currentDetailPhotoIndex]) {
+      img.src = imgs[currentDetailPhotoIndex];
+    }
+  }
+}
 function initDetailMap(lat, lng) { const el = byId('detail-map'); if (!el || typeof L === 'undefined') return; if (detailMap) { detailMap.remove(); detailMap = null; } detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(detailMap); L.marker([lat, lng]).addTo(detailMap); }
 function changeDetailPhoto(adId, dir) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgs.length) % imgs.length; setDetailPhoto(adId, currentDetailPhotoIndex); }
 function setDetailPhoto(adId, idx) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
@@ -1484,7 +1506,8 @@ function openProfileModal() {
 
 function setFeedLayout(layout) {
   localStorage.setItem('bs_feed_layout', layout);
-  itemsPerPage = layout === 'list' ? 10 : (layout === 'grid' ? 12 : 12);
+  const isDesktop = window.innerWidth >= 1024;
+  itemsPerPage = layout === 'list' ? (isDesktop ? 18 : 10) : (layout === 'grid' ? (isDesktop ? 24 : 12) : (isDesktop ? 12 : 6));
   renderAds();
   openProfileModal();
   showToast('Вид ленты изменен', 'success');
@@ -3235,10 +3258,10 @@ function openComboDetail(comboId) {
   const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); 
   const save = v.comboOriginalTotal - c.price; 
   
-  content.innerHTML = `<div class="grid md:grid-cols-2 h-full max-h-[90vh]">
-<div class="relative bg-black flex items-center justify-center overflow-hidden h-full min-h-[320px] max-h-[46vh] md:max-h-[90vh]">
+content.innerHTML = `<div class="grid md:grid-cols-2 h-full max-h-[90vh]">
+<div class="relative bg-black flex items-center justify-center overflow-hidden h-full min-h-[320px] max-h-[46vh] md:max-h-[90vh] select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${c.id}', dir))">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
-<img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[46vh] md:max-h-[90vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src)">
+<img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[46vh] md:max-h-[90vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src, '${c.id}')">
 <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')} • ${v.comboItems.length}</span>
 ${imgs.length > 1 ? `<button onclick="changeDetailPhoto('${c.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevL()}</button><button onclick="changeDetailPhoto('${c.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevR()}</button><div id="detail-photo-counter" class="absolute bottom-3 right-3 z-10 bg-black/70 text-white px-2.5 py-1 rounded-lg text-[11px] font-mono">1 / ${imgs.length}</div>` : ''}
 </div>
