@@ -301,7 +301,9 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
       });
       const data = await response.json();
       if (data.success) {
-        arr.push(data.data.url);
+        // Берем прямой URL на исходную картинку (display_url или url)
+        const directImageUrl = data.data.display_url || (data.data.image && data.data.image.url) || data.data.url;
+        arr.push(directImageUrl);
         renderPhotoThumbnailsGrid(mode);
       } else {
         throw new Error('ImgBB error');
