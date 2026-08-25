@@ -670,6 +670,32 @@ async function handleCreateAdSubmit(e) {
     if (t) postingUser = t;
   }
 
+  // === ЛОГИКА ТАРИФИКАЦИИ И МАГАЗИНА ===
+  const hasShop = !!(postingUser.shop);
+  const myActiveAdsCount = ads.filter(a => 
+    a.sellerUsername && 
+    a.sellerUsername.toLowerCase() === (postingUser.username || '').toLowerCase() && 
+    a.status === 'ACTIVE'
+  ).length;
+
+  if (hasShop) {
+    const shopLimit = postingUser.shop.maxAds || 50;
+    if (myActiveAdsCount >= shopLimit) {
+      showToast(`Лимит объявлений магазина (${shopLimit} шт.) исчерпан. Расширьте тариф в настройках магазина!`, 'warning');
+      return;
+    }
+    // Магазин в пределах лимита: плата за публикацию не взимается
+  } else {
+    // Обычный пользователь без магазина: списание 1 AC (из стартовых 10 AC)
+    const adPrice = AVITOCASH_PRICES.adPrice || 1;
+    const charged = await _0xSCCharge(postingUser.uid || postingUser.username, adPrice, 'Публикация объявления');
+    if (!charged) {
+      // Недостаточно AC на балансе
+      return;
+    }
+  }
+  // =====================================
+
   const imgs = [...pendingCreateImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
 
@@ -703,42 +729,37 @@ async function handleCreateAdSubmit(e) {
   };
 
   if (supabaseClient) {
-    const { data: feeRes, error: feeErr } = await supabaseClient.rpc('create_ad_with_fee', {
-      p_ad: {
-        id: adId,
-        title: newAd.title,
-        category: newAd.category,
-        storeCategory: newAd.storeCategory,
-        region: newAd.region,
-        city: newAd.city,
-        isWomenOnly: newAd.isWomenOnly,
-        isFree: newAd.isFree,
-        isNegotiable: newAd.isNegotiable,
-        price: newAd.price,
-        currency: newAd.currency,
-        desc: newAd.desc,
-        images: newAd.images,
-        image: newAd.image,
-        lat: newAd.lat,
-        lng: newAd.lng,
-        createdAt: newAd.createdAt
-      },
-      p_user_identifier: postingUser.uid || postingUser.username
+    const { error: insertErr } = await supabaseClient.from('ads').insert({
+      id: newAd.id,
+      title: newAd.title,
+      category: newAd.category,
+      store_category: newAd.storeCategory,
+      region: newAd.region,
+      city: newAd.city,
+      is_women_only: newAd.isWomenOnly,
+      is_free: newAd.isFree,
+      is_negotiable: newAd.isNegotiable,
+      price: newAd.price,
+      currency: newAd.currency,
+      description: newAd.desc,
+      images: newAd.images,
+      image: newAd.image,
+      lat: newAd.lat,
+      lng: newAd.lng,
+      seller_username: newAd.sellerUsername,
+      seller_uid: newAd.sellerUid,
+      seller_kunya: newAd.sellerKunya,
+      seller_whatsapp: newAd.sellerWhatsapp,
+      status: newAd.status,
+      created_at: newAd.createdAt,
+      queue: [],
+      likes: [],
+      views: 0
     });
 
-    if (feeErr || !feeRes || !feeRes.success) {
-      showToast(feeRes?.error || 'Ошибка создания объявления', 'error');
+    if (insertErr) {
+      showToast('Ошибка сохранения объявления в базе: ' + insertErr.message, 'error');
       return;
-    }
-
-    if (feeRes.fee_charged > 0) {
-      postingUser.avitocashBalance = feeRes.new_balance;
-      postingUser.avitocash_balance = feeRes.new_balance;
-      if (currentUser.uid === postingUser.uid) {
-        currentUser.avitocashBalance = feeRes.new_balance;
-        currentUser.avitocash_balance = feeRes.new_balance;
-        saveUserSession(currentUser, true);
-      }
     }
   }
 
