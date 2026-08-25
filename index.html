@@ -68,7 +68,16 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 ::-webkit-scrollbar-thumb{background:var(--ig-border);border-radius:9999px}
 .no-scrollbar::-webkit-scrollbar{display:none}
 .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-.modal-scroll-body{overscroll-behavior:contain;touch-action:pan-y}
+body.overflow-hidden{
+  overflow:hidden !important;
+  height:100vh !important;
+  touch-action:none;
+}
+.modal-scroll-body{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+}
 #support-qr-box img,#support-qr-box canvas{display:block;margin:0 auto;border-radius:4px}
 .sort-dropdown { animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
