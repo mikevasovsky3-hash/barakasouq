@@ -3138,4 +3138,9 @@ function sendPriceOffer(adId) {
   const msg = `Здравствуйте! По объявлению "${ad.title}" (${ad.id}) на Авито Шам предлагаю цену: $${parseFloat(val).toFixed(2)}. От: ${sender}`; 
   window.open(`https://wa.me/${wa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank'); 
   showToast('Ваше предложение цены отправляется через WhatsApp', 'success'); 
+}function handleCategoryClick(catId) {
+  selectedCategory = catId;
+  currentPage = 1;
+  renderCategoryPills();
+  renderAds();
 }
