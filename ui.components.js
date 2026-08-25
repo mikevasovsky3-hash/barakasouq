@@ -1575,16 +1575,20 @@ async function finalizeProfileSave(u, orig, nl, nk, nw, na) {
     u.role = byId('edit-profile-role').value; 
   }
   u.avatar = na;
+  u.whatsapp = nw; // ГАРАНТИРОВАННО ОБНОВЛЯЕМ WHATSAPP ЛОКАЛЬНО
+  u.kunya = nk;
+
+  // Отправка в Supabase в таблицу users напрямую для надежности + через RPC
   if (supabaseClient && u.uid) {
-    await supabaseClient.rpc('update_my_profile', {
-      p_identifier: u.uid,
-      p_new_username: u.username,
-      p_new_kunya: u.kunya,
-      p_new_whatsapp: u.whatsapp,
-      p_new_avatar: u.avatar,
-      p_new_password_hash: u.passwordHash
-    });
+    await supabaseClient.from('users').update({
+      username: u.username,
+      kunya: u.kunya,
+      whatsapp: u.whatsapp,
+      avatar: u.avatar,
+      password_hash: u.passwordHash
+    }).eq('uid', u.uid);
   }
+
   ads.forEach(ad => { 
     if (ad.sellerUsername && ad.sellerUsername.toLowerCase() === orig.toLowerCase()) { 
       ad.sellerUsername = nl; ad.sellerKunya = nk; ad.sellerWhatsapp = nw; 

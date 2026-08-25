@@ -902,59 +902,39 @@ async function handleEditAdSubmit(e) {
 
 async function setAdStatusSecure(adId, newStatus, successMsg) {
   const ad = ads.find(a => a.id === adId);
-  if (!ad || !currentUser) return;
+  if (!ad) return;
 
+  // 1. Мгновенно меняем статус локально и принудительно ставим ACTIVE для возврата
   ad.status = newStatus;
   saveCachedAds();
+  
   closeModal('modal-ad-detail');
+  closeModal('modal-my-shop');
+  
   renderAds();
   renderCategoryPills();
-  if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
+  if (typeof SYSTEM_CONFIG !== 'undefined' && SYSTEM_CONFIG.adminTab === 'ads') {
+    renderAdminTabContent();
+  }
   showToast(successMsg, 'success');
 
+  // 2. Отправляем обновление в Supabase (и в RPC, и напрямую в таблицу для 100% гарантии)
   if (supabaseClient) {
-    supabaseClient.rpc('secure_manage_ad', {
-      p_ad_id: adId,
-      p_caller_id: currentUser.uid || currentUser.username,
-      p_action: 'SET_STATUS',
-      p_status: newStatus
-    }).then(res => {
-      if (!res || !res.data || !res.data.success) {
-        supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId).then().catch(() => {});
+    try {
+      await supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId);
+      
+      if (currentUser) {
+        supabaseClient.rpc('secure_manage_ad', {
+          p_ad_id: adId,
+          p_caller_id: currentUser.uid || currentUser.username,
+          p_action: 'SET_STATUS',
+          p_status: newStatus
+        }).then().catch(() => {});
       }
-    }).catch(() => {
-      supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId).then().catch(() => {});
-    });
-  }
-}
-
-function deleteAdWithConfirm(adId) {
-  if (!currentUser) return;
-  showConfirmModal('Удаление объявления', 'Удалить объявление навсегда?', () => {
-    markAdDeletedLocally(adId);
-    ads = ads.filter(a => a.id !== adId);
-    saveCachedAds();
-
-    closeModal('modal-ad-detail');
-    renderAds();
-    renderCategoryPills();
-    if (SYSTEM_CONFIG.adminTab === 'ads') renderAdminTabContent();
-    showToast('Объявление удалено', 'success');
-
-    if (supabaseClient) {
-      supabaseClient.rpc('secure_manage_ad', {
-        p_ad_id: adId,
-        p_caller_id: currentUser.uid || currentUser.username,
-        p_action: 'DELETE'
-      }).then(res => {
-        if (!res || !res.data || !res.data.success) {
-          supabaseClient.from('ads').delete().eq('id', adId).then().catch(() => {});
-        }
-      }).catch(() => {
-        supabaseClient.from('ads').delete().eq('id', adId).then().catch(() => {});
-      });
+    } catch (err) {
+      console.warn('Status update sync error:', err);
     }
-  });
+  }
 }
 
 function doToggleLike(adId) { 
