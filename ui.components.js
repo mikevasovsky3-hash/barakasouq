@@ -81,10 +81,21 @@ async function generateShareImage(ad) {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    // Проверка арабского языка для генерации карточки
+    const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
     const kunya = getSellerKunya(ad);
     const verified = getSellerVerified(ad);
     const avatar = getSellerAvatar(ad);
-    const regionName = REGION_NAMES[ad.region] || ad.region || 'Сирия';
+
+    let regionRaw = REGION_NAMES[ad.region] || ad.region || 'Сирия';
+    let regionName = isAr && typeof DICTIONARY !== 'undefined' && DICTIONARY[regionRaw] ? DICTIONARY[regionRaw] : regionRaw;
+    let cardTitle = ad.title || '';
+
+    // Если включен арабский, переводим название товара через словарь или оставляем как есть
+    if (isAr && typeof translateDynamic === 'function') {
+      cardTitle = await translateDynamic(ad.title, 'ar');
+    }
     const likesCount = (ad.likes || []).length;
     const viewsCount = ad.views || 0;
     const priceText = ad.isCombo ? ('🔥 $' + Number(ad.price).toFixed(2)) : convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable).replace(/<[^>]*>/g, '');
@@ -148,9 +159,9 @@ async function generateShareImage(ad) {
     const qx = W - FR - 44 - qrBox, qy = fy - 8;
     ctx.fillStyle = '#fff'; roundRectPath(ctx, qx, qy, qrBox, qrBox, 24); ctx.fill();
     if (qrImg) ctx.drawImage(qrImg, qx + 14, qy + 14, qrBox - 28, qrBox - 28);
-    const titleMaxW = qx - px - 30;
+const titleMaxW = qx - px - 30;
     ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 42px Arial';
-    wrapTextCanvas(ctx, ad.title, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 64 + i * 54));
+    wrapTextCanvas(ctx, cardTitle, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 64 + i * 54));
     const by2 = H - FR - 40;
     ctx.font = '54px "Grand Hotel", cursive';
     const brand = 'Avito Sham';
