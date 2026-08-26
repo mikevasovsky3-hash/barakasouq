@@ -242,8 +242,22 @@ async function bumpAdToTop(adId) {
   showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
 }
 
+// Максимально чистая нормализация текста (очистка харакатов, хамз, надстрочных знаков и выравнивание букв)
+function normalizeArabicText(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Полное удаление всех харакатов (фатха, дамма, касра, сукун, ташдид, танвин) и татвиля
+    .replace(/[أإآٱ]/g, 'ا') // Любой вид алифа приводится к простому 'ا'
+    .replace(/ة/g, 'ه')     // Та-марбута приводится к 'ه'
+    .replace(/[ىيئ]/g, 'ي')  // Алиф максура, я и я с хамзой приводятся к 'ي'
+    .replace(/ؤ/g, 'و')     // Вав с хамзой к 'و'
+    .replace(/[^\w\s\u0621-\u064A]/gi, '') // Очистка пунктуации и спецсимволов
+    .trim();
+}
+
 function checkUrlHashAdOpen() {
-  const hash = window.location.hash || '';
+	const hash = window.location.hash || '';
   if (hash.startsWith('#ad-')) {
     const targetAdId = hash.replace('#ad-', '').trim();
     if (targetAdId) {
@@ -1518,33 +1532,70 @@ function onSearchInput(el) {
   resetPageAndRender();
 }
 
-function renderSearchSuggestions(query) {
+async function renderSearchSuggestions(query) {
   const listDesktop = byId('search-suggestions-desktop');
   const listMobile = byId('search-suggestions-mobile');
-  if (!query || query.length < 2) {
+  if (!query || query.trim().length < 1) {
     if (listDesktop) listDesktop.classList.add('hidden');
     if (listMobile) listMobile.classList.add('hidden');
     return;
   }
-  const matches = ads
-    .filter(a => a.status === 'ACTIVE' && a.title.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 5);
 
-  const html = matches.map(a => `
-    <div onclick="selectSearchSuggestion('${a.title.replace(/'/g, "\\'")}')" class="px-3 py-2 text-xs t1 hover:bg-field cursor-pointer flex items-center justify-between border-b b-ig last:border-0">
-      <span class="truncate font-semibold">${a.title}</span>
-      <span class="text-[10px] text-blue-500 shrink-0 font-bold">$${Number(a.price || 0).toFixed(2)}</span>
-    </div>
-  `).join('');
+  const cleanQ = normalizeArabicText(query);
+  const isAr = currentLang === 'ar';
 
+  const matches = [];
+  for (const a of ads) {
+    if (a.status !== 'ACTIVE') continue;
+
+    let titleNorm = normalizeArabicText(a.title);
+    let descNorm = normalizeArabicText(a.desc || '');
+    let matched = titleNorm.includes(cleanQ) || descNorm.includes(cleanQ);
+
+    // Поиск по словарю категорий и кэшу перевода
+    if (!matched && isAr) {
+      const catObj = categories.find(c => c.id === a.category);
+      if (catObj && normalizeArabicText(t(catObj.name)).includes(cleanQ)) {
+        matched = true;
+      }
+      if (!matched && typeof TRANSLATE_CACHE !== 'undefined') {
+        const cacheKey = `ar_${(a.title || '').trim()}`;
+        if (TRANSLATE_CACHE[cacheKey]) {
+          matched = normalizeArabicText(TRANSLATE_CACHE[cacheKey]).includes(cleanQ);
+        }
+      }
+    }
+
+    if (matched) {
+      matches.push(a);
+      if (matches.length >= 6) break;
+    }
+  }
+
+  if (matches.length === 0) {
+    if (listDesktop) listDesktop.classList.add('hidden');
+    if (listMobile) listMobile.classList.add('hidden');
+    return;
+  }
+
+  const itemsHtml = await Promise.all(matches.map(async a => {
+    let displayTitle = a.title;
+    if (isAr && typeof translateDynamic === 'function') {
+      displayTitle = await translateDynamic(a.title, 'ar');
+    }
+    return `
+      <div onclick="openAdDetail('${a.id}')" class="px-3 py-2 text-xs t1 hover:bg-field cursor-pointer flex items-center justify-between border-b b-ig last:border-0">
+        <span class="truncate font-semibold">${displayTitle}</span>
+        <span class="text-[10px] text-blue-500 shrink-0 font-bold">$${Number(a.price || 0).toFixed(2)}</span>
+      </div>
+    `;
+  }));
+
+  const html = itemsHtml.join('');
   [listDesktop, listMobile].forEach(l => {
     if (l) {
-      if (matches.length > 0) {
-        l.innerHTML = html;
-        l.classList.remove('hidden');
-      } else {
-        l.classList.add('hidden');
-      }
+      l.innerHTML = html;
+      l.classList.remove('hidden');
     }
   });
 }

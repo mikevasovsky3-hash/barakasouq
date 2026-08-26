@@ -334,12 +334,35 @@ function renderAds() {
       ad._distance = dist;
       if (dist === null || dist > activeRadiusKm) return false;
     }
-    if (q && !(ad.title || '').toLowerCase().includes(q) && !(ad.city || '').toLowerCase().includes(q) && !(ad.desc || '').toLowerCase().includes(q) && !(getSellerKunya(ad) || '').toLowerCase().includes(q)) return false;
+if (q) {
+      const cleanQ = typeof normalizeArabicText === 'function' ? normalizeArabicText(q) : q.toLowerCase().trim();
+      const titleNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.title) : (ad.title || '').toLowerCase();
+      const cityNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.city) : (ad.city || '').toLowerCase();
+      const descNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.desc) : (ad.desc || '').toLowerCase();
+      const kunyaNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(getSellerKunya(ad)) : (getSellerKunya(ad) || '').toLowerCase();
+
+      let matched = titleNorm.includes(cleanQ) || cityNorm.includes(cleanQ) || descNorm.includes(cleanQ) || kunyaNorm.includes(cleanQ);
+
+      if (!matched && currentLang === 'ar') {
+        const catObj = categories.find(c => c.id === ad.category);
+        if (catObj && typeof normalizeArabicText === 'function' && normalizeArabicText(t(catObj.name)).includes(cleanQ)) {
+          matched = true;
+        }
+        if (!matched && typeof TRANSLATE_CACHE !== 'undefined') {
+          const cacheKey = `ar_${(ad.title || '').trim()}`;
+          if (TRANSLATE_CACHE[cacheKey]) {
+            matched = normalizeArabicText(TRANSLATE_CACHE[cacheKey]).includes(cleanQ);
+          }
+        }
+      }
+
+      if (!matched) return false;
+    }
     return true;
   });
 
   filtered.sort((a, b) => {
-    if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
+	  if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
     if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
     if (currentSortMode === 'expensive') return adToUSD(b) - adToUSD(a);
     if (currentSortMode === 'popular') {
