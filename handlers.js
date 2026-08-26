@@ -1690,3 +1690,70 @@ function handleTouchSwipeEnd(e, callback) {
     }
   }
 }
+
+async function cleanUnusedStorageImagesAdmin() {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен', 'error');
+    return;
+  }
+  if (!supabaseClient) return;
+
+  showToast('Проверка хранилища на неиспользуемые фото...', 'info');
+
+  try {
+    const { data: storageFiles } = await supabaseClient.storage.from('listings').list('public', { limit: 1000 });
+    if (!storageFiles || !storageFiles.length) {
+      showToast('В хранилище нет файлов для очистки', 'info');
+      return;
+    }
+
+    const [{ data: adsData }, { data: usersData }] = await Promise.all([
+      supabaseClient.from('ads').select('images, image'),
+      supabaseClient.from('users').select('avatar, shop')
+    ]);
+
+    const usedFileNames = new Set();
+
+    (adsData || []).forEach(ad => {
+      const allImgs = Array.isArray(ad.images) ? ad.images : [ad.image].filter(Boolean);
+      allImgs.forEach(url => {
+        if (typeof url === 'string' && url.includes('/storage/v1/object/public/listings/')) {
+          const fn = url.split('/listings/public/').pop().split('/listings/').pop();
+          if (fn) usedFileNames.add(fn.replace('public/', ''));
+        }
+      });
+    });
+
+    (usersData || []).forEach(u => {
+      if (u.avatar && typeof u.avatar === 'string' && u.avatar.includes('/storage/v1/object/public/listings/')) {
+        const fn = u.avatar.split('/listings/public/').pop().split('/listings/').pop();
+        if (fn) usedFileNames.add(fn.replace('public/', ''));
+      }
+      if (u.shop?.logo && typeof u.shop.logo === 'string' && u.shop.logo.includes('/storage/v1/object/public/listings/')) {
+        const fn = u.shop.logo.split('/listings/public/').pop().split('/listings/').pop();
+        if (fn) usedFileNames.add(fn.replace('public/', ''));
+      }
+    });
+
+    const filesToDelete = storageFiles
+      .filter(f => f.name && !usedFileNames.has(f.name))
+      .map(f => `public/${f.name}`);
+
+    if (!filesToDelete.length) {
+      showToast('Лишних неиспользуемых фото не обнаружено', 'success');
+      return;
+    }
+
+    showConfirmModal('Очистка хранилища', `Найдено ${filesToDelete.length} неиспользуемых фото. Удалить их из Supabase Storage?`, async () => {
+      const { error: delErr } = await supabaseClient.storage.from('listings').remove(filesToDelete);
+      if (delErr) {
+        showToast('Ошибка очистки хранилища', 'error');
+      } else {
+        showToast(`Удалено ${filesToDelete.length} неиспользуемых фото!`, 'success');
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка при сканировании хранилища', 'error');
+  }
+}

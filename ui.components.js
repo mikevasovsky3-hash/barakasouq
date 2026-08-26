@@ -985,6 +985,14 @@ function renderAdminTabContent() {
 <label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> Импорт БД<input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden"></label>
 </div>
 </div>
+<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)">
+<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-broom" style="color:#ef4444"></i> Очистка неиспользуемых изображений</h4>
+<p class="text-xs t2 leading-relaxed">Сканирует бакет listings в Supabase Storage и навсегда удаляет файлы, которые не привязаны ни к одному объявлению или профилю.</p>
+<button onclick="cleanUnusedStorageImagesAdmin()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-sm transition active:scale-95" style="background:#ef4444">
+  <i class="fa-solid fa-trash-can"></i> Найти и удалить неиспользуемые фото
+</button>
+</div>
+
 <div class="p-4 rounded-xl border space-y-3">
 <h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-list" style="color:#6b7280"></i> Журнал бэкапов</h4>
 <p class="text-xs t2">Список метаданных бэкапов, созданных администраторами. Можно воссоздать и скачать снимок или удалить запись из журнала.</p>
