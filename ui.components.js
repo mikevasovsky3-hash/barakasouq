@@ -1408,6 +1408,7 @@ function openProfileModal() {
         currentUser.avitocashBalance = freshMe.avitocashBalance;
         currentUser.trialBalance = freshMe.trialBalance;
         currentUser.showWomenAds = freshMe.showWomenAds;
+        currentUser.isDnd = freshMe.isDnd;
     }
     const c = byId('profile-content');  
     if (!c) return; 
@@ -1418,10 +1419,11 @@ function openProfileModal() {
     const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); 
     const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
     const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+    const isDnd = !!currentUser.isDnd;
 
     c.innerHTML = `
     <div class="space-y-3 pt-1">
-        <!-- Шапка: Аватар + Инфо + Быстрый статус -->
+        <!-- Шапка: Аватар + Инфо -->
         <div class="bg-field p-3.5 rounded-2xl border b-ig flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
                 <div class="w-12 h-12 rounded-full overflow-hidden bg-card border b-ig flex items-center justify-center shrink-0">
@@ -1440,12 +1442,29 @@ function openProfileModal() {
                     </div>
                 </div>
             </div>
-            <label class="ig-switch shrink-0" title="${currentUser.isDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}">
-                <input type="checkbox" onchange="toggleSellerStatus(this.checked)" ${currentUser.isDnd ? 'checked' : ''}>
-                <span class="slider" style="${currentUser.isDnd ? 'background:#64748b' : ''}"></span>
-            </label>
         </div>
 
+        <!-- Наглядный статус продавца для покупателей -->
+        <div class="p-3 rounded-2xl border flex items-center justify-between gap-3 transition-colors" style="${isDnd ? 'background:rgba(100,116,139,.1);border-color:rgba(100,116,139,.35);' : 'background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.35);'}">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDnd ? 'bg-slate-500/20 text-slate-400' : 'bg-emerald-500/20 text-emerald-400'}">
+                    <i class="fa-solid ${isDnd ? 'fa-moon' : 'fa-bell'} text-sm"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold ${isDnd ? 'text-slate-300' : 'text-emerald-400'}">
+                        ${isDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}
+                    </div>
+                    <div class="text-[10px] t2 truncate">
+                        ${isDnd ? t('Сейчас не на связи') : t('Принимаю звонки и сообщения')}
+                    </div>
+                </div>
+            </div>
+            <label class="ig-switch shrink-0">
+                <input type="checkbox" onchange="toggleSellerStatus(!this.checked)" ${!isDnd ? 'checked' : ''}>
+                <span class="slider" style="${!isDnd ? 'background:#10b981' : 'background:#475569'}"></span>
+            </label>
+        </div>
+		
         <!-- Компактный кошелек AvitoCash -->
         <div class="p-3 rounded-2xl border b-ig bg-field flex items-center justify-between gap-2">
             <div>
