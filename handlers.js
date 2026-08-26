@@ -288,49 +288,39 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
   const arr = mode === 'create' ? pendingCreateImages : pendingEditImages;
   const slots = 6 - arr.length;
   if (slots <= 0) { showToast('Максимум 6 фотографий!', 'warning'); return; }
-  const IMGBB_KEY = '77bb343baa9af19a82ccde09deb73a05';
-  showToast(`Загрузка ${Math.min(files.length, slots)} фото...`, 'info');
+
+  if (!supabaseClient) {
+    showToast('Нет соединения с базой данных', 'error');
+    return;
+  }
+
+  showToast(`Загрузка ${Math.min(files.length, slots)} фото в облако...`, 'info');
 
   for (const f of files.slice(0, slots)) {
     try {
       const compressedFile = await compressSingleImageFile(f, 1280, 1280, 0.75);
-      let directImageUrl = null;
+const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
 
-      // Контур 1: Быстрая загрузка через ImgBB
-      try {
-        const formData = new FormData();
-        formData.append("image", compressedFile);
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-          method: "POST",
-          body: formData
+      const { error: sbErr } = await supabaseClient.storage
+        .from('listings')
+        .upload(filePath, compressedFile, {
+          cacheControl: '31536000',
+          upsert: false
         });
-        const data = await response.json();
-        if (data && data.success) {
-          directImageUrl = data.data.display_url || (data.data.image && data.data.image.url) || data.data.url;
-        }
-      } catch (imgbbErr) {
-        console.warn('ImgBB fallback triggering...', imgbbErr);
-      }
 
-      // Контур 2: Резервная загрузка в Supabase Storage (если ImgBB недоступен)
-      if (!directImageUrl && supabaseClient) {
-        const filePath = `public/${compressedFile.name}`;
-        const { error: sbErr } = await supabaseClient.storage.from('listings').upload(filePath, compressedFile, { upsert: false });
-        if (!sbErr) {
-          const { data: pubData } = supabaseClient.storage.from('listings').getPublicUrl(filePath);
-          directImageUrl = pubData?.publicUrl;
-        }
-      }
+      if (sbErr) throw sbErr;
 
-      if (directImageUrl) {
-        arr.push(directImageUrl);
+      const { data: pubData } = supabaseClient.storage
+        .from('listings')
+        .getPublicUrl(filePath);
+
+      if (pubData && pubData.publicUrl) {
+        arr.push(pubData.publicUrl);
         renderPhotoThumbnailsGrid(mode);
-      } else {
-        throw new Error('Все шлюзы загрузки фото недоступны');
       }
     } catch (err) {
       console.error('Upload critical error:', err);
-      showToast('Ошибка загрузки фото. Проверьте соединение с сетью.', 'error');
+      showToast('Ошибка загрузки фото в хранилище Supabase', 'error');
       e.target.value = '';
       return;
     }
@@ -715,7 +705,7 @@ async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, 
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob((blob) => {
+canvas.toBlob((blob) => {
           if (!blob) {
             return reject(new Error('Canvas toBlob failed'));
           }
@@ -724,7 +714,7 @@ async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, 
           });
           resolve(compressedFile);
         }, 'image/jpeg', quality);
-      };
+		};
       img.onerror = (err) => reject(err);
     };
     reader.onerror = (err) => reject(err);
@@ -1451,11 +1441,19 @@ function deleteAdPermanently(adId) {
 
     showToast('Объявление удалено навсегда', 'info');
 
-    // 4. Удаляем из Supabase базы
+// 4. Удаляем из Supabase базы и очищаем Storage
     if (supabaseClient) {
       try {
         await supabaseClient.from('ads').delete().eq('id', adId);
         
+        const imgsToDelete = (Array.isArray(ad.images) ? ad.images : [ad.image])
+          .filter(url => url && typeof url === 'string' && url.includes('/storage/v1/object/public/listings/'))
+          .map(url => url.split('/listings/').pop());
+
+        if (imgsToDelete.length > 0) {
+          await supabaseClient.storage.from('listings').remove(imgsToDelete);
+        }
+
         if (currentUser) {
           supabaseClient.rpc('secure_manage_ad', {
             p_ad_id: adId,

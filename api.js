@@ -1,5 +1,15 @@
 /* ================= SUPABASE & NETWORK SERVICES ================= */
 
+function fixDirectImageUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  let clean = url.trim();
+  
+  if (clean.includes('ibb.co/') && !clean.includes('i.ibb.co/')) {
+    const id = clean.split('ibb.co/').pop().split('/')[0].split('?')[0];
+    if (id) return `https://i.ibb.co/${id}/image.jpg`;
+  }
+  return clean;
+}
 // Инициализация Supabase Client
 try {
   if (typeof supabase !== 'undefined') {
@@ -38,7 +48,13 @@ function loadCachedAds() {
       const parsed = JSON.parse(c);
       if (Array.isArray(parsed)) {
         const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-        ads = parsed.filter(a => !deletedIds.includes(a.id));
+        ads = parsed
+          .filter(a => !deletedIds.includes(a.id))
+          .map(a => ({
+            ...a,
+            images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
+            image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null))
+          }));
       }
     }
     const f = localStorage.getItem('bs_favorites');
@@ -280,7 +296,7 @@ try {
       }
     }	
 
-    if (adsRes.data) {
+if (adsRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
 
       ads = adsRes.data
@@ -301,8 +317,8 @@ try {
             oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
             currency: a.currency,
             desc: a.description || a.desc || '',
-            images: Array.isArray(a.images) ? a.images : [a.image || ''],
-            image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
+            images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
+            image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
             lat: Number(a.lat) || 33.5138,
             lng: Number(a.lng) || 36.2765,
             sellerUsername: a.seller_username || owner?.username || '',
@@ -317,7 +333,7 @@ try {
           };
         });
     }
-
+	
     if (combosRes.data) {
       combos = combosRes.data.map(c => ({
         id: c.id,
