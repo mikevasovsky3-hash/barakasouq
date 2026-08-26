@@ -278,11 +278,10 @@ async function initSupabaseSync() {
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
 try {
-    const [usersRes, adsRes] = await Promise.all([
-      supabaseClient.from('users').select('*'),
-      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(1000)
-    ]);
-	
+const [usersRes, adsRes] = await Promise.all([
+  supabaseClient.from('users').select('*'),
+  supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(30)
+]);	
     const combosPromise = supabaseClient.from('combos').select('*');
     const catsPromise = supabaseClient.from('categories').select('*');
     const reportsPromise = (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) 
