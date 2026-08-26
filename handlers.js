@@ -242,17 +242,20 @@ async function bumpAdToTop(adId) {
   showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
 }
 
-// Максимально чистая нормализация текста (очистка харакатов, хамз, надстрочных знаков и выравнивание букв)
+// Универсальная чистая нормализация для русского, английского и арабского языков
 function normalizeArabicText(str) {
   if (!str || typeof str !== 'string') return '';
+  const isArabic = /[\u0600-\u06FF]/.test(str);
+  if (!isArabic) {
+    return str.toLowerCase().trim(); // Для русского и латиницы оставляем буквы без жесткой фильтрации
+  }
   return str
     .toLowerCase()
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Полное удаление всех харакатов (фатха, дамма, касра, сукун, ташдид, танвин) и татвиля
-    .replace(/[أإآٱ]/g, 'ا') // Любой вид алифа приводится к простому 'ا'
-    .replace(/ة/g, 'ه')     // Та-марбута приводится к 'ه'
-    .replace(/[ىيئ]/g, 'ي')  // Алиф максура, я и я с хамзой приводятся к 'ي'
-    .replace(/ؤ/g, 'و')     // Вав с хамзой к 'و'
-    .replace(/[^\w\s\u0621-\u064A]/gi, '') // Очистка пунктуации и спецсимволов
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Удаление харакатов и татвиля
+    .replace(/[أإآٱ]/g, 'ا') // Выравнивание алифов
+    .replace(/ة/g, 'ه')     // Та-марбута
+    .replace(/[ىيئ]/g, 'ي')  // Я и алиф максура
+    .replace(/ؤ/g, 'و')     // Вав с хамзой
     .trim();
 }
 
@@ -1520,7 +1523,25 @@ function restoreAd(adId) {
   setAdStatusSecure(adId, 'ACTIVE', 'Объявление успешно восстановлено');
 }
 
+// Универсальная нормализация для русского, английского и арабского языков
+function normalizeArabicText(str) {
+  if (!str || typeof str !== 'string') return '';
+  const isArabic = /[\u0600-\u06FF]/.test(str);
+  if (!isArabic) {
+    return str.toLowerCase().trim(); // Для русского и английского — точный поиск по символам
+  }
+  return str
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Удаление харакатов и татвиля
+    .replace(/[أإآٱ]/g, 'ا') // Выравнивание алифов
+    .replace(/ة/g, 'ه')     // Та-марбута
+    .replace(/[ىيئ]/g, 'ي')  // Я и алиф максура
+    .replace(/ؤ/g, 'و')     // Вав с хамзой
+    .trim();
+}
+
 // Обработчик живого поиска и синхронизации Desktop / Mobile инпутов
+let searchDebounceTimer = null;
 function onSearchInput(el) {
   const val = (el ? el.value : '').trim();
   const desktop = byId('search-input-desktop');
@@ -1528,8 +1549,13 @@ function onSearchInput(el) {
   if (desktop && desktop !== el) desktop.value = el.value;
   if (mobile && mobile !== el) mobile.value = el.value;
   searchQuery = val;
+  
   renderSearchSuggestions(val);
-  resetPageAndRender();
+
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    resetPageAndRender();
+  }, 120);
 }
 
 async function renderSearchSuggestions(query) {
@@ -1552,7 +1578,6 @@ async function renderSearchSuggestions(query) {
     let descNorm = normalizeArabicText(a.desc || '');
     let matched = titleNorm.includes(cleanQ) || descNorm.includes(cleanQ);
 
-    // Поиск по словарю категорий и кэшу перевода
     if (!matched && isAr) {
       const catObj = categories.find(c => c.id === a.category);
       if (catObj && normalizeArabicText(t(catObj.name)).includes(cleanQ)) {
@@ -1584,7 +1609,7 @@ async function renderSearchSuggestions(query) {
       displayTitle = await translateDynamic(a.title, 'ar');
     }
     return `
-      <div onclick="openAdDetail('${a.id}')" class="px-3 py-2 text-xs t1 hover:bg-field cursor-pointer flex items-center justify-between border-b b-ig last:border-0">
+      <div onclick="openAdDetail('${a.id}'); renderSearchSuggestions('');" class="px-3 py-2 text-xs t1 hover:bg-field cursor-pointer flex items-center justify-between border-b b-ig last:border-0">
         <span class="truncate font-semibold">${displayTitle}</span>
         <span class="text-[10px] text-blue-500 shrink-0 font-bold">$${Number(a.price || 0).toFixed(2)}</span>
       </div>

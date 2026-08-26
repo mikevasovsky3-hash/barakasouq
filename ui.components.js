@@ -281,7 +281,7 @@ function renderCategoryPills() {
 function renderAds() {
   const grid = byId('listings-view'), pag = byId('pagination-container');
   if (!grid) return;
-  const q = (byId('search-input')?.value || '').toLowerCase();
+  const q = (typeof searchQuery !== 'undefined' && searchQuery ? searchQuery : (byId('search-input-desktop')?.value || byId('search-input')?.value || '')).trim().toLowerCase();
   const region = byId('region-filter')?.value || 'ALL';
 
   if (selectedCategory === 'shops_dir') {
@@ -335,23 +335,31 @@ function renderAds() {
       if (dist === null || dist > activeRadiusKm) return false;
     }
 if (q) {
-      const cleanQ = typeof normalizeArabicText === 'function' ? normalizeArabicText(q) : q.toLowerCase().trim();
-      const titleNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.title) : (ad.title || '').toLowerCase();
-      const cityNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.city) : (ad.city || '').toLowerCase();
-      const descNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.desc) : (ad.desc || '').toLowerCase();
-      const kunyaNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(getSellerKunya(ad)) : (getSellerKunya(ad) || '').toLowerCase();
+      const cleanQ = q.toLowerCase().trim();
+      const titleText = (ad.title || '').toLowerCase();
+      const cityText = (ad.city || '').toLowerCase();
+      const descText = (ad.desc || '').toLowerCase();
+      const kunyaText = (getSellerKunya(ad) || '').toLowerCase();
 
-      let matched = titleNorm.includes(cleanQ) || cityNorm.includes(cleanQ) || descNorm.includes(cleanQ) || kunyaNorm.includes(cleanQ);
+      let matched = titleText.includes(cleanQ) || cityText.includes(cleanQ) || descText.includes(cleanQ) || kunyaText.includes(cleanQ);
 
       if (!matched && currentLang === 'ar') {
-        const catObj = categories.find(c => c.id === ad.category);
-        if (catObj && typeof normalizeArabicText === 'function' && normalizeArabicText(t(catObj.name)).includes(cleanQ)) {
-          matched = true;
-        }
-        if (!matched && typeof TRANSLATE_CACHE !== 'undefined') {
-          const cacheKey = `ar_${(ad.title || '').trim()}`;
-          if (TRANSLATE_CACHE[cacheKey]) {
-            matched = normalizeArabicText(TRANSLATE_CACHE[cacheKey]).includes(cleanQ);
+        const cleanArQ = typeof normalizeArabicText === 'function' ? normalizeArabicText(q) : cleanQ;
+        const titleNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.title) : titleText;
+        const descNorm = typeof normalizeArabicText === 'function' ? normalizeArabicText(ad.desc) : descText;
+        
+        matched = titleNorm.includes(cleanArQ) || descNorm.includes(cleanArQ);
+
+        if (!matched) {
+          const catObj = categories.find(c => c.id === ad.category);
+          if (catObj && typeof normalizeArabicText === 'function' && normalizeArabicText(t(catObj.name)).includes(cleanArQ)) {
+            matched = true;
+          }
+          if (!matched && typeof TRANSLATE_CACHE !== 'undefined') {
+            const cacheKey = `ar_${(ad.title || '').trim()}`;
+            if (TRANSLATE_CACHE[cacheKey]) {
+              matched = normalizeArabicText(TRANSLATE_CACHE[cacheKey]).includes(cleanArQ);
+            }
           }
         }
       }
@@ -360,7 +368,7 @@ if (q) {
     }
     return true;
   });
-
+  
   filtered.sort((a, b) => {
 	  if (currentSortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
     if (currentSortMode === 'cheapest') return adToUSD(a) - adToUSD(b);
