@@ -6,14 +6,23 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Avito Sham — Авито Шам</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='ig'%20x1='0%25'%20y1='100%25'%20x2='100%25'%20y2='0%25'%3E%3Cstop%20offset='0%25'%20stop-color='%23feda75'/%3E%3Cstop%20offset='25%25'%20stop-color='%23fa7e1e'/%3E%3Cstop%20offset='50%25'%20stop-color='%23d62976'/%3E%3Cstop%20offset='75%25'%20stop-color='%23962fbf'/%3E%3Cstop%20offset='100%25'%20stop-color='%234f5bd5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='url(%23ig)'/%3E%3Ctext%20x='50'%20y='68'%20font-family='Arial'%20font-weight='900'%20font-size='56'%20fill='%23ffffff'%20text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Avito Sham (Авито Шам) — ведущая доска объявлений Сирии. Покупка и продажа электроники, транспорта, недвижимости, создание магазинов и размещение товаров.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E...%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel@5.0.8/index.css" crossorigin="anonymous">
+<style>
+@font-face {
+  font-family: 'Grand Hotel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel@5.0.8/files/grand-hotel-latin-400-normal.woff2') format('woff2');
+}
+</style>
 <style>
 :root{
 --ig-bg:#000000; --ig-card:#000000; --ig-border:#262626; --ig-text:#f5f5f5;
@@ -285,17 +294,17 @@ body { top: 0px !important; }
 <div id="pagination-container" class="flex items-center justify-center gap-2 flex-wrap pt-2 pb-4 text-sm"></div>
 </div>
 </main>
-<button id="btn-scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-20 right-4 z-40 w-10 h-10 rounded-full bg-field border b-ig t1 shadow-lg flex items-center justify-center hover:bg-ig-hover">
+<button id="btn-scroll-top" aria-label="Наверх" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-20 right-4 z-40 w-10 h-10 rounded-full bg-field border b-ig t1 shadow-lg flex items-center justify-center hover:bg-ig-hover">
 <i class="fa-solid fa-arrow-up"></i>
 </button>
 
 <!-- ============ MOBILE BOTTOM NAV ============ -->
 <nav id="app-mobile-nav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
-<button id="bn-home" onclick="handleNavClick('home')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
-<button id="bn-shops" onclick="handleNavClick('shops')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
-<button id="bn-create" onclick="handleNavClick('create')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
-<button id="bn-fav" onclick="handleNavClick('favorites')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
-<button id="bn-profile" onclick="handleNavClick('profile')" class="p-2"><span id="bn-profile-ic" class="w-7 h-7 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center"></span></button>
+<button id="bn-home" aria-label="Главная" onclick="handleNavClick('home')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-shops" aria-label="Магазины" onclick="handleNavClick('shops')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-create" aria-label="Создать объявление" onclick="handleNavClick('create')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-fav" aria-label="Избранное" onclick="handleNavClick('favorites')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-profile" aria-label="Профиль" onclick="handleNavClick('profile')" class="p-2"><span id="bn-profile-ic" class="w-7 h-7 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center"></span></button>
 </nav>
 
 <!-- ============ SUPPORT / AVITOCASH QR ============ -->

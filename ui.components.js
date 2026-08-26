@@ -486,7 +486,7 @@ const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
       return `
 <article class="card-in border-b b-ig bg-card pb-3 rounded-2xl transition-all ${hasDiscount || ad.isCombo ? 'border-2 shadow-lg my-2' : ''}" style="${hasDiscount ? 'border-color:rgba(239,68,68,.6);box-shadow:0 0 15px rgba(239,68,68,.18);background:linear-gradient(180deg,rgba(239,68,68,.04) 0%,rgba(0,0,0,0) 100%)' : (ad.isCombo ? 'border-color:rgba(249,115,22,.6);box-shadow:0 0 15px rgba(249,115,22,.18)' : '')}">
 <div class="flex items-center gap-3 px-3.5 py-2.5">
-<div class="w-9 h-9 rounded-full p-[2px] shrink-0 ${verified ? 'story-ring' : ''}" style="${verified ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1.5px]"><div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold cursor-pointer" onclick="openAdDetail('${ad.id}')">${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.isCombo ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : (ad.sellerUsername || '?').charAt(0).toUpperCase())}</div></div></div>
+<div class="w-9 h-9 rounded-full p-[2px] shrink-0 ${verified ? 'story-ring' : ''}" style="${verified ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1.5px]"><div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold cursor-pointer" onclick="openAdDetail('${ad.id}')">${avatar ? `<img src="${avatar}" alt="Аватар продавца" class="w-full h-full object-cover">` : (ad.isCombo ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : (ad.sellerUsername || '?').charAt(0).toUpperCase())}</div></div></div>
 <div class="flex-1 min-w-0 cursor-pointer" onclick="openAdDetail('${ad.id}')">
 <div class="flex items-center gap-1.5 text-sm font-semibold t1">${kunya} ${verified ? IGSVG.verified() : ''} <span class="t2 font-normal text-xs">• ${timeAgo(ad.createdAt)}</span></div>
 <div class="text-xs t2 truncate">
@@ -494,7 +494,7 @@ const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
   ${(userCurrentCoords && ad.lat && ad.lng) ? ` · <b class="text-blue-500 font-mono font-bold">${calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng)).toFixed(1)} ${t('км от вас')}</b>` : ''}
 </div>
 </div>
-<button onclick="openAdDetail('${ad.id}')" class="ig-btn-nav t1"><i class="fa-solid fa-ellipsis"></i></button>
+<button onclick="openAdDetail('${ad.id}')" aria-label="Меню объявления" class="ig-btn-nav t1"><i class="fa-solid fa-ellipsis"></i></button>
 </div>
 <div class="relative bg-black overflow-hidden cursor-pointer select-none" style="aspect-ratio:4/5" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => cardNav(event, '${ad.id}', dir))" onclick="openAdDetail('${ad.id}')">
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
@@ -507,7 +507,7 @@ ${ad.isCombo ? `
     <i class="fa-solid fa-fire-flame-curved animate-bounce"></i> СКИДКА -${discPercent}%
   </div>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
 ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
-${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
+${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" aria-label="Предыдущее фото" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" aria-label="Следующее фото" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
 </div>
 <div class="flex items-center gap-4 px-3.5 pt-3 t1">
 <button onclick="toggleLike('${ad.id}', event)" class="ig-btn-nav ${liked ? 'heart-pop' : ''}" title="Лайк">${IGSVG.heart(liked)}</button>
@@ -516,12 +516,12 @@ ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" class="absol
 ${ad.isCombo ? `<span class="ml-auto text-[11px] font-extrabold flex items-center gap-1" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${ad.comboItems.length} товаров</span>` : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav ml-auto" title="Занять очередь">${IGSVG.bookmark(isFav)}</button>`}
 </div>
 ${hasDiscount ? `
-<div class="mx-3.5 mt-2 p-2.5 rounded-xl border flex items-center justify-between" style="border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)">
-  <div>
-    <div class="text-[11px] t2 line-through font-semibold">$${Number(ad.oldPrice).toFixed(2)}</div>
-    <div class="text-base font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)} <span class="text-[10px] font-bold text-white px-1.5 py-0.5 rounded ml-1" style="background:#ef4444">-${discPercent}%</span></div>
-  </div>
-  <div class="text-right">
+  <div class="mx-3.5 mt-2 p-2.5 rounded-xl border flex items-center justify-between" style="border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)">
+    <div>
+      <div class="text-[11px] t2 line-through font-semibold">$${Number(ad.oldPrice).toFixed(2)}</div>
+      <div class="text-base font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)} <span class="text-[10px] font-extrabold text-black px-1.5 py-0.5 rounded ml-1 bg-red-400">-${discPercent}%</span></div>
+    </div>
+	<div class="text-right">
     <div class="text-[10px] uppercase font-bold t2">Ваша выгода:</div>
     <div class="text-xs font-black" style="color:#10b981">+$${saveAmount.toFixed(2)}</div>
   </div>
@@ -1122,9 +1122,9 @@ async function openAdDetail(adId, countView = true) {
 <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
         <div class="relative w-9 h-9 rounded-full p-[2px] ${verified ? 'story-ring' : 'bg-field'}">
           <div class="w-full h-full rounded-full bg-card p-[1.5px]">
-            <div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
-              ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
-            </div>
+<div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
+    ${avatar ? `<img src="${avatar}" alt="Аватар" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
+</div>
           </div>
         </div>
         <div class="flex-1 min-w-0">
