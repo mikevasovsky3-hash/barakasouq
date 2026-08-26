@@ -1343,15 +1343,14 @@ async function handleAuthSubmit(e) {
     }
     const whatsapp = whatsappCheck.number;
 
-// Проверяем наличие активного пользователя с таким номером
 const cleanWa = whatsapp.replace(/\D/g, '');
 
-    // Проверяем актуальное состояние номера напрямую в таблице Supabase
+    // 1. Проверяем существование номера строго в актуальной базе Supabase
     if (supabaseClient) {
       const { data: dbUser } = await supabaseClient
         .from('users')
-        .select('uid')
-        .ilike('whatsapp', `%${cleanWa}%`)
+        .select('uid, whatsapp')
+        .or(`whatsapp.ilike.%${cleanWa}%,whatsapp.eq.+${cleanWa},whatsapp.eq.${cleanWa}`)
         .maybeSingle();
 
       if (dbUser) {
