@@ -48,10 +48,15 @@ let categories = [
   { id:'electronics', name:'Электроника', icon:'fa-laptop' },
   { id:'transport', name:'Транспорт', icon:'fa-car' },
   { id:'realestate', name:'Недвижимость', icon:'fa-house' },
-  { id:'home', name:'Бытовые вещи', icon:'fa-couch' },
+  { id:'tools', name:'Инструменты', icon:'fa-hammer' },
+  { id:'home', name:'Для дома', icon:'fa-couch' },
+  { id:'food', name:'Продукты', icon:'fa-utensils' },
+  { id:'fashion', name:'Одежда и мода', icon:'fa-shirt' },
   { id:'services', name:'Услуги', icon:'fa-wrench' },
+  { id:'kids', name:'Детские товары', icon:'fa-baby' },
   { id:'other', name:'Прочее', icon:'fa-boxes-stacked' }
 ];
+
 const CATEGORY_ICON_POOL = ['fa-mobile-screen','fa-laptop','fa-car','fa-house','fa-couch','fa-wrench','fa-boxes-stacked','fa-shirt','fa-baby','fa-utensils','fa-book','fa-futbol','fa-gamepad','fa-tractor','fa-truck','fa-gem','fa-paw','fa-seedling','fa-motorcycle','fa-camera','fa-tv','fa-blender','fa-chair','fa-hammer','fa-paint-roller','fa-plug','fa-scissors','fa-briefcase','fa-bicycle','fa-ring'];
 let users = [];
 let archivedUsers = [];
@@ -249,6 +254,11 @@ const DICTIONARY = {
   'Недвижимость': 'عقارات',
   'Бытовые вещи': 'أدوات منزلية',
   'Услуги': 'خدمات',
+  'Инструменты': 'عدد وأدوات',
+  'Для дома': 'للمنزل',
+  'Продукты': 'مواد غذائية وخضار',
+  'Одежда и мода': 'ملابس وأزياء',
+'Детские товары': 'مستلزمات أطفال',
   'Прочее': 'أخرى',
   'Страница': 'صفحة',
   'из': 'من',

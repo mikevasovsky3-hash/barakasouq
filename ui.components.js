@@ -217,8 +217,9 @@ function renderPhotoThumbnailsGrid(mode = 'create') {
 
 function fillCategorySelect(sel, selected) { 
   if (!sel) return; 
-  sel.innerHTML = `<option value="" disabled ${!selected ? 'selected' : ''}>${t('Категория *')}</option>` + categories.map(c => `<option value="${c.id}">${t(c.name)}</option>`).join(''); 
-  if (selected) sel.value = selected; 
+  const currentVal = selected || sel.value || '';
+  sel.innerHTML = `<option value="" disabled ${!currentVal ? 'selected' : ''}>${t('Категория *')}</option>` + categories.map(c => `<option value="${c.id}">${t(c.name)}</option>`).join(''); 
+  if (currentVal) sel.value = currentVal; 
 }
 
 function renderComboItemsList() {
