@@ -430,9 +430,14 @@ body { top: 0px !important; }
     <input type="number" id="ad-price" step="0.01" required placeholder="Цена, $ *" class="ig-input flex-1 px-3.5 py-2.5 text-xs font-bold draft-field">
     <div class="px-3 py-2 rounded-lg bg-field border b-ig text-xs font-bold t2 flex items-center">USD ($)</div>
   </div>
-  <div class="flex gap-3 text-xs">
-    <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#10b981"><span style="color:#10b981" class="font-semibold">Даром 🎁</span></label>
-    <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#3b82f6"><span style="color:#3b82f6" class="font-semibold">Договорная 🤝</span></label>
+  <div class="flex items-center justify-between gap-2 text-xs flex-wrap">
+    <div class="flex items-center gap-3">
+      <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#10b981"><span style="color:#10b981" class="font-semibold">Даром 🎁</span></label>
+      <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#3b82f6"><span style="color:#3b82f6" class="font-semibold">Договорная 🤝</span></label>
+    </div>
+    <div id="women-only-container" class="hidden items-center">
+      <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="ad-is-women-only" class="w-4 h-4 rounded draft-field" style="accent-color:#ec4899"><span style="color:#ec4899" class="font-semibold">Для женщин 🌸</span></label>
+    </div>
   </div>
 </div>
 
@@ -497,11 +502,6 @@ body { top: 0px !important; }
     <select id="ad-currency" class="ig-input w-full px-3 py-2 text-xs draft-field">
       <option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option>
     </select>
-  </div>
-
-  <div id="women-only-container" class="hidden items-center justify-between p-2.5 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
-    <div id="ad-women-label" class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div>
-    <input type="checkbox" id="ad-is-women-only" class="w-4 h-4 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
   </div>
 
   <div id="ad-onbehalf-container" class="hidden">
