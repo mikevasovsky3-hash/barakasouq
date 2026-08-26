@@ -835,15 +835,11 @@ async function handleCreateAdSubmit(e) {
 
   let postingUser = currentUser;
 
-  // Авторегистрация гостя при первой публикации
+// Авторегистрация гостя при первой публикации только по номеру
   if (!postingUser) {
-    const gKunya = byId('guest-kunya')?.value.trim();
     const gWaRaw = byId('guest-whatsapp')?.value.trim();
-    const gUser = byId('guest-username')?.value.trim();
-    const gPassRaw = byId('guest-password')?.value;
-
-    if (!gKunya || !gWaRaw || !gUser || !gPassRaw) {
-      showToast('Заполните данные продавца (Имя, WhatsApp, Логин и Пароль)', 'warning');
+    if (!gWaRaw) {
+      showToast('Укажите ваш номер WhatsApp для связи', 'warning');
       return;
     }
 
@@ -852,41 +848,46 @@ async function handleCreateAdSubmit(e) {
       showToast(waCheck.error, 'error');
       return;
     }
+    const cleanWa = waCheck.number;
 
-    if (users.some(u => u.username && u.username.toLowerCase() === gUser.toLowerCase())) {
-      showToast('Этот логин уже занят! Придумайте другой.', 'error');
-      return;
+    // Если аккаунт с таким номером уже существует — привязываем к нему
+    const existing = users.find(u => u.whatsapp && u.whatsapp.replace(/\D/g, '') === cleanWa.replace(/\D/g, ''));
+    if (existing) {
+      postingUser = existing;
+      saveUserSession(postingUser, true);
+    } else {
+      if (!supabaseClient) {
+        showToast('Нет соединения с базой данных', 'error');
+        return;
+      }
+
+      const autoLogin = 'user_' + cleanWa.replace(/\D/g, '').slice(-6);
+      const autoPass = 'sham' + Math.floor(1000 + Math.random() * 9000);
+      const passHash = await sha256(autoPass);
+      const newUid = 'u_' + Date.now();
+
+      const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+        p_uid: newUid,
+        p_username: autoLogin,
+        p_password_hash: passHash,
+        p_kunya: 'Пользователь',
+        p_gender: 'MALE',
+        p_whatsapp: cleanWa,
+        p_avatar: null
+      });
+
+      if (regErr || !regRes || !regRes.success) {
+        showToast(regRes?.error || 'Ошибка создания аккаунта', 'error');
+        return;
+      }
+
+      postingUser = regRes.user;
+      users.push(postingUser);
+      saveUserSession(postingUser, true);
+      showToast(`Профиль создан! Логин: @${postingUser.username}`, 'success');
     }
-
-    if (!supabaseClient) {
-      showToast('Нет соединения с базой данных', 'error');
-      return;
-    }
-
-    const passHash = await sha256(gPassRaw);
-    const newUid = 'u_' + Date.now();
-
-    const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
-      p_uid: newUid,
-      p_username: gUser,
-      p_password_hash: passHash,
-      p_kunya: gKunya,
-      p_gender: 'MALE',
-      p_whatsapp: waCheck.number,
-      p_avatar: null
-    });
-
-    if (regErr || !regRes || !regRes.success) {
-      showToast(regRes?.error || 'Ошибка авторегистрации', 'error');
-      return;
-    }
-
-    postingUser = regRes.user;
-    users.push(postingUser);
-    saveUserSession(postingUser, true);
-    showToast(`Профиль создан! Добро пожаловать, ${postingUser.kunya}!`, 'success');
   }
-
+  
   const onbS = byId('ad-post-onbehalf');
   if (onbS && onbS.value && (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'))) {
     const t = users.find(u => u.username === onbS.value);
@@ -1308,44 +1309,32 @@ function openAuthModal() {
 }
 
 function switchAuthTab(tab) { 
-  const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), b = byId('auth-submit-btn'); 
+  const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), lf = byId('login-fields'), b = byId('auth-submit-btn'); 
   if (tab === 'login') { 
     l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; 
     r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; 
-    f.classList.add('hidden'); 
+    if (lf) lf.classList.remove('hidden');
+    if (f) f.classList.add('hidden'); 
     b.innerText = t('Войти'); 
   } else { 
     r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; 
     l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; 
-    f.classList.remove('hidden'); 
-    b.innerText = t('Зарегистрироваться'); 
+    if (lf) lf.classList.add('hidden');
+    if (f) f.classList.remove('hidden'); 
+    b.innerText = t('Получить код'); 
   } 
 }
 
 async function handleAuthSubmit(e) {
   e.preventDefault();
   const isReg = !byId('reg-fields').classList.contains('hidden');
-  const username = byId('auth-username').value.trim();
-  const rawPassword = byId('auth-password').value;
-  const password = await sha256(rawPassword);
   const remember = byId('auth-remember-me').checked;
   const btn = byId('auth-submit-btn');
   const originalText = btn.innerText;
   btn.disabled = true;
-  btn.innerText = 'Проверка...';
 
   if (isReg) {
-    const kunya = byId('auth-kunya').value.trim() || username;
-    const gender = document.querySelector('input[name="auth-gender"]:checked')?.value || 'MALE';
     const whatsappRaw = byId('auth-whatsapp').value.trim();
-    const avatar = byId('auth-avatar-data')?.value || null;
-
-    if (users.some(u => u.username && u.username.toLowerCase() === username.toLowerCase()) || archivedUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
-      showToast('Логин уже занят!', 'error');
-      btn.disabled = false; btn.innerText = originalText;
-      return;
-    }
-
     const whatsappCheck = validateWhatsApp(whatsappRaw);
     if (!whatsappCheck.valid) {
       showToast(whatsappCheck.error, 'error');
@@ -1356,42 +1345,109 @@ async function handleAuthSubmit(e) {
 
     const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,'')) || archivedUsers.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
     if (waExists) {
-      showToast('Этот номер WhatsApp уже зарегистрирован!', 'error');
+      showToast('Этот номер уже зарегистрирован! Войдите во вкладке Вход.', 'warning');
       btn.disabled = false; btn.innerText = originalText;
       return;
     }
 
-    const uid = 'u_' + Date.now();
-    if (!supabaseClient) {
-      showToast('Нет соединения с базой данных', 'error');
-      btn.disabled = false; btn.innerText = originalText;
+    const otpBlock = byId('auth-otp-block');
+    const otpInput = byId('auth-otp-code');
+
+    // Шаг 1: генерация и отправка одноразового кода
+    if (!pendingRegVerification || pendingRegVerification.whatsapp !== whatsapp) {
+      btn.innerText = 'Отправка кода...';
+      const generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+      const autoPass = 'sham' + Math.floor(1000 + Math.random() * 9000);
+      const autoLogin = 'user_' + whatsapp.replace(/\D/g,'').slice(-6);
+
+      try {
+        const gatewayRes = await fetch('https://whatsapp-gateway-kohl.vercel.app/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            phone: whatsapp, 
+            code: `${generatedCode}\n👤 Ваш логин: ${autoLogin}\n🔑 Ваш пароль: ${autoPass}` 
+          })
+        });
+
+        const gatewayData = await gatewayRes.json();
+        if (!gatewayRes.ok || !gatewayData.success) {
+          throw new Error(gatewayData.error || 'Ошибка шлюза');
+        }
+
+        pendingRegVerification = {
+          code: generatedCode,
+          username: autoLogin,
+          password: autoPass,
+          whatsapp: whatsapp,
+          createdAt: Date.now()
+        };
+
+        if (otpBlock) otpBlock.classList.remove('hidden');
+        if (otpInput) { otpInput.value = ''; otpInput.focus(); }
+
+        if (typeof startOtpTimer === 'function') startOtpTimer();
+        btn.disabled = false;
+        btn.innerText = 'Подтвердить код';
+        showToast('Код и данные входа отправлены в WhatsApp!', 'success');
+        return;
+      } catch (err) {
+        console.error('WhatsApp Gateway error:', err);
+        showToast('Не удалось отправить сообщение в WhatsApp', 'error');
+        btn.disabled = false; btn.innerText = originalText;
+        return;
+      }
+    }
+
+    // Шаг 2: проверка кода и мгновенная регистрация
+    const enteredCode = otpInput?.value.trim();
+    if (!enteredCode || enteredCode !== pendingRegVerification.code) {
+      showToast('Неверный код из WhatsApp!', 'error');
+      btn.disabled = false; btn.innerText = 'Подтвердить код';
       return;
     }
+
+    btn.innerText = 'Создание профиля...';
+    const passHash = await sha256(pendingRegVerification.password);
+    const uid = 'u_' + Date.now();
 
     const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
       p_uid: uid,
-      p_username: username,
-      p_password_hash: password,
-      p_kunya: kunya,
-      p_gender: gender,
-      p_whatsapp: whatsapp,
-      p_avatar: avatar
+      p_username: pendingRegVerification.username,
+      p_password_hash: passHash,
+      p_kunya: 'Пользователь',
+      p_gender: 'MALE',
+      p_whatsapp: pendingRegVerification.whatsapp,
+      p_avatar: null
     });
 
     if (regErr || !regRes || !regRes.success) {
-      showToast(regRes?.error || 'Ошибка при регистрации', 'error');
-      btn.disabled = false; btn.innerText = originalText;
+      showToast(regRes?.error || 'Ошибка создания аккаунта', 'error');
+      btn.disabled = false; btn.innerText = 'Подтвердить код';
       return;
     }
 
     const localUser = regRes.user;
     users.push(localUser);
     saveUserSession(localUser, remember);
+    pendingRegVerification = null;
+    if (otpBlock) otpBlock.classList.add('hidden');
     closeModal('modal-auth');
-    showToast('Регистрация успешна! 🎁 Приветственный бонус: 10 AC', 'success');
-    btn.disabled = false; btn.innerText = originalText;
+    showToast(`Добро пожаловать! Логин: @${localUser.username}`, 'success');
+    btn.disabled = false; btn.innerText = 'Войти';
+    return;
   } else {
-    const isArchivedLocally = archivedUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+    // Вход по логину или номеру WhatsApp
+    btn.innerText = 'Проверка...';
+    const loginIdentifier = byId('auth-username').value.trim();
+    const rawPassword = byId('auth-password').value;
+    const password = await sha256(rawPassword);
+
+    const isArchivedLocally = archivedUsers.some(u => 
+      (u.username && u.username.toLowerCase() === loginIdentifier.toLowerCase()) ||
+      (u.whatsapp && u.whatsapp.replace(/\D/g,'') === loginIdentifier.replace(/\D/g,''))
+    );
+
     if (isArchivedLocally) {
       showToast('Этот аккаунт перенесен в архив администратором. Доступ заблокирован.', 'error');
       btn.disabled = false; btn.innerText = originalText;
@@ -1403,12 +1459,13 @@ async function handleAuthSubmit(e) {
       btn.disabled = false; btn.innerText = originalText;
       return;
     }
+
     try {
       const { data: res, error } = await supabaseClient.rpc('verify_user_login', {
-        p_username: username,
+        p_username: loginIdentifier,
         p_password_hash: password
       });
-	  
+      
       if (error) throw error;
 
       if (res && res.success && res.user) {
@@ -2027,5 +2084,36 @@ async function cleanUnusedStorageImagesAdmin() {
   } catch (e) {
     console.error(e);
     showToast('Ошибка при сканировании хранилища', 'error');
+  }
+}let otpInterval = null;
+
+function startOtpTimer(seconds = 60) {
+  clearInterval(otpInterval);
+  const timerEl = byId('auth-otp-timer');
+  const resendBtn = byId('auth-resend-btn');
+  if (resendBtn) resendBtn.classList.add('hidden');
+  if (timerEl) { timerEl.classList.remove('hidden'); timerEl.innerText = '01:00'; }
+
+  let timeLeft = seconds;
+  otpInterval = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    if (timerEl) timerEl.innerText = `${m}:${s}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(otpInterval);
+      if (timerEl) timerEl.classList.add('hidden');
+      if (resendBtn) resendBtn.classList.remove('hidden');
+    }
+  }, 1000);
+}
+
+function resendWhatsAppCode() {
+  pendingRegVerification = null;
+  const submitBtn = byId('auth-submit-btn');
+  if (submitBtn) {
+    submitBtn.innerText = 'Получить код';
+    submitBtn.click();
   }
 }

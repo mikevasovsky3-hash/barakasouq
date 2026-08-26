@@ -403,21 +403,21 @@ body { top: 0px !important; }
 <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold border-b-2 border-transparent t2">Регистрация</button>
 </div>
 <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-sm">
-<input type="text" id="auth-username" required placeholder="Логин *" class="ig-input w-full px-3.5 py-2.5 text-xs">
-<input type="password" id="auth-password" required placeholder="Пароль *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<div id="login-fields" class="space-y-2.5">
+  <input type="text" id="auth-username" placeholder="Логин или WhatsApp *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+  <input type="password" id="auth-password" placeholder="Пароль *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+</div>
 <div id="reg-fields" class="hidden space-y-2.5">
-<input type="text" id="auth-kunya" placeholder="Имя / Кунья *" class="ig-input w-full px-3.5 py-2.5 text-xs">
-<div>
-<input type="file" id="auth-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'auth')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
-<input type="hidden" id="auth-avatar-data">
-<div id="auth-avatar-preview-box" class="hidden mt-2 w-14 h-14 rounded-full overflow-hidden border b-ig"><img id="auth-avatar-preview-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью аватара" class="w-full h-full object-cover"></div>
-</div>
-<div class="grid grid-cols-2 gap-2">
-<label class="flex items-center justify-center gap-2 p-2.5 rounded-lg border b-ig bg-field cursor-pointer text-xs font-semibold"><input type="radio" name="auth-gender" value="MALE" checked class="accent-[#0095f6]"><span>Мужчина</span></label>
-<label class="flex items-center justify-center gap-2 p-2.5 rounded-lg border b-ig bg-field cursor-pointer text-xs font-semibold"><input type="radio" name="auth-gender" value="FEMALE" class="accent-[#ed4956]"><span>Женщина 🌸</span></label>
-</div>
-<input type="text" id="auth-whatsapp" placeholder="WhatsApp номер * (+963…)" class="ig-input w-full px-3.5 py-2.5 text-xs">
-</div>
+  <input type="text" id="auth-whatsapp" placeholder="Номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+<div id="auth-otp-block" class="hidden space-y-1.5 pt-1">
+    <input type="text" id="auth-otp-code" placeholder="Введите 6-значный код *" maxlength="6" class="ig-input w-full px-3.5 py-2.5 text-xs text-center font-bold tracking-widest text-emerald-400">
+    <div class="flex items-center justify-between text-[10px] px-1">
+      <span class="t2">Код отправлен в WhatsApp</span>
+      <span id="auth-otp-timer" class="font-mono font-bold text-amber-500">01:00</span>
+    </div>
+    <button type="button" id="auth-resend-btn" onclick="resendWhatsAppCode()" class="hidden w-full text-[11px] text-blue-400 font-bold hover:underline text-center pt-1">Отправить код повторно</button>
+  </div>
+  </div>
 <label class="flex items-center gap-2 text-xs t2 cursor-pointer"><input type="checkbox" id="auth-remember-me" checked class="accent-[#0095f6]"><span>Запомнить мой вход на этом устройстве</span></label>
 <button type="submit" id="auth-submit-btn" class="ig-btn w-full py-2.5 text-sm">Войти</button>
 </form>
@@ -490,18 +490,11 @@ body { top: 0px !important; }
 </div>
 
 <!-- 7. Блок автора для неавторизованного гостя -->
-<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2.5" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
+<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
   <div class="text-xs font-bold flex items-center gap-1.5" style="color:#0095f6">
-    <i class="fa-solid fa-user-plus"></i> Ваши контакты (создание профиля в 1 клик):
+    <i class="fa-brands fa-whatsapp text-sm"></i> Контакт для связи (профиль создастся автоматически):
   </div>
-  <div class="grid grid-cols-2 gap-2">
-    <input type="text" id="guest-kunya" placeholder="Ваше Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
-    <input type="text" id="guest-whatsapp" placeholder="WhatsApp (+963…)*" class="ig-input w-full px-3 py-2 text-xs">
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <input type="text" id="guest-username" placeholder="Придумайте логин *" class="ig-input w-full px-3 py-2 text-xs">
-    <input type="password" id="guest-password" placeholder="Придумайте пароль *" class="ig-input w-full px-3 py-2 text-xs">
-  </div>
+  <input type="text" id="guest-whatsapp" placeholder="Ваш номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
 </div>
 
 <!-- Информация для авторизованного -->

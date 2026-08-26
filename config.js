@@ -1,5 +1,6 @@
 /* ================= STATE & CONFIGURATION ================= */
 let currentUser = null;
+let pendingRegVerification = null;
 let supabaseClient = null;
 const SUPABASE_URL = "https://wykjwznojmzlbrujikft.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5a2p3em5vam16bGJydWppa2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczODUwNTksImV4cCI6MjEwMjk2MTA1OX0.5wfUCVKV9yQan1nz2BLLLzzzy9JrBBovzVeEePg09x4";
