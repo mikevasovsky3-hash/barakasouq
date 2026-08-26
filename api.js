@@ -274,14 +274,36 @@ async function initSupabaseSync() {
   renderCategoryPills();
   renderAds();
 
+  if (!supabaseClient) {
+    console.warn("Supabase client not initialized yet.");
+    return;
+  }
+
   const st = byId('cloud-sync-status');
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
-try {
+  try {
 const [usersRes, adsRes] = await Promise.all([
   supabaseClient.from('users').select('*'),
-  supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(30)
-]);	
+  supabaseClient.from('ads').select('*').order('created_at', { ascending: false })
+]); 
+
+// Если база вернула пользователей, обновляем список. Если нет — оставляем старые, чтобы они не пропадали
+if (usersRes.data && usersRes.data.length > 0) {
+  const allParsedUsers = usersRes.data.map(u => ({
+    ...u,
+    passwordHash: u.password_hash,
+    verifiedShop: !!u.verified_shop,
+    avitocashBalance: Number(u.avitocash_balance || 0),
+    trialBalance: Number(u.trial_balance || 0),
+    showWomenAds: !!u.show_women_ads,
+    frozen: !!u.frozen,
+    isArchived: !!u.is_archived
+  }));
+
+  users = allParsedUsers.filter(u => !u.isArchived);
+  archivedUsers = allParsedUsers.filter(u => u.isArchived);
+}
     const combosPromise = supabaseClient.from('combos').select('*');
     const catsPromise = supabaseClient.from('categories').select('*');
     const reportsPromise = (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) 
@@ -311,9 +333,9 @@ const [usersRes, adsRes] = await Promise.all([
           saveUserSession(currentUser, true);
         }
       }
-    }	
+    }  
 
-if (adsRes.data) {
+    if (adsRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
 
       ads = adsRes.data
@@ -350,7 +372,7 @@ if (adsRes.data) {
           };
         });
     }
-	
+  
     if (combosRes.data) {
       combos = combosRes.data.map(c => ({
         id: c.id,
@@ -366,7 +388,7 @@ if (adsRes.data) {
     if (catsRes.data && catsRes.data.length) categories = catsRes.data;
     if (reportsRes.data) reports = reportsRes.data;
 
-saveCachedAds();
+    saveCachedAds();
     renderCategoryPills();
     renderAds();
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
