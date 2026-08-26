@@ -2958,21 +2958,54 @@ function exportShopDatabaseJSON() {
   showToast('Бэкап магазина выгружен!', 'success');
 }
 
-function exportFullDatabaseJSON() {
+async function exportFullDatabaseJSON() {
   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
     showToast('Доступ запрещен', 'error');
     return;
   }
   try {
+    showToast('Архивация объявлений и конвертация всех фотографий в Base64...', 'info');
+
     const backupId = 'BK-' + Date.now();
     const exportDate = new Date().toISOString();
+
+    // 1. Конвертируем все фотографии объявлений в автономный формат Base64
+    const packagedAds = [];
+    for (let i = 0; i < ads.length; i++) {
+      const a = ads[i];
+      const rawImgs = Array.isArray(a.images) ? a.images : [a.image].filter(Boolean);
+      const b64Images = [];
+      for (const imgUrl of rawImgs) {
+        b64Images.push(await urlToBase64(imgUrl));
+      }
+      packagedAds.push({
+        ...a,
+        images: b64Images,
+        image: b64Images[0] || a.image
+      });
+    }
+
+    // 2. Конвертируем аватары и логотипы магазинов
+    const packagedUsers = [];
+    for (const u of users) {
+      let b64Avatar = u.avatar;
+      let shopCopy = u.shop ? { ...u.shop } : null;
+      if (u.avatar) b64Avatar = await urlToBase64(u.avatar);
+      if (shopCopy && shopCopy.logo) shopCopy.logo = await urlToBase64(shopCopy.logo);
+      packagedUsers.push({
+        ...u,
+        avatar: b64Avatar,
+        shop: shopCopy
+      });
+    }
+
     const backupData = {
-      version: '3.1',
+      version: '4.0_FULL_MEDIA',
       type: 'AVITO_SHAM_FULL_PLATFORM_BACKUP',
       exportDate: exportDate,
-      users: users,
+      users: packagedUsers,
       archivedUsers: archivedUsers,
-      ads: ads,
+      ads: packagedAds,
       categories: categories,
       combos: combos,
       rates: EXCHANGE_RATES,
@@ -2981,7 +3014,7 @@ function exportFullDatabaseJSON() {
 
     if (typeof BACKUPS_META === 'object') {
       BACKUPS_META[backupId] = {
-        type: 'full',
+        type: 'full_with_media',
         exportDate: exportDate,
         by: currentUser.uid || currentUser.username || 'admin'
       };
@@ -2993,7 +3026,7 @@ function exportFullDatabaseJSON() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `AvitoSham_FullDB_${Date.now()}.json`;
+    link.download = `AvitoSham_FullMedia_DB_${Date.now()}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -3002,111 +3035,125 @@ function exportFullDatabaseJSON() {
     if (byId('admin-backup-list') && typeof renderBackupList === 'function') {
       renderBackupList();
     }
-    showToast('Полный бэкап выгружен и сохранен в журнале!', 'success');
+    showToast('Полный медиа-бэкап (текст + фото) успешно выгружен!', 'success');
   } catch (err) {
     console.error('Export error:', err);
-    showToast('Ошибка создания бэкапа', 'error');
+    showToast('Ошибка создания полного бэкапа', 'error');
   }
 }
 
 function importFullDatabaseJSON(event) {
   if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) return;
   const f = event.target.files[0]; if (!f) return;
-  showConfirmModal('Импорт полной БД', 'Восстановить базу данных из бэкапа? Это перенесет все данные и восстановит привязки.', () => {
+  showConfirmModal('Импорт полной БД с медиа', 'Восстановить базу данных и загрузить все фотографии в Supabase Storage?', () => {
     const r = new FileReader();
     r.onload = async e => {
       try {
         const d = JSON.parse(e.target.result);
-        showToast('Загружаем данные в облако Supabase...', 'info');
+        showToast('Загружаем данные и разворачиваем фото в Supabase Storage...', 'info');
+
+        const rawAds = d.ads || [];
+        const restoredAds = [];
+
+        for (const a of rawAds) {
+          const rawImgs = Array.isArray(a.images) ? a.images : [a.image].filter(Boolean);
+          const newUrls = [];
+
+          for (const imgItem of rawImgs) {
+            // Если в бэкапе лежит Base64-фото, сохраняем его в Storage бакета listings
+            if (typeof imgItem === 'string' && imgItem.startsWith('data:image')) {
+              try {
+                const res = await fetch(imgItem);
+                const blob = await res.blob();
+                const filePath = `public/restored_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+                const { error: upErr } = await supabaseClient.storage.from('listings').upload(filePath, blob, { contentType: 'image/jpeg', upsert: false });
+                if (!upErr) {
+                  const { data: pubData } = supabaseClient.storage.from('listings').getPublicUrl(filePath);
+                  newUrls.push(pubData.publicUrl);
+                } else {
+                  newUrls.push(imgItem);
+                }
+              } catch(err) {
+                newUrls.push(imgItem);
+              }
+            } else {
+              newUrls.push(imgItem);
+            }
+          }
+
+          restoredAds.push({
+            id: a.id,
+            title: a.title,
+            category: a.category,
+            store_category: a.storeCategory || a.store_category || '',
+            region: a.region || 'DAM',
+            city: a.city || '',
+            is_women_only: !!a.isWomenOnly,
+            is_free: !!a.isFree,
+            is_negotiable: !!a.isNegotiable,
+            price: Number(a.price || 0),
+            old_price: ((a.oldPrice || a.old_price) && Number(a.oldPrice || a.old_price) > Number(a.price)) ? Number(a.oldPrice || a.old_price) : null,
+            currency: a.currency || 'USD',
+            description: a.desc || a.description || '',
+            images: newUrls,
+            image: newUrls[0] || a.image,
+            lat: Number(a.lat || 33.5138),
+            lng: Number(a.lng || 36.2765),
+            seller_username: a.sellerUsername || a.seller_username || '',
+            seller_uid: a.sellerUid || a.seller_uid || '',
+            seller_kunya: a.sellerKunya || a.seller_kunya || '',
+            seller_whatsapp: a.sellerWhatsapp || a.seller_whatsapp || '',
+            status: a.status || 'ACTIVE',
+            created_at: Number(a.createdAt || a.created_at || Date.now()),
+            queue: Array.isArray(a.queue) ? a.queue : [],
+            likes: Array.isArray(a.likes) ? a.likes : [],
+            views: Number(a.views || 0)
+          });
+        }
+
+        if (restoredAds.length && supabaseClient) {
+          await supabaseClient.from('ads').upsert(restoredAds);
+        }
 
         const rawUsers = d.users || [];
         if (Array.isArray(rawUsers) && supabaseClient) {
-            const dbUsers = rawUsers.map(u => ({
-                uid: u.uid,
-                username: u.username,
-                password_hash: u.passwordHash || u.password_hash || '',
-                kunya: u.kunya,
-                gender: u.gender || 'MALE',
-                whatsapp: u.whatsapp,
-                avatar: u.avatar,
-                role: u.role || 'USER',
-                verified_shop: !!(u.verifiedShop || u.verified_shop),
-                avitocash_balance: Number(u.avitocashBalance ?? u.shamcashBalance ?? 0),
-                trial_balance: Number(u.trialBalance || 10),
-                show_women_ads: !!u.showWomenAds,
-                shop: u.shop || null,
-                receipts: u.receipts || null
-            }));
-            const { error: userErr } = await supabaseClient.from('users').upsert(dbUsers);
-            if (userErr) console.warn("User import warning:", userErr);
-        }
-
-        const rawAds = d.ads || [];
-        if (Array.isArray(rawAds) && supabaseClient) {
-            const dbAds = rawAds.map(a => ({
-                id: a.id,
-                title: a.title,
-                category: a.category,
-                store_category: a.storeCategory || a.store_category || '',
-                region: a.region || 'DAM',
-                city: a.city || '',
-                is_women_only: !!a.isWomenOnly,
-                is_free: !!a.isFree,
-                is_negotiable: !!a.isNegotiable,
-                price: Number(a.price || 0),
-                oldPrice: ((a.oldPrice || a.old_price) && Number(a.oldPrice || a.old_price) > Number(a.price)) ? Number(a.oldPrice || a.old_price) : null,
-                currency: a.currency,
-                description: a.desc || a.description || '',
-images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
-image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
-                lat: Number(a.lat || 33.5138),
-                lng: Number(a.lng || 36.2765),
-                seller_username: a.sellerUsername || a.seller_username || '',
-                seller_uid: a.sellerUid || a.seller_uid || '',
-                seller_kunya: a.sellerKunya || a.seller_kunya || '',
-                seller_whatsapp: a.sellerWhatsapp || a.seller_whatsapp || '',
-                status: a.status || 'ACTIVE',
-                created_at: Number(a.createdAt || a.created_at || Date.now()),
-                queue: Array.isArray(a.queue) ? a.queue : [],
-                likes: Array.isArray(a.likes) ? a.likes : [],
-                views: Number(a.views || 0)
-            }));
-            const { error: adErr } = await supabaseClient.from('ads').upsert(dbAds);
-            if (adErr) console.warn("Ads import warning:", adErr);
-        }
-
-        const rawCombos = d.combos || [];
-        if (Array.isArray(rawCombos) && supabaseClient) {
-            const dbCombos = rawCombos.map(c => ({
-                id: c.id,
-                shop_uid: c.shopUid || c.shop_uid || '',
-                seller_username: c.sellerUsername || c.seller_username || '',
-                title: c.title,
-                price: Number(c.price || 0),
-                items: Array.isArray(c.items) ? c.items : [],
-                created_at: Number(c.createdAt || c.created_at || Date.now())
-            }));
-            await supabaseClient.from('combos').upsert(dbCombos);
+          const dbUsers = rawUsers.map(u => ({
+            uid: u.uid,
+            username: u.username,
+            password_hash: u.passwordHash || u.password_hash || '',
+            kunya: u.kunya,
+            gender: u.gender || 'MALE',
+            whatsapp: u.whatsapp,
+            avatar: u.avatar,
+            role: u.role || 'USER',
+            verified_shop: !!(u.verifiedShop || u.verified_shop),
+            avitocash_balance: Number(u.avitocashBalance ?? u.shamcashBalance ?? 0),
+            trial_balance: Number(u.trialBalance || 10),
+            show_women_ads: !!u.showWomenAds,
+            shop: u.shop || null,
+            receipts: u.receipts || null
+          }));
+          await supabaseClient.from('users').upsert(dbUsers);
         }
 
         if (Array.isArray(d.categories) && supabaseClient) {
-            await supabaseClient.from('categories').upsert(d.categories);
+          await supabaseClient.from('categories').upsert(d.categories);
         }
 
-        const rawReports = d.reports || [];
-        if (Array.isArray(rawReports) && supabaseClient) {
-            const dbReports = rawReports.map(r => ({
-                id: r.id,
-                ad_id: r.adId || r.ad_id,
-                reason: r.reason,
-                comment: r.comment || '',
-                reporter_username: r.reporterUsername || r.reporter_username || '',
-                timestamp: Number(r.timestamp || Date.now())
-            }));
-            await supabaseClient.from('reports').upsert(dbReports);
+        if (Array.isArray(d.combos) && supabaseClient) {
+          const dbCombos = d.combos.map(c => ({
+            id: c.id,
+            shop_uid: c.shopUid || c.shop_uid || '',
+            seller_username: c.sellerUsername || c.seller_username || '',
+            title: c.title,
+            price: Number(c.price || 0),
+            items: Array.isArray(c.items) ? c.items : [],
+            created_at: Number(c.createdAt || c.created_at || Date.now())
+          }));
+          await supabaseClient.from('combos').upsert(dbCombos);
         }
 
-        showToast('Все данные и привязки успешно перенесены!', 'success');
+        showToast('Полный медиа-бэкап восстановлен!', 'success');
         setTimeout(() => window.location.reload(), 1500);
       } catch (err) { 
         console.error(err);

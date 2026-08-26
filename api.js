@@ -100,6 +100,24 @@ function validateWhatsApp(number) {
   return { valid: true, number: cleaned };
 }
 
+async function urlToBase64(url) {
+  try {
+    if (!url || typeof url !== 'string') return url;
+    if (url.startsWith('data:')) return url;
+    const res = await fetch(url);
+    if (!res.ok) return url;
+    const blob = await res.blob();
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(url);
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) {
+    return url;
+  }
+}
+
 function generateFastThumbnail(base64Data, size = 320) {
   return new Promise((resolve) => {
     const img = new Image();
