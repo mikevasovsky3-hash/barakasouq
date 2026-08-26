@@ -127,10 +127,9 @@ function handleNavClick(tab) {
   LAST_NAV = tab; 
   if (tab === 'home') { selectedCategory = 'all'; resetPageAndRender(); } 
   else if (tab === 'shops') { selectedCategory = 'shops_dir'; resetPageAndRender(); } 
-  else if (tab === 'create') { 
-    if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт для подачи объявления', 'warning'); } 
-    else openCreateAdModal(); 
-  } 
+else if (tab === 'create') { 
+    openCreateAdModal(); 
+  }
   else if (tab === 'favorites') { selectedCategory = 'favorites'; resetPageAndRender(); } 
   else if (tab === 'profile') { 
     if (!currentUser) openAuthModal(); 
@@ -551,74 +550,82 @@ function saveDraft() { try { const data = { title: byId('ad-title').value, categ
 function restoreDraft() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { const data = JSON.parse(d); byId('ad-title').value = data.title || ''; byId('ad-category').value = data.category || 'electronics'; byId('ad-region').value = data.region || 'DAM'; byId('ad-city').value = data.city || ''; byId('ad-price').value = data.price || ''; byId('ad-currency').value = data.currency || 'USD'; byId('ad-desc').value = data.desc || ''; byId('draft-restore-banner').classList.add('hidden'); } } catch(e){} }
 function clearDraft(silent) { localStorage.removeItem('bs_ad_draft'); byId('draft-restore-banner').classList.add('hidden'); if(!silent) showToast('Черновик удален', 'info'); }
 
+function toggleAdvancedCreateFields() {
+  const adv = byId('create-ad-advanced-fields');
+  const ic = byId('advanced-toggle-icon');
+  if (!adv) return;
+  const isHidden = adv.classList.contains('hidden');
+  adv.classList.toggle('hidden', !isHidden);
+  if (ic) ic.style.transform = isHidden ? 'rotate(180deg)' : 'none';
+  if (isHidden) setTimeout(initCreateMap, 150);
+}
+
 function openCreateAdModal() { 
-  if (!currentUser) { openAuthModal(); return; } 
   pendingCreateImages = []; 
   renderPhotoThumbnailsGrid('create'); 
   fillCategorySelect(byId('ad-category')); 
   loadDraftCheck();
 
+  const guestBlock = byId('guest-auth-block');
+  const userBadge = byId('user-logged-badge');
+  const userNameEl = byId('user-logged-name');
+
+  if (currentUser) {
+    if (guestBlock) guestBlock.classList.add('hidden');
+    if (userBadge) {
+      userBadge.classList.remove('hidden');
+      if (userNameEl) userNameEl.innerText = `${currentUser.kunya || currentUser.username} (@${currentUser.username})`;
+    }
+  } else {
+    if (guestBlock) guestBlock.classList.remove('hidden');
+    if (userBadge) userBadge.classList.add('hidden');
+  }
+
+  // Фоновый запрос GPS для автоматического выставления региона
+  if (navigator.geolocation && (!userCurrentCoords || !userCurrentCoords.lat)) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      userCurrentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (byId('ad-lat')) byId('ad-lat').value = pos.coords.latitude.toFixed(6);
+      if (byId('ad-lng')) byId('ad-lng').value = pos.coords.longitude.toFixed(6);
+      const sumEl = byId('ad-location-summary');
+      if (sumEl) sumEl.innerText = `Локация: GPS определена (${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)})`;
+    }, () => {}, { timeout: 7000 });
+  }
+
   const savedLocation = localStorage.getItem('bs_last_seller_location');
   if (savedLocation && (!localStorage.getItem('bs_ad_draft'))) {
     try {
       const loc = JSON.parse(savedLocation);
-      if (loc.region) byId('ad-region').value = loc.region;
-      if (loc.city) byId('ad-city').value = loc.city;
-      if (loc.lat) byId('ad-lat').value = loc.lat;
-      if (loc.lng) byId('ad-lng').value = loc.lng;
+      if (loc.region && byId('ad-region')) byId('ad-region').value = loc.region;
+      if (loc.city && byId('ad-city')) byId('ad-city').value = loc.city;
+      if (loc.lat && byId('ad-lat')) byId('ad-lat').value = loc.lat;
+      if (loc.lng && byId('ad-lng')) byId('ad-lng').value = loc.lng;
     } catch (e) {}
   } 
 
   const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); 
-  if (currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { 
+  if (currentUser && currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { 
     ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); 
     sc.classList.remove('hidden'); 
-  } else sc.classList.add('hidden'); 
+  } else if (sc) sc.classList.add('hidden'); 
 
   const wb = byId('women-only-container'); 
-  if (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { 
+  if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { 
     wb.classList.remove('hidden'); wb.classList.add('flex'); 
-  } else { 
+  } else if (wb) { 
     wb.classList.add('hidden'); wb.classList.remove('flex'); 
   } 
 
-  const neg = byId('ad-is-negotiable'); 
-  if (neg) { neg.checked = false; toggleNegotiableField(false); } 
-
   const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); 
   if (onbC && onbS) { 
-    if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') { 
+    if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { 
       onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); 
       if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } 
       onbC.classList.remove('hidden'); 
     } else onbC.classList.add('hidden'); 
   } 
 
-  const mHead = document.querySelector('#modal-create-ad h3');
-  if (mHead) mHead.innerText = t('Подача нового объявления');
-
-  const tInp = byId('ad-title'), cInp = byId('ad-city'), pInp = byId('ad-price'), dInp = byId('ad-desc');
-  if (tInp) tInp.placeholder = t('Заголовок объявления *');
-  if (cInp) cInp.placeholder = t('Город / Населенный пункт *');
-  if (pInp) pInp.placeholder = t('Цена *');
-  if (dInp) dInp.placeholder = t('Описание и возможные изъяны *');
-
-  const subBtn = document.querySelector('#modal-create-ad button[type="submit"]');
-  if (subBtn) subBtn.innerText = t('Опубликовать объявление');
-
-  const rSel = byId('ad-region');
-  if (rSel) {
-    Array.from(rSel.options).forEach(opt => {
-      if (opt.value) opt.text = t(REGION_NAMES[opt.value] || opt.text);
-      else opt.text = t('Регион *');
-    });
-  }
-
-  const upTxt = byId('ad-upload-btn-text');
-  if (upTxt) upTxt.innerText = t('Выбрать фотографии');
-
   openModal('modal-create-ad'); 
-  setTimeout(initCreateMap, 200); 
   document.querySelectorAll('.draft-field').forEach(el => { 
     el.addEventListener('input', saveDraft); 
     el.addEventListener('change', saveDraft); 
@@ -739,20 +746,72 @@ canvas.toBlob((blob) => {
 
 async function handleCreateAdSubmit(e) {
   e.preventDefault();
-  if (!currentUser) return;
-
-  const isFree = byId('ad-is-free')?.checked || false;
-  const isNegotiable = byId('ad-is-negotiable')?.checked || false;
-  const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price').value || 0);
 
   let postingUser = currentUser;
+
+  // Авторегистрация гостя при первой публикации
+  if (!postingUser) {
+    const gKunya = byId('guest-kunya')?.value.trim();
+    const gWaRaw = byId('guest-whatsapp')?.value.trim();
+    const gUser = byId('guest-username')?.value.trim();
+    const gPassRaw = byId('guest-password')?.value;
+
+    if (!gKunya || !gWaRaw || !gUser || !gPassRaw) {
+      showToast('Заполните данные продавца (Имя, WhatsApp, Логин и Пароль)', 'warning');
+      return;
+    }
+
+    const waCheck = validateWhatsApp(gWaRaw);
+    if (!waCheck.valid) {
+      showToast(waCheck.error, 'error');
+      return;
+    }
+
+    if (users.some(u => u.username && u.username.toLowerCase() === gUser.toLowerCase())) {
+      showToast('Этот логин уже занят! Придумайте другой.', 'error');
+      return;
+    }
+
+    if (!supabaseClient) {
+      showToast('Нет соединения с базой данных', 'error');
+      return;
+    }
+
+    const passHash = await sha256(gPassRaw);
+    const newUid = 'u_' + Date.now();
+
+    const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+      p_uid: newUid,
+      p_username: gUser,
+      p_password_hash: passHash,
+      p_kunya: gKunya,
+      p_gender: 'MALE',
+      p_whatsapp: waCheck.number,
+      p_avatar: null
+    });
+
+    if (regErr || !regRes || !regRes.success) {
+      showToast(regRes?.error || 'Ошибка авторегистрации', 'error');
+      return;
+    }
+
+    postingUser = regRes.user;
+    users.push(postingUser);
+    saveUserSession(postingUser, true);
+    showToast(`Профиль создан! Добро пожаловать, ${postingUser.kunya}!`, 'success');
+  }
+
   const onbS = byId('ad-post-onbehalf');
-  if (onbS && onbS.value && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+  if (onbS && onbS.value && (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'))) {
     const t = users.find(u => u.username === onbS.value);
     if (t) postingUser = t;
   }
 
-  // === ЛОГИКА ТАРИФИКАЦИИ И МАГАЗИНА ===
+  const isFree = byId('ad-is-free')?.checked || false;
+  const isNegotiable = byId('ad-is-negotiable')?.checked || false;
+  const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price')?.value || 0);
+
+  // Проверка лимитов и тарифов
   const hasShop = !!(postingUser.shop);
   const myActiveAdsCount = ads.filter(a => 
     a.sellerUsername && 
@@ -763,20 +822,16 @@ async function handleCreateAdSubmit(e) {
   if (hasShop) {
     const shopLimit = postingUser.shop.maxAds || 50;
     if (myActiveAdsCount >= shopLimit) {
-      showToast(`Лимит объявлений магазина (${shopLimit} шт.) исчерпан. Расширьте тариф в настройках магазина!`, 'warning');
-      return;
-    }
-  } else {
-    const adPrice = AVITOCASH_PRICES.adPrice || 1;
-    const charged = await _0xSCCharge(postingUser.uid || postingUser.username, adPrice, 'Публикация объявления');
-    if (!charged) {
+      showToast(`Лимит объявлений магазина (${shopLimit} шт.) исчерпан.`, 'warning');
       return;
     }
   }
-  // =====================================
 
   const imgs = [...pendingCreateImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
+
+  const regionVal = byId('ad-region')?.value || 'DAM';
+  const cityVal = byId('ad-city')?.value.trim() || REGION_NAMES[regionVal] || 'Дамаск';
 
   const adId = 'AD-' + Date.now().toString(36).toUpperCase();
   const newAd = {
@@ -784,18 +839,18 @@ async function handleCreateAdSubmit(e) {
     title: byId('ad-title').value.trim(),
     category: byId('ad-category').value,
     storeCategory: byId('ad-store-category')?.value || '',
-    region: byId('ad-region').value,
-    city: byId('ad-city').value.trim(),
+    region: regionVal,
+    city: cityVal,
     isWomenOnly: byId('ad-is-women-only')?.checked || false,
     isFree,
     isNegotiable,
     price,
-    currency: byId('ad-currency').value,
+    currency: byId('ad-currency')?.value || 'USD',
     desc: byId('ad-desc').value.trim(),
     images: imgs,
     image: imgs[0],
-    lat: parseFloat(byId('ad-lat').value || 33.5138),
-    lng: parseFloat(byId('ad-lng').value || 36.2765),
+    lat: parseFloat(byId('ad-lat')?.value || 33.5138),
+    lng: parseFloat(byId('ad-lng')?.value || 36.2765),
     sellerUsername: postingUser.username,
     sellerUid: postingUser.uid || '',
     sellerKunya: postingUser.kunya || postingUser.username,
@@ -837,7 +892,7 @@ async function handleCreateAdSubmit(e) {
     });
 
     if (insertErr) {
-      showToast('Ошибка сохранения объявления в базе: ' + insertErr.message, 'error');
+      showToast('Ошибка сохранения в базе: ' + insertErr.message, 'error');
       return;
     }
   }
@@ -861,7 +916,7 @@ async function handleCreateAdSubmit(e) {
   renderCategoryPills();
   renderAds();
 
-  showToast(postingUser.username !== currentUser.username ? `Объявление опубликовано от имени @${postingUser.username}!` : 'Объявление опубликовано!', 'success');
+  showToast('Объявление успешно опубликовано!', 'success');
 }
 
 function openEditAdModal(adId) {

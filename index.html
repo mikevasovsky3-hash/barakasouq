@@ -390,57 +390,21 @@ body { top: 0px !important; }
 
 <!-- ============ CREATE AD MODAL ============ -->
 <div id="modal-create-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
-<div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
 <div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
-<h3 class="text-sm font-bold t1">Подача нового объявления</h3>
+<h3 class="text-sm font-bold t1">Подача объявления</h3>
 </div>
-<form onsubmit="handleCreateAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
-<div id="draft-restore-banner" class="hidden mb-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+<form onsubmit="handleCreateAdSubmit(event)" class="p-4 overflow-y-auto space-y-3 text-sm flex-1 modal-scroll-body">
+<div id="draft-restore-banner" class="hidden p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
 <span class="text-xs text-blue-400 font-semibold"><i class="fa-solid fa-rotate-left"></i> Найден черновик</span>
 <div class="flex gap-2">
 <button type="button" onclick="restoreDraft()" class="text-xs text-blue-400 font-bold underline">Восстановить</button>
 <button type="button" onclick="clearDraft(true)" class="text-xs t2 hover:text-white">Удалить</button>
 </div>
 </div>
-<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
-<div class="grid grid-cols-2 gap-3">
-<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="" disabled selected>Категория *</option></select>
-<select id="ad-region" required onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs draft-field">
-<option value="" disabled selected>Регион *</option>
-<option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
-</select>
-</div>
-<div id="women-only-container" class="hidden items-center justify-between p-3 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
-<div><div id="ad-women-label" class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div><div id="ad-women-sublabel" class="text-[10px] t2">Объявление будет видно исключительно женщинам</div></div>
-<input type="checkbox" id="ad-is-women-only" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
-</div>
-<div id="ad-onbehalf-container" class="hidden">
-<label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> Подать от имени пользователя (режим администратора)</label>
-<select id="ad-post-onbehalf" class="ig-input w-full px-3 py-2.5 text-xs"></select>
-</div>
-<div id="ad-store-cat-container" class="hidden">
-<label class="block text-xs font-bold mb-1" style="color:#9333ea"><i class="fa-solid fa-tags"></i> Личная категория Вашего магазина</label>
-<select id="ad-store-category" class="ig-input w-full px-3 py-2.5 text-xs"></select>
-</div>
-<input type="text" id="ad-city" required placeholder="Город / Населенный пункт *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
-<div>
-<label class="block text-xs t2 mb-1"><span id="ad-map-label">Местоположение на карте *</span> <span id="ad-map-hint" class="t2">(кликните на карту)</span></label>
-<div id="create-map" class="h-36 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
-<input type="hidden" id="ad-lat" value="33.5138"><input type="hidden" id="ad-lng" value="36.2765">
-</div>
-<div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
-<div><div id="ad-free-label" class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div><div id="ad-free-sublabel" class="text-[10px] t2">Безвозмездно нуждающимся</div></div>
-<input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#10b981">
-</div>
-<div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
-<div><div id="ad-neg-label" class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div><div id="ad-neg-sublabel" class="text-[10px] t2">Покупатели смогут предложить свою цену</div></div>
-<input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer draft-field" style="accent-color:#3b82f6">
-</div>
-<div id="price-container" class="grid grid-cols-2 gap-3">
-<input type="number" id="ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
-<select id="ad-currency" class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
-</div>
+
+<!-- 1. Загрузка фото -->
 <div>
 <div class="flex items-center justify-between mb-1">
 <label id="ad-photos-label" class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
@@ -453,7 +417,110 @@ body { top: 0px !important; }
 <input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" style="display:none !important">
 <div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
-<textarea id="ad-desc" required rows="3" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
+
+<!-- 2. Заголовок -->
+<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
+
+<!-- 3. Категория -->
+<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="" disabled selected>Категория *</option></select>
+
+<!-- 4. Цена и быстрые чекбоксы -->
+<div class="space-y-2">
+  <div id="price-container" class="flex gap-2">
+    <input type="number" id="ad-price" step="0.01" required placeholder="Цена, $ *" class="ig-input flex-1 px-3.5 py-2.5 text-xs font-bold draft-field">
+    <div class="px-3 py-2 rounded-lg bg-field border b-ig text-xs font-bold t2 flex items-center">USD ($)</div>
+  </div>
+  <div class="flex gap-3 text-xs">
+    <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#10b981"><span style="color:#10b981" class="font-semibold">Даром 🎁</span></label>
+    <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#3b82f6"><span style="color:#3b82f6" class="font-semibold">Договорная 🤝</span></label>
+  </div>
+</div>
+
+<!-- 5. Описание -->
+<textarea id="ad-desc" required rows="2" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
+
+<!-- 6. Автоматическая локация -->
+<div class="p-2.5 rounded-xl bg-field border b-ig flex items-center justify-between text-xs">
+  <div class="flex items-center gap-2 t1">
+    <i class="fa-solid fa-location-crosshairs text-blue-500"></i>
+    <span id="ad-location-summary">Локация: Дамаск (по GPS)</span>
+  </div>
+  <span class="text-[10px] text-emerald-500 font-semibold">Автоматически</span>
+</div>
+
+<!-- 7. Блок автора для неавторизованного гостя -->
+<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2.5" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
+  <div class="text-xs font-bold flex items-center gap-1.5" style="color:#0095f6">
+    <i class="fa-solid fa-user-plus"></i> Ваши контакты (создание профиля в 1 клик):
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <input type="text" id="guest-kunya" placeholder="Ваше Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
+    <input type="text" id="guest-whatsapp" placeholder="WhatsApp (+963…)*" class="ig-input w-full px-3 py-2 text-xs">
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <input type="text" id="guest-username" placeholder="Придумайте логин *" class="ig-input w-full px-3 py-2 text-xs">
+    <input type="password" id="guest-password" placeholder="Придумайте пароль *" class="ig-input w-full px-3 py-2 text-xs">
+  </div>
+</div>
+
+<!-- Информация для авторизованного -->
+<div id="user-logged-badge" class="hidden p-2.5 rounded-xl bg-field border b-ig flex items-center gap-2 text-xs font-semibold t1">
+  <i class="fa-solid fa-circle-check text-emerald-500"></i>
+  <span>Публикация от имени: <b id="user-logged-name" class="text-blue-500"></b></span>
+</div>
+
+<!-- 8. Спойлер «Расширенный режим» -->
+<div class="pt-1">
+  <button type="button" onclick="toggleAdvancedCreateFields()" class="w-full py-2 px-3 rounded-xl border b-ig bg-field hover:bg-ig text-xs font-bold t2 flex items-center justify-between">
+    <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-purple-400"></i> Расширенные настройки</span>
+    <i id="advanced-toggle-icon" class="fa-solid fa-chevron-down text-xs transition-transform"></i>
+  </button>
+</div>
+
+<!-- Скрытый блок расширенных настроек -->
+<div id="create-ad-advanced-fields" class="hidden space-y-3 pt-2 border-t b-ig">
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <label class="text-[10px] t2 block mb-1">Регион вручную</label>
+      <select id="ad-region" onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2 text-xs draft-field">
+        <option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[10px] t2 block mb-1">Точный город/район</label>
+      <input type="text" id="ad-city" placeholder="Город/район" class="ig-input w-full px-3 py-2 text-xs draft-field">
+    </div>
+  </div>
+
+  <div>
+    <label class="text-[10px] t2 block mb-1">Валюта</label>
+    <select id="ad-currency" class="ig-input w-full px-3 py-2 text-xs draft-field">
+      <option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option>
+    </select>
+  </div>
+
+  <div id="women-only-container" class="hidden items-center justify-between p-2.5 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
+    <div id="ad-women-label" class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div>
+    <input type="checkbox" id="ad-is-women-only" class="w-4 h-4 rounded cursor-pointer draft-field" style="accent-color:#ec4899">
+  </div>
+
+  <div id="ad-onbehalf-container" class="hidden">
+    <label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> От имени пользователя (Админ)</label>
+    <select id="ad-post-onbehalf" class="ig-input w-full px-3 py-2 text-xs"></select>
+  </div>
+
+  <div id="ad-store-cat-container" class="hidden">
+    <label class="block text-xs font-bold mb-1" style="color:#9333ea"><i class="fa-solid fa-tags"></i> Категория магазина</label>
+    <select id="ad-store-category" class="ig-input w-full px-3 py-2 text-xs"></select>
+  </div>
+
+  <div>
+    <label class="block text-xs t2 mb-1">Уточнить точку на карте (необязательно)</label>
+    <div id="create-map" class="h-32 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
+    <input type="hidden" id="ad-lat" value="33.5138"><input type="hidden" id="ad-lng" value="36.2765">
+  </div>
+</div>
+
 <div class="sticky bottom-0 bg-card pt-2 pb-1">
 <button type="submit" id="create-ad-submit-btn" class="ig-btn w-full py-3 text-sm font-bold shadow-lg">Опубликовать объявление</button>
 </div>
