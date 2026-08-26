@@ -1195,12 +1195,20 @@ async function openAdDetail(adId, countView = true) {
         <p id="detail-ad-desc" class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${displayDesc}</p>
       </div>
 
+${!isRealOwner && !ad.isFree ? `
+      <div class="p-2.5 rounded-xl bg-field border b-ig flex items-center gap-2 shrink-0">
+        <input type="number" id="offer-price-input" placeholder="Предложить цену ($)" class="ig-input flex-1 px-3 py-2 text-xs font-bold">
+        <button onclick="sendPriceOffer('${ad.id}')" class="px-3 py-2 rounded-lg text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition active:scale-95" style="background:linear-gradient(45deg,#3b82f6,#2563eb)">
+          <i class="fa-solid fa-handshake"></i> Торг
+        </button>
+      </div>` : ''}
+
       <div class="flex items-center gap-2 pt-2 shrink-0">
         ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg shrink-0"></i><span class="truncate">${t('Связаться через WhatsApp')}</span></a>` : ''}
         ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#f59e0b"><i class="fa-solid fa-coins shrink-0"></i><span class="truncate">${t('Оплатить из баланса')}</span></button>` : ''}
         <button onclick="shareAd('${ad.id}')" class="h-11 w-11 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center text-blue-500 shrink-0 transition active:scale-95 shadow-sm" title="${t('Поделиться')}"><i class="fa-solid fa-paper-plane text-base"></i></button>
       </div>
-
+	  
       <div class="pt-2 border-t b-ig shrink-0">
         ${!isOwner ? `<button onclick="openReportModal('${ad.id}')" class="w-full py-2.5 rounded-xl text-xs font-semibold border b-ig t2 flex items-center justify-center gap-1.5 hover:bg-field transition"><i class="fa-solid fa-flag text-red-500"></i> ${t('Пожаловаться')}</button>` : ''}
         ${isOwner ? `
@@ -2893,7 +2901,10 @@ ${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пок
         ${a.status === 'SOLD' ? '<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : ''}
       </div>
     </div>
-    <div class="flex items-center gap-1.5 pt-1.5 border-t b-ig justify-end flex-wrap">
+<div class="flex items-center gap-1.5 pt-1.5 border-t b-ig justify-end flex-wrap">
+      <button onclick="bumpAdToTop('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="Поднять в топ ленты">
+        <i class="fa-solid fa-arrow-up"></i> В топ
+      </button>
       <button onclick="openQuickDiscountModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
         <i class="fa-solid fa-tag"></i> Скидка
       </button>
@@ -3357,15 +3368,24 @@ function sendPriceOffer(adId) {
   const inp = byId('offer-price-input'); 
   const val = inp ? inp.value.trim() : ''; 
   if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) { 
-    showToast('Введите вашу предложенную цену', 'warning'); 
+    showToast(currentLang === 'ar' ? 'الرجاء إدخال السعر المقترح' : 'Введите вашу предложенную цену', 'warning'); 
     return; 
   } 
   const wa = getSellerWhatsapp(ad); 
-  const sender = currentUser ? (currentUser.whatsapp ? `${currentUser.kunya || currentUser.username} (${currentUser.whatsapp})` : currentUser.username) : 'Гость платформы'; 
-  const msg = `Здравствуйте! По объявлению "${ad.title}" (${ad.id}) на Авито Шам предлагаю цену: $${parseFloat(val).toFixed(2)}. От: ${sender}`; 
-  window.open(`https://wa.me/${wa.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank'); 
-  showToast('Ваше предложение цены отправляется через WhatsApp', 'success'); 
-}function handleCategoryClick(catId) {
+  const isAr = currentLang === 'ar';
+  const sender = currentUser 
+    ? (currentUser.whatsapp ? `${currentUser.kunya || currentUser.username} (${currentUser.whatsapp})` : currentUser.username) 
+    : (isAr ? 'زائر للمنصة' : 'Гость платформы'); 
+  
+  const msg = isAr 
+    ? `السلام عليكم ورحمة الله!\nبخصوص إعلانك على *أفيتو الشام*:\n📦 *${ad.title}* (كود: ${ad.id})\n🤝 *أقترح شراء المنتج بسعر:* $${parseFloat(val).toFixed(2)}\n👤 *المرسل:* ${sender}`
+    : `Здравствуйте!\nПо объявлению "${ad.title}" (${ad.id}) на *Avito Sham* предлагаю цену: $${parseFloat(val).toFixed(2)}.\n👤 *От:* ${sender}`; 
+
+window.open(`https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank'); 
+  showToast(isAr ? 'جاري إرسال عرض السعر عبر واتساب...' : 'Ваше предложение цены отправляется через WhatsApp', 'success'); 
+}
+
+function handleCategoryClick(catId) {
   selectedCategory = catId;
   currentPage = 1;
   renderCategoryPills();

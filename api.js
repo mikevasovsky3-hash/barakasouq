@@ -597,16 +597,23 @@ function translateStaticUI(lang) {
   const supCopy = byId('support-modal-copybtn')?.querySelector('span');
   if (supCopy) supCopy.innerText = lang === 'ar' ? DICTIONARY['Скопировать ID'] : 'Скопировать ID';
 
-  const createTitle = document.querySelector('#modal-create-ad h3');
-  if (createTitle) createTitle.innerText = t('Подача нового объявления');
+const createTitle = document.querySelector('#modal-create-ad h3');
+  if (createTitle) createTitle.innerText = t('Подача объявления');
   const adTitleInp = byId('ad-title');
   if (adTitleInp) adTitleInp.placeholder = t('Заголовок объявления *');
   const adCityInp = byId('ad-city');
-  if (adCityInp) adCityInp.placeholder = t('Город / Населенный пункт *');
+  if (adCityInp) adCityInp.placeholder = t('Точный город/район');
   const adPriceInp = byId('ad-price');
   if (adPriceInp) adPriceInp.placeholder = t('Цена *');
   const adDescInp = byId('ad-desc');
   if (adDescInp) adDescInp.placeholder = t('Описание и возможные изъяны *');
   const createSubBtn = document.querySelector('#modal-create-ad button[type="submit"]');
   if (createSubBtn) createSubBtn.innerText = t('Опубликовать объявление');
+
+  const gKunya = byId('guest-kunya');
+  if (gKunya) gKunya.placeholder = t('Ваше Имя / Кунья *');
+  const gUser = byId('guest-username');
+  if (gUser) gUser.placeholder = t('Придумайте логин *');
+  const gPass = byId('guest-password');
+  if (gPass) gPass.placeholder = t('Придумайте пароль *');
 }

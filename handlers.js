@@ -225,6 +225,23 @@ async function renewAdExpiry(adId) {
   showToast(t('Объявление успешно продлено и поднято в топ!'), 'success');
 }
 
+async function bumpAdToTop(adId) {
+  const ad = ads.find(a => a.id === adId);
+  if (!ad || !currentUser) return;
+
+  ad.createdAt = Date.now();
+  if (supabaseClient) {
+    await supabaseClient.from('ads').update({ created_at: ad.createdAt }).eq('id', ad.id);
+  }
+
+  // Перемещаем в начало локального массива
+  ads = [ad, ...ads.filter(a => a.id !== adId)];
+  saveCachedAds();
+  renderAds();
+  openProfileModal();
+  showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
+}
+
 function checkUrlHashAdOpen() {
   const hash = window.location.hash || '';
   if (hash.startsWith('#ad-')) {
@@ -625,11 +642,38 @@ function openCreateAdModal() {
     } else onbC.classList.add('hidden'); 
   } 
 
-  openModal('modal-create-ad'); 
+openModal('modal-create-ad'); 
   document.querySelectorAll('.draft-field').forEach(el => { 
     el.addEventListener('input', saveDraft); 
     el.addEventListener('change', saveDraft); 
-  }); 
+  });
+
+  const titleField = byId('ad-title');
+  if (titleField) {
+    titleField.oninput = () => {
+      saveDraft();
+      detectCategoryByTitle(titleField.value);
+    };
+  }
+}
+
+function detectCategoryByTitle(text) {
+  if (!text || typeof text !== 'string') return;
+  const q = text.toLowerCase();
+  const catSel = byId('ad-category');
+  if (!catSel) return;
+
+  if (/iphone|айфон|samsung|телефон|ноутбук|пк|компьютер|планшет|часы|наушники|xiaomi|redmi|macbook|монитор|видеокарта|бытовая|принтер|هاتف|جوال|موبايل|لابتوب|كمبيوتر|شاشة|ساعة|ايباد|راوتر/i.test(q)) {
+    catSel.value = 'electronics';
+  } else if (/машина|авто|автомобиль|bmw|mercedes|kia|hyundai|запчасти|колеса|шины|мото|скутер|диски|аккумулятор|starex|سيارة|مركبة|موتور|دراجة|قطع غيار|إطارات|بطارية|محرك/i.test(q)) {
+    catSel.value = 'transport';
+  } else if (/квартира|дом|аренда|комната|участок|офис|магазин|недвижимость|дача|شقة|منزل|بيت|أرض|عقار|محل|إيجار|مكتب|فيلا/i.test(q)) {
+    catSel.value = 'realestate';
+  } else if (/диван|стол|стул|шкаф|кровать|мебель|ковер|посуда|лампа|люстра|холодильник|плита|стиралка|اثاث|أثاث|طاولة|كرسي|كنبة|خزانة|فرش|سجاد|براد|غسالة|مطبخ/i.test(q)) {
+    catSel.value = 'home';
+  } else if (/ремонт|услуги|мастер|перевозки|такси|доставка|курсы|уборка|строительство|خدمة|خدمات|صيانة|تصليح|معلم|تكسي|شحن|نقل|تعليم|بناء/i.test(q)) {
+    catSel.value = 'services';
+  }
 }
 
 function openCreateAdModalForUser(username) { onBehalfPreset = username; openCreateAdModal(); }
@@ -1470,6 +1514,48 @@ function onSearchInput(el) {
   if (desktop && desktop !== el) desktop.value = el.value;
   if (mobile && mobile !== el) mobile.value = el.value;
   searchQuery = val;
+  renderSearchSuggestions(val);
+  resetPageAndRender();
+}
+
+function renderSearchSuggestions(query) {
+  const listDesktop = byId('search-suggestions-desktop');
+  const listMobile = byId('search-suggestions-mobile');
+  if (!query || query.length < 2) {
+    if (listDesktop) listDesktop.classList.add('hidden');
+    if (listMobile) listMobile.classList.add('hidden');
+    return;
+  }
+  const matches = ads
+    .filter(a => a.status === 'ACTIVE' && a.title.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 5);
+
+  const html = matches.map(a => `
+    <div onclick="selectSearchSuggestion('${a.title.replace(/'/g, "\\'")}')" class="px-3 py-2 text-xs t1 hover:bg-field cursor-pointer flex items-center justify-between border-b b-ig last:border-0">
+      <span class="truncate font-semibold">${a.title}</span>
+      <span class="text-[10px] text-blue-500 shrink-0 font-bold">$${Number(a.price || 0).toFixed(2)}</span>
+    </div>
+  `).join('');
+
+  [listDesktop, listMobile].forEach(l => {
+    if (l) {
+      if (matches.length > 0) {
+        l.innerHTML = html;
+        l.classList.remove('hidden');
+      } else {
+        l.classList.add('hidden');
+      }
+    }
+  });
+}
+
+function selectSearchSuggestion(title) {
+  const desktop = byId('search-input-desktop');
+  const mobile = byId('search-input');
+  if (desktop) desktop.value = title;
+  if (mobile) mobile.value = title;
+  searchQuery = title;
+  renderSearchSuggestions('');
   resetPageAndRender();
 }
 
