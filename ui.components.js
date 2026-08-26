@@ -1119,33 +1119,22 @@ async function openAdDetail(adId, countView = true) {
 	
     <!-- Правая колонка: Детали, Описание, Кнопки -->
     <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto max-h-[88vh] modal-scroll-body bg-card w-full md:w-1/2 flex-1 min-w-0">
-      ${(() => {
-        const sellerObj = users.find(u => (u.uid && u.uid === ad.sellerUid) || (u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()));
-        const isSellerDnd = !!(sellerObj && sellerObj.isDnd);
-        return `
-        <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
-          <div class="relative w-9 h-9 rounded-full p-[2px] ${verified ? 'story-ring' : 'bg-field'}">
-            <div class="w-full h-full rounded-full bg-card p-[1.5px]">
-              <div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
-                ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
-              </div>
+<div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
+        <div class="relative w-9 h-9 rounded-full p-[2px] ${verified ? 'story-ring' : 'bg-field'}">
+          <div class="w-full h-full rounded-full bg-card p-[1.5px]">
+            <div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold">
+              ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : (ad.sellerUsername || '?').charAt(0).toUpperCase()}
             </div>
-            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-black ${isSellerDnd ? 'bg-slate-400' : 'bg-emerald-500'}"></span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold t1 flex items-center justify-between gap-2">
-              <span class="truncate">${displayKunya} ${verified ? IGSVG.verified() : ''}</span>
-              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1 ${isSellerDnd ? 'bg-slate-500/15 text-slate-400 border border-slate-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}">
-                <span class="w-1.5 h-1.5 rounded-full ${isSellerDnd ? 'bg-slate-400' : 'bg-emerald-500'}"></span>
-                <span>${isSellerDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}</span>
-              </span>
-            </div>
-            <div class="text-xs t2 truncate">${displayRegion} • ${displayCity}</div>
           </div>
         </div>
-        ${isSellerDnd ? `<div class="p-2.5 rounded-xl border text-[11px] leading-relaxed flex items-center gap-2" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.08);color:#94a3b8"><i class="fa-solid fa-moon text-sm"></i><span>${t('Продавец сейчас отдыхает. Пожалуйста, отправьте сообщение и не звоните.')}</span></div>` : ''}
-        `;
-      })()}
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold t1 flex items-center gap-1.5 truncate">
+            <span class="truncate">${displayKunya}</span>
+            ${verified ? IGSVG.verified() : ''}
+          </div>
+          <div class="text-xs t2 truncate">${displayRegion} • ${displayCity}</div>
+        </div>
+      </div>
       ${imgs.length > 1 ? `
         <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0">
           ${imgs.map((img, idx) => `<button onclick="setDetailPhoto('${ad.id}',${idx})" id="detail-thumb-${idx}" class="w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 ${idx === 0 ? '' : 'opacity-60'}" style="border-color:${idx === 0 ? '#0095f6' : 'var(--ig-border)'}"><img src="${img}" class="w-full h-full object-cover"></button>`).join('')}
@@ -1387,19 +1376,6 @@ async function purchaseAd(adId) {
   }
 }/* ================= PROFILE & ADMIN FUNCTIONS ================= */
 
-async function toggleSellerStatus(isDnd) {
-  if (!currentUser) return;
-  currentUser.isDnd = isDnd;
-  const idx = users.findIndex(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
-  if (idx !== -1) users[idx].isDnd = isDnd;
-  saveUserSession(currentUser, true);
-
-  if (supabaseClient && currentUser.uid) {
-    await supabaseClient.from('users').update({ is_dnd: isDnd }).eq('uid', currentUser.uid);
-  }
-  showToast(t('Статус доступности обновлен'), 'success');
-  openProfileModal();
-}
 
 function openProfileModal() {  
     if (!currentUser) return;  
@@ -1444,26 +1420,6 @@ function openProfileModal() {
             </div>
         </div>
 
-        <!-- Наглядный статус продавца для покупателей -->
-        <div class="p-3 rounded-2xl border flex items-center justify-between gap-3 transition-colors" style="${isDnd ? 'background:rgba(100,116,139,.1);border-color:rgba(100,116,139,.35);' : 'background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.35);'}">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDnd ? 'bg-slate-500/20 text-slate-400' : 'bg-emerald-500/20 text-emerald-400'}">
-                    <i class="fa-solid ${isDnd ? 'fa-moon' : 'fa-bell'} text-sm"></i>
-                </div>
-                <div class="min-w-0">
-                    <div class="text-xs font-bold ${isDnd ? 'text-slate-300' : 'text-emerald-400'}">
-                        ${isDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}
-                    </div>
-                    <div class="text-[10px] t2 truncate">
-                        ${isDnd ? t('Сейчас не на связи') : t('Принимаю звонки и сообщения')}
-                    </div>
-                </div>
-            </div>
-            <label class="ig-switch shrink-0">
-                <input type="checkbox" onchange="toggleSellerStatus(!this.checked)" ${!isDnd ? 'checked' : ''}>
-                <span class="slider" style="${!isDnd ? 'background:#10b981' : 'background:#475569'}"></span>
-            </label>
-        </div>
 		
         <!-- Компактный кошелек AvitoCash -->
         <div class="p-3 rounded-2xl border b-ig bg-field flex items-center justify-between gap-2">

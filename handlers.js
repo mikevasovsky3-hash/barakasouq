@@ -247,15 +247,15 @@ function normalizeArabicText(str) {
   if (!str || typeof str !== 'string') return '';
   const isArabic = /[\u0600-\u06FF]/.test(str);
   if (!isArabic) {
-    return str.toLowerCase().trim(); // Для русского и латиницы оставляем буквы без жесткой фильтрации
+    return str.toLowerCase().trim();
   }
   return str
     .toLowerCase()
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Удаление харакатов и татвиля
-    .replace(/[أإآٱ]/g, 'ا') // Выравнивание алифов
-    .replace(/ة/g, 'ه')     // Та-марбута
-    .replace(/[ىيئ]/g, 'ي')  // Я и алиф максура
-    .replace(/ؤ/g, 'و')     // Вав с хамзой
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/[ىيئ]/g, 'ي')
+    .replace(/ؤ/g, 'و')
     .trim();
 }
 
