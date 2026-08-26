@@ -1294,18 +1294,32 @@ function openFullscreenViewer(src, adId = null) {
   } 
 }
 
-function handleFullscreenSwipe(dir) {
+function handleFullscreenNav(dir) {
   if (!currentFullscreenAdId) return;
   changeDetailPhoto(currentFullscreenAdId, dir);
   const ad = getListingById(currentFullscreenAdId);
   if (ad) {
-    const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image];
+    const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
     const img = byId('fullscreen-viewer-img');
     if (img && imgs[currentDetailPhotoIndex]) {
       img.src = imgs[currentDetailPhotoIndex];
     }
   }
 }
+
+function handleFullscreenSwipe(dir) {
+  handleFullscreenNav(dir);
+}
+
+// Управление стрелками клавиатуры влево/вправо на компьютере
+window.addEventListener('keydown', (e) => {
+  const viewer = byId('modal-image-viewer');
+  if (viewer && !viewer.classList.contains('hidden')) {
+    if (e.key === 'ArrowRight') handleFullscreenNav(1);
+    else if (e.key === 'ArrowLeft') handleFullscreenNav(-1);
+    else if (e.key === 'Escape') closeModal('modal-image-viewer');
+  }
+});
 function initDetailMap(lat, lng) { const el = byId('detail-map'); if (!el || typeof L === 'undefined') return; if (detailMap) { detailMap.remove(); detailMap = null; } detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(detailMap); L.marker([lat, lng]).addTo(detailMap); }
 function changeDetailPhoto(adId, dir) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgs.length) % imgs.length; setDetailPhoto(adId, currentDetailPhotoIndex); }
 function setDetailPhoto(adId, idx) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
