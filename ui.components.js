@@ -1420,140 +1420,105 @@ function openProfileModal() {
     const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 
     c.innerHTML = `
-    <div class="space-y-3 pt-2">
-        <div class="flex items-center gap-3.5 bg-field p-3 rounded-2xl border b-ig">
-            <div class="story-ring rounded-full p-[2px] shrink-0">
-                <div class="rounded-full bg-card p-[2px]">
-                    <div class="w-14 h-14 rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xl font-bold">
-                        ${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user"></i>'}
+    <div class="space-y-3 pt-1">
+        <!-- Шапка: Аватар + Инфо + Быстрый статус -->
+        <div class="bg-field p-3.5 rounded-2xl border b-ig flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-card border b-ig flex items-center justify-center shrink-0">
+                    ${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user text-base t2"></i>'}
+                </div>
+                <div class="min-w-0">
+                    <div class="text-sm font-bold t1 truncate flex items-center gap-1.5">
+                        <span class="truncate">${currentUser.kunya || currentUser.username}</span>
+                        <span class="text-[9px] px-1.5 py-0.2 rounded bg-card border b-ig t2 shrink-0">${currentUser.role}</span>
+                    </div>
+                    <div class="text-[11px] t2 truncate">@${currentUser.username} • ${currentUser.whatsapp || 'WhatsApp'}</div>
+                    <div class="flex gap-2 text-[10px] t1 pt-0.5">
+                        <span><b>${myAds.length}</b> ${t('объявл.')}</span>
+                        <span>• <b>${totalLikes}</b> ${t('лайков')}</span>
+                        <span>• <b>${totalViews}</b> ${t('просмотров')}</span>
                     </div>
                 </div>
             </div>
-            <div class="flex-1 min-w-0">
-                <div class="text-sm font-bold t1 flex items-center gap-1.5 truncate">
-                    <span class="truncate">${currentUser.kunya || currentUser.username}</span> 
-                    <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full border b-ig t2 shrink-0">${currentUser.role}</span>
-                </div>
-                <div class="text-xs t2 truncate">@${currentUser.username} • ${currentUser.whatsapp || 'WhatsApp'}</div>
-                <div class="flex gap-3 text-xs pt-1.5 t1">
-                    <span><b>${myAds.length}</b> <span class="t2 text-[10px]">${t('объявл.')}</span></span>
-                    <span><b>${totalLikes}</b> <span class="t2 text-[10px]">${t('лайков')}</span></span>
-                    <span><b>${totalViews}</b> <span class="t2 text-[10px]">${t('просмотров')}</span></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="text-xs font-bold t1 flex items-center gap-1.5">
-                    <span>${currentUser.isDnd ? '🌙 ' + t('Не беспокоить 🌙') : '🟢 ' + t('На связи 🟢')}</span>
-                </div>
-                <div class="text-[10px] t2 truncate">${currentUser.isDnd ? t('Сейчас не на связи') : t('Принимаю звонки и сообщения')}</div>
-            </div>
-            <label class="ig-switch shrink-0">
+            <label class="ig-switch shrink-0" title="${currentUser.isDnd ? t('Не беспокоить 🌙') : t('На связи 🟢')}">
                 <input type="checkbox" onchange="toggleSellerStatus(this.checked)" ${currentUser.isDnd ? 'checked' : ''}>
                 <span class="slider" style="${currentUser.isDnd ? 'background:#64748b' : ''}"></span>
             </label>
         </div>
 
-        ${isAdmin && currentUser.gender !== 'FEMALE' ? `
-        <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="text-xs font-bold t1">${t('Женские объявления 🌸')}</div>
-                <div class="text-[10px] t2 truncate">${t('Видеть спец. предложения в общей ленте')}</div>
+        <!-- Компактный кошелек AvitoCash -->
+        <div class="p-3 rounded-2xl border b-ig bg-field flex items-center justify-between gap-2">
+            <div>
+                <div class="text-[10px] t2 font-semibold flex items-center gap-1"><i class="fa-solid fa-coins text-amber-500"></i> ${t('Баланс AvitoCash')}</div>
+                <div class="text-base font-extrabold text-amber-500">${Number(currentUser.avitocashBalance || 0).toFixed(2)} AC</div>
             </div>
+            <div class="flex items-center gap-1 shrink-0">
+                <button onclick="openTopupModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border b-ig bg-card hover:bg-ig text-amber-500 flex items-center gap-1 transition-colors">
+                    <i class="fa-solid fa-plus text-[10px]"></i> ${t('Пополнить')}
+                </button>
+                <button onclick="openTransferModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border b-ig bg-card hover:bg-ig text-emerald-500 flex items-center gap-1 transition-colors">
+                    <i class="fa-solid fa-paper-plane text-[10px]"></i> ${t('Перевод')}
+                </button>
+                <button onclick="openRedeemGiftModal()" class="px-2 py-1.5 rounded-lg text-xs font-bold border b-ig bg-card hover:bg-ig text-purple-400" title="${t('Код')}">
+                    <i class="fa-solid fa-gift"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Настройки: Язык, Тема, Вид ленты и Магазин -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <!-- Язык -->
+            <div class="bg-field border b-ig p-2 rounded-xl flex items-center justify-between">
+                <span class="text-[10px] t2 font-bold uppercase">Язык</span>
+                <div class="flex gap-1">
+                    <button type="button" onclick="changeLanguage('ru')" class="px-1.5 py-0.5 rounded text-[10px] font-bold ${currentLang === 'ru' ? 'bg-blue-500 text-white' : 't2'}">RU</button>
+                    <button type="button" onclick="changeLanguage('ar')" class="px-1.5 py-0.5 rounded text-[10px] font-bold ${currentLang === 'ar' ? 'bg-blue-500 text-white' : 't2'}">AR</button>
+                </div>
+            </div>
+
+            <!-- Тема -->
+            <button type="button" onclick="toggleTheme()" class="bg-field border b-ig p-2 rounded-xl flex items-center justify-between text-left hover:bg-ig transition-colors">
+                <span class="text-[10px] t2 font-bold uppercase">${t('Тема экрана')}</span>
+                <span class="text-xs">${isLight ? IGSVG.moon() : IGSVG.sun()}</span>
+            </button>
+
+            <!-- Вид ленты -->
+            <div class="bg-field border b-ig p-1.5 rounded-xl flex items-center justify-around">
+                <button onclick="setFeedLayout('grid')" class="p-1 rounded text-[10px] font-bold ${layout === 'grid' ? 'text-blue-500' : 't2'}" title="${t('Сетка')}"><i class="fa-solid fa-table-cells"></i></button>
+                <button onclick="setFeedLayout('list')" class="p-1 rounded text-[10px] font-bold ${layout === 'list' ? 'text-blue-500' : 't2'}" title="${t('Список')}"><i class="fa-solid fa-list"></i></button>
+                <button onclick="setFeedLayout('instagram')" class="p-1 rounded text-[10px] font-bold ${layout === 'instagram' ? 'text-blue-500' : 't2'}" title="${t('Лента')}"><i class="fa-regular fa-square"></i></button>
+            </div>
+
+            <!-- Магазин -->
+            <button type="button" onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border b-ig p-2 rounded-xl flex items-center justify-between text-left hover:bg-ig transition-colors">
+                <span class="text-[10px] font-bold text-purple-400 truncate">${t('Магазин')}</span>
+                <i class="fa-solid fa-store text-xs text-purple-400"></i>
+            </button>
+        </div>
+
+        ${isAdmin && currentUser.gender !== 'FEMALE' ? `
+        <div class="bg-field border b-ig rounded-xl p-2.5 flex items-center justify-between">
+            <span class="text-xs font-semibold t1">${t('Женские объявления 🌸')}</span>
             <label class="ig-switch shrink-0">
                 <input type="checkbox" id="profile-show-women-ads" onchange="toggleShowWomenAds(this.checked)" ${currentUser.showWomenAds ? 'checked' : ''}>
                 <span class="slider"></span>
             </label>
         </div>` : ''}
 
-        ${(() => {
-          const expiredList = myAds.filter(a => a.status === 'EXPIRED');
-          if (!expiredList.length) return '';
-          return `
-          <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(237,73,86,.4);background:rgba(237,73,86,.08)">
-            <div class="text-xs font-bold flex items-center justify-between" style="color:#ed4956">
-              <span><i class="fa-solid fa-clock-rotate-left"></i> ${t('У вас есть объявления с истекшим сроком:')}</span>
-              <span class="font-extrabold">${expiredList.length}</span>
+        <!-- История чеков -->
+        <div class="bg-field border b-ig rounded-2xl p-3 space-y-1">
+            <div class="text-[11px] font-bold t2 uppercase tracking-wide flex items-center gap-1.5">
+                <i class="fa-solid fa-receipt text-emerald-500"></i> ${t('История сделок (чеки)')}
             </div>
-            <div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-              ${expiredList.map(a => `
-                <div class="bg-card p-2 rounded-xl border b-ig flex items-center justify-between gap-2 text-xs">
-                  <span class="truncate t1 font-medium">${a.title}</span>
-                  <button onclick="renewAdExpiry('${a.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0" style="background:#10b981">
-                    <i class="fa-solid fa-arrows-rotate"></i> ${t('Продлить на 30 дней')}
-                  </button>
-                </div>
-              `).join('')}
-            </div>
-          </div>`;
-        })()}
-
-        <div class="p-3 rounded-2xl border space-y-2" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> ${t('Баланс AvitoCash')}</span>
-                <b class="text-sm font-extrabold" style="color:#f59e0b">${Number(currentUser.avitocashBalance || 0).toFixed(2)} AC</b>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5 pt-1">
-                <button onclick="openTopupModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#f59e0b;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)">
-                    <i class="fa-solid fa-qrcode"></i> ${t('Пополнить')}
-                </button>
-                <button onclick="openRedeemGiftModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#a78bfa;border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.08)">
-                    <i class="fa-solid fa-gift"></i> ${t('Код')}
-                </button>
-                <button onclick="openTransferModal()" class="py-2 px-1 rounded-xl text-[10px] font-bold border text-center flex flex-col items-center justify-center gap-1" style="color:#10b981;border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> ${t('Перевод')}
-                </button>
-            </div>
+            <div class="space-y-1 max-h-28 overflow-y-auto pr-1 modal-scroll-body">${renderMyReceipts()}</div>
         </div>
 
-        <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between">
-            <div>
-                <div class="text-[10px] t2">Язык / اللغة</div>
-                <div class="text-xs font-bold t1">${currentLang === 'ar' ? 'العربية' : 'Русский'}</div>
-            </div>
-            <div class="flex gap-1.5">
-                <button type="button" onclick="changeLanguage('ru')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border ${currentLang === 'ru' ? 'text-white' : 'b-ig t2'}" style="${currentLang === 'ru' ? 'background:#0095f6;border-color:#0095f6' : ''}">RU</button>
-                <button type="button" onclick="changeLanguage('ar')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border ${currentLang === 'ar' ? 'text-white' : 'b-ig t2'}" style="${currentLang === 'ar' ? 'background:#0095f6;border-color:#0095f6' : ''}">عربي</button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-            <div class="bg-field border b-ig rounded-2xl p-3 flex items-center justify-between">
-                <div>
-                    <div class="text-[10px] t2">${t('Тема экрана')}</div>
-                    <div class="text-xs font-bold t1">${isLight ? t('Светлая ☀️') : t('Темная 🌙')}</div>
-                </div>
-                <button type="button" aria-label="Переключить тему" onclick="toggleTheme()" class="ig-btn-outline w-8 h-8 rounded-xl flex items-center justify-center text-xs">
-                    ${isLight ? IGSVG.moon() : IGSVG.sun()}
-                </button>
-            </div>
-            <button type="button" aria-label="Закрыть" onclick="closeModal('modal-profile');${currentUser.shop ? 'openMyShopModal()' : 'openCreateShopModal()'}" class="bg-field border rounded-2xl p-3 text-left flex flex-col justify-center hover:bg-ig-hover transition-colors" style="border-color:rgba(147,51,234,.3)">
-                <div class="text-[10px]" style="color:#c084fc">${t('Магазин')}</div>
-                <div class="text-xs font-bold t1 truncate"><i class="fa-solid fa-store"></i> ${currentUser.shop ? currentUser.shop.name : t('Открыть')}</div>
-            </button>
-        </div>
-
-        <div class="bg-field border b-ig rounded-2xl p-3 space-y-2">
-            <div class="text-[10px] t2 uppercase tracking-wide font-semibold">${t('Вид ленты объявлений')}</div>
-            <div class="grid grid-cols-3 gap-1.5">
-                <button onclick="setFeedLayout('grid')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'grid' ? 'text-white' : 'b-ig t2'}" style="${layout === 'grid' ? 'background:#0095f6;border-color:#0095f6' : ''}">${t('Сетка')}</button>
-                <button onclick="setFeedLayout('list')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'list' ? 'text-white' : 'b-ig t2'}" style="${layout === 'list' ? 'background:#0095f6;border-color:#0095f6' : ''}">${t('Список')}</button>
-                <button onclick="setFeedLayout('instagram')" class="py-1.5 rounded-xl text-[11px] font-bold border ${layout === 'instagram' ? 'text-white' : 'b-ig t2'}" style="${layout === 'instagram' ? 'background:#0095f6;border-color:#0095f6' : ''}">${t('Лента')}</button>
-            </div>
-        </div>
-
-        <div class="bg-field border b-ig rounded-2xl p-3 space-y-1.5">
-            <div class="text-xs font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-receipt" style="color:#10b981"></i> ${t('История сделок (чеки)')}</div>
-            <div class="space-y-1 max-h-32 overflow-y-auto pr-1">${renderMyReceipts()}</div>
-        </div>
-
-        <div class="space-y-2 pt-1">
-            ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-md"><i class="fa-solid fa-user-shield"></i> ${t('Панель Администратора')}</button>` : ''}
+        <!-- Кнопки управления аккаунтом -->
+        <div class="space-y-1.5 pt-1">
+            ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2 text-xs font-bold flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> ${t('Панель Администратора')}</button>` : ''}
             <div class="flex gap-2">
-                <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2.5 text-xs font-semibold"><i class="fa-solid fa-pen-to-square"></i> ${t('Изменить анкету')}</button>
-                <button onclick="logout()" class="ig-btn-danger px-4 py-2.5 text-xs font-semibold"><i class="fa-solid fa-right-from-bracket"></i> ${t('Выйти')}</button>
+                <button onclick="openEditProfileModal('${currentUser.username}')" class="flex-1 ig-btn-outline py-2 text-xs font-semibold"><i class="fa-solid fa-pen-to-square"></i> ${t('Изменить анкету')}</button>
+                <button onclick="logout()" class="ig-btn-danger px-3.5 py-2 text-xs font-semibold"><i class="fa-solid fa-right-from-bracket"></i> ${t('Выйти')}</button>
             </div>
         </div>
     </div>`;

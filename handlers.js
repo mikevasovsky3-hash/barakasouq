@@ -1448,6 +1448,17 @@ function logout() {
 
 /* ================= INITIALIZATION AT STARTUP ================= */
 document.addEventListener('DOMContentLoaded', () => {
+  // Включение прокрутки колесиком мыши для горизонтальных списков на ПК
+  const catScroll = byId('categories-container');
+  if (catScroll) {
+    catScroll.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        catScroll.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  }
+
   if (localStorage.getItem('bs_theme') === 'light') {
     document.body.classList.add('light-mode');
   }
