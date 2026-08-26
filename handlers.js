@@ -226,6 +226,22 @@ async function renewAdExpiry(adId) {
   showToast(t('Объявление успешно продлено и поднято в топ!'), 'success');
 }
 
+function checkUrlHashAdOpen() {
+  const hash = window.location.hash || '';
+  if (hash.startsWith('#ad-')) {
+    const targetAdId = hash.replace('#ad-', '').trim();
+    if (targetAdId) {
+      setTimeout(() => {
+        const targetAd = (typeof ads !== 'undefined' ? ads.find(a => a.id === targetAdId) : null) || 
+                         (typeof combos !== 'undefined' ? combos.find(c => c.id === targetAdId) : null);
+        if (targetAd && typeof openAdDetail === 'function') {
+          openAdDetail(targetAdId);
+        }
+      }, 150);
+    }
+  }
+}
+
 function requestPushPermission() {
   if (!('Notification' in window)) return;
   if (localStorage.getItem('bs_push_asked')) return;
@@ -1307,13 +1323,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  restoreUserSession();
+restoreUserSession();
   initSupabaseSync();
   fetchLiveExchangeRates();
   setInterval(fetchLiveExchangeRates, 5 * 60 * 1000);
   setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
   requestPushPermission();
+  checkUrlHashAdOpen();
 });
+
+window.addEventListener('hashchange', checkUrlHashAdOpen);
 
 // Безопасная конвертация цены объявления в USD
 function adToUSD(ad) {

@@ -349,10 +349,11 @@ if (adsRes.data) {
     if (catsRes.data && catsRes.data.length) categories = catsRes.data;
     if (reportsRes.data) reports = reportsRes.data;
 
-    saveCachedAds();
+saveCachedAds();
     renderCategoryPills();
     renderAds();
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
+    if (typeof checkUrlHashAdOpen === 'function') checkUrlHashAdOpen();
 
   } catch (error) {
     console.error("Ошибка синхронизации Supabase:", error);
