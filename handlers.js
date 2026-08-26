@@ -345,11 +345,11 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
 
   showToast(`Загрузка ${Math.min(files.length, slots)} фото в облако...`, 'info');
 
-  for (const f of files.slice(0, slots)) {
+for (const f of files.slice(0, slots)) {
     try {
-      const compressedFile = await compressSingleImageFile(f, 1280, 1280, 0.75);
-const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
-
+      const compressedFile = await compressSingleImageFile(f, 800, 800, 0.75);
+      const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+	  
       const { error: sbErr } = await supabaseClient.storage
         .from('listings')
         .upload(filePath, compressedFile, {

@@ -382,10 +382,11 @@ if (q) {
     return 0;
   });
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
-  const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
-
+  const maxItemsPerBatch = 20;
+  const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, ((currentPage - 1) * itemsPerPage) + maxItemsPerBatch);
+  
   if (!pageAds.length) {
     grid.innerHTML = `<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>${t('Объявлений пока нет. Будьте первым!')}</div>`;
     if (pag) pag.innerHTML = '';
