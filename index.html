@@ -156,6 +156,13 @@ body { top: 0px !important; }
 </style>
 </head>
 <body class="min-h-full flex flex-col">
+<!-- Прелоадер для плавной загрузки -->
+<div id="app-preloader" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center transition-opacity duration-500">
+  <div class="flex flex-col items-center space-y-4">
+    <i class="fa-solid fa-gear text-5xl text-blue-500 animate-spin"></i>
+    <span class="ig-logo text-2xl text-white tracking-widest">Avito Sham</span>
+  </div>
+</div>
 <h1 class="sr-only hidden">Avito Sham — Доска объявлений Сирии</h1>
 
 <!-- ============ DESKTOP SIDEBAR ============ -->
@@ -926,6 +933,18 @@ body { top: 0px !important; }
 <script src="api.js"></script>
 <script src="ui.components.js"></script>
 <script src="handlers.js"></script>
+<script>
+  // Плавное скрытие прелоадера после инициализации
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const preloader = document.getElementById('app-preloader');
+      if (preloader) {
+        preloader.style.opacity = '0';
+        setTimeout(() => preloader.remove(), 500);
+      }
+    }, 400);
+  });
+</script>
 <!-- Плавающая кнопка связи с техподдержкой в WhatsApp (слева, мобильный режим) -->
 <a 
   href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" 
