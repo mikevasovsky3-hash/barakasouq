@@ -1828,8 +1828,8 @@ function deleteUserPermanently(uid) {
       }
     }
 
-    users = users.filter(x => x.uid !== uid);
-    archivedUsers = archivedUsers.filter(x => x.uid !== uid);
+users = users.filter(x => x.uid !== uid && (u.username ? x.username?.toLowerCase() !== u.username.toLowerCase() : true));
+    archivedUsers = archivedUsers.filter(x => x.uid !== uid && (u.username ? x.username?.toLowerCase() !== u.username.toLowerCase() : true));
     ads = ads.filter(a => !(a.sellerUsername && a.sellerUsername.toLowerCase() === (u.username || '').toLowerCase()));
     saveCachedAds();
     

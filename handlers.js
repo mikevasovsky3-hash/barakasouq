@@ -1343,13 +1343,25 @@ async function handleAuthSubmit(e) {
     }
     const whatsapp = whatsappCheck.number;
 
-    const waExists = users.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,'')) || archivedUsers.some(u => u.whatsapp && u.whatsapp.replace(/\D/g,'') === whatsapp.replace(/\D/g,''));
-    if (waExists) {
-      showToast('Этот номер уже зарегистрирован! Войдите во вкладке Вход.', 'warning');
-      btn.disabled = false; btn.innerText = originalText;
-      return;
-    }
+// Проверяем наличие активного пользователя с таким номером
+const cleanWa = whatsapp.replace(/\D/g, '');
 
+    // Проверяем актуальное состояние номера напрямую в таблице Supabase
+    if (supabaseClient) {
+      const { data: dbUser } = await supabaseClient
+        .from('users')
+        .select('uid')
+        .ilike('whatsapp', `%${cleanWa}%`)
+        .maybeSingle();
+
+      if (dbUser) {
+        showToast('Этот номер уже зарегистрирован! Войдите во вкладке Вход.', 'warning');
+        btn.disabled = false;
+        btn.innerText = originalText;
+        return;
+      }
+    }
+	
     const otpBlock = byId('auth-otp-block');
     const otpInput = byId('auth-otp-code');
 
