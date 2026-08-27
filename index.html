@@ -8,6 +8,8 @@
 <title>Avito Sham — Авито Шам</title>
 <meta name="description" content="Avito Sham (Авито Шам) — ведущая доска объявлений Сирии. Покупка и продажа электроники, транспорта, недвижимости, создание магазинов и размещение товаров.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E...%3C/svg%3E">
+<link rel="preconnect" href="https://wykjwznojmzlbrujikft.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://wykjwznojmzlbrujikft.supabase.co">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -988,10 +990,10 @@ body { top: 0px !important; }
 <canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
 <!-- ============ SCRIPTS CONNECTED IN CORRECT ORDER ============ -->
-<script src="config.js"></script>
-<script src="api.js"></script>
-<script src="ui.components.js"></script>
-<script src="handlers.js"></script>
+<script src="config.js" defer></script>
+<script src="api.js" defer></script>
+<script src="ui.components.js" defer></script>
+<script src="handlers.js" defer></script>
 <script>
   // Плавное скрытие прелоадера после инициализации
   window.addEventListener('load', () => {

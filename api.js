@@ -285,8 +285,8 @@ async function initSupabaseSync() {
   try {
 const [usersRes, adsRes] = await Promise.all([
   supabaseClient.from('users').select('*'),
-  supabaseClient.from('ads').select('*').order('created_at', { ascending: false })
-]); 
+  supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).range(0, 35)
+]);
 
 // Если база вернула пользователей, обновляем список. Если нет — оставляем старые, чтобы они не пропадали
 if (usersRes.data && usersRes.data.length > 0) {
