@@ -395,12 +395,14 @@ const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
 
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 
-  if (layout === 'grid') {
+if (layout === 'grid') {
     grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-1';
     grid.innerHTML = pageAds.map(ad => {
 		const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
-      const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
-      const discPercent = hasDisc ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
+      const isCombo = !!ad.isCombo;
+      const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price) || isCombo;
+      const discPercent = (ad.oldPrice && ad.oldPrice > ad.price) ? Math.round((1 - ad.price / ad.oldPrice) * 100) : (isCombo && ad.comboOriginalTotal > ad.price ? Math.round((1 - ad.price / ad.comboOriginalTotal) * 100) : 0);
+      const oldPr = ad.oldPrice || (isCombo ? ad.comboOriginalTotal : null);
 
       setTimeout(async () => {
         if (currentLang === 'ar') {
@@ -409,35 +411,37 @@ const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
         }
       }, 10);
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden border-2 transition-all hover:scale-[1.01] ${hasDisc ? 'shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.7);box-shadow:0 0 12px rgba(239,68,68,.25)' : ''}">
+      return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden border-2 transition-all hover:scale-[1.01] ${hasDisc ? 'shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.85);box-shadow:0 0 14px rgba(239,68,68,.3);background:linear-gradient(135deg,rgba(239,68,68,.1),transparent)' : ''}">
   <img src="${img}" class="w-full h-full object-cover">
   ${hasDisc ? `
     <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
-      <i class="fa-solid fa-fire-flame-curved"></i> -${discPercent}%
+      <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? 'КОМБО' : '-' + discPercent + '%'}
     </div>` : ''}
-  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-2.5 space-y-0.5">
+  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
     <div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div>
     <div class="flex items-center gap-1.5 flex-wrap">
       ${hasDisc ? `
         <span class="text-white text-[11px] font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</span>
-        <span class="text-slate-400 text-[9px] line-through">$${Number(ad.oldPrice).toFixed(2)}</span>
+        ${oldPr ? `<span class="text-slate-400 text-[9px] line-through">$${Number(oldPr).toFixed(2)}</span>` : ''}
       ` : `<span class="text-white text-xs font-bold">${priceBadge(ad)}</span>`}
     </div>
   </div>
 </div>`;
     }).join('');
- } else if (layout === 'list') {
+} else if (layout === 'list') {
     grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3';
     grid.innerHTML = pageAds.map(ad => {
       const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
-      const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
-      const discPercent = hasDisc ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
-      const saveAmount = hasDisc ? (ad.oldPrice - ad.price) : 0;
+      const isCombo = !!ad.isCombo;
+      const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price) || isCombo;
+      const discPercent = (ad.oldPrice && ad.oldPrice > ad.price) ? Math.round((1 - ad.price / ad.oldPrice) * 100) : (isCombo && ad.comboOriginalTotal > ad.price ? Math.round((1 - ad.price / ad.comboOriginalTotal) * 100) : 0);
+      const oldPr = ad.oldPrice || (isCombo ? ad.comboOriginalTotal : null);
+      const saveAmount = oldPr ? (oldPr - ad.price) : 0;
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:border-red-500/50 ${hasDisc ? 'border-2 shadow-md' : ''}" style="${hasDisc ? 'border-color:rgba(239,68,68,.6);background:linear-gradient(90deg,rgba(239,68,68,.05) 0%,transparent 100%)' : ''}">
+      return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:scale-[1.01] ${hasDisc ? 'border-2 shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.85);box-shadow:0 0 14px rgba(239,68,68,.3);background:linear-gradient(90deg,rgba(239,68,68,.1) 0%,transparent 100%)' : ''}">
   <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
     <img src="${img}" class="w-full h-full object-cover">
-    ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white" style="background:#ef4444">-${discPercent}%</span>` : ''}
+    ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
   </div>
   <div class="flex-1 min-w-0 flex flex-col justify-between">
     <div>
@@ -447,16 +451,16 @@ const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
     <div class="flex items-center justify-between pt-1">
       <div>
         ${hasDisc ? `
-          <div class="text-[10px] t2 line-through">$${Number(ad.oldPrice).toFixed(2)}</div>
+          ${oldPr ? `<div class="text-[10px] t2 line-through">$${Number(oldPr).toFixed(2)}</div>` : ''}
           <div class="text-sm font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</div>
         ` : `<div class="text-sm font-bold" style="color:#f59e0b">${priceBadge(ad)}</div>`}
       </div>
-      ${hasDisc ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
+      ${hasDisc && saveAmount > 0 ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
     </div>
   </div>
 </div>`;
     }).join('');
-} else {
+	} else {
     grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
     grid.innerHTML = pageAds.map(ad => {
 		cardPhotoIndex[ad.id] = 0;
@@ -3274,12 +3278,40 @@ function handleComboSubmit(e) {
       if (supabaseClient) supabaseClient.from('combos').upsert(c).then(); 
     } 
     showToast('Акция обновлена!', 'success'); 
-  } else { 
-    const nc = { id: 'COMBO-' + Date.now(), shopUid: owner.uid || '', sellerUsername: owner.username, title, price, items: [...comboSelectedIds], createdAt: Date.now() }; 
-    combos.push(nc); 
-    if (supabaseClient) supabaseClient.from('combos').upsert(nc).then(); 
-    showToast('Акция создана! Комбо появилось в ленте.', 'success'); 
-  } 
+} else { 
+    const nc = { 
+      id: 'COMBO-' + Date.now(), 
+      shop_uid: owner.uid || '', 
+      seller_username: owner.username, 
+      title, 
+      price: Number(price), 
+      items: [...comboSelectedIds], 
+      created_at: Date.now() 
+    }; 
+    
+    // Дублируем поля для локального массива и для Supabase, чтобы имена колонок совпадали
+    const localCombo = { 
+      id: nc.id, 
+      shopUid: nc.shop_uid, 
+      sellerUsername: nc.seller_username, 
+      title: nc.title, 
+      price: nc.price, 
+      items: nc.items, 
+      createdAt: nc.created_at 
+    };
+
+    combos.push(localCombo); 
+
+    if (supabaseClient) {
+      supabaseClient.from('combos').upsert(nc).then(({ error }) => {
+        if (error) {
+          console.error('Ошибка сохранения комбо в Supabase:', error);
+          showToast('Ошибка сохранения акции в базе', 'error');
+        }
+      });
+    } 
+    showToast('Акция создана и сохранена в базу!', 'success'); 
+  }
   closeModal('modal-combo-builder'); 
   renderAds(); 
   renderCategoryPills(); 
