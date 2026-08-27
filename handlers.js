@@ -2146,3 +2146,20 @@ function resendWhatsAppCode() {
     submitBtn.click();
   }
 }
+// Автоматический оверлей при потере связи
+function updateNetworkStatus() {
+  const offlineScreen = document.getElementById('offline-screen');
+  if (!offlineScreen) return;
+
+  if (navigator.onLine) {
+    offlineScreen.classList.add('hidden');
+    offlineScreen.classList.remove('flex');
+  } else {
+    offlineScreen.classList.remove('hidden');
+    offlineScreen.classList.add('flex');
+  }
+}
+
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
+document.addEventListener('DOMContentLoaded', updateNetworkStatus);

@@ -1017,5 +1017,36 @@ body { top: 0px !important; }
   aria-label="Написать в техподдержку WhatsApp">
   <i class="fa-brands fa-whatsapp"></i>
 </a>
+<!-- Полноэкранный оверлей при потере интернета -->
+<div id="offline-screen" class="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center p-6 text-center select-none">
+  <div class="relative flex items-center justify-center mb-6">
+    <!-- Пульсирующий круг -->
+    <div class="absolute w-28 h-28 rounded-full bg-red-500/20 animate-ping"></div>
+    <div class="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center text-red-500 text-3xl shadow-[0_0_25px_rgba(239,68,68,0.3)]">
+      <i class="fa-solid fa-wifi-slash animate-pulse"></i>
+    </div>
+  </div>
+  
+  <h2 class="text-xl font-bold text-white mb-2 tracking-wide">Нет подключения к сети</h2>
+  <p class="text-xs text-neutral-400 max-w-xs leading-relaxed mb-6">
+    Проверьте интернет-соединение. Приложение автоматически продолжит работу, как только связь восстановится.
+  </p>
+
+  <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs font-mono">
+    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+    Ожидание сети...
+  </div>
+</div>
+
+<script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Offline SW ready'))
+        .catch((err) => console.warn('SW error:', err));
+    });
+  }
+</script>
 </body>
 </html>
