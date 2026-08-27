@@ -313,14 +313,21 @@ body { top: 0px !important; }
 </button>
 </div>
 <div id="radius-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
-<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown" onclick="event.stopPropagation()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2 sort-dropdown" onclick="event.stopPropagation()">
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
-<div id="radius-menu-title" class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Радиус поиска:</div>
-<button id="radius-btn-5" onclick="setRadiusFilter(5)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 5 км</span> <i id="radius-check-5" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-<button id="radius-btn-15" onclick="setRadiusFilter(15)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 15 км</span> <i id="radius-check-15" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-<button id="radius-btn-30" onclick="setRadiusFilter(30)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 30 км</span> <i id="radius-check-30" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-<button id="radius-btn-50" onclick="setRadiusFilter(50)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>📍 50 км</span> <i id="radius-check-50" class="fa-solid fa-check text-blue-500 hidden"></i></button>
-<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between border-t b-ig" style="color:#ed4956"><span>❌ Отключить поиск рядом</span></button>
+<div class="flex items-center justify-between pb-2 border-b b-ig">
+  <span class="text-sm font-bold t1"><i class="fa-solid fa-location-crosshairs text-blue-500"></i> Поиск в радиусе</span>
+  <button onclick="closeRadiusMenu()" class="text-xs t2 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+  <button id="radius-btn-5" onclick="setRadiusFilter(5)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 5 км</span> <i id="radius-check-5" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-15" onclick="setRadiusFilter(15)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 15 км</span> <i id="radius-check-15" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-30" onclick="setRadiusFilter(30)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 30 км</span> <i id="radius-check-30" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-50" onclick="setRadiusFilter(50)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 50 км</span> <i id="radius-check-50" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+</div>
+<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 flex items-center justify-center gap-2 transition active:scale-95 mt-1">
+  <i class="fa-solid fa-circle-xmark"></i> Сбросить фильтр по радиусу
+</button>
 </div>
 </div>
 <select id="region-filter" onchange="resetPageAndRender(); updateRegionLabel()" class="hidden">

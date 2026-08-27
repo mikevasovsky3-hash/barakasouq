@@ -1902,6 +1902,13 @@ function selectRegion(code) {
   const sel = byId('region-filter');
   if (sel) {
     sel.value = code;
+    if (code !== 'ALL' && activeRadiusKm > 0) {
+      activeRadiusKm = 0;
+      const nearLbl = byId('near-me-label');
+      const nearBtn = byId('near-me-btn');
+      if (nearLbl) nearLbl.innerText = t('Рядом');
+      if (nearBtn) nearBtn.classList.remove('text-blue-500', 'border-blue-500');
+    }
     resetPageAndRender();
     updateRegionLabel();
   }
@@ -1923,14 +1930,13 @@ function openRadiusMenu() {
   if (m) {
     [5, 15, 30, 50].forEach(km => {
       const chk = byId(`radius-check-${km}`);
+      const btn = byId(`radius-btn-${km}`);
       if (chk) chk.classList.toggle('hidden', activeRadiusKm !== km);
+      if (btn) {
+        btn.classList.toggle('border-blue-500', activeRadiusKm === km);
+        btn.classList.toggle('text-blue-500', activeRadiusKm === km);
+      }
     });
-    const offChk = byId('radius-btn-off');
-    if (offChk) {
-      offChk.style.opacity = activeRadiusKm === 0 ? '1' : '0.7';
-      const offCheckIcon = byId('radius-check-off');
-      if (offCheckIcon) offCheckIcon.classList.toggle('hidden', activeRadiusKm !== 0);
-    }
     m.classList.remove('hidden');
   }
 }
@@ -1952,7 +1958,12 @@ function applyRadiusState(km) {
 
 function setRadiusFilter(km) {
   if (km > 0) {
-    // Если координаты уже определены в текущей сессии — переключаем радиус мгновенно
+    const sel = byId('region-filter');
+    if (sel) {
+      sel.value = 'ALL';
+      updateRegionLabel();
+    }
+
     if (userCurrentCoords && userCurrentCoords.lat && userCurrentCoords.lng) {
       applyRadiusState(km);
       return;
@@ -1976,9 +1987,16 @@ function setRadiusFilter(km) {
   } else {
     activeRadiusKm = 0;
     const lbl = byId('near-me-label');
-    const btn = byId('btn-near-me') || lbl?.closest('button');
+    const btn = byId('near-me-btn');
     if (lbl) lbl.innerText = t('Рядом');
-    if (btn) btn.classList.remove('text-blue-500', 'border-blue-500');
+    if (btn) {
+      btn.classList.remove('text-blue-500', 'border-blue-500');
+      btn.style.borderColor = '';
+    }
+    [5, 15, 30, 50].forEach(k => {
+      const chk = byId(`radius-check-${k}`);
+      if (chk) chk.classList.add('hidden');
+    });
     closeRadiusMenu();
     resetPageAndRender();
     showToast('Поиск рядом отключен', 'info');
