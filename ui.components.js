@@ -1,5 +1,22 @@
 /* ================= UI RENDERING & TEMPLATES ================= */
 
+function renderComboSlashCollage(ad) {
+  const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
+  const img1 = imgs[0] || PLACEHOLDER_IMG;
+  const img2 = imgs[1] || img1;
+
+  if (imgs.length >= 2) {
+    return `
+      <div class="anime-slash-collage">
+        <img src="${img1}" class="anime-slash-left" alt="Товар 1">
+        <img src="${img2}" class="anime-slash-right" alt="Товар 2">
+        <div class="anime-slash-line"></div>
+      </div>
+    `;
+  }
+  return `<img src="${img1}" class="w-full h-full object-cover">`;
+}
+
 function checkBadImagePlaceholder(imgElement) {
   if (!imgElement) return;
   // Если ImgBB вернул синюю плашку или картинка не загрузилась
@@ -411,8 +428,8 @@ if (layout === 'grid') {
         }
       }, 10);
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden transition-all hover:scale-[1.02] ${hasDisc ? 'fire-card' : 'border b-ig'}">
-  <img src="${img}" class="w-full h-full object-cover">
+return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden transition-all hover:scale-[1.02] ${hasDisc ? 'fire-card' : 'border b-ig'}">
+  ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
   ${hasDisc ? `
     <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
       <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? 'КОМБО' : '-' + discPercent + '%'}
@@ -439,8 +456,8 @@ if (layout === 'grid') {
       const saveAmount = oldPr ? (oldPr - ad.price) : 0;
 
       return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
-  <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
-    <img src="${img}" class="w-full h-full object-cover">
+<div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
+    ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
     ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
   </div>
   <div class="flex-1 min-w-0 flex flex-col justify-between">
@@ -502,8 +519,10 @@ return `
 <button onclick="openAdDetail('${ad.id}')" aria-label="Меню объявления" class="ig-btn-nav t1"><i class="fa-solid fa-ellipsis"></i></button>
 </div>
 <div class="relative bg-black overflow-hidden cursor-pointer select-none" style="aspect-ratio:4/5" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => cardNav(event, '${ad.id}', dir))" onclick="openAdDetail('${ad.id}')">
+${ad.isCombo ? renderComboSlashCollage(ad) : `
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
 <img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" fetchpriority="high" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onerror="this.src=PLACEHOLDER_IMG" onload="this.style.opacity='1'; if(this.naturalWidth<=300 && this.src.includes('imgbb')) this.src=PLACEHOLDER_IMG;" style="opacity:0.85">
+`}
 ${ad.isCombo ? `
   <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-xl border border-white/20" style="background:linear-gradient(45deg,#f97316,#ef4444)">
     <i class="fa-solid fa-fire animate-pulse text-sm"></i> АКЦИЯ • КОМБО

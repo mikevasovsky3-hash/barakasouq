@@ -22,6 +22,44 @@
   font-display: swap;
   src: url('https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel@5.0.8/files/grand-hotel-latin-400-normal.woff2') format('woff2');
 }
+/* === АНИМЕ СЛЭШ-КОЛЛАЖ ДЛЯ КОМБО-АКЦИЙ === */
+.anime-slash-collage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.anime-slash-left {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(0 0, 68% 0, 32% 100%, 0 100%);
+  z-index: 2;
+}
+.anime-slash-right {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(68% 0, 100% 0, 100% 100%, 32% 100%);
+  z-index: 1;
+}
+.anime-slash-line {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  width: 3px;
+  height: 120%;
+  background: linear-gradient(180deg, #ff4500, #ffcc00, #ff0055);
+  box-shadow: 0 0 10px #ff3b00, 0 0 20px #ff9900;
+  transform: rotate(20deg);
+  z-index: 3;
+  pointer-events: none;
+}
 </style>
 <style>
 :root{
