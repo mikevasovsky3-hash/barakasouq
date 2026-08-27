@@ -23,6 +23,12 @@ function saveBackupsMeta() {
   } catch(e) {}
 }
 
+function saveCachedCombos() {
+  try {
+    localStorage.setItem('bs_cached_combos', JSON.stringify(combos));
+  } catch(e) {}
+}
+
 function saveCachedAds() {
   try {
     const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
@@ -38,6 +44,7 @@ function saveCachedAds() {
       try { localStorage.removeItem('bs_cached_ads'); } catch(e2) {}
     }
   }
+  saveCachedCombos();
 }
 
 function loadCachedAds() {
@@ -55,6 +62,11 @@ function loadCachedAds() {
             image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null))
           }));
       }
+    }
+    const cb = localStorage.getItem('bs_cached_combos');
+    if (cb) {
+      const parsedCombos = JSON.parse(cb);
+      if (Array.isArray(parsedCombos)) combos = parsedCombos;
     }
     const f = localStorage.getItem('bs_favorites');
     if (f) favorites = JSON.parse(f);
@@ -372,7 +384,7 @@ if (usersRes.data && usersRes.data.length > 0) {
         });
     }
   
-    if (combosRes.data) {
+if (combosRes.data) {
       combos = combosRes.data.map(c => ({
         id: c.id,
         shopUid: c.shop_uid,
@@ -380,10 +392,12 @@ if (usersRes.data && usersRes.data.length > 0) {
         title: c.title,
         price: Number(c.price || 0),
         items: Array.isArray(c.items) ? c.items : [],
+        likes: Array.isArray(c.likes) ? c.likes : [],
         createdAt: Number(c.created_at) || Date.now()
       }));
+      saveCachedCombos();
     }
-
+	
     if (catsRes.data && catsRes.data.length) categories = catsRes.data;
     if (reportsRes.data) reports = reportsRes.data;
 

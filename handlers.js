@@ -1165,17 +1165,23 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
 
 function doToggleLike(adId) { 
   if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } 
-  const ad = ads.find(a => a.id === adId) || combos.find(c => c.id === adId); 
-  if (!ad) return false; 
-  if (!ad.likes) ad.likes = []; 
-  const i = ad.likes.indexOf(currentUser.username); 
-  if (i === -1) ad.likes.push(currentUser.username); 
-  else ad.likes.splice(i, 1); 
+  const isCombo = typeof adId === 'string' && adId.startsWith('COMBO-');
+  const target = isCombo ? combos.find(c => c.id === adId) : ads.find(a => a.id === adId);
+  if (!target) return false; 
+
+  if (!Array.isArray(target.likes)) target.likes = []; 
+  const i = target.likes.indexOf(currentUser.username); 
+  if (i === -1) target.likes.push(currentUser.username); 
+  else target.likes.splice(i, 1); 
+
   saveCachedAds(); 
+  if (typeof saveCachedCombos === 'function') saveCachedCombos();
+
   if (supabaseClient) {
-    const isCombo = typeof adId === 'string' && adId.startsWith('COMBO-');
     const table = isCombo ? 'combos' : 'ads';
-    supabaseClient.from(table).update({ likes: ad.likes }).eq('id', adId).then();
+    supabaseClient.from(table).update({ likes: target.likes }).eq('id', adId).then(({ error }) => {
+      if (error) console.warn('Sync like error:', error);
+    });
   }
   return true; 
 }
