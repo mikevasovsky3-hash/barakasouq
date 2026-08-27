@@ -26,15 +26,14 @@ function saveBackupsMeta() {
 function saveCachedAds() {
   try {
     const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-    // Сохраняем в локальный кэш только последние 35 объявлений для мгновенного старта приложения
-    const cleanAds = ads.filter(a => !deletedIds.includes(a.id)).slice(0, 35);
+    const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
     localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
   } catch (e) {
     console.warn('LocalStorage quota exceeded. Trimming cache...');
     try {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-      const minimalAds = ads.filter(a => !deletedIds.includes(a.id)).slice(0, 15);
-      localStorage.setItem('bs_cached_ads', JSON.stringify(minimalAds));
+      const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
+      localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
     } catch(err) {
       try { localStorage.removeItem('bs_cached_ads'); } catch(e2) {}
     }
@@ -285,7 +284,7 @@ async function initSupabaseSync() {
   try {
 const [usersRes, adsRes] = await Promise.all([
   supabaseClient.from('users').select('*'),
-  supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).range(0, 35)
+  supabaseClient.from('ads').select('*').order('created_at', { ascending: false })
 ]);
 
 // Если база вернула пользователей, обновляем список. Если нет — оставляем старые, чтобы они не пропадали

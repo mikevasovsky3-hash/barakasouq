@@ -1165,14 +1165,18 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
 
 function doToggleLike(adId) { 
   if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } 
-  const ad = ads.find(a => a.id === adId); 
+  const ad = ads.find(a => a.id === adId) || combos.find(c => c.id === adId); 
   if (!ad) return false; 
   if (!ad.likes) ad.likes = []; 
   const i = ad.likes.indexOf(currentUser.username); 
   if (i === -1) ad.likes.push(currentUser.username); 
   else ad.likes.splice(i, 1); 
   saveCachedAds(); 
-  if (supabaseClient) supabaseClient.from('ads').update({ likes: ad.likes }).eq('id', adId).then(); 
+  if (supabaseClient) {
+    const isCombo = typeof adId === 'string' && adId.startsWith('COMBO-');
+    const table = isCombo ? 'combos' : 'ads';
+    supabaseClient.from(table).update({ likes: ad.likes }).eq('id', adId).then();
+  }
   return true; 
 }
 
@@ -2163,3 +2167,25 @@ function updateNetworkStatus() {
 window.addEventListener('online', updateNetworkStatus);
 window.addEventListener('offline', updateNetworkStatus);
 document.addEventListener('DOMContentLoaded', updateNetworkStatus);
+
+// Открытие конструктора акции «Товар + Подарок» для конкретного товара
+function openGiftForSpecificAd(adId) {
+  const mainAd = ads.find(a => a.id === adId);
+  if (!mainAd) return;
+
+  openComboBuilder(currentUser ? currentUser.uid : null);
+
+  setTimeout(() => {
+    const titleInp = byId('combo-title');
+    const priceInp = byId('combo-price');
+    if (titleInp) titleInp.value = `🎁 АКЦИЯ: ${mainAd.title} + Подарок!`;
+    if (priceInp) priceInp.value = mainAd.price || '';
+
+    const checkMain = byId(`combo-item-${mainAd.id}`);
+    if (checkMain) {
+      checkMain.checked = true;
+      if (typeof updateComboSummary === 'function') updateComboSummary();
+    }
+    showToast('Выберите из списка второй товар, который пойдет в подарок!', 'info');
+  }, 200);
+}

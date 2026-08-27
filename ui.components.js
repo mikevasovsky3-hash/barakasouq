@@ -58,11 +58,11 @@ function comboToVirtualAd(c) {
     sellerUsername: c.sellerUsername || owner?.username || '', 
     sellerKunya: owner?.kunya || '', 
     sellerWhatsapp: shop?.whatsapp || owner?.whatsapp || '', 
-    verified: !!(owner && (owner.verifiedShop || (owner.shop && owner.shop.isVerified))), 
+verified: !!(owner && (owner.verifiedShop || (owner.shop && owner.shop.isVerified))), 
     status: 'ACTIVE', 
     createdAt: c.createdAt || Date.now(), 
     queue: [], 
-    likes: [], 
+    likes: Array.isArray(c.likes) ? c.likes : [], 
     views: 0 
   }; 
 }
@@ -107,8 +107,8 @@ async function generateShareImage(ad) {
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
-    // Проверка арабского языка для генерации карточки
     const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
+    const isCombo = !!ad.isCombo;
     const kunya = getSellerKunya(ad);
     const verified = getSellerVerified(ad);
     const avatar = getSellerAvatar(ad);
@@ -117,45 +117,157 @@ async function generateShareImage(ad) {
     let regionName = isAr && typeof DICTIONARY !== 'undefined' && DICTIONARY[regionRaw] ? DICTIONARY[regionRaw] : regionRaw;
     let cardTitle = ad.title || '';
 
-    // Если включен арабский, переводим название товара через словарь или оставляем как есть
     if (isAr && typeof translateDynamic === 'function') {
       cardTitle = await translateDynamic(ad.title, 'ar');
     }
     const likesCount = (ad.likes || []).length;
     const viewsCount = ad.views || 0;
-    const priceText = ad.isCombo ? ('🔥 $' + Number(ad.price).toFixed(2)) : convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable).replace(/<[^>]*>/g, '');
+    
+    // Формирование цены и выгоды для комбо
+    const priceText = isCombo ? `🔥 $${Number(ad.price).toFixed(2)}` : convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable).replace(/<[^>]*>/g, '');
+    const oldPriceText = isCombo && ad.comboOriginalTotal > ad.price ? `$${Number(ad.comboOriginalTotal).toFixed(2)}` : (ad.oldPrice ? `$${Number(ad.oldPrice).toFixed(2)}` : null);
+    const saveAmount = isCombo && ad.comboOriginalTotal > ad.price ? (ad.comboOriginalTotal - ad.price) : (ad.oldPrice ? (ad.oldPrice - ad.price) : 0);
+
     const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
     const url = base + '#ad-' + ad.id;
-    const srcs = (ad.images && ad.images.length ? ad.images : [ad.image || PLACEHOLDER_IMG]).slice(0, 6);
+
+    // Сбор изображений (если комбо — берем фото товаров комплекта)
+    let srcs = [];
+    if (isCombo && Array.isArray(ad.comboItems)) {
+      srcs = ad.comboItems.map(it => (it.images && it.images[0]) || it.image).filter(Boolean);
+    } else {
+      srcs = (ad.images && ad.images.length ? ad.images : [ad.image || PLACEHOLDER_IMG]).slice(0, 6);
+    }
+    if (!srcs.length) srcs.push(PLACEHOLDER_IMG);
+
     const photos = (await Promise.all(srcs.map(loadImgSafe))).filter(Boolean);
     const avatarImg = avatar ? await loadImgSafe(avatar) : null;
     const qrImg = await makeQRImage(url, 300);
-    ctx.fillStyle = igGradient(ctx, 0, 0, W, H); ctx.fillRect(0, 0, W, H);
+
+    // Градиентная рамка
+    ctx.fillStyle = isCombo ? '#f97316' : igGradient(ctx, 0, 0, W, H); 
+    ctx.fillRect(0, 0, W, H);
+    
     const FR = 16;
-    ctx.fillStyle = '#000'; roundRectPath(ctx, FR, FR, W - FR * 2, H - FR * 2, 42); ctx.fill();
+    ctx.fillStyle = '#000'; 
+    roundRectPath(ctx, FR, FR, W - FR * 2, H - FR * 2, 42); 
+    ctx.fill();
+
     const padX = FR + 44;
-    const hy = FR + 44; const avR = 44;
-    ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR + 6, 0, Math.PI * 2); ctx.fillStyle = igGradient(ctx, padX, hy, padX + avR * 2, hy + avR * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR, 0, Math.PI * 2); ctx.fillStyle = '#121212'; ctx.fill();
-    if (avatarImg) { ctx.save(); ctx.beginPath(); ctx.arc(padX + avR, hy + avR, avR - 3, 0, Math.PI * 2); ctx.clip(); drawContain(ctx, avatarImg, padX + 3, hy + 3, avR * 2 - 6, avR * 2 - 6); ctx.restore(); }
-    else { ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((kunya || 'A').charAt(0).toUpperCase(), padX + avR, hy + avR + 3); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
-    ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 38px Arial';
-    const nameStr = kunya || 'Avito Sham';
+    const hy = FR + 44; 
+    const avR = 44;
+
+    // Аватар
+    ctx.beginPath(); 
+    ctx.arc(padX + avR, hy + avR, avR + 6, 0, Math.PI * 2); 
+    ctx.fillStyle = isCombo ? '#f97316' : igGradient(ctx, padX, hy, padX + avR * 2, hy + avR * 2); 
+    ctx.fill();
+
+    ctx.beginPath(); 
+    ctx.arc(padX + avR, hy + avR, avR, 0, Math.PI * 2); 
+    ctx.fillStyle = '#121212'; 
+    ctx.fill();
+
+    if (avatarImg) { 
+      ctx.save(); 
+      ctx.beginPath(); 
+      ctx.arc(padX + avR, hy + avR, avR - 3, 0, Math.PI * 2); 
+      ctx.clip(); 
+      drawContain(ctx, avatarImg, padX + 3, hy + 3, avR * 2 - 6, avR * 2 - 6); 
+      ctx.restore(); 
+    } else { 
+      ctx.fillStyle = '#f5f5f5'; 
+      ctx.font = 'bold 40px Arial'; 
+      ctx.textAlign = 'center'; 
+      ctx.textBaseline = 'middle'; 
+      ctx.fillText((kunya || 'A').charAt(0).toUpperCase(), padX + avR, hy + avR + 3); 
+      ctx.textAlign = 'left'; 
+      ctx.textBaseline = 'alphabetic'; 
+    }
+
+    // Имя и регион продавца
+    ctx.fillStyle = '#f5f5f5'; 
+    ctx.font = 'bold 38px Arial';
+    const nameStr = kunya || (isCombo ? 'Магазин' : 'Avito Sham');
     ctx.fillText(nameStr, padX + avR * 2 + 26, hy + avR - 4);
-    if (verified) { const nw = ctx.measureText(nameStr).width; const bx = padX + avR * 2 + 26 + nw + 22, byy = hy + avR - 16; ctx.beginPath(); ctx.arc(bx, byy, 16, 0, Math.PI * 2); ctx.fillStyle = '#0095f6'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(bx - 7, byy); ctx.lineTo(bx - 2, byy + 6); ctx.lineTo(bx + 8, byy - 6); ctx.stroke(); }
-    ctx.fillStyle = '#a8a8a8'; ctx.font = '28px Arial';
+
+    if (verified) { 
+      const nw = ctx.measureText(nameStr).width; 
+      const bx = padX + avR * 2 + 26 + nw + 22, byy = hy + avR - 16; 
+      ctx.beginPath(); 
+      ctx.arc(bx, byy, 16, 0, Math.PI * 2); 
+      ctx.fillStyle = '#0095f6'; 
+      ctx.fill(); 
+      ctx.strokeStyle = '#fff'; 
+      ctx.lineWidth = 3.5; 
+      ctx.lineCap = 'round'; 
+      ctx.lineJoin = 'round'; 
+      ctx.beginPath(); 
+      ctx.moveTo(bx - 7, byy); 
+      ctx.lineTo(bx - 2, byy + 6); 
+      ctx.lineTo(bx + 8, byy - 6); 
+      ctx.stroke(); 
+    }
+
+    ctx.fillStyle = '#a8a8a8'; 
+    ctx.font = '28px Arial';
     ctx.fillText(`${regionName}${ad.city ? ' • ' + ad.city : ''}`, padX + avR * 2 + 26, hy + avR + 34);
-    if (srcs.length > 1) { ctx.font = 'bold 26px Arial'; const pw2 = ctx.measureText(' ' + srcs.length).width + 56; const px2 = W - FR - 44 - pw2, py2 = hy + 22; ctx.fillStyle = 'rgba(255,255,255,0.1)'; roundRectPath(ctx, px2, py2, pw2, 52, 26); ctx.fill(); ctx.fillStyle = '#f5f5f5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 ' + srcs.length, px2 + pw2 / 2, py2 + 27); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+
+    // Бейдж акции в правом верхнем углу
+    if (isCombo) {
+      const comboLabel = `🔥 КОМБО • ${ad.comboItems ? ad.comboItems.length : 2} ТОВАРА`;
+      ctx.font = 'bold 26px Arial';
+      const pw2 = ctx.measureText(comboLabel).width + 40;
+      const px2 = W - FR - 44 - pw2, py2 = hy + 22;
+      ctx.fillStyle = '#f97316';
+      roundRectPath(ctx, px2, py2, pw2, 52, 26);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(comboLabel, px2 + pw2 / 2, py2 + 27);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    } else if (srcs.length > 1) { 
+      ctx.font = 'bold 26px Arial'; 
+      const pw2 = ctx.measureText(' ' + srcs.length).width + 56; 
+      const px2 = W - FR - 44 - pw2, py2 = hy + 22; 
+      ctx.fillStyle = 'rgba(255,255,255,0.1)'; 
+      roundRectPath(ctx, px2, py2, pw2, 52, 26); 
+      ctx.fill(); 
+      ctx.fillStyle = '#f5f5f5'; 
+      ctx.textAlign = 'center'; 
+      ctx.textBaseline = 'middle'; 
+      ctx.fillText('📷 ' + srcs.length, px2 + pw2 / 2, py2 + 27); 
+      ctx.textAlign = 'left'; 
+      ctx.textBaseline = 'alphabetic'; 
+    }
+
+    // Блок фотографий (сетка для комбо или галерея)
     const px = padX, pw = W - padX * 2;
     const py = hy + avR * 2 + 36;
-    const photoBottom = H - FR - 352;
+    const photoBottom = H - FR - 380;
     const ph = photoBottom - py;
     const tileBg = '#121212';
-    const strokeTile = (x, y, w, h, r) => { ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 2; roundRectPath(ctx, x, y, w, h, r); ctx.stroke(); };
+    const strokeTile = (x, y, w, h, r) => { 
+      ctx.strokeStyle = isCombo ? 'rgba(249,115,22,0.35)' : 'rgba(255,255,255,0.10)'; 
+      ctx.lineWidth = 2; 
+      roundRectPath(ctx, x, y, w, h, r); 
+      ctx.stroke(); 
+    };
+
     if (photos.length > 1) {
       const gap = 14, thumbH = 170;
       const mainH = ph - thumbH - gap;
-      ctx.save(); roundRectPath(ctx, px, py, pw, mainH, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, mainH); if (photos[0]) drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, mainH - 16); ctx.restore(); strokeTile(px, py, pw, mainH, 26);
+      ctx.save(); 
+      roundRectPath(ctx, px, py, pw, mainH, 26); 
+      ctx.clip(); 
+      ctx.fillStyle = tileBg; 
+      ctx.fillRect(px, py, pw, mainH); 
+      if (photos[0]) drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, mainH - 16); 
+      ctx.restore(); 
+      strokeTile(px, py, pw, mainH, 26);
+
       const remaining = photos.slice(1);
       const slots = 4;
       const thumbW = (pw - gap * (slots - 1)) / slots;
@@ -163,41 +275,123 @@ async function generateShareImage(ad) {
       for (let i = 0; i < slots; i++) {
         if (i >= remaining.length) break;
         const tx = px + i * (thumbW + gap);
-        ctx.save(); roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(tx, ty, thumbW, thumbH); drawContain(ctx, remaining[i], tx + 6, ty + 6, thumbW - 12, thumbH - 12); ctx.restore(); strokeTile(tx, ty, thumbW, thumbH, 18);
-        if (i === slots - 1 && remaining.length > slots) { const extra = remaining.length - slots + 1; ctx.fillStyle = 'rgba(0,0,0,0.6)'; roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 44px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+' + extra, tx + thumbW / 2, ty + thumbH / 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+        ctx.save(); 
+        roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); 
+        ctx.clip(); 
+        ctx.fillStyle = tileBg; 
+        ctx.fillRect(tx, ty, thumbW, thumbH); 
+        drawContain(ctx, remaining[i], tx + 6, ty + 6, thumbW - 12, thumbH - 12); 
+        ctx.restore(); 
+        strokeTile(tx, ty, thumbW, thumbH, 18);
+        if (i === slots - 1 && remaining.length > slots) { 
+          const extra = remaining.length - slots + 1; 
+          ctx.fillStyle = 'rgba(0,0,0,0.6)'; 
+          roundRectPath(ctx, tx, ty, thumbW, thumbH, 18); 
+          ctx.fill(); 
+          ctx.fillStyle = '#fff'; 
+          ctx.font = 'bold 44px Arial'; 
+          ctx.textAlign = 'center'; 
+          ctx.textBaseline = 'middle'; 
+          ctx.fillText('+' + extra, tx + thumbW / 2, ty + thumbH / 2); 
+          ctx.textAlign = 'left'; 
+          ctx.textBaseline = 'alphabetic'; 
+        }
       }
     } else if (photos.length === 1) {
-      ctx.save(); roundRectPath(ctx, px, py, pw, ph, 26); ctx.clip(); ctx.fillStyle = tileBg; ctx.fillRect(px, py, pw, ph); drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, ph - 16); ctx.restore(); strokeTile(px, py, pw, ph, 26);
+      ctx.save(); 
+      roundRectPath(ctx, px, py, pw, ph, 26); 
+      ctx.clip(); 
+      ctx.fillStyle = tileBg; 
+      ctx.fillRect(px, py, pw, ph); 
+      drawContain(ctx, photos[0], px + 8, py + 8, pw - 16, ph - 16); 
+      ctx.restore(); 
+      strokeTile(px, py, pw, ph, 26);
     } else {
-      ctx.fillStyle = tileBg; roundRectPath(ctx, px, py, pw, ph, 26); ctx.fill();
+      ctx.fillStyle = tileBg; 
+      roundRectPath(ctx, px, py, pw, ph, 26); 
+      ctx.fill();
     }
-    const fy = photoBottom + 36;
-    ctx.font = 'bold 46px Arial';
-    const ptw = Math.min(ctx.measureText(priceText).width + 80, pw);
-    const phh = 78;
-    ctx.fillStyle = igGradient(ctx, px, fy, px + ptw, fy + phh);
-    roundRectPath(ctx, px, fy, ptw, phh, phh / 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(priceText, px + ptw / 2, fy + phh / 2 + 2);
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    // Подвал: цена, QR-код и состав комплекта
+    const fy = photoBottom + 30;
     const qrBox = 216;
-    const qx = W - FR - 44 - qrBox, qy = fy - 8;
-    ctx.fillStyle = '#fff'; roundRectPath(ctx, qx, qy, qrBox, qrBox, 24); ctx.fill();
+    const qx = W - FR - 44 - qrBox;
+    const qy = fy - 8;
+
+    // QR-код
+    ctx.fillStyle = '#fff'; 
+    roundRectPath(ctx, qx, qy, qrBox, qrBox, 24); 
+    ctx.fill();
     if (qrImg) ctx.drawImage(qrImg, qx + 14, qy + 14, qrBox - 28, qrBox - 28);
-const titleMaxW = qx - px - 30;
-    ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 42px Arial';
-    wrapTextCanvas(ctx, cardTitle, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 64 + i * 54));
-    const by2 = H - FR - 40;
+
+    // Бейдж цены
+    ctx.font = 'bold 44px Arial';
+    const ptw = Math.min(ctx.measureText(priceText).width + 60, qx - px - 30);
+    const phh = 74;
+    ctx.fillStyle = isCombo ? '#f97316' : igGradient(ctx, px, fy, px + ptw, fy + phh);
+    roundRectPath(ctx, px, fy, ptw, phh, phh / 2); 
+    ctx.fill();
+
+    ctx.fillStyle = '#fff'; 
+    ctx.textAlign = 'center'; 
+    ctx.textBaseline = 'middle';
+    ctx.fillText(priceText, px + ptw / 2, fy + phh / 2 + 2);
+    ctx.textAlign = 'left'; 
+    ctx.textBaseline = 'alphabetic';
+
+    // Зачеркнутая старая цена и выгода
+    if (oldPriceText && saveAmount > 0) {
+      ctx.font = 'bold 28px Arial';
+      ctx.fillStyle = '#a8a8a8';
+      const oldX = px + ptw + 20;
+      ctx.fillText(oldPriceText, oldX, fy + phh / 2 - 6);
+      
+      const oldW = ctx.measureText(oldPriceText).width;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(oldX - 4, fy + phh / 2 - 14);
+      ctx.lineTo(oldX + oldW + 4, fy + phh / 2 - 14);
+      ctx.stroke();
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 26px Arial';
+      ctx.fillText(`Экономия: +$${saveAmount.toFixed(2)}`, oldX, fy + phh / 2 + 26);
+    }
+
+    // Заголовок и перечисление состава акции
+    const titleMaxW = qx - px - 30;
+    ctx.fillStyle = '#f5f5f5'; 
+    ctx.font = 'bold 36px Arial';
+    wrapTextCanvas(ctx, cardTitle, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 50 + i * 44));
+
+    // Если это комбо — выводим названия товаров комплекта
+    if (isCombo && Array.isArray(ad.comboItems) && ad.comboItems.length > 0) {
+      const itemsListStr = 'В комплекте: ' + ad.comboItems.map(it => it.title).join(' + ');
+      ctx.fillStyle = '#f97316';
+      ctx.font = 'bold 24px Arial';
+      wrapTextCanvas(ctx, itemsListStr, titleMaxW, 1).forEach((ln) => ctx.fillText(ln, px, fy + phh + 142));
+    }
+
+    // Нижняя плашка с логотипом платформы
+    const by2 = H - FR - 36;
     ctx.font = '54px "Grand Hotel", cursive';
     const brand = 'Avito Sham';
     const bw = ctx.measureText(brand).width;
     ctx.fillStyle = igGradient(ctx, px, by2 - 40, px + bw, by2 + 10);
     ctx.fillText(brand, px, by2);
-    ctx.fillStyle = '#a8a8a8'; ctx.font = '26px Arial'; ctx.textAlign = 'right';
+
+    ctx.fillStyle = '#a8a8a8'; 
+    ctx.font = '24px Arial'; 
+    ctx.textAlign = 'right';
     ctx.fillText(`❤ ${likesCount} • 👁 ${viewsCount} • ${ad.id}`, W - FR - 44, by2 - 4);
     ctx.textAlign = 'left';
+
     return await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.92));
-  } catch (e) { console.warn('Share card error:', e); return null; }
+  } catch (e) { 
+    console.warn('Share card error:', e); 
+    return null; 
+  }
 }
 
 function renderSupportQR() { 
@@ -401,8 +595,7 @@ if (q) {
 
 const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
-  const maxItemsPerBatch = 20;
-  const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, ((currentPage - 1) * itemsPerPage) + maxItemsPerBatch);
+  const pageAds = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   if (!pageAds.length) {
     grid.innerHTML = `<div class="py-16 text-center t2"><i class="fa-solid fa-box-open text-4xl mb-3 block opacity-40"></i>${t('Объявлений пока нет. Будьте первым!')}</div>`;
@@ -415,11 +608,13 @@ const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 if (layout === 'grid') {
     grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-1';
     grid.innerHTML = pageAds.map(ad => {
-		const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
+      const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
       const isCombo = !!ad.isCombo;
       const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price) || isCombo;
       const discPercent = (ad.oldPrice && ad.oldPrice > ad.price) ? Math.round((1 - ad.price / ad.oldPrice) * 100) : (isCombo && ad.comboOriginalTotal > ad.price ? Math.round((1 - ad.price / ad.comboOriginalTotal) * 100) : 0);
       const oldPr = ad.oldPrice || (isCombo ? ad.comboOriginalTotal : null);
+      const isFav = favorites.includes(ad.id);
+      const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
       setTimeout(async () => {
         if (currentLang === 'ar') {
@@ -428,20 +623,28 @@ if (layout === 'grid') {
         }
       }, 10);
 
-return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden transition-all hover:scale-[1.02] ${hasDisc ? 'fire-card' : 'border b-ig'}">
-  ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
-  ${hasDisc ? `
-    <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
-      <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? 'КОМБО' : '-' + discPercent + '%'}
-    </div>` : ''}
-  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
-    <div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div>
-    <div class="flex items-center gap-1.5 flex-wrap">
-      ${hasDisc ? `
-        <span class="text-white text-[11px] font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</span>
-        ${oldPr ? `<span class="text-slate-400 text-[9px] line-through">$${Number(oldPr).toFixed(2)}</span>` : ''}
-      ` : `<span class="text-white text-xs font-bold">${priceBadge(ad)}</span>`}
+      return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'border b-ig'}">
+  <div onclick="openAdDetail('${ad.id}')" class="relative aspect-square cursor-pointer overflow-hidden bg-black">
+    ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
+    ${hasDisc ? `
+      <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
+        <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? 'КОМБО' : '-' + discPercent + '%'}
+      </div>` : ''}
+    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
+      <div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div>
+      <div class="flex items-center gap-1.5 flex-wrap">
+        ${hasDisc ? `
+          <span class="text-white text-[11px] font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</span>
+          ${oldPr ? `<span class="text-slate-400 text-[9px] line-through">$${Number(oldPr).toFixed(2)}</span>` : ''}
+        ` : `<span class="text-white text-xs font-bold">${priceBadge(ad)}</span>`}
+      </div>
     </div>
+  </div>
+  <div class="flex items-center justify-around py-2 px-1 border-t b-ig bg-card t1">
+    <button onclick="toggleLike('${ad.id}', event)" class="ig-btn-nav p-1 text-sm ${liked ? 'heart-pop' : ''}" title="Лайк">${IGSVG.heart(liked)}</button>
+    <button onclick="toggleFavorite('${ad.id}', event)" class="ig-btn-nav p-1 text-sm ${isFav ? 'heart-pop' : ''}" title="В избранное" style="${isFav ? 'color:#f59e0b' : ''}">${IGSVG.star(isFav)}</button>
+    <button onclick="shareAd('${ad.id}')" class="ig-btn-nav p-1 text-sm" title="Поделиться">${IGSVG.send()}</button>
+    ${ad.isCombo ? '' : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav p-1 text-sm" title="Занять очередь">${IGSVG.bookmark(isFav)}</button>`}
   </div>
 </div>`;
     }).join('');
@@ -454,30 +657,40 @@ return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg
       const discPercent = (ad.oldPrice && ad.oldPrice > ad.price) ? Math.round((1 - ad.price / ad.oldPrice) * 100) : (isCombo && ad.comboOriginalTotal > ad.price ? Math.round((1 - ad.price / ad.comboOriginalTotal) * 100) : 0);
       const oldPr = ad.oldPrice || (isCombo ? ad.comboOriginalTotal : null);
       const saveAmount = oldPr ? (oldPr - ad.price) : 0;
+      const isFav = favorites.includes(ad.id);
+      const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
-<div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
-    ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
-    ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
-  </div>
-  <div class="flex-1 min-w-0 flex flex-col justify-between">
-    <div>
-      <div class="font-bold t1 text-sm truncate">${ad.title}</div>
-      <div class="text-xs t2 truncate">${ad.city} • ${timeAgo(ad.createdAt)}</div>
+      return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.5 transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
+  <div onclick="openAdDetail('${ad.id}')" class="flex gap-3 cursor-pointer">
+    <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
+      ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
+      ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
     </div>
-    <div class="flex items-center justify-between pt-1">
+    <div class="flex-1 min-w-0 flex flex-col justify-between">
       <div>
-        ${hasDisc ? `
-          ${oldPr ? `<div class="text-[10px] t2 line-through">$${Number(oldPr).toFixed(2)}</div>` : ''}
-          <div class="text-sm font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</div>
-        ` : `<div class="text-sm font-bold" style="color:#f59e0b">${priceBadge(ad)}</div>`}
+        <div class="font-bold t1 text-sm truncate">${ad.title}</div>
+        <div class="text-xs t2 truncate">${ad.city} • ${timeAgo(ad.createdAt)}</div>
       </div>
-      ${hasDisc && saveAmount > 0 ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
+      <div class="flex items-center justify-between pt-1">
+        <div>
+          ${hasDisc ? `
+            ${oldPr ? `<div class="text-[10px] t2 line-through">$${Number(oldPr).toFixed(2)}</div>` : ''}
+            <div class="text-sm font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</div>
+          ` : `<div class="text-sm font-bold" style="color:#f59e0b">${priceBadge(ad)}</div>`}
+        </div>
+        ${hasDisc && saveAmount > 0 ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
+      </div>
     </div>
+  </div>
+<div class="flex items-center justify-around pt-2 border-t b-ig t1">
+    <button onclick="toggleLike('${ad.id}', event)" class="ig-btn-nav p-1 text-sm flex items-center gap-1.5 ${liked ? 'heart-pop' : ''}" title="Лайк">${IGSVG.heart(liked)} <span class="text-xs">${(ad.likes || []).length}</span></button>
+    <button onclick="toggleFavorite('${ad.id}', event)" class="ig-btn-nav p-1 text-sm ${isFav ? 'heart-pop' : ''}" title="В избранное" style="${isFav ? 'color:#f59e0b' : ''}">${IGSVG.star(isFav)}</button>
+    <button onclick="shareAd('${ad.id}')" class="ig-btn-nav p-1 text-sm" title="Поделиться">${IGSVG.send()}</button>
+    ${ad.isCombo ? '' : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav p-1 text-sm" title="Занять очередь">${IGSVG.bookmark(isFav)}</button>`}
   </div>
 </div>`;
     }).join('');
-	} else {
+  } else {
     grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
     grid.innerHTML = pageAds.map(ad => {
 		cardPhotoIndex[ad.id] = 0;
@@ -2911,21 +3124,24 @@ ${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пок
         ${a.status === 'SOLD' ? '<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : ''}
       </div>
     </div>
-<div class="flex items-center gap-1.5 pt-1.5 border-t b-ig justify-end flex-wrap">
-      <button onclick="bumpAdToTop('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="Поднять в топ ленты">
-        <i class="fa-solid fa-arrow-up"></i> В топ
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-1 pt-1.5 border-t b-ig">
+      <button onclick="bumpAdToTop('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="Поднять в ТОП">
+        <i class="fa-solid fa-rocket"></i> В ТОП
       </button>
-      <button onclick="openQuickDiscountModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
-        <i class="fa-solid fa-tag"></i> Скидка
+      <button onclick="openQuickDiscountModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
+        <i class="fa-solid fa-percent"></i> Скидка
       </button>
-      <button onclick="openComboBuilder('${currentUser.uid}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо-набор">
+      <button onclick="openGiftForSpecificAd('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)" title="Товар + Подарок">
+        <i class="fa-solid fa-gift"></i> +Подарок
+      </button>
+      <button onclick="openComboBuilder('${currentUser.uid}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо-набор">
         <i class="fa-solid fa-fire"></i> В комбо
       </button>
-      <button onclick="startShopAuction('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
+      <button onclick="startShopAuction('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
         <i class="fa-solid fa-gavel"></i> Аукцион
       </button>
-      <button onclick="openEditAdModal('${a.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field" title="Редактировать">
-        <i class="fa-solid fa-pen"></i>
+      <button onclick="openEditAdModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="Редактировать">
+        <i class="fa-solid fa-pen"></i> Изменить
       </button>
     </div>
   </div>
