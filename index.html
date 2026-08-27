@@ -75,6 +75,27 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 @keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.9)}100%{transform:scale(1)}}
 .card-in{animation:cardIn .3s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* === ОГНЕННОЕ ПЛАМЯ ДЛЯ АКЦИЙ И СКИДОК === */
+.fire-card {
+  position: relative;
+  border: 2px solid #ff4500 !important;
+  animation: fireGlow 2.2s infinite alternate ease-in-out;
+}
+@keyframes fireGlow {
+  0% {
+    box-shadow: 0 0 6px rgba(255, 69, 0, 0.4), 0 0 12px rgba(255, 140, 0, 0.2), inset 0 0 4px rgba(255, 69, 0, 0.2);
+    border-color: #ff3b00;
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 69, 0, 0.75), 0 0 24px rgba(255, 165, 0, 0.45), inset 0 0 8px rgba(255, 69, 0, 0.35);
+    border-color: #ff8c00;
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 0, 50, 0.85), 0 0 32px rgba(255, 69, 0, 0.6), inset 0 0 12px rgba(255, 140, 0, 0.45);
+    border-color: #ff0033;
+  }
+}
 .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--ig-border);border-radius:9999px}

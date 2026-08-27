@@ -411,7 +411,7 @@ if (layout === 'grid') {
         }
       }, 10);
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden border-2 transition-all hover:scale-[1.01] ${hasDisc ? 'shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.85);box-shadow:0 0 14px rgba(239,68,68,.3);background:linear-gradient(135deg,rgba(239,68,68,.1),transparent)' : ''}">
+      return `<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square bg-card rounded-2xl cursor-pointer overflow-hidden transition-all hover:scale-[1.02] ${hasDisc ? 'fire-card' : 'border b-ig'}">
   <img src="${img}" class="w-full h-full object-cover">
   ${hasDisc ? `
     <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
@@ -438,7 +438,7 @@ if (layout === 'grid') {
       const oldPr = ad.oldPrice || (isCombo ? ad.comboOriginalTotal : null);
       const saveAmount = oldPr ? (oldPr - ad.price) : 0;
 
-      return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:scale-[1.01] ${hasDisc ? 'border-2 shadow-lg' : 'b-ig'}" style="${hasDisc ? 'border-color:rgba(239,68,68,.85);box-shadow:0 0 14px rgba(239,68,68,.3);background:linear-gradient(90deg,rgba(239,68,68,.1) 0%,transparent 100%)' : ''}">
+      return `<div onclick="openAdDetail('${ad.id}')" class="ig-card p-3 rounded-2xl flex gap-3 cursor-pointer transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
   <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
     <img src="${img}" class="w-full h-full object-cover">
     ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
@@ -488,8 +488,8 @@ if (layout === 'grid') {
       const discPercent = hasDiscount ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
       const saveAmount = hasDiscount ? (ad.oldPrice - ad.price) : 0;
 
-      return `
-<article class="card-in border-b b-ig bg-card pb-3 rounded-2xl transition-all ${hasDiscount || ad.isCombo ? 'border-2 shadow-lg my-2' : ''}" style="${hasDiscount ? 'border-color:rgba(239,68,68,.6);box-shadow:0 0 15px rgba(239,68,68,.18);background:linear-gradient(180deg,rgba(239,68,68,.04) 0%,rgba(0,0,0,0) 100%)' : (ad.isCombo ? 'border-color:rgba(249,115,22,.6);box-shadow:0 0 15px rgba(249,115,22,.18)' : '')}">
+return `
+<article class="card-in bg-card pb-3 rounded-2xl transition-all my-2 ${hasDiscount || ad.isCombo ? 'fire-card' : 'border-b b-ig'}">
 <div class="flex items-center gap-3 px-3.5 py-2.5">
 <div class="w-9 h-9 rounded-full p-[2px] shrink-0 ${verified ? 'story-ring' : ''}" style="${verified ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1.5px]"><div class="w-full h-full rounded-full overflow-hidden bg-field flex items-center justify-center t2 text-xs font-bold cursor-pointer" onclick="openAdDetail('${ad.id}')">${avatar ? `<img src="${avatar}" alt="Аватар продавца" class="w-full h-full object-cover">` : (ad.isCombo ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : (ad.sellerUsername || '?').charAt(0).toUpperCase())}</div></div></div>
 <div class="flex-1 min-w-0 cursor-pointer" onclick="openAdDetail('${ad.id}')">
