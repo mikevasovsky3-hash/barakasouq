@@ -337,14 +337,18 @@ if (usersRes.data && usersRes.data.length > 0) {
       users = allParsedUsers.filter(u => !u.isArchived);
       archivedUsers = allParsedUsers.filter(u => u.isArchived);
 
-      if (currentUser) {
+if (currentUser) {
         const freshMe = allParsedUsers.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
         if (freshMe) {
-          currentUser = { ...currentUser, ...freshMe };
+          if (Array.isArray(freshMe.favorites)) {
+            favorites = [...new Set([...(Array.isArray(favorites) ? favorites : []), ...freshMe.favorites])];
+            try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
+          }
+          currentUser = { ...currentUser, ...freshMe, favorites };
           saveUserSession(currentUser, true);
         }
       }
-    }  
+	  }  
 
     if (adsRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];

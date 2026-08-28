@@ -543,14 +543,16 @@ function renderAds() {
     } else if (selectedCategory !== 'all') {
       if (isCombo || ad.category !== selectedCategory) return false;
     }
-    if (region !== 'ALL' && ad.region !== region) return false;
-    if (activeRadiusKm > 0 && userCurrentCoords) {
-      if (!ad.lat || !ad.lng) return false;
-      const dist = calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng));
-      ad._distance = dist;
-      if (dist === null || dist > activeRadiusKm) return false;
+if (selectedCategory !== 'favorites') {
+      if (region !== 'ALL' && ad.region !== region) return false;
+      if (activeRadiusKm > 0 && userCurrentCoords) {
+        if (!ad.lat || !ad.lng) return false;
+        const dist = calculateDistanceKm(userCurrentCoords.lat, userCurrentCoords.lng, parseFloat(ad.lat), parseFloat(ad.lng));
+        ad._distance = dist;
+        if (dist === null || dist > activeRadiusKm) return false;
+      }
     }
-if (q) {
+	if (q) {
       const cleanQ = q.toLowerCase().trim();
       const titleText = (ad.title || '').toLowerCase();
       const cityText = (ad.city || '').toLowerCase();

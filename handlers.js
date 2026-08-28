@@ -102,6 +102,10 @@ function restoreUserSession() {
         return;
       }
       currentUser = users.find(u => u.username && p.username && u.username.toLowerCase() === p.username.toLowerCase()) || p; 
+      if (currentUser && Array.isArray(currentUser.favorites)) {
+        favorites = [...new Set([...(Array.isArray(favorites) ? favorites : []), ...currentUser.favorites])];
+        try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
+      }
     } 
   } catch (e) {} 
   updateAuthUI(); 
@@ -1191,6 +1195,7 @@ function toggleLikeDetail(adId) { if (!doToggleLike(adId)) return; renderAds(); 
 
 function toggleFavorite(adId, e) { 
   if (e) e.stopPropagation(); 
+  if (!Array.isArray(favorites)) favorites = [];
   if (favorites.includes(adId)) { 
     favorites = favorites.filter(i => i !== adId); 
     showToast('Удалено из избранного', 'info'); 
@@ -1199,6 +1204,13 @@ function toggleFavorite(adId, e) {
     showToast('Добавлено в избранное!', 'success'); 
   } 
   try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {} 
+  if (currentUser) {
+    currentUser.favorites = favorites;
+    saveUserSession(currentUser, true);
+    if (supabaseClient && currentUser.uid) {
+      supabaseClient.from('users').update({ favorites: favorites }).eq('uid', currentUser.uid).then();
+    }
+  }
   renderCategoryPills(); 
   renderAds(); 
 }
