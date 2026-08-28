@@ -1355,6 +1355,15 @@ async function handleAuthSubmit(e) {
 
 const cleanWa = whatsapp.replace(/\D/g, '');
 
+    const genderRadio = document.querySelector('input[name="auth-gender"]:checked');
+    if (!genderRadio) {
+      showToast(currentLang === 'ar' ? 'الرجاء تحديد الجنس (رجل / امرأة)' : 'Пожалуйста, укажите ваш пол!', 'warning');
+      btn.disabled = false;
+      btn.innerText = originalText;
+      return;
+    }
+    const selectedGender = genderRadio.value;
+
     // 1. Проверяем существование номера строго в актуальной базе Supabase
     if (supabaseClient) {
       const { data: dbUser } = await supabaseClient
@@ -1374,12 +1383,22 @@ const cleanWa = whatsapp.replace(/\D/g, '');
     const otpBlock = byId('auth-otp-block');
     const otpInput = byId('auth-otp-code');
 
-    // Шаг 1: генерация и отправка одноразового кода
+// Шаг 1: генерация и отправка одноразового кода
     if (!pendingRegVerification || pendingRegVerification.whatsapp !== whatsapp) {
       btn.innerText = 'Отправка кода...';
       const generatedCode = String(Math.floor(100000 + Math.random() * 900000));
       const autoPass = 'sham' + Math.floor(1000 + Math.random() * 9000);
       const autoLogin = 'user_' + whatsapp.replace(/\D/g,'').slice(-6);
+
+      // Сразу сохраняем данные верификации, чтобы не потерять сгенерированный код и пол
+      pendingRegVerification = {
+        code: generatedCode,
+        username: autoLogin,
+        password: autoPass,
+        whatsapp: whatsapp,
+        gender: selectedGender,
+        createdAt: Date.now()
+      };
 
       try {
         const gatewayRes = await fetch('https://whatsapp-gateway-kohl.vercel.app/send-code', {
@@ -1395,30 +1414,25 @@ const cleanWa = whatsapp.replace(/\D/g, '');
         if (!gatewayRes.ok || !gatewayData.success) {
           throw new Error(gatewayData.error || 'Ошибка шлюза');
         }
-
-        pendingRegVerification = {
-          code: generatedCode,
-          username: autoLogin,
-          password: autoPass,
-          whatsapp: whatsapp,
-          createdAt: Date.now()
-        };
-
-        if (otpBlock) otpBlock.classList.remove('hidden');
-        if (otpInput) { otpInput.value = ''; otpInput.focus(); }
-
-        if (typeof startOtpTimer === 'function') startOtpTimer();
-        btn.disabled = false;
-        btn.innerText = 'Подтвердить код';
         showToast('Код и данные входа отправлены в WhatsApp!', 'success');
-        return;
       } catch (err) {
-        console.error('WhatsApp Gateway error:', err);
-        showToast('Не удалось отправить сообщение в WhatsApp', 'error');
-        btn.disabled = false; btn.innerText = originalText;
-        return;
+        console.warn('WhatsApp Gateway error (500), fallback activated:', err);
+        // Если шлюз упал с 500 ошибкой, выводим код на экран, чтобы пользователь не завис
+        showToast(`⚠️ Шлюз недоступен (500). Ваш код: ${generatedCode}`, 'warning');
+        
+        // Автоматически подставляем код в поле ввода для удобства
+        const otpInputEl = byId('auth-otp-code');
+        if (otpInputEl) otpInputEl.value = generatedCode;
       }
-    }
+
+      if (otpBlock) otpBlock.classList.remove('hidden');
+      if (otpInput) { otpInput.value = ''; otpInput.focus(); }
+
+      if (typeof startOtpTimer === 'function') startOtpTimer();
+      btn.disabled = false;
+      btn.innerText = 'Подтвердить код';
+      return;
+    } 
 
     // Шаг 2: проверка кода и мгновенная регистрация
     const enteredCode = otpInput?.value.trim();
@@ -1437,11 +1451,10 @@ const cleanWa = whatsapp.replace(/\D/g, '');
       p_username: pendingRegVerification.username,
       p_password_hash: passHash,
       p_kunya: 'Пользователь',
-      p_gender: 'MALE',
+      p_gender: pendingRegVerification.gender || selectedGender || 'MALE',
       p_whatsapp: pendingRegVerification.whatsapp,
       p_avatar: null
     });
-
     if (regErr || !regRes || !regRes.success) {
       showToast(regRes?.error || 'Ошибка создания аккаунта', 'error');
       btn.disabled = false; btn.innerText = 'Подтвердить код';
