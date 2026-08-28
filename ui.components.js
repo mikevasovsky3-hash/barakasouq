@@ -3573,7 +3573,7 @@ function openComboDetail(comboId) {
   if (!c) return; 
   const v = comboToVirtualAd(c); 
   if (!v) { 
-    showToast('Товары этой акции больше недоступны', 'warning'); 
+    showToast(t('Товары этой акции больше недоступны'), 'warning'); 
     return; 
   } 
   const content = byId('detail-content'); 
@@ -3585,8 +3585,14 @@ function openComboDetail(comboId) {
   const wa = shop?.whatsapp || owner?.whatsapp || ''; 
   const canManage = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN' || (owner && currentUser.username.toLowerCase() === owner.username.toLowerCase())); 
   const save = v.comboOriginalTotal - c.price; 
+  const isAr = currentLang === 'ar';
+  const regionName = t(REGION_NAMES[v.region] || v.region || 'Сирия');
+
+  const waMsg = isAr
+    ? `السلام عليكم ورحمة الله!\nأود طلب العرض الخاص على *أفيتو الشام*:\n🔥 *${c.title}* (كود: ${c.id})\n💰 *السعر:* $${Number(c.price).toFixed(2)}\n👤 *المشتري:* ${currentUser ? (currentUser.kunya || currentUser.username) : 'زائر'}`
+    : `Здравствуйте!\nХочу заказать комбо-набор на *Avito Sham*:\n🔥 *${c.title}* (ID: ${c.id})\n💰 *Цена:* $${Number(c.price).toFixed(2)}\n👤 *Покупатель:* ${currentUser ? (currentUser.kunya || currentUser.username) : 'Гость'}`;
   
-content.innerHTML = `<div class="grid md:grid-cols-2 h-full max-h-[90vh]">
+  content.innerHTML = `<div class="grid md:grid-cols-2 h-full max-h-[90vh]">
 <div class="relative bg-black flex items-center justify-center overflow-hidden h-full min-h-[320px] max-h-[46vh] md:max-h-[90vh] select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${c.id}', dir))">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[46vh] md:max-h-[90vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src, '${c.id}')">
@@ -3596,25 +3602,39 @@ ${imgs.length > 1 ? `<button onclick="changeDetailPhoto('${c.id}',-1)" class="ab
 <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto max-h-[90vh] modal-scroll-body">
 <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
 <div class="w-9 h-9 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center t2">${shop?.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store"></i>'}</div>
-<div class="flex-1 min-w-0"><div class="text-sm font-semibold t1 flex items-center gap-1.5">${shop?.name || v.sellerKunya} ${v.verified ? IGSVG.verified() : ''}</div><div class="text-xs t2">${REGION_NAMES[v.region] || v.region}</div></div>
+<div class="flex-1 min-w-0"><div class="text-sm font-semibold t1 flex items-center gap-1.5">${shop?.name || v.sellerKunya} ${v.verified ? IGSVG.verified() : ''}</div><div class="text-xs t2">${regionName}</div></div>
 </div>
-<h2 class="text-base font-bold t1">${c.title}</h2>
+<h2 id="combo-detail-title" class="text-base font-bold t1">${c.title}</h2>
 <div class="p-3 rounded-xl border b-ig bg-field space-y-1">
-<div class="text-lg font-extrabold" style="color:#f97316">$${Number(c.price).toFixed(2)} <span class="t2 text-xs font-normal">цена комплекта</span></div>
-<div class="text-xs t2">По отдельности: <s>$${v.comboOriginalTotal.toFixed(2)}</s>${save > 0 ? ` • <b style="color:#10b981">выгода $${save.toFixed(2)}</b>` : ''}</div>
+<div class="text-lg font-extrabold" style="color:#f97316">$${Number(c.price).toFixed(2)} <span class="t2 text-xs font-normal">${t('цена комплекта')}</span></div>
+<div class="text-xs t2">${t('По отдельности:')} <s>$${v.comboOriginalTotal.toFixed(2)}</s>${save > 0 ? ` • <b style="color:#10b981">${t('выгода')} $${save.toFixed(2)}</b>` : ''}</div>
 </div>
-<div class="space-y-2"><div class="text-xs font-bold t2 uppercase tracking-wide">Состав комбо-набора:</div>
-${v.comboItems.map(it => `<div onclick="openAdDetail('${it.id}')" class="bg-field p-2.5 rounded-xl border b-ig hover:bg-ig flex items-center gap-3 cursor-pointer"><img src="${(it.images && it.images[0]) || it.image}" class="w-11 h-11 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate">${it.title}</div><div class="text-[10px] t2">${it.city || ''}</div></div><div class="text-[11px] font-bold t1 shrink-0">${convertPriceAll(it.price, it.currency, it.isFree, it.isNegotiable)}</div></div>`).join('')}
+<div class="space-y-2"><div class="text-xs font-bold t2 uppercase tracking-wide">${t('Состав комбо-набора:')}</div>
+${v.comboItems.map((it, idx) => `<div onclick="openAdDetail('${it.id}')" class="bg-field p-2.5 rounded-xl border b-ig hover:bg-ig flex items-center gap-3 cursor-pointer"><img src="${(it.images && it.images[0]) || it.image}" class="w-11 h-11 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div id="combo-item-title-${idx}" class="font-bold t1 text-xs truncate">${it.title}</div><div class="text-[10px] t2">${it.city || ''}</div></div><div class="text-[11px] font-bold t1 shrink-0">${convertPriceAll(it.price, it.currency, it.isFree, it.isNegotiable)}</div></div>`).join('')}
 </div>
 <div class="flex gap-2 pt-2">
-<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> Заказать комплект</a>
-<button onclick="shareAd('${c.id}')" class="ig-btn-outline py-3 px-4" title="Поделиться">${IGSVG.send()}</button>
+<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waMsg)}" target="_blank" class="flex-1 py-3 rounded-lg text-white text-xs font-extrabold flex items-center justify-center gap-2" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg"></i> ${t('Заказать комплект')}</a>
+<button onclick="shareAd('${c.id}')" class="ig-btn-outline py-3 px-4" title="${t('Поделиться')}">${IGSVG.send()}</button>
 </div>
-${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openComboBuilder('${owner?.uid || ''}','${c.id}')" class="flex-1 py-2.5 rounded-lg text-xs font-semibold border b-ig" style="color:#f97316"><i class="fa-solid fa-pen-to-square"></i> Изменить акцию</button><button onclick="deleteComboWithConfirm('${c.id}')" class="ig-btn-danger py-2.5 px-4 text-xs"><i class="fa-solid fa-trash"></i></button></div>` : ''}
+${canManage ? `<div class="pt-2 border-t b-ig flex gap-2"><button onclick="openComboBuilder('${owner?.uid || ''}','${c.id}')" class="flex-1 py-2.5 rounded-lg text-xs font-semibold border b-ig" style="color:#f97316"><i class="fa-solid fa-pen-to-square"></i> ${t('Изменить акцию')}</button><button onclick="deleteComboWithConfirm('${c.id}')" class="ig-btn-danger py-2.5 px-4 text-xs"><i class="fa-solid fa-trash"></i></button></div>` : ''}
 </div>
 </div>`; 
   openModal('modal-ad-detail'); 
+
+  if (isAr && typeof translateDynamic === 'function') {
+    translateDynamic(c.title, 'ar').then(tTitle => {
+      const tEl = byId('combo-detail-title');
+      if (tEl) tEl.innerText = tTitle;
+    });
+    v.comboItems.forEach((it, idx) => {
+      translateDynamic(it.title, 'ar').then(itTitle => {
+        const itEl = byId(`combo-item-title-${idx}`);
+        if (itEl) itEl.innerText = itTitle;
+      });
+    });
+  }
 }
+
 
 function sendPriceOffer(adId) { 
   const ad = ads.find(a => a.id === adId); 
