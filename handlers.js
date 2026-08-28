@@ -426,7 +426,7 @@ function fallbackCopy(text, cb) {
 }
 
 async function shareAd(adId) {
-  const ad = ads.find(a => a.id === adId) || combos.find(x => x.id === adId); if (!ad) return;
+  const ad = (typeof getListingById === 'function') ? getListingById(adId) : (ads.find(a => a.id === adId) || combos.find(x => x.id === adId)); if (!ad) return;
   const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
   const url = base + '#ad-' + ad.id;
   sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
@@ -1608,7 +1608,36 @@ function calculateDistanceKm(lat1, lon1, lat2, lon2) {
 // 2. Навигация по фотографиям прямо в ленте карточки (Instagram-стиль)
 function cardNav(event, adId, dir) {
   if (event) event.stopPropagation();
-  const ad = ads.find(a => a.id === adId) || combos.find(c => c.id === adId);
+  
+  const isCombo = typeof adId === 'string' && (adId.startsWith('COMBO-') || adId.includes('COMBO'));
+  
+  if (isCombo) {
+    const v = (typeof getListingById === 'function') ? getListingById(adId) : null;
+    if (!v || !v.comboItems || v.comboItems.length < 2) return;
+    
+    const itemLeft = v.comboItems[0];
+    const itemRight = v.comboItems[1];
+    
+    const imgsLeft = (itemLeft.images && itemLeft.images.length) ? itemLeft.images : [itemLeft.image || PLACEHOLDER_IMG];
+    const imgsRight = (itemRight.images && itemRight.images.length) ? itemRight.images : [itemRight.image || PLACEHOLDER_IMG];
+    
+    if (dir === -1) {
+      const key = `${adId}_left`;
+      if (cardPhotoIndex[key] === undefined) cardPhotoIndex[key] = 0;
+      cardPhotoIndex[key] = (cardPhotoIndex[key] + 1) % imgsLeft.length;
+      const leftEl = byId(`cimg-left-${adId}`);
+      if (leftEl) leftEl.src = imgsLeft[cardPhotoIndex[key]];
+    } else {
+      const key = `${adId}_right`;
+      if (cardPhotoIndex[key] === undefined) cardPhotoIndex[key] = 0;
+      cardPhotoIndex[key] = (cardPhotoIndex[key] + 1) % imgsRight.length;
+      const rightEl = byId(`cimg-right-${adId}`);
+      if (rightEl) rightEl.src = imgsRight[cardPhotoIndex[key]];
+    }
+    return;
+  }
+
+  const ad = ads.find(a => a.id === adId);
   if (!ad) return;
   const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
   if (imgs.length <= 1) return;

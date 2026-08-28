@@ -1,20 +1,24 @@
 /* ================= UI RENDERING & TEMPLATES ================= */
 
 function renderComboSlashCollage(ad) {
-  const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
-  const img1 = imgs[0] || PLACEHOLDER_IMG;
-  const img2 = imgs[1] || img1;
+  const v = (ad.isCombo && ad.comboItems) ? ad : (typeof getListingById === 'function' ? getListingById(ad.id) : ad);
+  const items = v?.comboItems || [];
+  const item1 = items[0] || {};
+  const item2 = items[1] || items[0] || {};
+  
+  const imgs1 = (item1.images && item1.images.length) ? item1.images : [item1.image || PLACEHOLDER_IMG];
+  const imgs2 = (item2.images && item2.images.length) ? item2.images : [item2.image || PLACEHOLDER_IMG];
+  
+  const img1 = imgs1[0] || PLACEHOLDER_IMG;
+  const img2 = imgs2[0] || img1;
 
-  if (imgs.length >= 2) {
-    return `
-      <div class="anime-slash-collage">
-        <img src="${img1}" class="anime-slash-left" alt="Товар 1">
-        <img src="${img2}" class="anime-slash-right" alt="Товар 2">
-        <div class="anime-slash-line"></div>
-      </div>
-    `;
-  }
-  return `<img src="${img1}" class="w-full h-full object-cover">`;
+  return `
+    <div class="anime-slash-collage">
+      <img id="cimg-left-${ad.id}" src="${img1}" class="anime-slash-left" alt="Товар 1">
+      <img id="cimg-right-${ad.id}" src="${img2}" class="anime-slash-right" alt="Товар 2">
+      <div class="anime-slash-line"></div>
+    </div>
+  `;
 }
 
 function checkBadImagePlaceholder(imgElement) {
@@ -1558,8 +1562,8 @@ window.addEventListener('keydown', (e) => {
   }
 });
 function initDetailMap(lat, lng) { const el = byId('detail-map'); if (!el || typeof L === 'undefined') return; if (detailMap) { detailMap.remove(); detailMap = null; } detailMap = L.map('detail-map', { dragging: false, zoomControl: false }).setView([lat, lng], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(detailMap); L.marker([lat, lng]).addTo(detailMap); }
-function changeDetailPhoto(adId, dir) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgs.length) % imgs.length; setDetailPhoto(adId, currentDetailPhotoIndex); }
-function setDetailPhoto(adId, idx) { const ad = getListingById(adId); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
+function changeDetailPhoto(adId, dir, event) { if (event && event.stopPropagation) event.stopPropagation(); const ad = (typeof getListingById === 'function') ? getListingById(adId) : (ads.find(a => a.id === adId) || combos.find(x => x.id === adId)); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; if (imgs.length <= 1) return; currentDetailPhotoIndex = (currentDetailPhotoIndex + dir + imgs.length) % imgs.length; setDetailPhoto(adId, currentDetailPhotoIndex); }
+function setDetailPhoto(adId, idx) { const ad = (typeof getListingById === 'function') ? getListingById(adId) : (ads.find(a => a.id === adId) || combos.find(x => x.id === adId)); if (!ad) return; const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG]; currentDetailPhotoIndex = idx; const m = byId('detail-main-img'), b = byId('detail-bg-blur'), c = byId('detail-photo-counter'); if (m) m.src = imgs[idx]; if (b) b.style.backgroundImage = `url('${imgs[idx]}')`; if (c) c.innerText = `${idx + 1} / ${imgs.length}`; imgs.forEach((_, i) => { const t = byId(`detail-thumb-${i}`); if (t) { t.style.borderColor = i === idx ? '#0095f6' : 'var(--ig-border)'; t.style.opacity = i === idx ? '1' : '.6'; } }); }
 
 async function purchaseAd(adId) {
   if (!currentUser) { openAuthModal(); return; }
@@ -3597,7 +3601,8 @@ function openComboDetail(comboId) {
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[46vh] md:max-h-[90vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src, '${c.id}')">
 <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')} • ${v.comboItems.length}</span>
-${imgs.length > 1 ? `<button onclick="changeDetailPhoto('${c.id}',-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevL()}</button><button onclick="changeDetailPhoto('${c.id}',1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow">${IGSVG.chevR()}</button><div id="detail-photo-counter" class="absolute bottom-3 right-3 z-10 bg-black/70 text-white px-2.5 py-1 rounded-lg text-[11px] font-mono">1 / ${imgs.length}</div>` : ''}
+${imgs.length > 1 ? `<button type="button" onclick="event.stopPropagation(); changeDetailPhoto('${c.id}', -1, event);" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white active:scale-95 transition-transform cursor-pointer">${IGSVG.chevL()}</button><button type="button" onclick="event.stopPropagation(); changeDetailPhoto('${c.id}', 1, event);" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white active:scale-95 transition-transform cursor-pointer">${IGSVG.chevR()}</button><div id="detail-photo-counter" class="absolute bottom-3 right-3 z-10 bg-black/70 text-white px-2.5 py-1 rounded-lg text-[11px] font-mono">1 / ${imgs.length}</div>` : ''}
+
 </div>
 <div class="flex flex-col p-4 space-y-3 text-sm overflow-y-auto max-h-[90vh] modal-scroll-body">
 <div class="flex items-center gap-3 pb-3 border-b b-ig shrink-0">
