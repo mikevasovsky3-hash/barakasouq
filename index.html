@@ -477,7 +477,22 @@ body { top: 0px !important; }
 </div>
 <div id="reg-fields" class="hidden space-y-2.5">
   <input type="text" id="auth-whatsapp" placeholder="Номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
-<div id="auth-otp-block" class="hidden space-y-1.5 pt-1">
+  
+  <div class="space-y-1">
+    <div class="text-[10px] t2 font-bold px-1 uppercase">Выберите ваш пол *</div>
+    <div class="flex items-center justify-around p-2.5 rounded-xl bg-field border b-ig text-xs">
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="auth-gender" value="MALE" class="accent-[#0095f6] w-4 h-4 cursor-pointer">
+        <span>Мужчина</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="auth-gender" value="FEMALE" class="accent-[#ec4899] w-4 h-4 cursor-pointer">
+        <span class="text-pink-400">Женщина 🌸</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="auth-otp-block" class="hidden space-y-1.5 pt-1">
     <input type="text" id="auth-otp-code" placeholder="Введите 6-значный код *" maxlength="6" class="ig-input w-full px-3.5 py-2.5 text-xs text-center font-bold tracking-widest text-emerald-400">
     <div class="flex items-center justify-between text-[10px] px-1">
       <span class="t2">Код отправлен в WhatsApp</span>
