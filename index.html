@@ -314,8 +314,8 @@ body { top: 0px !important; }
 <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
 </button>
 </div>
-<div id="radius-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
-<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2 sort-dropdown" onclick="event.stopPropagation()">
+<d<div id="radius-menu-overlay" class="hidden fixed inset-0 z-[1050] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2 sort-dropdown mb-[56px] sm:mb-0" onclick="event.stopPropagation()">
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
 <div class="flex items-center justify-between pb-2 border-b b-ig">
   <span class="text-sm font-bold t1"><i class="fa-solid fa-location-crosshairs text-blue-500"></i> Поиск в радиусе</span>
@@ -327,8 +327,8 @@ body { top: 0px !important; }
   <button id="radius-btn-30" onclick="setRadiusFilter(30)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 30 км</span> <i id="radius-check-30" class="fa-solid fa-check text-blue-500 hidden"></i></button>
   <button id="radius-btn-50" onclick="setRadiusFilter(50)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 50 км</span> <i id="radius-check-50" class="fa-solid fa-check text-blue-500 hidden"></i></button>
 </div>
-<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 flex items-center justify-center gap-2 transition active:scale-95 mt-1">
-  <i class="fa-solid fa-circle-xmark"></i> Сбросить фильтр по радиусу
+<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 flex items-center justify-center gap-2 transition active:scale-95 mt-2">
+  <i class="fa-solid fa-circle-xmark"></i> Отключить поиск рядом
 </button>
 </div>
 </div>
