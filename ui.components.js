@@ -544,6 +544,7 @@ function renderAds() {
       if (isCombo || ad.category !== selectedCategory) return false;
     }
 if (selectedCategory !== 'favorites') {
+if (selectedCategory !== 'favorites') {
       if (region !== 'ALL' && ad.region !== region) return false;
       if (activeRadiusKm > 0 && userCurrentCoords) {
         if (!ad.lat || !ad.lng) return false;
@@ -551,6 +552,7 @@ if (selectedCategory !== 'favorites') {
         ad._distance = dist;
         if (dist === null || dist > activeRadiusKm) return false;
       }
+    }
     }
 	if (q) {
       const cleanQ = q.toLowerCase().trim();

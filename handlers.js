@@ -1207,8 +1207,11 @@ function toggleFavorite(adId, e) {
   if (currentUser) {
     currentUser.favorites = favorites;
     saveUserSession(currentUser, true);
-    if (supabaseClient && currentUser.uid) {
-      supabaseClient.from('users').update({ favorites: favorites }).eq('uid', currentUser.uid).then();
+    if (supabaseClient) {
+      const query = currentUser.uid 
+        ? supabaseClient.from('users').update({ favorites: favorites }).eq('uid', currentUser.uid)
+        : supabaseClient.from('users').update({ favorites: favorites }).eq('username', currentUser.username);
+      query.then().catch(() => {});
     }
   }
   renderCategoryPills(); 
@@ -1522,14 +1525,19 @@ const cleanWa = whatsapp.replace(/\D/g, '');
           return;
         }
 
-        const idx = users.findIndex(u => u.uid === foundUser.uid);
+const idx = users.findIndex(u => u.uid === foundUser.uid);
         if (idx !== -1) users[idx] = foundUser;
         else users.push(foundUser);
+
+        if (Array.isArray(foundUser.favorites)) {
+          favorites = [...new Set([...(Array.isArray(favorites) ? favorites : []), ...foundUser.favorites])];
+          try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
+        }
 
         saveUserSession(foundUser, remember);
         closeModal('modal-auth');
         showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
-      } else {
+		} else {
         showToast(res?.error || 'Неверный логин или пароль!', 'error');
       }
     } catch (err) {
