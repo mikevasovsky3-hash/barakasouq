@@ -401,6 +401,54 @@ async function startBackgroundDualClutchSync(startOffset = 20, chunkSize = 20) {
   scheduleFirst(runSyncChunk);
 }
 
+let realtimeAdsChannel = null;
+
+function setupRealtimeAdsSubscription() {
+  if (!supabaseClient || realtimeAdsChannel) return;
+
+  realtimeAdsChannel = supabaseClient
+    .channel('public:ads_realtime_changes')
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'ads' },
+      (payload) => {
+        const deletedId = payload?.old?.id;
+        if (!deletedId) return;
+
+        if (typeof markAdDeletedLocally === 'function') {
+          markAdDeletedLocally(deletedId);
+        }
+
+        ads = (ads || []).filter(a => a.id !== deletedId);
+        favorites = (favorites || []).filter(id => id !== deletedId);
+        try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (e) {}
+
+        saveCachedAds();
+        if (typeof renderCategoryPills === 'function') renderCategoryPills();
+        if (typeof renderAds === 'function') renderAds();
+        if (typeof SYSTEM_CONFIG !== 'undefined' && SYSTEM_CONFIG.adminTab === 'ads' && typeof renderAdminTabContent === 'function') {
+          renderAdminTabContent();
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'ads' },
+      (payload) => {
+        if (!payload?.new?.id) return;
+        const mapped = mapSupabaseAdToLocal(payload.new);
+        const idx = (ads || []).findIndex(a => a.id === mapped.id);
+        if (idx !== -1) {
+          ads[idx] = mapped;
+        }
+        saveCachedAds();
+        if (typeof renderCategoryPills === 'function') renderCategoryPills();
+        if (typeof renderAds === 'function') renderAds();
+      }
+    )
+    .subscribe();
+}
+
 async function initSupabaseSync() {
   loadCachedAds();
   renderCategoryPills();
@@ -411,13 +459,15 @@ async function initSupabaseSync() {
     return;
   }
 
+  // Запуск постоянного слушателя Realtime для всех пользователей
+  setupRealtimeAdsSubscription();
+
   const st = byId('cloud-sync-status');
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
   try {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-// Первая быстрая порция (20 объявлений) параллельно с общими данными
     const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes] = await Promise.all([
       supabaseClient.from('users').select('uid, username, kunya, gender, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, frozen, is_archived, favorites, shop'),
       supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
@@ -458,16 +508,12 @@ async function initSupabaseSync() {
       }
     }
 
-    // Применение первой порции объявлений
+    // Применение свежих объявлений: первичный список полностью заменяется данными сервера
     if (adsFirstChunkRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-      const incomingFirstAds = adsFirstChunkRes.data
+      ads = adsFirstChunkRes.data
         .filter(a => !deletedIds.includes(a.id))
         .map(mapSupabaseAdToLocal);
-
-      const existingMap = new Map((ads || []).map(a => [a.id, a]));
-      incomingFirstAds.forEach(a => existingMap.set(a.id, a));
-      ads = Array.from(existingMap.values());
     }
 
     if (combosRes.data) {
@@ -493,7 +539,6 @@ async function initSupabaseSync() {
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
     if (typeof checkUrlHashAdOpen === 'function') checkUrlHashAdOpen();
 
-    // Запуск фоновой бесшовной догрузки остальных данных (второй диск сцепления)
     startBackgroundDualClutchSync(20, 20);
 
   } catch (error) {
