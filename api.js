@@ -220,11 +220,11 @@ async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, 
           if (!blob) {
             return reject(new Error('Canvas toBlob failed'));
           }
-          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`, {
-            type: 'image/webp'
+          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`, {
+            type: 'image/jpeg'
           });
           resolve(compressedFile);
-        }, 'image/webp', quality);
+        }, 'image/jpeg', quality);
       };
       img.onerror = (err) => reject(err);
     };
@@ -236,7 +236,6 @@ async function uploadListingImages(filesArray, bucketName = 'listings') {
   if (!filesArray || filesArray.length === 0) return [];
   
   const uploadPromises = Array.from(filesArray).map(async (file) => {
-    // Если передан уже готовый URL (строка), не трогаем его
     if (typeof file === 'string') return file;
 
     const compressed = await compressSingleImageFile(file);
@@ -245,7 +244,8 @@ async function uploadListingImages(filesArray, bucketName = 'listings') {
     const { data, error } = await supabaseClient.storage
       .from(bucketName)
       .upload(filePath, compressed, {
-        cacheControl: '3600',
+        contentType: 'image/jpeg',
+        cacheControl: '31536000',
         upsert: false
       });
 

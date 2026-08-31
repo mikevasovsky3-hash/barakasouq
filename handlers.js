@@ -306,12 +306,14 @@ function requestPushPermission() {
 function sendBrowserPush(title, body, icon = null) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
-    const notif = new Notification(title, {
+    new Notification(title, {
       body: body,
       icon: icon || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%230095f6\'/%3E%3Ctext x=\'50\' y=\'68\' font-family=\'Arial\' font-weight=\'900\' font-size=\'56\' fill=\'%23ffffff\' text-anchor=\'middle\'%3EA%3C/text%3E%3C/svg%3E',
       badge: icon
     });
-    playNotificationSound();
+    if (typeof playNotificationSound === 'function') {
+      playNotificationSound();
+    }
   } catch(e) {}
 }
 
@@ -367,13 +369,14 @@ for (const f of files.slice(0, slots)) {
       const compressedFile = await compressSingleImageFile(f, 800, 800, 0.75);
       const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
 	  
-      const { error: sbErr } = await supabaseClient.storage
+const { error: sbErr } = await supabaseClient.storage
         .from('listings')
         .upload(filePath, compressedFile, {
+          contentType: 'image/jpeg',
           cacheControl: '31536000',
           upsert: false
         });
-
+		
       if (sbErr) throw sbErr;
 
       const { data: pubData } = supabaseClient.storage
@@ -801,51 +804,7 @@ function toggleNegotiableField(isNeg) {
   } 
 }
 
-// Вспомогательная функция сжатия изображений
-async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-canvas.toBlob((blob) => {
-          if (!blob) {
-            return reject(new Error('Canvas toBlob failed'));
-          }
-          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`, {
-            type: 'image/jpeg'
-          });
-          resolve(compressedFile);
-        }, 'image/jpeg', quality);
-		};
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-}
+// Функция compressSingleImageFile централизованно используется из модуля api.js
 
 async function handleCreateAdSubmit(e) {
   e.preventDefault();

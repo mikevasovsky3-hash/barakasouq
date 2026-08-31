@@ -84,7 +84,7 @@ function getSellerAvatar(ad) { if (!ad) return null; const s = users.find(u => u
 function getSellerVerified(ad) { if (ad && ad.isCombo && typeof ad.verified === 'boolean') return ad.verified; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return !!(s && (s.verifiedShop || (s.shop && s.shop.isVerified))); }
 function getCategoryName(catId) { const c = categories.find(x => x.id === catId); return c ? c.name : 'Прочее'; }
 function timeAgo(ts) { if (!ts) return ''; const m = Math.floor((Date.now() - ts) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин'; const h = Math.floor(m / 60); if (h < 24) return h + ' ч'; const d = Math.floor(h / 24); if (d < 7) return d + ' дн'; return new Date(ts).toLocaleDateString(); }
-function adToUSD(a) { let p = (a.isFree || !a.price) ? 0 : a.price; if (a.currency === 'SYP') p = p / EXCHANGE_RATES.SYP; if (a.currency === 'TRY') p = p / EXCHANGE_RATES.TRY; return p; }
+// Используется безопасная версия функции adToUSD(ad), объявленная в handlers.js
 
 function convertPriceAll(amount, fromCurr, isFree, isNegotiable) {
   if (isNegotiable) return `<span class="font-bold" style="color:#3b82f6">${t('🤝 Договорная')}</span>`;
