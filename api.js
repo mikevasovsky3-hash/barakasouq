@@ -325,15 +325,15 @@ async function initSupabaseSync() {
   try {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-    // Единый параллельный запрос с оптимизированными лимитами
+// Единый параллельный запрос со снятыми ограничениями на количество объявлений и пользователей
     const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('*').limit(25),
-      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(50),
+      supabaseClient.from('users').select('*'),
+      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
       isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] })
     ]);
-
+	
     // Единичный парсинг пользователей
     if (usersRes.data && usersRes.data.length > 0) {
       const allParsedUsers = usersRes.data.map(u => ({
@@ -492,56 +492,137 @@ function saveTranslateCacheToStorage() {
   } catch (e) {}
 }
 
+// Гибкая маска для поиска исламских фраз в любом написании (с огласовками и без, с разными ه/ة и أ/ا)
+const ISLAMIC_PATTERNS = [
+  { original: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', pattern: /ب[\s\u064B-\u065F\u0670\u0640]*س[\s\u064B-\u065F\u0670\u0640]*م[\s\u064B-\u065F\u0670\u0640]*[\s\S]*?ا[\s\u064B-\u065F\u0670\u0640]*ل[\s\u064B-\u065F\u0670\u0640]*ل[\s\u064B-\u065F\u0670\u0640]*[هة][\s\S]*?ا[\s\u064B-\u065F\u0670\u0640]*ل[\s\u064B-\u065F\u0670\u0640]*ر[\s\u064B-\u065F\u0670\u0640]*ح[\s\u064B-\u065F\u0670\u0640]*م[\s\u064B-\u065F\u0670\u0640]*[نٰ][\s\S]*?ا[\s\u064B-\u065F\u0670\u0640]*ل[\s\u064B-\u065F\u0670\u0640]*ر[\s\u064B-\u065F\u0670\u0640]*ح[\s\u064B-\u065F\u0670\u0640]*ي[\s\u064B-\u065F\u0670\u0640]*م/gi },
+  { original: 'السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ', pattern: /[اأإآ]?[ل]?س[للا]*[اأإآ]?م\s+عليكم(\s+و\s*رحم[هة]\s+ا[ل]?ل[هة](\s+و\s*بركات[هة])?)?/gi },
+  { original: 'وَعَلَيْكُمْ السَّلَامُ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ', pattern: /و\s*عليكم\s+[اأإآ]?[ل]?س[للا]*[اأإآ]?م(\s+و\s*رحم[هة]\s+ا[ل]?ل[هة](\s+و\s*بركات[هة])?)?/gi },
+  { original: 'جَزَاكَ اللَّهُ خَيْرًا', pattern: /جزا[ككم]+[\s\u064B-\u065F]*ا[ل]?ل[هة][\s\u064B-\u065F]*خي[راً]+/gi },
+  { original: 'الْحَمْدُ لِلَّهِ', pattern: /[اأإآ]?ل?حمد[\s\u064B-\u065F]*[ل]+[هة]/gi },
+  { original: 'سُبْحَانَ اللَّهِ', pattern: /سبحان[\s\u064B-\u065F]*ا[ل]?ل[هة]/gi },
+  { original: 'اللَّهُ أَكْبَرُ', pattern: /ا[ل]?ل[هة][\s\u064B-\u065F]*[اأإآ]كبر/gi },
+  { original: 'أَسْتَغْفِرُ اللَّهَ', pattern: /[اأإآ]?ستغفر[\s\u064B-\u065F]*ا[ل]?ل[هة]/gi },
+  { original: 'إِنْ شَاءَ اللَّهُ', pattern: /[اإأآ]?ن[\s\u064B-\u065F]*شا[ءه]?[\s\u064B-\u065F]*ا[ل]?ل[هة]/gi },
+  { original: 'مَا شَاءَ اللَّهُ', pattern: /ما[\s\u064B-\u065F]*شا[ءه]?[\s\u064B-\u065F]*ا[ل]?ل[هة]/gi },
+  { original: 'بَارَكَ اللَّهُ فِيكَ', pattern: /بارك[\s\u064B-\u065F]*ا[ل]?ل[هة][\s\u064B-\u065F]*في[ككم]+/gi },
+  { original: 'لَا إِلَٰهَ إِلَّا اللَّهُ', pattern: /لا[\s\u064B-\u065F]*[اإأآ]ل[هة][\s\u064B-\u065F]*[اإأآ]لا[\s\u064B-\u065F]*ا[ل]?ل[هة]/gi },
+  { original: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', pattern: /لا[\s\u064B-\u065F]*حول[\s\u064B-\u065F]*و?لا[\s\u064B-\u065F]*قو[هة][\s\u064B-\u065F]*[اإأآ]لا[\s\u064B-\u065F]*با[ل]?ل[هة]/gi },
+  { original: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', pattern: /حسبنا[\s\u064B-\u065F]*ا[ل]?ل[هة][\s\u064B-\u065F]*و?نعم[\s\u064B-\u065F]*[اأإآ]?لوكيل/gi },
+  { original: 'إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ', pattern: /[اإأآ]?نا[\s\u064B-\u065F]*[ل]+[هة][\s\u064B-\u065F]*و?[اإأآ]?نا[\s\u064B-\u065F]*[اإأآ]?ليه[\s\u064B-\u065F]*راجعون/gi },
+  { original: 'صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ', pattern: /صلى[\s\u064B-\u065F]*ا[ل]?ل[هة][\s\u064B-\u065F]*عليه[\s\u064B-\u065F]*و?سلم/gi }
+];
+
 async function translateDynamic(text, targetLang = currentLang) {
   if (!text || typeof text !== 'string') return text;
   const clean = text.trim();
   if (!clean) return text;
   if (DICTIONARY[clean] && targetLang === 'ar') return DICTIONARY[clean];
-  
+
   const cacheKey = `${targetLang}_${clean}`;
   if (TRANSLATE_CACHE[cacheKey]) return TRANSLATE_CACHE[cacheKey];
 
-  const isArabicText = /[\u0600-\u06FF]/.test(clean);
-  if (targetLang === 'ar' && isArabicText) return clean;
-  if (targetLang === 'ru' && !isArabicText) return clean;
+  // 1. Проверяем, состоит ли весь текст только из одной священной фразы
+  for (const item of ISLAMIC_PATTERNS) {
+    if (item.pattern.test(clean) && clean.replace(item.pattern, '').trim().length === 0) {
+      return item.original;
+    }
+  }
+
+  // 2. Маскируем защищенные исламские фразы уникальными плейсхолдерами
+  let protectedText = clean;
+  const replacements = [];
+
+  ISLAMIC_PATTERNS.forEach((item, idx) => {
+    item.pattern.lastIndex = 0;
+    if (item.pattern.test(protectedText)) {
+      const placeholder = `ZIKRTOKEN${idx}X`;
+      protectedText = protectedText.replace(item.pattern, ` ${placeholder} `);
+      replacements.push({ placeholder, original: item.original });
+    }
+  });
+
+  const arabicChars = (protectedText.replace(/ZIKRTOKEN\d+X/g, '').match(/[\u0600-\u06FF]/g) || []).length;
+  const cyrillicChars = (protectedText.match(/[\u0400-\u04FF]/g) || []).length;
+  const latinChars = (protectedText.match(/[a-zA-Z]/g) || []).length;
+
+  // Если весь оставшийся текст уже на целевом языке — просто восстанавливаем защищенные фразы
+  if (targetLang === 'ar' && cyrillicChars === 0 && latinChars === 0) {
+    let res = protectedText;
+    replacements.forEach(r => { res = res.split(r.placeholder).join(r.original); });
+    return res.trim();
+  }
+  if (targetLang === 'ru' && arabicChars === 0) {
+    let res = protectedText;
+    replacements.forEach(r => { res = res.split(r.placeholder).join(r.original); });
+    return res.trim();
+  }
 
   if (IN_FLIGHT_TRANSLATIONS[cacheKey]) {
     return await IN_FLIGHT_TRANSLATIONS[cacheKey];
   }
 
-  const sl = isArabicText ? 'ar' : 'ru';
-  const tl = targetLang;
+  const tl = targetLang === 'ar' ? 'ar' : 'ru';
 
   const translationPromise = (async () => {
+    let translated = '';
+
+    // 1. Google Translate API (клиент gtx)
     try {
-      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(clean)}`;
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${tl}&dt=t&q=${encodeURIComponent(protectedText)}`;
       const res = await fetch(googleUrl);
       if (res.ok) {
         const data = await res.json();
-        if (data && data[0]) {
-          const result = data[0].map(x => x[0]).join('');
-          TRANSLATE_CACHE[cacheKey] = result;
-          saveTranslateCacheToStorage();
-          return result;
+        if (data && Array.isArray(data[0])) {
+          translated = data[0].map(x => x[0]).filter(Boolean).join('');
         }
       }
     } catch (e) {}
 
-    try {
-      const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean.slice(0, 450))}&langpair=${sl}|${tl}`;
-      const res = await fetch(proxyUrl);
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.responseData?.translatedText && !data.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
-          const result = data.responseData.translatedText;
-          TRANSLATE_CACHE[cacheKey] = result;
-          saveTranslateCacheToStorage();
-          return result;
+    // 2. Google Translate Web API Client (запасной)
+    if (!translated || !translated.trim()) {
+      try {
+        const altUrl = `https://translate.google.com/translate_a/single?client=at&dt=t&dt=ld&dt=qca&dt=rm&dt=bd&dj=1&hl=${tl}&ie=UTF-8&oe=UTF-8&inputm=2&otf=2&iid=1dd3b03a-145c-4279-b4ae-325039e0573e`;
+        const resAlt = await fetch(altUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `sl=auto&tl=${tl}&q=${encodeURIComponent(protectedText)}`
+        });
+        if (resAlt.ok) {
+          const altData = await resAlt.json();
+          if (altData && Array.isArray(altData.sentences)) {
+            translated = altData.sentences.map(s => s.trans || '').join('');
+          }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
 
-    return clean;
+    // 3. Fallback на MyMemory
+    if (!translated || !translated.trim()) {
+      try {
+        const slMem = arabicChars > cyrillicChars ? 'ar' : 'ru';
+        const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(protectedText.slice(0, 450))}&langpair=${slMem}|${tl}`;
+        const resMem = await fetch(proxyUrl);
+        if (resMem.ok) {
+          const dataMem = await resMem.json();
+          if (dataMem?.responseData?.translatedText && !dataMem.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
+            translated = dataMem.responseData.translatedText;
+          }
+        }
+      } catch (e) {}
+    }
+
+    let finalOutput = translated && translated.trim() ? translated : protectedText;
+
+    // 4. Восстанавливаем оригинальные арабские фразы с сохранением огласовок
+    replacements.forEach(r => {
+      const tokenRegex = new RegExp(`\\s*${r.placeholder}\\s*`, 'gi');
+      finalOutput = finalOutput.replace(tokenRegex, `\n${r.original}\n`);
+    });
+
+    finalOutput = finalOutput.replace(/\n{3,}/g, '\n\n').trim();
+    TRANSLATE_CACHE[cacheKey] = finalOutput;
+    saveTranslateCacheToStorage();
+    return finalOutput;
   })();
 
   IN_FLIGHT_TRANSLATIONS[cacheKey] = translationPromise;

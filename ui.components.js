@@ -637,11 +637,13 @@ if (layout === 'grid') {
       const isFav = favorites.includes(ad.id);
       const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
-setTimeout(async () => {
+      setTimeout(async () => {
         if (renderCycleId !== currentRenderCycle) return;
-        if (currentLang === 'ar') {
-          const el = document.getElementById(`grid-title-${ad.id}`);
-          if (el) el.innerText = await translateDynamic(ad.title, 'ar');
+        const targetLanguage = currentLang;
+        const el = document.getElementById(`grid-title-${ad.id}`);
+        if (el) {
+          const transTitle = await translateDynamic(ad.title, targetLanguage);
+          if (renderCycleId === currentRenderCycle) el.innerText = transTitle;
         }
       }, 10);
 	  
@@ -682,6 +684,16 @@ return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-be
       const isFav = favorites.includes(ad.id);
       const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
+      setTimeout(async () => {
+        if (renderCycleId !== currentRenderCycle) return;
+        const targetLanguage = currentLang;
+        const tEl = document.getElementById(`list-title-${ad.id}`);
+        if (tEl) {
+          const transTitle = await translateDynamic(ad.title, targetLanguage);
+          if (renderCycleId === currentRenderCycle) tEl.innerText = transTitle;
+        }
+      }, 10);
+
 return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.5 transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
   <div onclick="openAdDetail('${ad.id}')" class="flex gap-3 cursor-pointer">
     <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
@@ -690,7 +702,7 @@ return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.
     </div>
     <div class="flex-1 min-w-0 flex flex-col justify-between">
       <div>
-        <div class="font-bold t1 text-sm truncate">${ad.title}</div>
+        <div id="list-title-${ad.id}" class="font-bold t1 text-sm truncate">${ad.title}</div>
         <div class="text-xs t2 truncate">${ad.city} • ${timeAgo(ad.createdAt)}</div>
       </div>
       <div class="flex items-center justify-between pt-1">
@@ -727,13 +739,18 @@ return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.
       const viewsCount = ad.views || 0;
       const regionName = t(REGION_NAMES[ad.region] || ad.region || 'Сирия');
 
-setTimeout(async () => {
+      setTimeout(async () => {
         if (renderCycleId !== currentRenderCycle) return;
-        if (currentLang === 'ar') {
-          const tEl = document.getElementById(`feed-title-${ad.id}`);
-          const dEl = document.getElementById(`feed-desc-${ad.id}`);
-          if (tEl) tEl.innerText = await translateDynamic(ad.title, 'ar');
-          if (dEl && ad.desc) dEl.innerText = await translateDynamic(ad.desc, 'ar');
+        const targetLanguage = currentLang;
+        const tEl = document.getElementById(`feed-title-${ad.id}`);
+        const dEl = document.getElementById(`feed-desc-${ad.id}`);
+        if (tEl && ad.title) {
+          const transTitle = await translateDynamic(ad.title, targetLanguage);
+          if (renderCycleId === currentRenderCycle) tEl.innerText = transTitle;
+        }
+        if (dEl && ad.desc) {
+          const transDesc = await translateDynamic(ad.desc, targetLanguage);
+          if (renderCycleId === currentRenderCycle) dEl.innerText = transDesc;
         }
       }, 10);
 	  
@@ -800,7 +817,7 @@ ${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 ${t('Це
 </article>`;
     }).join('');
   }
-
+  
   if (pag) {
     pag.innerHTML = `<button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">${t('« Первая')}</button><button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">${t('< Назад')}</button><span class="px-3 py-1.5 rounded-lg text-xs font-bold t1 bg-field border b-ig">${t('Страница')} ${currentPage} ${t('из')} ${totalPages}</span><button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">${t('Вперед >')}</button><button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="ig-btn-outline px-3 py-1.5 text-xs disabled:opacity-30">${t('Последняя »')}</button>`;
   }
@@ -1636,23 +1653,24 @@ ${(ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 *
 
   openModal('modal-ad-detail');
   
-  setTimeout(async () => {
+setTimeout(async () => {
     initDetailMap(ad.lat || 33.5138, ad.lng || 36.2765);
     const titleEl = byId('detail-ad-title');
     const descEl = byId('detail-ad-desc');
-    
-    if (currentLang === 'ar') {
-      if (titleEl && ad.title) {
-        const transTitle = await translateDynamic(ad.title, 'ar');
-        titleEl.innerText = transTitle;
-      }
-      if (descEl && ad.desc) {
-        const transDesc = await translateDynamic(ad.desc, 'ar');
-        descEl.innerText = transDesc;
-      }
+    const targetLanguage = currentLang;
+
+    if (titleEl && ad.title) {
+      translateDynamic(ad.title, targetLanguage).then(transTitle => {
+        if (titleEl) titleEl.innerText = transTitle;
+      });
     }
-  }, 10);
-}
+    if (descEl && ad.desc) {
+      translateDynamic(ad.desc, targetLanguage).then(transDesc => {
+        if (descEl) descEl.innerText = transDesc;
+      });
+    }
+  }, 0);
+  }
 
 let currentFullscreenAdId = null;
 
