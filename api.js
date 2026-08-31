@@ -214,8 +214,8 @@ async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, 
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, width ? width : 0, 0, height);
-
+        ctx.drawImage(img, 0, 0, width, height);
+		
         canvas.toBlob((blob) => {
           if (!blob) {
             return reject(new Error('Canvas toBlob failed'));
@@ -323,35 +323,19 @@ async function initSupabaseSync() {
   if (st) { st.classList.remove('hidden'); st.classList.add('flex'); }
 
   try {
-const [usersRes, adsRes] = await Promise.all([
-  supabaseClient.from('users').select('*'),
-  supabaseClient.from('ads').select('*').order('created_at', { ascending: false })
-]);
+    const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-// Если база вернула пользователей, обновляем список. Если нет — оставляем старые, чтобы они не пропадали
-if (usersRes.data && usersRes.data.length > 0) {
-  const allParsedUsers = usersRes.data.map(u => ({
-    ...u,
-    passwordHash: u.password_hash,
-    verifiedShop: !!u.verified_shop,
-    avitocashBalance: Number(u.avitocash_balance || 0),
-    trialBalance: Number(u.trial_balance || 0),
-    showWomenAds: !!u.show_women_ads,
-    frozen: !!u.frozen,
-    isArchived: !!u.is_archived
-  }));
+    // Единый параллельный запрос с оптимизированными лимитами
+    const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
+      supabaseClient.from('users').select('*').limit(25),
+      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }).limit(50),
+      supabaseClient.from('combos').select('*'),
+      supabaseClient.from('categories').select('*'),
+      isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] })
+    ]);
 
-  users = allParsedUsers.filter(u => !u.isArchived);
-  archivedUsers = allParsedUsers.filter(u => u.isArchived);
-}
-    const combosPromise = supabaseClient.from('combos').select('*');
-    const catsPromise = supabaseClient.from('categories').select('*');
-    const reportsPromise = (currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) 
-      ? supabaseClient.from('reports').select('*') 
-      : Promise.resolve({ data: [] });
-    const [combosRes, catsRes, reportsRes] = await Promise.all([combosPromise, catsPromise, reportsPromise]);
-
-    if (usersRes.data) {
+    // Единичный парсинг пользователей
+    if (usersRes.data && usersRes.data.length > 0) {
       const allParsedUsers = usersRes.data.map(u => ({
         ...u,
         passwordHash: u.password_hash,
@@ -366,7 +350,7 @@ if (usersRes.data && usersRes.data.length > 0) {
       users = allParsedUsers.filter(u => !u.isArchived);
       archivedUsers = allParsedUsers.filter(u => u.isArchived);
 
-if (currentUser) {
+      if (currentUser) {
         const freshMe = allParsedUsers.find(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
         if (freshMe) {
           if (Array.isArray(freshMe.favorites)) {
@@ -376,12 +360,11 @@ if (currentUser) {
           currentUser = { ...currentUser, ...freshMe, role: freshMe.role || 'USER', favorites };
           saveUserSession(currentUser, true);
         } else if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-          // Если суперпользователь не подтвержден реальной базой Supabase, сбрасываем права
           currentUser.role = 'USER';
           saveUserSession(currentUser, true);
         }
       }
-	  }  
+    }
 
     if (adsRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
@@ -420,8 +403,8 @@ if (currentUser) {
           };
         });
     }
-  
-if (combosRes.data) {
+
+    if (combosRes.data) {
       combos = combosRes.data.map(c => ({
         id: c.id,
         shopUid: c.shop_uid,
@@ -434,7 +417,7 @@ if (combosRes.data) {
       }));
       saveCachedCombos();
     }
-	
+
     if (catsRes.data && catsRes.data.length) categories = catsRes.data;
     if (reportsRes.data) reports = reportsRes.data;
 
