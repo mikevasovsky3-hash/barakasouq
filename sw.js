@@ -1,6 +1,5 @@
-const CACHE_NAME = 'avito-sham-v3';
+const CACHE_NAME = 'avito-sham-v4';
 
-// Оставляем в жестком кэше только внутренние файлы нашего сайта
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
@@ -12,7 +11,13 @@ const OFFLINE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      // 1. Кэшируем наши локальные файлы
+      cache.addAll(OFFLINE_ASSETS);
+      // 2. Принудительно кэшируем Tailwind CDN в фоне, чтобы интерфейс работал без интернета
+      const twReq = new Request('https://cdn.tailwindcss.com', { mode: 'no-cors' });
+      fetch(twReq).then(res => cache.put(twReq, res)).catch(() => {});
+    })
   );
   self.skipWaiting();
 });
@@ -30,21 +35,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Пропускаем динамические API без кэширования
-  if (url.includes('supabase.co') || url.includes('workers.dev') || url.includes('whatsapp-gateway') || url.includes('translate.googleapis.com')) {
+  // Игнорируем запросы к Supabase, внешним API и не-GET запросы
+  if (event.request.method !== 'GET' || url.includes('supabase.co') || url.includes('workers.dev') || url.includes('whatsapp-gateway') || url.includes('translate.googleapis.com')) {
     return;
   }
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Кэшируем только успешные (200) и сторонние непрозрачные (0) ответы от CDN
-        if (response && (response.status === 200 || response.status === 0) && event.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+    caches.match(event.request).then((cachedResponse) => {
+      // Стратегия "Stale-While-Revalidate":
+      // Начинаем скачивание свежей версии с сервера
+      const networkFetch = fetch(event.request).then((networkResponse) => {
+        // Если скачали успешно — обновляем кэш в фоне
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((res) => res || caches.match('/index.html')))
+        return networkResponse;
+      }).catch(() => {
+        // Если интернета нет и файла нет в кэше:
+        // Отдаем index.html ТОЛЬКО если запрашивалась веб-страница (mode === 'navigate')
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
+      
+      // МГНОВЕННО отдаем кэш, если он есть. Если нет — ждем результата скачивания.
+      return cachedResponse || networkFetch;
+    })
   );
 });
