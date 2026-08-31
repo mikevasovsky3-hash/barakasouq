@@ -1,17 +1,13 @@
-const CACHE_NAME = 'avito-sham-v2';
+const CACHE_NAME = 'avito-sham-v3';
+
+// Оставляем в жестком кэше только внутренние файлы нашего сайта
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
   '/config.js',
   '/api.js',
   '/ui.components.js',
-  '/handlers.js',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
+  '/handlers.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -34,7 +30,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Пропускаем динамические API Supabase, курсы валют, WhatsApp шлюз и переводчик без задержек кэша
+  // Пропускаем динамические API без кэширования
   if (url.includes('supabase.co') || url.includes('workers.dev') || url.includes('whatsapp-gateway') || url.includes('translate.googleapis.com')) {
     return;
   }
@@ -42,8 +38,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // При наличии сети отдаем актуальный ответ и обновляем кэш в фоне
-        if (response && response.status === 200 && event.request.method === 'GET') {
+        // Кэшируем только успешные (200) и сторонние непрозрачные (0) ответы от CDN
+        if (response && (response.status === 200 || response.status === 0) && event.request.method === 'GET') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
