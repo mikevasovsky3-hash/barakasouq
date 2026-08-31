@@ -46,8 +46,8 @@ function comboToVirtualAd(c) {
     isCombo: true, 
     comboRef: c, 
     comboItems: items, 
-    comboOriginalTotal: originalTotal, 
-    title: c.title || 'Комбо-набор', 
+comboOriginalTotal: originalTotal, 
+    title: c.title || t('Комбо-набор'), 
     category: 'combo', 
     region: shop?.region || 'DAM', 
     city: shop?.name || 'Авито Шам', 
@@ -56,8 +56,8 @@ function comboToVirtualAd(c) {
     isWomenOnly: false, 
     price: c.price, 
     currency: 'USD', 
-    desc: `Акция! Комплект из ${items.length} товаров по специальной цене.`, 
-    images, 
+    desc: `${t('Акция! Комплект из')} ${items.length} ${t('товаров по специальной цене.')}`, 
+    images,
     image: images[0] || PLACEHOLDER_IMG, 
     sellerUsername: c.sellerUsername || owner?.username || '', 
     sellerKunya: owner?.kunya || '', 
@@ -217,9 +217,9 @@ async function generateShareImage(ad) {
     ctx.font = '28px Arial';
     ctx.fillText(`${regionName}${ad.city ? ' • ' + ad.city : ''}`, padX + avR * 2 + 26, hy + avR + 34);
 
-    // Бейдж акции в правом верхнем углу
+// Бейдж акции в правом верхнем углу
     if (isCombo) {
-      const comboLabel = `🔥 КОМБО • ${ad.comboItems ? ad.comboItems.length : 2} ТОВАРА`;
+      const comboLabel = `🔥 ${t('КОМБО')} • ${ad.comboItems ? ad.comboItems.length : 2} ${t('ТОВАРА')}`;
       ctx.font = 'bold 26px Arial';
       const pw2 = ctx.measureText(comboLabel).width + 40;
       const px2 = W - FR - 44 - pw2, py2 = hy + 22;
@@ -369,14 +369,18 @@ async function generateShareImage(ad) {
     ctx.font = 'bold 36px Arial';
     wrapTextCanvas(ctx, cardTitle, titleMaxW, 2).forEach((ln, i) => ctx.fillText(ln, px, fy + phh + 50 + i * 44));
 
-    // Если это комбо — выводим названия товаров комплекта
+// Если это комбо — выводим названия товаров комплекта
     if (isCombo && Array.isArray(ad.comboItems) && ad.comboItems.length > 0) {
-      const itemsListStr = 'В комплекте: ' + ad.comboItems.map(it => it.title).join(' + ');
+      let comboTitles = ad.comboItems.map(it => it.title);
+      if (isAr && typeof translateDynamic === 'function') {
+        comboTitles = await Promise.all(comboTitles.map(tStr => translateDynamic(tStr, 'ar')));
+      }
+      const itemsListStr = `${t('В комплекте:')} ` + comboTitles.join(' + ');
       ctx.fillStyle = '#f97316';
       ctx.font = 'bold 24px Arial';
       wrapTextCanvas(ctx, itemsListStr, titleMaxW, 1).forEach((ln) => ctx.fillText(ln, px, fy + phh + 142));
     }
-
+	
     // Нижняя плашка с логотипом платформы
     const by2 = H - FR - 36;
     ctx.font = '54px "Grand Hotel", cursive';
@@ -441,12 +445,19 @@ function renderComboItemsList() {
   const list = byId('combo-items-list');
   if (!list) return;
   if (!comboBuilderAds.length) {
-    list.innerHTML = '<div class="text-center py-6 t2">У магазина пока нет активных товаров</div>';
+    list.innerHTML = `<div class="text-center py-6 t2">${t('У магазина пока нет активных товаров')}</div>`;
     return;
   }
-  list.innerHTML = comboBuilderAds.map(a => {
+  const isAr = currentLang === 'ar';
+  list.innerHTML = comboBuilderAds.map((a, idx) => {
     const sel = comboSelectedIds.includes(a.id);
-    return `<label class="flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${sel ? '' : 'b-ig bg-field hover:bg-ig'}" style="${sel ? 'border-color:#f97316;background:rgba(249,115,22,.1)' : ''}"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleComboItem('${a.id}')" class="w-4 h-4 shrink-0" style="accent-color:#f97316"><img src="${(a.images && a.images[0]) || a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate">${a.title}</div><div class="text-[10px] t2">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div></div>${sel ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : ''}</label>`;
+    if (isAr && typeof translateDynamic === 'function') {
+      translateDynamic(a.title, 'ar').then(trans => {
+        const el = byId(`combo-builder-item-title-${a.id}`);
+        if (el) el.innerText = trans;
+      });
+    }
+    return `<label class="flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all ${sel ? '' : 'b-ig bg-field hover:bg-ig'}" style="${sel ? 'border-color:#f97316;background:rgba(249,115,22,.1)' : ''}"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleComboItem('${a.id}')" class="w-4 h-4 shrink-0" style="accent-color:#f97316"><img src="${(a.images && a.images[0]) || a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div id="combo-builder-item-title-${a.id}" class="font-bold t1 text-xs truncate">${a.title}</div><div class="text-[10px] t2">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div></div>${sel ? '<i class="fa-solid fa-fire" style="color:#f97316"></i>' : ''}</label>`;
   }).join('');
 }
 
@@ -457,11 +468,11 @@ function updateComboSummary() {
   const total = selected.reduce((s, a) => s + adToUSD(a), 0);
   const price = parseFloat(byId('combo-price')?.value || 0);
   if (selected.length < 2) {
-    el.innerHTML = `<i class="fa-solid fa-circle-info"></i> Выберите минимум 2 товара для создания комбо. Выбрано: ${selected.length}.`;
+    el.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${t('Выберите минимум 2 товара для создания комбо. Выбрано:')} ${selected.length}.`;
     return;
   }
   const save = total - price;
-  el.innerHTML = `<div class="space-y-1"><div>Товаров в комплекте: <b class="t1">${selected.length}</b></div><div>Цена по отдельности: <b class="t2 line-through">$${total.toFixed(2)}</b></div><div>Цена акции: <b style="color:#f97316">$${(price || 0).toFixed(2)}</b></div>${price > 0 ? `<div>Выгода покупателя: <b style="color:${save > 0 ? '#10b981' : '#ed4956'}">${save > 0 ? '$' + save.toFixed(2) + ' (-' + Math.round(save / total * 100) + '%)' : 'нет скидки'}</b></div>` : ''}</div>`;
+  el.innerHTML = `<div class="space-y-1"><div>${t('Товаров в комплекте:')} <b class="t1">${selected.length}</b></div><div>${t('Цена по отдельности:')} <b class="t2 line-through">$${total.toFixed(2)}</b></div><div>${t('цена комплекта')}: <b style="color:#f97316">$${(price || 0).toFixed(2)}</b></div>${price > 0 ? `<div>${t('Выгода покупателя:')} <b style="color:${save > 0 ? '#10b981' : '#ed4956'}">${save > 0 ? '$' + save.toFixed(2) + ' (-' + Math.round(save / total * 100) + '%)' : t('нет скидки')}</b></div>` : ''}</div>`;
 }
 
 function getCategoryAdsCount(catId) { 
@@ -494,16 +505,19 @@ function renderCategoryPills() {
   }).join('');
 }
 
+let currentRenderCycle = 0;
+
 function renderAds() {
   const grid = byId('listings-view'), pag = byId('pagination-container');
   if (!grid) return;
+  const renderCycleId = ++currentRenderCycle;
   const q = (typeof searchQuery !== 'undefined' && searchQuery ? searchQuery : (byId('search-input-desktop')?.value || byId('search-input')?.value || '')).trim().toLowerCase();
   const region = byId('region-filter')?.value || 'ALL';
-
-  if (selectedCategory === 'shops_dir') {
+  
+if (selectedCategory === 'shops_dir') {
     const shops = users.filter(u => u.shop && (u.verifiedShop || u.shop.isVerified) && (region === 'ALL' || u.shop.region === region));
     if (!shops.length) {
-      grid.innerHTML = '<div class="py-16 text-center t2"><i class="fa-solid fa-store text-4xl mb-3 block opacity-40" style="color:#9333ea"></i>Подтвержденных магазинов в данном регионе пока нет.</div>';
+      grid.innerHTML = `<div class="py-16 text-center t2"><i class="fa-solid fa-store text-4xl mb-3 block opacity-40" style="color:#9333ea"></i>${t('Подтвержденных магазинов в данном регионе пока нет.')}</div>`;
       if (pag) pag.innerHTML = '';
       return;
     }
@@ -511,18 +525,19 @@ function renderAds() {
       const s = u.shop;
       const cnt = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === u.username.toLowerCase() && a.status === 'ACTIVE').length;
       const uCombos = combos.filter(x => x.shopUid === u.uid).length;
+      const regionName = t(REGION_NAMES[s.region] || s.region);
       return `<div class="ig-card rounded-xl p-3 space-y-2 card-in">
 <div class="flex items-center gap-3">
 <div class="story-ring rounded-full p-[2px] shrink-0"><div class="rounded-full bg-card p-[2px]"><div class="w-12 h-12 rounded-full overflow-hidden bg-field flex items-center justify-center t2">${s.logo ? `<img src="${s.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store text-lg"></i>'}</div></div></div>
-<div class="flex-1 min-w-0"><div class="font-bold text-sm t1 flex items-center gap-1.5 truncate"><span>${s.name}</span> ${IGSVG.verified()}</div><div class="text-xs t2 truncate">${s.slogan || ''}</div><div class="text-xs t2"><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${REGION_NAMES[s.region] || s.region}</div></div>
+<div class="flex-1 min-w-0"><div class="font-bold text-sm t1 flex items-center gap-1.5 truncate"><span>${s.name}</span> ${IGSVG.verified()}</div><div class="text-xs t2 truncate">${s.slogan || ''}</div><div class="text-xs t2"><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}</div></div>
 </div>
 <p class="text-xs t1 line-clamp-2 bg-field p-2 rounded-lg border b-ig">${s.desc || ''}</p>
-<div class="pt-2 border-t b-ig flex items-center justify-between"><span class="text-[10px] font-bold" style="color:#f59e0b"><i class="fa-solid fa-boxes-stacked"></i> ${cnt} товаров ${uCombos > 0 ? `• <span style="color:#f97316"><i class="fa-solid fa-fire"></i> ${uCombos} акций</span>` : ''}</span><button onclick="openShopShowcase('${u.uid}')" class="ig-btn px-4 py-1.5 text-xs">Смотреть магазин</button></div></div>`;
+<div class="pt-2 border-t b-ig flex items-center justify-between"><span class="text-[10px] font-bold" style="color:#f59e0b"><i class="fa-solid fa-boxes-stacked"></i> ${cnt} ${t('товаров')} ${uCombos > 0 ? `• <span style="color:#f97316"><i class="fa-solid fa-fire"></i> ${uCombos} ${t('акций')}</span>` : ''}</span><button onclick="openShopShowcase('${u.uid}')" class="ig-btn px-4 py-1.5 text-xs">${t('Смотреть магазин')}</button></div></div>`;
     }).join('');
     if (pag) pag.innerHTML = '';
     return;
   }
-
+  
   const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
   const filtered = merged.filter(ad => {
     const isCombo = !!ad.isCombo;
@@ -544,7 +559,6 @@ function renderAds() {
       if (isCombo || ad.category !== selectedCategory) return false;
     }
 if (selectedCategory !== 'favorites') {
-if (selectedCategory !== 'favorites') {
       if (region !== 'ALL' && ad.region !== region) return false;
       if (activeRadiusKm > 0 && userCurrentCoords) {
         if (!ad.lat || !ad.lng) return false;
@@ -552,7 +566,6 @@ if (selectedCategory !== 'favorites') {
         ad._distance = dist;
         if (dist === null || dist > activeRadiusKm) return false;
       }
-    }
     }
 	if (q) {
       const cleanQ = q.toLowerCase().trim();
@@ -624,21 +637,22 @@ if (layout === 'grid') {
       const isFav = favorites.includes(ad.id);
       const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
-      setTimeout(async () => {
+setTimeout(async () => {
+        if (renderCycleId !== currentRenderCycle) return;
         if (currentLang === 'ar') {
           const el = document.getElementById(`grid-title-${ad.id}`);
           if (el) el.innerText = await translateDynamic(ad.title, 'ar');
         }
       }, 10);
-
-      return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'border b-ig'}">
+	  
+return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'border b-ig'}">
   <div onclick="openAdDetail('${ad.id}')" class="relative aspect-square cursor-pointer overflow-hidden bg-black">
     ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
     ${hasDisc ? `
       <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
-        <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? 'КОМБО' : '-' + discPercent + '%'}
+        <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? t('КОМБО') : '-' + discPercent + '%'}
       </div>` : ''}
-    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
+	  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
       <div id="grid-title-${ad.id}" class="text-white text-xs font-bold truncate">${ad.title}</div>
       <div class="flex items-center gap-1.5 flex-wrap">
         ${hasDisc ? `
@@ -668,11 +682,11 @@ if (layout === 'grid') {
       const isFav = favorites.includes(ad.id);
       const liked = currentUser && (ad.likes || []).includes(currentUser.username);
 
-      return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.5 transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
+return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.5 transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
   <div onclick="openAdDetail('${ad.id}')" class="flex gap-3 cursor-pointer">
     <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
       ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
-      ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? 'КОМБО' : '-' + discPercent + '%'}</span>` : ''}
+      ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? t('КОМБО') : '-' + discPercent + '%'}</span>` : ''}
     </div>
     <div class="flex-1 min-w-0 flex flex-col justify-between">
       <div>
@@ -686,7 +700,7 @@ if (layout === 'grid') {
             <div class="text-sm font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)}</div>
           ` : `<div class="text-sm font-bold" style="color:#f59e0b">${priceBadge(ad)}</div>`}
         </div>
-        ${hasDisc && saveAmount > 0 ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">Выгода +$${saveAmount.toFixed(2)}</div>` : ''}
+        ${hasDisc && saveAmount > 0 ? `<div class="text-[10px] font-bold px-2 py-1 rounded-lg" style="background:rgba(16,185,129,.15);color:#10b981">${t('Выгода')} +$${saveAmount.toFixed(2)}</div>` : ''}
       </div>
     </div>
   </div>
@@ -713,7 +727,8 @@ if (layout === 'grid') {
       const viewsCount = ad.views || 0;
       const regionName = t(REGION_NAMES[ad.region] || ad.region || 'Сирия');
 
-      setTimeout(async () => {
+setTimeout(async () => {
+        if (renderCycleId !== currentRenderCycle) return;
         if (currentLang === 'ar') {
           const tEl = document.getElementById(`feed-title-${ad.id}`);
           const dEl = document.getElementById(`feed-desc-${ad.id}`);
@@ -721,7 +736,7 @@ if (layout === 'grid') {
           if (dEl && ad.desc) dEl.innerText = await translateDynamic(ad.desc, 'ar');
         }
       }, 10);
-
+	  
       const hasDiscount = !!(ad.oldPrice && ad.oldPrice > ad.price);
       const discPercent = hasDiscount ? Math.round((1 - ad.price / ad.oldPrice) * 100) : 0;
       const saveAmount = hasDiscount ? (ad.oldPrice - ad.price) : 0;
@@ -746,19 +761,19 @@ ${ad.isCombo ? renderComboSlashCollage(ad) : `
 `}
 ${ad.isCombo ? `
   <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-xl border border-white/20" style="background:linear-gradient(45deg,#f97316,#ef4444)">
-    <i class="fa-solid fa-fire animate-pulse text-sm"></i> АКЦИЯ • КОМБО
+    <i class="fa-solid fa-fire animate-pulse text-sm"></i> ${t('АКЦИЯ')} • ${t('КОМБО')}
   </div>` : (hasDiscount ? `
   <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-2xl border border-white/25" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
-    <i class="fa-solid fa-fire-flame-curved animate-bounce"></i> СКИДКА -${discPercent}%
+    <i class="fa-solid fa-fire-flame-curved animate-bounce"></i> ${t('Скидка')} -${discPercent}%
   </div>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
-${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
+  ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
 ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" aria-label="Предыдущее фото" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" aria-label="Следующее фото" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
 </div>
 <div class="flex items-center gap-4 px-3.5 pt-3 t1">
 <button onclick="toggleLike('${ad.id}', event)" class="ig-btn-nav ${liked ? 'heart-pop' : ''}" title="Лайк">${IGSVG.heart(liked)}</button>
-<button onclick="toggleFavorite('${ad.id}', event)" class="ig-btn-nav ${isFav ? 'heart-pop' : ''}" title="В избранное" style="${isFav ? 'color:#f59e0b' : ''}">${IGSVG.star(isFav)}</button>
-<button onclick="shareAd('${ad.id}')" class="ig-btn-nav" title="Поделиться">${IGSVG.send()}</button>
-${ad.isCombo ? `<span class="ml-auto text-[11px] font-extrabold flex items-center gap-1" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${ad.comboItems.length} товаров</span>` : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav ml-auto" title="Занять очередь">${IGSVG.bookmark(isFav)}</button>`}
+<button onclick="toggleFavorite('${ad.id}', event)" class="ig-btn-nav ${isFav ? 'heart-pop' : ''}" title="${t('Избранное')}" style="${isFav ? 'color:#f59e0b' : ''}">${IGSVG.star(isFav)}</button>
+<button onclick="shareAd('${ad.id}')" class="ig-btn-nav" title="${t('Поделиться')}">${IGSVG.send()}</button>
+${ad.isCombo ? `<span class="ml-auto text-[11px] font-extrabold flex items-center gap-1" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${ad.comboItems.length} ${t('товаров')}</span>` : `<button onclick="queueToggleCard('${ad.id}')" class="ig-btn-nav ml-auto" title="${t('Занять очередь')}">${IGSVG.bookmark(isFav)}</button>`}
 </div>
 ${hasDiscount ? `
   <div class="mx-3.5 mt-2 p-2.5 rounded-xl border flex items-center justify-between" style="border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)">
@@ -767,12 +782,12 @@ ${hasDiscount ? `
       <div class="text-base font-black" style="color:#ef4444">$${Number(ad.price).toFixed(2)} <span class="text-[10px] font-extrabold text-black px-1.5 py-0.5 rounded ml-1 bg-red-400">-${discPercent}%</span></div>
     </div>
 	<div class="text-right">
-    <div class="text-[10px] uppercase font-bold t2">Ваша выгода:</div>
+    <div class="text-[10px] uppercase font-bold t2">${t('Ваша выгода:')}</div>
     <div class="text-xs font-black" style="color:#10b981">+$${saveAmount.toFixed(2)}</div>
   </div>
 </div>` : ''}
 <div class="px-3.5 pt-2 text-sm font-semibold t1">${likesCount > 0 ? `${t('Нравится:')} ${likesCount}` : t('Будьте первым, кому понравилось')}</div>
-${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 Цена по акции: <span style="color:#f97316">$${Number(ad.price).toFixed(2)}</span> <s class="t2 font-normal">$${ad.comboOriginalTotal.toFixed(2)}</s>${ad.comboOriginalTotal > ad.price ? ` <span style="color:#10b981">выгода $${(ad.comboOriginalTotal - ad.price).toFixed(2)}</span>` : ''}</div>` : ''}
+${ad.isCombo ? `<div class="px-3.5 pt-1 text-sm font-semibold t1">💥 ${t('Цена акции:')} <span style="color:#f97316">$${Number(ad.price).toFixed(2)}</span> <s class="t2 font-normal">$${ad.comboOriginalTotal.toFixed(2)}</s>${ad.comboOriginalTotal > ad.price ? ` <span style="color:#10b981">${t('выгода')} $${(ad.comboOriginalTotal - ad.price).toFixed(2)}</span>` : ''}</div>` : ''}
 <div class="px-3.5 pt-1 text-sm t1 leading-snug"><span class="font-semibold">${kunya}</span> <span id="feed-title-${ad.id}" class="font-semibold">${ad.title}</span> <span id="feed-desc-${ad.id}" class="t2 line-clamp-2">${ad.desc || ''}</span> <button onclick="openAdDetail('${ad.id}')" class="t2">… ${currentLang === 'ar' ? 'المزيد' : 'ещё'}</button></div>
 <div class="px-3.5 pt-1 text-sm t2 cursor-pointer" onclick="openAdDetail('${ad.id}')">${qc > 0 ? `${t('Посмотреть очередь')}: ${qc}` : t('Очередь свободна')}</div>
 <div class="px-3.5 pt-1 flex items-center justify-between text-[10px] t2">
@@ -1177,11 +1192,92 @@ function renderAdminTabContent() {
 <div class="flex items-center gap-3 min-w-0"><div class="w-10 h-10 rounded-lg bg-field border b-ig flex items-center justify-center shrink-0" style="color:#f59e0b"><i class="fa-solid ${cat.icon || 'fa-tag'}"></i></div>
 <div class="min-w-0"><div class="font-bold t1 text-xs truncate">${cat.name}</div><div class="text-[10px] t2">ID: ${cat.id} • Объявлений: ${cnt}</div></div></div>
 <div class="flex gap-1.5 shrink-0"><button onclick="startEditCategory('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.4)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteCategoryWithConfirm('${cat.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold" style="background:rgba(237,73,86,.12);color:#ed4956"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('')}</div></div>`; 
-  } else if (tab === 'finance') { 
+} else if (tab === 'finance') { 
     if (!_0xSCAdmin()) { c.innerHTML = '<div class="text-center py-10 t2">Раздел доступен только Главному Администратору.</div>'; return; } 
+    
+    const isFreeActive = typeof isMasterFreeActive === 'function' && isMasterFreeActive();
+    const cfg = (typeof MASTER_FREE_CONFIG === 'object' && MASTER_FREE_CONFIG) ? MASTER_FREE_CONFIG : { enabled: false, conditionType: 'always', targetValue: 10 };
+    
+    let progressInfo = '';
+    if (cfg.enabled) {
+      if (cfg.conditionType === 'always') {
+        progressInfo = 'Режим активен бессрочно (пока включен тумблер)';
+      } else if (cfg.conditionType === 'shops_count') {
+        const curShops = users.filter(u => u.shop).length;
+        const targetShops = Number(cfg.targetValue) || 10;
+        progressInfo = `Открыто магазинов: <b>${curShops} / ${targetShops}</b> (Осталось: <b>${Math.max(0, targetShops - curShops)}</b>)`;
+      } else if (cfg.conditionType === 'ads_count') {
+        const curAds = ads.filter(a => a.status === 'ACTIVE').length;
+        const targetAds = Number(cfg.targetValue) || 100;
+        progressInfo = `Активных товаров: <b>${curAds} / ${targetAds}</b> (Осталось: <b>${Math.max(0, targetAds - curAds)}</b>)`;
+      } else if (cfg.conditionType === 'users_count') {
+        const curUsers = users.length;
+        const targetUsers = Number(cfg.targetValue) || 100;
+        progressInfo = `Пользователей: <b>${curUsers} / ${targetUsers}</b> (Осталось: <b>${Math.max(0, targetUsers - curUsers)}</b>)`;
+      } else if (cfg.conditionType === 'days_timer') {
+        const start = Number(cfg.startDate) || Date.now();
+        const daysTotal = Number(cfg.targetValue) || 30;
+        const daysPassed = Math.floor((Date.now() - start) / 86400000);
+        const daysLeft = Math.max(0, daysTotal - daysPassed);
+        progressInfo = `Прошло дней: <b>${daysPassed} / ${daysTotal}</b> (Осталось: <b>${daysLeft} дн.</b>)`;
+      } else if (cfg.conditionType === 'until_date') {
+        progressInfo = `Действует до даты: <b>${cfg.targetValue || '—'}</b>`;
+      }
+    }
+
     c.innerHTML = `
     <div class="space-y-4">
+        <!-- Блок «Умный Промо-режим (Всё бесплатно)» -->
+        <div class="p-4 rounded-xl border space-y-3" style="${isFreeActive ? 'border-color:#10b981;background:rgba(16,185,129,.08)' : 'border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)'}">
+            <div class="flex items-center justify-between gap-2 pb-2 border-b b-ig">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <i class="fa-solid fa-gift text-lg shrink-0" style="color:${isFreeActive ? '#10b981' : '#ef4444'}"></i>
+                    <div class="min-w-0">
+                        <div class="font-bold t1 text-xs truncate">Промо-режим: «Всё бесплатно» 🎁</div>
+                        <div class="text-[10px] t2 truncate">${isFreeActive ? '🟢 Активен: тарифы 0 AC, лимиты сняты' : '🔴 Выключен: действуют тарифы AvitoCash'}</div>
+                    </div>
+                </div>
+                <label class="ig-switch shrink-0">
+                    <input type="checkbox" id="admin-free-master-toggle" onchange="toggleMasterFreeSwitch(this.checked)" ${cfg.enabled ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            ${cfg.enabled ? `
+            <div class="space-y-2.5 pt-1">
+                <div class="text-[10px] t1 bg-field p-2.5 rounded-lg border b-ig">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> ${progressInfo}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] t2 block mb-1 font-semibold">Условие действия бесплатного режима:</label>
+                        <select id="admin-free-condition-type" onchange="handleFreeConditionChange(this.value)" class="ig-input w-full px-2.5 py-2 text-xs">
+                            <option value="always" ${cfg.conditionType === 'always' ? 'selected' : ''}>Бессрочно (пока включен тумблер)</option>
+                            <option value="shops_count" ${cfg.conditionType === 'shops_count' ? 'selected' : ''}>Пока не откроют N магазинов</option>
+                            <option value="ads_count" ${cfg.conditionType === 'ads_count' ? 'selected' : ''}>Пока не наберётся N объявлений</option>
+                            <option value="users_count" ${cfg.conditionType === 'users_count' ? 'selected' : ''}>Пока не наберётся N пользователей</option>
+                            <option value="days_timer" ${cfg.conditionType === 'days_timer' ? 'selected' : ''}>В течение N дней (с обратным отсчетом)</option>
+                            <option value="until_date" ${cfg.conditionType === 'until_date' ? 'selected' : ''}>До определенной даты</option>
+                        </select>
+                    </div>
+
+                    <div id="admin-free-target-wrap" class="${cfg.conditionType === 'always' ? 'hidden' : ''}">
+                        <label id="admin-free-target-label" class="text-[10px] t2 block mb-1 font-semibold">Значение лимита / Срок:</label>
+                        ${cfg.conditionType === 'until_date' 
+                          ? `<input id="admin-free-target-val" type="date" value="${cfg.targetValue || ''}" class="ig-input w-full px-2.5 py-2 text-xs">` 
+                          : `<input id="admin-free-target-val" type="number" min="1" step="1" value="${cfg.targetValue || 10}" class="ig-input w-full px-2.5 py-2 text-xs">`}
+                    </div>
+                </div>
+
+                <button onclick="saveMasterFreePromoConfig()" class="w-full py-2 rounded-lg text-white font-bold text-xs shadow-sm transition active:scale-95" style="background:#10b981">
+                    <i class="fa-solid fa-floppy-disk"></i> Сохранить условия промо-режима
+                </button>
+            </div>` : ''}
+        </div>
+
         ${renderFinanceReport()}
+
         <div class="p-4 rounded-xl border space-y-3 bg-field b-ig">
             <h4 class="font-bold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-coins" style="color:#f59e0b"></i> Тарифы AvitoCash</h4>
             <div class="grid grid-cols-2 gap-2">
@@ -1315,9 +1411,22 @@ async function openAdDetail(adId, countView = true) {
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
   if (countView) {
-    ad.views = (ad.views || 0) + 1;
-    saveCachedAds();
-    if (supabaseClient) supabaseClient.from('ads').update({ views: ad.views }).eq('id', adId);
+    let viewedSession = [];
+    try {
+      viewedSession = JSON.parse(sessionStorage.getItem('bs_viewed_session_ads') || '[]');
+    } catch(e) {}
+
+    if (!viewedSession.includes(adId)) {
+      ad.views = (ad.views || 0) + 1;
+      viewedSession.push(adId);
+      try {
+        sessionStorage.setItem('bs_viewed_session_ads', JSON.stringify(viewedSession));
+      } catch(e) {}
+      saveCachedAds();
+      if (supabaseClient) {
+        supabaseClient.from('ads').update({ views: ad.views }).eq('id', adId).then().catch(() => {});
+      }
+    }
   }
   const content = byId('detail-content');
   if (!content) return;
@@ -1463,12 +1572,12 @@ async function openAdDetail(adId, countView = true) {
 
 ${!isRealOwner && !ad.isFree ? `
       <div class="p-2.5 rounded-xl bg-field border b-ig flex items-center gap-2 shrink-0">
-        <input type="number" id="offer-price-input" placeholder="Предложить цену ($)" class="ig-input flex-1 px-3 py-2 text-xs font-bold">
+        <input type="number" id="offer-price-input" placeholder="${t('Предложить цену ($)')}" class="ig-input flex-1 px-3 py-2 text-xs font-bold">
         <button onclick="sendPriceOffer('${ad.id}')" class="px-3 py-2 rounded-lg text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition active:scale-95" style="background:linear-gradient(45deg,#3b82f6,#2563eb)">
-          <i class="fa-solid fa-handshake"></i> Торг
+          <i class="fa-solid fa-handshake"></i> ${t('Торг')}
         </button>
       </div>` : ''}
-
+	  
       <div class="flex items-center gap-2 pt-2 shrink-0">
         ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg shrink-0"></i><span class="truncate">${t('Связаться через WhatsApp')}</span></a>` : ''}
         ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#f59e0b"><i class="fa-solid fa-coins shrink-0"></i><span class="truncate">${t('Оплатить из баланса')}</span></button>` : ''}
@@ -1487,7 +1596,7 @@ ${!isRealOwner && !ad.isFree ? `
               <i class="fa-solid fa-ban text-xs"></i>
               <span class="truncate w-full text-center">${t('Передумал')}</span>
             </button>
-            ${(ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 * 60 * 1000)) ? `
+${(ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 * 60 * 1000)) ? `
               <button onclick="renewAdExpiry('${ad.id}')" class="flex-1 min-w-0 py-2.5 px-1 rounded-xl text-[10px] font-bold text-white flex flex-col items-center justify-center gap-0.5 shadow-sm transition shrink-0" style="background:#10b981" title="${t('Продлить бесплатно')}">
                 <i class="fa-solid fa-arrows-rotate text-xs"></i>
                 <span class="truncate w-full text-center">${t('Продлить')}</span>
@@ -1503,7 +1612,7 @@ ${!isRealOwner && !ad.isFree ? `
             <button onclick="deleteAdWithConfirm('${ad.id}')" class="h-10 px-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center shadow-sm transition shrink-0" style="background:#ed4956" title="${t('Удалить навсегда')}">
               <i class="fa-solid fa-trash"></i>
             </button>
-          </div>` : ''}
+			</div>` : ''}
       </div>
     </div>
   </div>`;
@@ -1701,11 +1810,11 @@ function openProfileModal() {
 
         <!-- Настройки: Язык, Тема, Вид ленты и Магазин -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <!-- Язык -->
+<!-- Язык -->
             <div class="bg-field border b-ig p-2 rounded-xl flex items-center justify-between">
-                <span class="text-[10px] t2 font-bold uppercase">Язык</span>
+                <span class="text-[10px] t2 font-bold uppercase">${t('Язык')}</span>
                 <div class="flex gap-1">
-                    <button type="button" onclick="changeLanguage('ru')" class="px-1.5 py-0.5 rounded text-[10px] font-bold ${currentLang === 'ru' ? 'bg-blue-500 text-white' : 't2'}">RU</button>
+				<button type="button" onclick="changeLanguage('ru')" class="px-1.5 py-0.5 rounded text-[10px] font-bold ${currentLang === 'ru' ? 'bg-blue-500 text-white' : 't2'}">RU</button>
                     <button type="button" onclick="changeLanguage('ar')" class="px-1.5 py-0.5 rounded text-[10px] font-bold ${currentLang === 'ar' ? 'bg-blue-500 text-white' : 't2'}">AR</button>
                 </div>
             </div>
@@ -2238,10 +2347,10 @@ function drawGiftCard(code, amount, expiresAt) {
   ctx.textAlign = 'center'; 
   ctx.fillStyle = '#fbbf24'; 
   ctx.font = 'bold 46px Arial'; 
-  ctx.fillText('AVITO SHAM', 450, 160); 
+ctx.fillText('AVITO SHAM', 450, 160); 
   ctx.fillStyle = '#fff'; 
   ctx.font = 'bold 76px Arial'; 
-  ctx.fillText('ПОДАРОК', 450, 330); 
+  ctx.fillText(t('ПОДАРОК'), 450, 330); 
   ctx.font = 'bold 108px Arial'; 
   ctx.fillStyle = '#fbbf24'; 
   ctx.fillText(`${amount.toFixed(2)} AC`, 450, 515); 
@@ -2250,12 +2359,12 @@ function drawGiftCard(code, amount, expiresAt) {
   ctx.fillText(code, 450, 730); 
   ctx.fillStyle = '#a8a8a8'; 
   ctx.font = '28px Arial'; 
-  ctx.fillText('Подарочный баланс AvitoCash', 450, 815); 
-  ctx.fillText(expiresAt ? `Действует до ${new Date(expiresAt).toLocaleDateString()}` : 'Без срока действия', 450, 875); 
+  ctx.fillText(t('Подарочный баланс AvitoCash'), 450, 815); 
+  ctx.fillText(expiresAt ? `${t('Действует до')} ${new Date(expiresAt).toLocaleDateString()}` : t('Без срока действия'), 450, 875); 
   ctx.fillStyle = '#fbbf24'; 
   ctx.font = 'bold 30px Arial'; 
-  ctx.fillText('1 AC = 1 USD', 450, 1040); 
-}
+  ctx.fillText('1 AC = 1 USD', 450, 1040);
+  }
 
 function generateGiftCode() {
   if (!_0xSCAdmin()) return;
@@ -2294,7 +2403,7 @@ function openTransferModal() {
 
   select.innerHTML = available.length
     ? available.map(u => `<option value="${u.uid || u.username}">${u.kunya || u.username} (@${u.username})</option>`).join('')
-    : '<option value="">Нет доступных получателей</option>';
+    : `<option value="">${t('Нет доступных получателей')}</option>`;
 
   byId('transfer-amount').value = '';
   byId('transfer-note').value = '';
@@ -2389,6 +2498,9 @@ async function shareGiftCard() {
 }
 
 async function _0xSCCharge(uid, amount, label) {
+  if (typeof isMasterFreeActive === 'function' && isMasterFreeActive()) {
+    return true;
+  }
   const target = users.find(x => (x.uid && x.uid === uid) || (x.username && x.username === uid)) || currentUser;
   if (target && target.frozen) {
     showToast('Аккаунт заморожен администратором — действие недоступно', 'error');
@@ -2396,7 +2508,7 @@ async function _0xSCCharge(uid, amount, label) {
   }
   const price = _0xSCAmount(amount);
   if (!price || price <= 0) return true;
-
+  
   const currentBal = Number(target.avitocashBalance ?? target.avitocash_balance ?? 0);
   if (currentBal < price) {
     showToast(`Недостаточно AvitoCash. Требуется ${price.toFixed(2)} AC`, 'warning');
@@ -2468,7 +2580,111 @@ async function saveShamCashSettings() {
     }
   }
 
-  showToast('Настройки тарифов сохранены и синхронизированы!', 'success');
+showToast('Настройки тарифов сохранены и синхронизированы!', 'success');
+}
+
+function handleFreeConditionChange(type) {
+  const wrap = byId('admin-free-target-wrap');
+  const label = byId('admin-free-target-label');
+  const valInput = byId('admin-free-target-val');
+  if (!wrap) return;
+
+  if (type === 'always') {
+    wrap.classList.add('hidden');
+    return;
+  }
+  wrap.classList.remove('hidden');
+
+  if (type === 'shops_count') {
+    if (label) label.innerText = 'Количество магазинов:';
+    if (valInput) { valInput.type = 'number'; valInput.placeholder = 'Например, 10'; }
+  } else if (type === 'ads_count') {
+    if (label) label.innerText = 'Количество объявлений:';
+    if (valInput) { valInput.type = 'number'; valInput.placeholder = 'Например, 200'; }
+  } else if (type === 'users_count') {
+    if (label) label.innerText = 'Количество пользователей:';
+    if (valInput) { valInput.type = 'number'; valInput.placeholder = 'Например, 500'; }
+  } else if (type === 'days_timer') {
+    if (label) label.innerText = 'Срок в днях (со дня включения):';
+    if (valInput) { valInput.type = 'number'; valInput.placeholder = 'Например, 30'; }
+  } else if (type === 'until_date') {
+    if (label) label.innerText = 'Дата окончания акции:';
+    if (valInput) { valInput.type = 'date'; }
+  }
+}
+
+async function toggleMasterFreeSwitch(enabled) {
+  if (!_0xSCAdmin()) {
+    showToast('Доступ запрещен', 'error');
+    return;
+  }
+  MASTER_FREE_CONFIG.enabled = !!enabled;
+  if (enabled && !MASTER_FREE_CONFIG.startDate) {
+    MASTER_FREE_CONFIG.startDate = Date.now();
+  }
+  localStorage.setItem('bs_master_free_config', JSON.stringify(MASTER_FREE_CONFIG));
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'master_free_config',
+        value: MASTER_FREE_CONFIG
+      });
+    } catch (e) {
+      console.warn('Sync master free config error:', e);
+    }
+  }
+  renderAdminTabContent();
+  showToast(MASTER_FREE_CONFIG.enabled ? '🎁 Промо-режим включен!' : '🔒 Промо-режим выключен', 'info');
+}
+
+async function saveMasterFreePromoConfig() {
+  if (!_0xSCAdmin()) {
+    showToast('Доступ запрещен', 'error');
+    return;
+  }
+  const type = byId('admin-free-condition-type')?.value || 'always';
+  const rawVal = byId('admin-free-target-val')?.value;
+
+  MASTER_FREE_CONFIG.conditionType = type;
+  MASTER_FREE_CONFIG.targetValue = type === 'until_date' ? rawVal : (Number(rawVal) || 10);
+  MASTER_FREE_CONFIG.startDate = Date.now(); // Сброс даты старта для честного отсчета дней
+
+  localStorage.setItem('bs_master_free_config', JSON.stringify(MASTER_FREE_CONFIG));
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'master_free_config',
+        value: MASTER_FREE_CONFIG
+      });
+    } catch (e) {
+      console.warn('Sync master free config error:', e);
+    }
+  }
+
+renderAdminTabContent();
+  showToast('Условия промо-режима успешно сохранены!', 'success');
+}
+
+async function toggleMasterFreeMode(enabled) {
+  if (!_0xSCAdmin()) {
+    showToast('Доступ запрещен', 'error');
+    return;
+  }
+  MASTER_FREE_MODE = !!enabled;
+  localStorage.setItem('bs_master_free_mode', String(MASTER_FREE_MODE));
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'master_free_mode',
+        value: MASTER_FREE_MODE
+      });
+    } catch (e) {
+      console.warn('Sync master free mode error:', e);
+    }
+  }
+  renderAdminTabContent();
+  showToast(MASTER_FREE_MODE ? '🎁 Включен режим «Всё бесплатно»!' : '🔒 Стандартные тарифы AvitoCash активированы', 'info');
 }
 
 async function verifyPayment(requestId, approve) {
@@ -2559,20 +2775,55 @@ function openCreateShopModal(targetUid = null) {
       targetUser = t; 
     } 
   } 
-  if (!targetUser) { 
+if (!targetUser) { 
     openAuthModal(); 
-    showToast('Войдите в аккаунт', 'warning'); 
+    showToast(t('Войдите в аккаунт'), 'warning'); 
     return; 
-  } 
+  }
   const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); 
   if (shopEditTargetUid) { 
     banner.classList.remove('hidden'); 
     bannerText.innerText = `Режим модерации: магазин пользователя @${targetUser.username}`; 
   } else banner.classList.add('hidden'); 
   
+const shopCatSelect = byId('shop-category');
+  if (shopCatSelect) {
+    shopCatSelect.innerHTML = `
+      <option value="" disabled selected>${t('Категория магазина *')}</option>
+      <option value="electronics">${t('Электроника и Техника')}</option>
+      <option value="transport">${t('Авто & Запчасти')}</option>
+      <option value="realestate">${t('Недвижимость')}</option>
+      <option value="home">${t('Товары для дома')}</option>
+      <option value="services">${t('Услуги & Сервис')}</option>
+      <option value="other">${t('Разное')}</option>
+    `;
+  }
+
+  const shopNameInp = byId('shop-name');
+  if (shopNameInp) shopNameInp.placeholder = t('Название магазина *');
+  const shopSloganInp = byId('shop-slogan');
+  if (shopSloganInp) shopSloganInp.placeholder = t('Слоган / краткое описание *');
+  const shopAddressInp = byId('shop-address');
+  if (shopAddressInp) shopAddressInp.placeholder = t('Точный физический адрес *');
+  const shopHoursInp = byId('shop-hours');
+  if (shopHoursInp) shopHoursInp.placeholder = t('Часы работы (напр. Сб–Чт 09:00–20:00)');
+  const shopWhatsappInp = byId('shop-whatsapp');
+  if (shopWhatsappInp) shopWhatsappInp.placeholder = t('WhatsApp магазина * (+963…)');
+  const shopDescInp = byId('shop-desc');
+  if (shopDescInp) shopDescInp.placeholder = t('Подробная информация о магазине *');
+
+  const shopLabels = document.querySelectorAll('#modal-create-shop label');
+  if (shopLabels.length >= 2) {
+    shopLabels[0].innerText = t('Расположение на карте * (клик — установить метку)');
+    shopLabels[1].innerText = t('Логотип магазина (1:1) *');
+  }
+
+  const shopNote = document.querySelector('#modal-create-shop .p-3.rounded-xl');
+  if (shopNote) shopNote.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${t('Магазин будет отправлен на проверку администратору.')}`;
+
   if (targetUser.shop) { 
-    titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Редактирование магазина</span>`; 
-    submitBtn.innerText = 'Сохранить изменения магазина'; 
+    titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>${t('Редактирование магазина')}</span>`; 
+    submitBtn.innerText = t('Сохранить изменения магазина'); 
     byId('shop-name').value = targetUser.shop.name || ''; 
     byId('shop-slogan').value = targetUser.shop.slogan || ''; 
     byId('shop-category').value = targetUser.shop.category || 'electronics'; 
@@ -2589,8 +2840,8 @@ function openCreateShopModal(targetUid = null) {
       byId('shop-logo-preview-box').classList.remove('hidden'); 
     } 
   } else { 
-    titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>Открытие нового магазина</span>`; 
-    submitBtn.innerText = 'Создать магазин'; 
+    titleEl.innerHTML = `<i class="fa-solid fa-store" style="color:#9333ea"></i> <span>${t('Открытие нового магазина')}</span>`; 
+    submitBtn.innerText = t('Создать магазин'); 
     ['shop-name', 'shop-slogan', 'shop-address', 'shop-hours', 'shop-desc', 'shop-logo-data'].forEach(i => byId(i).value = ''); 
     byId('shop-category').value = 'electronics'; 
     byId('shop-region').value = 'DAM'; 
@@ -2598,7 +2849,7 @@ function openCreateShopModal(targetUid = null) {
     byId('shop-lat').value = 33.5138; 
     byId('shop-lng').value = 36.2765; 
     byId('shop-logo-preview-box').classList.add('hidden'); 
-  } 
+  }
   openModal('modal-create-shop'); 
   setTimeout(initShopCreateMap, 200); 
 }
@@ -2781,11 +3032,40 @@ function openQuickDiscountModal(adId) {
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
   currentDiscountTargetAd = ad;
-  byId('quick-discount-ad-id').value = ad.id;
+byId('quick-discount-ad-id').value = ad.id;
   byId('quick-discount-ad-title').innerText = ad.title;
-  byId('quick-discount-ad-current').innerText = `Текущая цена: $${Number(ad.price || 0).toFixed(2)}`;
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    translateDynamic(ad.title, 'ar').then(trans => {
+      const el = byId('quick-discount-ad-title');
+      if (el) el.innerText = trans;
+    });
+  }
+  byId('quick-discount-ad-current').innerText = `${t('Текущая цена:')} $${Number(ad.price || 0).toFixed(2)}`;
   byId('quick-discount-price').value = ad.price || '';
   byId('quick-discount-duration').value = 'forever';
+
+  const modalTitle = document.querySelector('#modal-quick-discount h3');
+  if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-tags" style="color:#ef4444"></i> ${t('Установить скидку / Акцию')}`;
+
+  const labels = document.querySelectorAll('#modal-quick-discount .grid label');
+  if (labels.length >= 2) {
+    labels[0].childNodes[0].nodeValue = t('Новая цена ($)');
+    labels[1].childNodes[0].nodeValue = t('Срок действия');
+  }
+
+  const durationSelect = byId('quick-discount-duration');
+  if (durationSelect && durationSelect.options.length >= 4) {
+    durationSelect.options[0].text = t('Бессрочно');
+    durationSelect.options[1].text = t('24 часа (Скидка дня)');
+    durationSelect.options[2].text = t('3 дня (Выходные)');
+    durationSelect.options[3].text = t('7 дней (Неделя скидок)');
+  }
+
+  const applyBtn = document.querySelector('#modal-quick-discount button[onclick="saveQuickDiscountSubmit()"]');
+  if (applyBtn) applyBtn.innerText = t('Применить скидку');
+  const cancelBtn = document.querySelector('#modal-quick-discount button[onclick="removeQuickDiscountSubmit()"]');
+  if (cancelBtn) cancelBtn.innerText = t('Отменить скидку (вернуть старую цену)');
+
   openModal('modal-quick-discount');
 }
 
@@ -2802,12 +3082,12 @@ async function saveQuickDiscountSubmit() {
   const ad = ads.find(a => a.id === adId) || currentDiscountTargetAd;
   if (!ad || !currentUser) return;
 
-  const newP = parseFloat(byId('quick-discount-price')?.value);
+const newP = parseFloat(byId('quick-discount-price')?.value);
   if (isNaN(newP) || newP <= 0) {
-    showToast('Укажите корректную новую цену', 'warning');
+    showToast(t('Укажите корректную новую цену'), 'warning');
     return;
   }
-
+  
   const basePrice = Number(ad.oldPrice || ad.price || 0);
   if (newP >= basePrice && !ad.oldPrice) {
     ad.price = newP;
@@ -2864,7 +3144,7 @@ async function removeQuickDiscountSubmit() {
     saveCachedAds();
     renderCategoryPills();
     renderAds();
-    showToast('Скидка отменена, возвращена базовая цена', 'info');
+    showToast(t('Скидка отменена, возвращена базовая цена'), 'info');
   }
   closeModal('modal-quick-discount');
   if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
@@ -2877,7 +3157,7 @@ async function removeQuickDiscountSubmit() {
 
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { 
   const seller = users.find(u => (u.uid && String(u.uid) === String(shopUserUid)) || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
-  if (!seller || !seller.shop) { showToast('Магазин не найден', 'error'); return; } 
+  if (!seller || !seller.shop) { showToast(t('Магазин не найден'), 'error'); return; } 
   const shop = seller.shop; 
   
   // Универсальный подсчет активных товаров витрины
@@ -2891,53 +3171,73 @@ function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') {
   const list = filterStoreCat === 'ALL' ? shopAds : shopAds.filter(a => a.storeCategory === filterStoreCat); 
   const c = byId('shop-showcase-content'); 
   if (!c) return; 
-  const regionName = REGION_NAMES[shop.region] || shop.region || 'Сирия'; 
+  const regionName = t(REGION_NAMES[shop.region] || shop.region || 'Сирия'); 
   const shopCombos = combos.filter(x => 
     (x.shopUid && seller.uid && String(x.shopUid) === String(seller.uid)) ||
     (x.sellerUsername && seller.username && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())
   ).map(comboToVirtualAd).filter(Boolean); 
 
-  const isShopOwner = !!(currentUser && ((currentUser.uid && seller.uid && currentUser.uid === seller.uid) || (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
+const isShopOwner = !!(currentUser && ((currentUser.uid && seller.uid && currentUser.uid === seller.uid) || (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
 
-  c.innerHTML = `<div class="space-y-4">
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    if (shop.slogan) translateDynamic(shop.slogan, 'ar').then(res => { const el = byId('showcase-shop-slogan'); if (el) el.innerText = res; });
+    if (shop.desc) translateDynamic(shop.desc, 'ar').then(res => { const el = byId('showcase-shop-desc'); if (el) el.innerText = res; });
+  }
+
+c.innerHTML = `<div class="space-y-4">
 <div class="p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.08)">
   <div class="flex items-center gap-3">
     <div class="w-16 h-16 rounded-2xl bg-field border b-ig overflow-hidden shrink-0 flex items-center justify-center t2">${shop.logo ? `<img src="${shop.logo}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-store text-2xl"></i>'}</div>
     <div>
       <h3 class="text-base font-extrabold t1 flex items-center gap-1.5"><span>${shop.name}</span> ${IGSVG.verified()}</h3>
-      <p class="text-xs t2">${shop.slogan || ''}</p>
-      <div class="flex items-center gap-2 text-[10px] t2 mt-1 flex-wrap"><span><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}${shop.address ? ', ' + shop.address : ''}</span>${shop.hours ? `<span>• <i class="fa-solid fa-clock"></i> ${shop.hours}</span>` : ''}<span>• <i class="fa-solid fa-boxes-stacked"></i> ${shopAds.length} товаров</span></div>
-      <p class="text-[11px] t1 mt-1.5 leading-relaxed bg-field p-2.5 rounded-xl border b-ig">${shop.desc || ''}</p>
+      <p id="showcase-shop-slogan" class="text-xs t2">${shop.slogan || ''}</p>
+      <div class="flex items-center gap-2 text-[10px] t2 mt-1 flex-wrap"><span><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}${shop.address ? ', ' + shop.address : ''}</span>${shop.hours ? `<span>• <i class="fa-solid fa-clock"></i> ${shop.hours}</span>` : ''}<span>• <i class="fa-solid fa-boxes-stacked"></i> ${shopAds.length} ${t('товаров')}</span></div>
+      <p id="showcase-shop-desc" class="text-[11px] t1 mt-1.5 leading-relaxed bg-field p-2.5 rounded-xl border b-ig">${shop.desc || ''}</p>
     </div>
   </div>
   <div class="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
-    <a href="https://wa.me/${(shop.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2.5 text-white text-xs font-bold rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-base"></i> Связаться</a>
-    ${isShopOwner ? `<button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold border b-ig bg-field hover:bg-ig t1 flex items-center justify-center gap-1.5"><i class="fa-solid fa-gear text-purple-400"></i> Настройки</button>` : ''}
+    <a href="https://wa.me/${(shop.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2.5 text-white text-xs font-bold rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-base"></i> ${t('Связаться')}</a>
+    ${isShopOwner ? `<button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold border b-ig bg-field hover:bg-ig t1 flex items-center justify-center gap-1.5"><i class="fa-solid fa-gear text-purple-400"></i> ${t('Настройки')}</button>` : ''}
   </div>
 </div>
 
 ${isShopOwner ? `
 <div class="p-3.5 rounded-2xl border space-y-2.5 bg-field" style="border-color:rgba(147,51,234,.35)">
   <div class="flex items-center justify-between text-xs font-bold">
-    <span class="t1 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Управление магазином</span>
-    <button onclick="openMyShopModal()" class="text-xs text-purple-400 font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-sliders"></i> Полная панель</button>
+    <span class="t1 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> ${t('Управление магазином')}</span>
+    <button onclick="openMyShopModal()" class="text-xs text-purple-400 font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-sliders"></i> ${t('Полная панель')}</button>
   </div>
   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
     <button onclick="closeModal('modal-shop-showcase'); openCreateAdModal();" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#10b981,#14b8a6)">
-      <i class="fa-solid fa-plus"></i> Добавить товар
+      <i class="fa-solid fa-plus"></i> ${t('Добавить товар')}
     </button>
     <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#f97316,#ef4444)">
-      <i class="fa-solid fa-fire"></i> Создать комбо
+      <i class="fa-solid fa-fire"></i> ${t('Создать комбо')}
     </button>
     <button onclick="exportShopDatabaseJSON()" class="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:#9333ea">
-      <i class="fa-solid fa-download"></i> Бэкап (JSON)
+      <i class="fa-solid fa-download"></i> ${t('Бэкап (JSON)')}
     </button>
   </div>
 </div>` : ''}
 <div id="showcase-shop-map" class="h-36 rounded-2xl border b-ig overflow-hidden bg-field z-0"></div>
-${shopCombos.length > 0 ? `<div class="space-y-2"><div class="font-bold text-xs flex items-center gap-1.5" style="color:#f97316"><i class="fa-solid fa-fire"></i> Акции магазина:</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${shopCombos.map(v => `<div onclick="openAdDetail('${v.id}')" class="ig-card p-3 rounded-xl cursor-pointer hover:bg-field"><div class="flex items-center gap-3"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate flex items-center gap-1"><i class="fa-solid fa-fire" style="color:#f97316"></i> ${v.title}</div><div class="text-[11px] font-extrabold" style="color:#f97316">$${Number(v.price).toFixed(2)} <span class="t2 line-through font-normal">$${v.comboOriginalTotal.toFixed(2)}</span></div><div class="text-[10px] t2">${v.comboItems.length} товаров в комплекте</div></div></div></div>`).join('')}</div></div>` : ''}
-${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"><button onclick="openShopShowcase('${shopUserUid}','ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === 'ALL' ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === 'ALL' ? 'background:#9333ea;border-color:#9333ea' : ''}">Все товары (${shopAds.length})</button>${cats.map(cn => `<button onclick="openShopShowcase('${shopUserUid}','${String(cn).replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === cn ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === cn ? 'background:#9333ea;border-color:#9333ea' : ''}">${cn} (${shopAds.filter(a => a.storeCategory === cn).length})</button>`).join('')}</div>` : ''}
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? '<div class="col-span-full py-8 text-center t2">Товаров пока нет</div>' : list.map(ad => `<div class="ig-card p-2.5 rounded-xl hover:bg-field space-y-2 flex flex-col justify-between">
+${shopCombos.length > 0 ? `<div class="space-y-2"><div class="font-bold text-xs flex items-center gap-1.5" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${t('Акции магазина:')}</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${shopCombos.map(v => {
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    translateDynamic(v.title, 'ar').then(trans => {
+      const el = document.getElementById(`showcase-combo-title-${v.id}`);
+      if (el) el.innerText = trans;
+    });
+  }
+  return `<div onclick="openAdDetail('${v.id}')" class="ig-card p-3 rounded-xl cursor-pointer hover:bg-field"><div class="flex items-center gap-3"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate flex items-center gap-1"><i class="fa-solid fa-fire" style="color:#f97316"></i> <span id="showcase-combo-title-${v.id}">${v.title}</span></div><div class="text-[11px] font-extrabold" style="color:#f97316">$${Number(v.price).toFixed(2)} <span class="t2 line-through font-normal">$${v.comboOriginalTotal.toFixed(2)}</span></div><div class="text-[10px] t2">${v.comboItems.length} ${t('товаров в комплекте')}</div></div></div></div>`;
+}).join('')}</div></div>` : ''}
+${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"><button onclick="openShopShowcase('${shopUserUid}','ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === 'ALL' ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === 'ALL' ? 'background:#9333ea;border-color:#9333ea' : ''}">${t('Все товары')} (${shopAds.length})</button>${cats.map(cn => `<button onclick="openShopShowcase('${shopUserUid}','${String(cn).replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === cn ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === cn ? 'background:#9333ea;border-color:#9333ea' : ''}">${cn} (${shopAds.filter(a => a.storeCategory === cn).length})</button>`).join('')}</div>` : ''}
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? `<div class="col-span-full py-8 text-center t2">${t('Товаров пока нет')}</div>` : list.map(ad => {
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    translateDynamic(ad.title, 'ar').then(trans => {
+      const el = document.getElementById(`showcase-item-title-${ad.id}`);
+      if (el) el.innerText = trans;
+    });
+  }
+  return `<div class="ig-card p-2.5 rounded-xl hover:bg-field space-y-2 flex flex-col justify-between">
   <div onclick="openAdDetail('${ad.id}')" class="cursor-pointer space-y-2">
     <div class="h-28 rounded-lg overflow-hidden bg-black relative">
       <img src="${ad.images ? ad.images[0] : ad.image}" class="w-full h-full object-cover">
@@ -2945,31 +3245,31 @@ ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 
       ${ad.oldPrice && ad.oldPrice > ad.price ? `<span class="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style="background:#ef4444">-%${Math.round((1 - ad.price / ad.oldPrice) * 100)}</span>` : ''}
     </div>
     <div>
-      <div class="font-bold t1 text-xs truncate">${ad.title}</div>
+      <div id="showcase-item-title-${ad.id}" class="font-bold t1 text-xs truncate">${ad.title}</div>
       <div class="text-[11px] font-extrabold mt-0.5" style="color:#f59e0b">${convertPriceAll(ad.price, ad.currency, ad.isFree, ad.isNegotiable)}</div>
     </div>
   </div>
   ${isShopOwner ? `
   <div class="pt-1.5 border-t b-ig grid grid-cols-2 gap-1">
-    <button onclick="openQuickDiscountModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
-      <i class="fa-solid fa-tag"></i> Скидка
+    <button onclick="openQuickDiscountModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="${t('Сделать скидку')}">
+      <i class="fa-solid fa-tag"></i> ${t('Скидка')}
     </button>
-    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо">
-      <i class="fa-solid fa-fire"></i> В комбо
+    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="${t('Добавить в комбо')}">
+      <i class="fa-solid fa-fire"></i> ${t('В комбо')}
     </button>
-    <button onclick="startShopAuction('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
-      <i class="fa-solid fa-gavel"></i> Аукцион
+    <button onclick="startShopAuction('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="${t('Запустить аукцион')}">
+      <i class="fa-solid fa-gavel"></i> ${t('Аукцион')}
     </button>
-    <button onclick="openEditAdModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="Редактировать">
-      <i class="fa-solid fa-pen"></i> Изменить
+    <button onclick="openEditAdModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="${t('Редактировать')}">
+      <i class="fa-solid fa-pen"></i> ${t('Изменить')}
     </button>
   </div>` : ''}
-</div>`).join('')}</div>
+</div>`;
+}).join('')}</div>
 </div>`; 
-  openModal('modal-shop-showcase'); 
+  openModal('modal-shop-showcase');
   setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); 
-}
-
+} 
 function initShowcaseShopMap(lat, lng, storeName) { 
   const el = byId('showcase-shop-map'); 
   if (!el || typeof L === 'undefined') return; 
@@ -2985,11 +3285,16 @@ function initShowcaseShopMap(lat, lng, storeName) {
 async function upgradeShopLimitNow() {
   if (!currentUser || !currentUser.shop) return;
   const curMax = currentUser.shop.maxAds || 50;
-  const upgradeCost = 5;
+  const isFree = typeof isMasterFreeActive === 'function' && isMasterFreeActive();
+  const upgradeCost = isFree ? 0 : 5;
+
+  const confirmMsg = isFree
+    ? `${t('Увеличить лимит магазина с')} ${curMax} ${t('до')} ${curMax + 50} ${t('объявлений бесплатно (Промо-режим)?')}`
+    : `${t('Увеличить лимит магазина с')} ${curMax} ${t('до')} ${curMax + 50} ${t('объявлений за')} ${upgradeCost} AC?`;
 
   showConfirmModal(
     t('Расширение тарифа магазина'),
-    `${t('Увеличить лимит магазина с')} ${curMax} ${t('до')} ${curMax + 50} ${t('объявлений за')} ${upgradeCost} AC?`,
+    confirmMsg,
     async () => {
       if (await _0xSCCharge(currentUser.uid, upgradeCost, t('Расширение тарифа магазина'))) {
         currentUser.shop.maxAds = curMax + 50;
@@ -3009,21 +3314,33 @@ function startShopAuction(adId) {
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
   const currentPrice = Number(ad.price || 0);
-  const startPriceStr = prompt(`Укажите начальную цену для аукциона товара "${ad.title}" ($):`, currentPrice ? (currentPrice * 0.8).toFixed(2) : '10');
+  const isAr = currentLang === 'ar';
+  
+  const promptPriceText = isAr 
+    ? `حدد السعر الابتدائي لمزاد المنتج "${ad.title}" ($):`
+    : `Укажите начальную цену для аукциона товара "${ad.title}" ($):`;
+
+  const startPriceStr = prompt(promptPriceText, currentPrice ? (currentPrice * 0.8).toFixed(2) : '10');
   if (!startPriceStr) return;
   const startPrice = parseFloat(startPriceStr);
   if (isNaN(startPrice) || startPrice <= 0) {
-    showToast('Некорректная начальная цена', 'warning');
+    showToast(t('Некорректная начальная цена'), 'warning');
     return;
   }
 
-  const hoursStr = prompt('Длительность аукциона в часах (например, 24 или 48):', '24');
+  const promptHoursText = isAr
+    ? 'مدة المزاد بالساعات (مثال: 24 أو 48):'
+    : 'Длительность аукциона в часах (например, 24 или 48):';
+
+  const hoursStr = prompt(promptHoursText, '24');
   const hours = Math.max(1, parseInt(hoursStr || '24', 10));
   const endsAt = Date.now() + hours * 60 * 60 * 1000;
 
   ad.oldPrice = ad.price;
   ad.price = startPrice;
-  ad.desc = `🔨 АУКЦИОН! Начальная цена: $${startPrice.toFixed(2)}. Окончание: ${new Date(endsAt).toLocaleString()}. Предлагайте вашу ставку в WhatsApp!\n\n` + (ad.desc || '');
+  ad.desc = isAr
+    ? `🔨 مزاد علني! السعر الابتدائي: $${startPrice.toFixed(2)}. ينتهي في: ${new Date(endsAt).toLocaleString()}. يرجى تقديم عروض الأسعار عبر واتساب!\n\n` + (ad.desc || '')
+    : `🔨 АУКЦИОН! Начальная цена: $${startPrice.toFixed(2)}. Окончание: ${new Date(endsAt).toLocaleString()}. Предлагайте вашу ставку в WhatsApp!\n\n` + (ad.desc || '');
 
   if (supabaseClient) {
     supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice, description: ad.desc }).eq('id', ad.id).then();
@@ -3032,7 +3349,7 @@ function startShopAuction(adId) {
   renderAds();
   renderCategoryPills();
   openMyShopModal();
-  showToast(`Аукцион запущен со стартовой цены $${startPrice.toFixed(2)}!`, 'success');
+  showToast(`${t('Аукцион запущен со стартовой цены')} $${startPrice.toFixed(2)}!`, 'success');
 }
 
 function openMyShopModal() { 
@@ -3062,20 +3379,28 @@ function openMyShopModal() {
 <div><h3 class="text-base font-extrabold t1 leading-snug">${shop.name}</h3><p class="text-xs t2 mt-0.5">${shop.slogan || ''}</p><div class="text-[10px] t2 mt-0.5"><i class="fa-solid fa-location-dot" style="color:#f59e0b"></i> ${regionName}</div></div>
 </div>
 <div class="flex flex-col items-end gap-1.5">
-<span class="px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5" style="${isVerified ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}"><i class="fa-solid ${isVerified ? 'fa-circle-check' : 'fa-hourglass-half'}"></i> ${isVerified ? 'Подтвержден' : 'На проверке'}</span>
-<button onclick="openCreateShopModal()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border b-ig t1"><i class="fa-solid fa-gear"></i> Редактировать магазин</button>
+<span class="px-3 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5" style="${isVerified ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}"><i class="fa-solid ${isVerified ? 'fa-circle-check' : 'fa-hourglass-half'}"></i> ${isVerified ? t('Подтвержден') : t('На проверке')}</span>
+<button onclick="openCreateShopModal()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border b-ig t1"><i class="fa-solid fa-gear"></i> ${t('Редактировать магазин')}</button>
 </div>
 </div>
 
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-  <button onclick="openComboBuilder()" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Создать комбо</button>
-  <button onclick="closeModal('modal-my-shop'); openShopShowcase(currentUser.uid);" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#dc2626,#ef4444)"><i class="fa-solid fa-tags"></i> Скидки витрины</button>
-  <button onclick="closeModal('modal-my-shop'); openCreateAdModal();" class="col-span-2 sm:col-span-1 w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> Добавить товар</button>
+  <button onclick="openComboBuilder()" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('Создать комбо')}</button>
+  <button onclick="closeModal('modal-my-shop'); openShopShowcase(currentUser.uid);" class="w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#dc2626,#ef4444)"><i class="fa-solid fa-tags"></i> ${t('Скидки витрины')}</button>
+  <button onclick="closeModal('modal-my-shop'); openCreateAdModal();" class="col-span-2 sm:col-span-1 w-full py-2.5 px-2 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-plus"></i> ${t('Добавить товар')}</button>
 </div>
 
 ${myCombos.length > 0 ? `<div class="p-4 rounded-2xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-fire" style="color:#f97316"></i> Мои акции (${myCombos.length})</h4>
-${myCombos.map(x => `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t1 text-xs truncate">${x.title}</div><div class="text-[10px] t2">${x.items.length} товаров • Цена акции: <b style="color:#f97316">$${Number(x.price).toFixed(2)}</b></div></div><div class="flex gap-1.5 shrink-0"><button onclick="openComboBuilder(null,'${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteComboWithConfirm('${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
+<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-fire" style="color:#f97316"></i> ${t('Мои акции')} (${myCombos.length})</h4>
+${myCombos.map(x => {
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    translateDynamic(x.title, 'ar').then(trans => {
+      const el = document.getElementById(`my-shop-combo-title-${x.id}`);
+      if (el) el.innerText = trans;
+    });
+  }
+  return `<div class="bg-field p-2.5 rounded-xl border b-ig flex items-center justify-between gap-2"><div class="min-w-0"><div id="my-shop-combo-title-${x.id}" class="font-bold t1 text-xs truncate">${x.title}</div><div class="text-[10px] t2">${x.items.length} ${t('товаров')} • ${t('Цена акции:')} <b style="color:#f97316">$${Number(x.price).toFixed(2)}</b></div></div><div class="flex gap-1.5 shrink-0"><button onclick="openComboBuilder(null,'${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteComboWithConfirm('${x.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div></div>`;
+}).join('')}
 </div>` : ''}
 
 ${(() => {
@@ -3104,61 +3429,67 @@ ${(() => {
 })()}
 
 <div class="p-4 rounded-2xl bg-field border b-ig space-y-3">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-list-check" style="color:#9333ea"></i> Личные категории магазина</h4>
-<div class="flex gap-2"><input type="text" id="new-shop-cat-input" placeholder="Например: Запчасти или Чехлы" class="ig-input flex-1 px-3 py-2 text-xs"><button onclick="addShopCustomCategory()" class="px-3 py-2 text-white font-bold text-xs rounded-lg shrink-0" style="background:#9333ea"><i class="fa-solid fa-plus"></i> Добавить</button></div>
-<div class="flex flex-wrap gap-1.5 pt-1">${cats.length === 0 ? '<div class="text-[11px] t2">Собственных категорий пока нет</div>' : cats.map((cat, idx) => `<span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-2 border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.35)"><span>${cat}</span><button onclick="removeShopCustomCategory(${idx})" style="color:#ed4956"><i class="fa-solid fa-xmark"></i></button></span>`).join('')}</div>
+<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-list-check" style="color:#9333ea"></i> ${t('Личные категории магазина')}</h4>
+<div class="flex gap-2"><input type="text" id="new-shop-cat-input" placeholder="${t('Например: Запчасти или Чехлы')}" class="ig-input flex-1 px-3 py-2 text-xs"><button onclick="addShopCustomCategory()" class="px-3 py-2 text-white font-bold text-xs rounded-lg shrink-0" style="background:#9333ea"><i class="fa-solid fa-plus"></i> ${t('Добавить')}</button></div>
+<div class="flex flex-wrap gap-1.5 pt-1">${cats.length === 0 ? `<div class="text-[11px] t2">${t('Собственных категорий пока нет')}</div>` : cats.map((cat, idx) => `<span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-2 border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.35)"><span>${cat}</span><button onclick="removeShopCustomCategory(${idx})" style="color:#ed4956"><i class="fa-solid fa-xmark"></i></button></span>`).join('')}</div>
 </div>
 
 <div class="p-4 rounded-2xl border space-y-3" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.06)">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Бэкап магазина (JSON)</h4>
-<div class="grid grid-cols-2 gap-2"><button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5" style="background:#9333ea"><i class="fa-solid fa-download"></i> Экспорт</button><label class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> Импорт<input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden"></label></div>
+<h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-database" style="color:#f59e0b"></i> ${t('Бэкап (JSON)')}</h4>
+<div class="grid grid-cols-2 gap-2"><button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5" style="background:#9333ea"><i class="fa-solid fa-download"></i> ${t('Экспорт')}</button><label class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> ${t('Импорт')}<input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden"></label></div>
 </div>
 
 <div class="space-y-2 pt-2 border-t b-ig">
-<h4 class="font-bold t1 text-xs">Товары Вашего магазина:</h4>
+<h4 class="font-bold t1 text-xs">${t('Товары Вашего магазина:')}</h4>
 <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
-${shopAds.length === 0 ? '<div class="text-center py-4 t2">Товаров пока нет — нажмите «Добавить товар»</div>' : shopAds.map(a => `
-  <div class="bg-field p-2.5 rounded-xl border b-ig flex flex-col gap-2">
+${shopAds.length === 0 ? `<div class="text-center py-4 t2">${t('Товаров пока нет — нажмите «Добавить товар»')}</div>` : shopAds.map(a => {
+  if (currentLang === 'ar' && typeof translateDynamic === 'function') {
+    translateDynamic(a.title, 'ar').then(trans => {
+      const el = document.getElementById(`my-shop-item-title-${a.id}`);
+      if (el) el.innerText = trans;
+    });
+  }
+  return `<div class="bg-field p-2.5 rounded-xl border b-ig flex flex-col gap-2">
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2 min-w-0">
         <img src="${a.images ? a.images[0] : a.image}" class="w-10 h-10 rounded-lg object-cover border b-ig shrink-0">
         <div class="min-w-0">
-          <div class="font-bold t1 text-xs truncate">${a.title}</div>
+          <div id="my-shop-item-title-${a.id}" class="font-bold t1 text-xs truncate">${a.title}</div>
           <div class="text-[10px] font-semibold" style="color:#f59e0b">${convertPriceAll(a.price, a.currency, a.isFree, a.isNegotiable)}</div>
         </div>
       </div>
       <div class="flex items-center gap-1 shrink-0">
         ${a.storeCategory ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(147,51,234,.15);color:#c084fc">${a.storeCategory}</span>` : ''}
-        ${a.status === 'SOLD' ? '<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(16,185,129,.15);color:#10b981">Продано</span>' : ''}
+        ${a.status === 'SOLD' ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:rgba(16,185,129,.15);color:#10b981">${t('Продано')}</span>` : ''}
       </div>
     </div>
     <div class="grid grid-cols-3 sm:grid-cols-6 gap-1 pt-1.5 border-t b-ig">
-      <button onclick="bumpAdToTop('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="Поднять в ТОП">
-        <i class="fa-solid fa-rocket"></i> В ТОП
+      <button onclick="bumpAdToTop('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="${t('Поднять в ТОП')}">
+        <i class="fa-solid fa-rocket"></i> ${t('В ТОП')}
       </button>
-      <button onclick="openQuickDiscountModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="Сделать скидку">
-        <i class="fa-solid fa-percent"></i> Скидка
+      <button onclick="openQuickDiscountModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="${t('Сделать скидку')}">
+        <i class="fa-solid fa-percent"></i> ${t('Скидка')}
       </button>
-      <button onclick="openGiftForSpecificAd('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)" title="Товар + Подарок">
-        <i class="fa-solid fa-gift"></i> +Подарок
+      <button onclick="openGiftForSpecificAd('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)" title="${t('Товар + Подарок')}">
+        <i class="fa-solid fa-gift"></i> ${t('+Подарок')}
       </button>
-      <button onclick="openComboBuilder('${currentUser.uid}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="Добавить в комбо-набор">
-        <i class="fa-solid fa-fire"></i> В комбо
+      <button onclick="openComboBuilder('${currentUser.uid}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="${t('В комбо')}">
+        <i class="fa-solid fa-fire"></i> ${t('В комбо')}
       </button>
-      <button onclick="startShopAuction('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="Запустить аукцион">
-        <i class="fa-solid fa-gavel"></i> Аукцион
+      <button onclick="startShopAuction('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="${t('Запустить аукцион')}">
+        <i class="fa-solid fa-gavel"></i> ${t('Аукцион')}
       </button>
-      <button onclick="openEditAdModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="Редактировать">
-        <i class="fa-solid fa-pen"></i> Изменить
+      <button onclick="openEditAdModal('${a.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="${t('Редактировать')}">
+        <i class="fa-solid fa-pen"></i> ${t('Изменить')}
       </button>
     </div>
-  </div>
-`).join('')}
+  </div>`;
+}).join('')}
 </div>
 </div>
 </div>`; 
-  openModal('modal-my-shop'); 
-}
+  openModal('modal-my-shop');
+  }
 
 async function addShopCustomCategory() {
   if (!currentUser || !currentUser.shop) return;
@@ -3471,10 +3802,10 @@ function openComboBuilder(targetUid = null, editComboId = null) {
     openAuthModal(); 
     return; 
   } 
-  if (!owner.shop) { 
-    showToast('Сначала откройте магазин!', 'warning'); 
+if (!owner.shop) { 
+    showToast(t('Сначала откройте магазин!'), 'warning'); 
     return; 
-  } 
+  }
   comboOwnerCache = owner; 
   byId('combo-target-uid').value = owner.uid || ''; 
   byId('combo-edit-id').value = editComboId || ''; 
@@ -3483,7 +3814,21 @@ function openComboBuilder(targetUid = null, editComboId = null) {
   byId('combo-title').value = editing ? (editing.title || '') : ''; 
   byId('combo-price').value = editing ? editing.price : ''; 
   comboBuilderAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === owner.username.toLowerCase() && a.status === 'ACTIVE'); 
-  byId('combo-builder-title').innerHTML = editing ? '<i class="fa-solid fa-fire" style="color:#f97316"></i> Редактирование акции' : `<i class="fa-solid fa-fire" style="color:#f97316"></i> Новая акция — магазин «${owner.shop.name || ''}»`; 
+const builderTitleText = editing ? t('Редактирование акции') : `${t('Новая акция — магазин')} «${owner.shop.name || ''}»`;
+  byId('combo-builder-title').innerHTML = `<i class="fa-solid fa-fire" style="color:#f97316"></i> ${builderTitleText}`; 
+  
+  const comboNote = document.querySelector('#modal-combo-builder .p-3.rounded-xl.border');
+  if (comboNote) comboNote.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${t('Выберите несколько товаров и назначьте одну специальную цену комплекта. Цены товаров по отдельности не меняются, а комбо появится в ленте отдельным объявлением.')}`;
+  
+  const comboTitleInp = byId('combo-title');
+  if (comboTitleInp) comboTitleInp.placeholder = t('Название акции (напр.: Комплект солнечной энергетики)');
+  const comboPriceInp = byId('combo-price');
+  if (comboPriceInp) comboPriceInp.placeholder = t('Специальная цена комплекта, $ *');
+  const comboItemsLbl = document.querySelector('#modal-combo-builder label');
+  if (comboItemsLbl) comboItemsLbl.innerText = t('Товары в комплекте (минимум 2) *');
+  const comboSubBtn = document.querySelector('#modal-combo-builder button[type="submit"]');
+  if (comboSubBtn) comboSubBtn.innerHTML = `<i class="fa-solid fa-fire"></i> ${t('Сохранить акцию')}`;
+
   renderComboItemsList(); 
   updateComboSummary(); 
   openModal('modal-combo-builder'); 
@@ -3502,15 +3847,15 @@ function handleComboSubmit(e) {
   const owner = comboOwnerCache; 
   if (!owner) return; 
   if (comboSelectedIds.length < 2) { 
-    showToast('Выберите минимум 2 товара!', 'warning'); 
+    showToast(t('Выберите минимум 2 товара!'), 'warning'); 
     return; 
   } 
   const price = parseFloat(byId('combo-price').value); 
   if (isNaN(price) || price <= 0) { 
-    showToast('Укажите специальную цену акции!', 'warning'); 
+    showToast(t('Укажите специальную цену акции!'), 'warning'); 
     return; 
   } 
-  const title = byId('combo-title').value.trim() || `Комбо-набор из ${comboSelectedIds.length} товаров`; 
+  const title = byId('combo-title').value.trim() || `${t('Комбо-набор из')} ${comboSelectedIds.length} ${t('товаров')}`; 
   const editId = byId('combo-edit-id').value; 
   if (editId) { 
     const c = combos.find(x => x.id === editId); 
@@ -3520,8 +3865,8 @@ function handleComboSubmit(e) {
       c.items = [...comboSelectedIds]; 
       if (supabaseClient) supabaseClient.from('combos').upsert(c).then(); 
     } 
-    showToast('Акция обновлена!', 'success'); 
-} else { 
+    showToast(t('Акция обновлена!'), 'success');
+	} else { 
     const nc = { 
       id: 'COMBO-' + Date.now(), 
       shop_uid: owner.uid || '', 
@@ -3564,7 +3909,7 @@ function handleComboSubmit(e) {
 }
 
 function deleteComboWithConfirm(comboId) { 
-  showConfirmModal('Удаление акции', 'Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.', () => { 
+  showConfirmModal(t('Удаление акции'), t('Удалить эту акцию? Комбо-объявление исчезнет из ленты, товары останутся со своими ценами.'), () => { 
     combos = combos.filter(x => x.id !== comboId); 
     if (supabaseClient) supabaseClient.from('combos').delete().eq('id', comboId).then(); 
     closeModal('modal-ad-detail'); 
@@ -3572,7 +3917,7 @@ function deleteComboWithConfirm(comboId) {
     renderCategoryPills(); 
     if (!byId('modal-my-shop').classList.contains('hidden')) openMyShopModal(); 
     if (!byId('modal-admin-panel').classList.contains('hidden')) renderAdminTabContent(); 
-    showToast('Акция удалена', 'info'); 
+    showToast(t('Акция удалена'), 'info'); 
   }); 
 }
 
@@ -3604,7 +3949,7 @@ function openComboDetail(comboId) {
 <div class="relative bg-black flex items-center justify-center overflow-hidden h-full min-h-[320px] max-h-[46vh] md:max-h-[90vh] select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => changeDetailPhoto('${c.id}', dir))">
 <div id="detail-bg-blur" class="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110" style="background-image:url('${imgs[0]}')"></div>
 <img id="detail-main-img" src="${imgs[0]}" class="relative w-full h-full max-h-[46vh] md:max-h-[90vh] object-contain z-[1] cursor-pointer" onclick="openFullscreenViewer(this.src, '${c.id}')">
-<span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')} • ${v.comboItems.length}</span>
+<span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-lg text-xs font-extrabold text-white flex items-center gap-1.5" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> ${t('АКЦИЯ')} • ${v.comboItems.length} ${t('товаров')}</span>
 ${imgs.length > 1 ? `<button type="button" onclick="event.stopPropagation(); changeDetailPhoto('${c.id}', -1, event);" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white active:scale-95 transition-transform cursor-pointer">${IGSVG.chevL()}</button><button type="button" onclick="event.stopPropagation(); changeDetailPhoto('${c.id}', 1, event);" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white active:scale-95 transition-transform cursor-pointer">${IGSVG.chevR()}</button><div id="detail-photo-counter" class="absolute bottom-3 right-3 z-10 bg-black/70 text-white px-2.5 py-1 rounded-lg text-[11px] font-mono">1 / ${imgs.length}</div>` : ''}
 
 </div>
@@ -3673,4 +4018,10 @@ function handleCategoryClick(catId) {
   currentPage = 1;
   renderCategoryPills();
   renderAds();
+}
+
+function contactSupport() {
+  const isAr = currentLang === 'ar';
+  const msg = isAr ? 'مرحباً! أحتاج إلى مساعدة في منصة أفيتو الشام' : 'Здравствуйте! Мне нужна помощь по сайту Avito Sham';
+  window.open(`https://wa.me/447887280238?text=${encodeURIComponent(msg)}`, '_blank');
 }

@@ -30,16 +30,45 @@ function saveCachedCombos() {
 }
 
 function saveCachedAds() {
+  const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+  const cleanAds = (Array.isArray(ads) ? ads : []).filter(a => a && !deletedIds.includes(a.id));
+  
   try {
-    const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-    const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
-    localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
+    // Сохраняем первые 100 активных объявлений для мгновенного офлайн-старта без перегрузки памяти
+    const optimizedCache = cleanAds.slice(0, 100).map(a => ({
+      id: a.id,
+      title: a.title,
+      category: a.category,
+      storeCategory: a.storeCategory,
+      region: a.region,
+      city: a.city,
+      isWomenOnly: !!a.isWomenOnly,
+      isFree: !!a.isFree,
+      isNegotiable: !!a.isNegotiable,
+      price: a.price,
+      oldPrice: a.oldPrice,
+      currency: a.currency,
+      desc: (a.desc || '').slice(0, 300),
+      images: Array.isArray(a.images) ? a.images.slice(0, 6) : [a.image],
+      image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
+      lat: a.lat,
+      lng: a.lng,
+      sellerUsername: a.sellerUsername,
+      sellerUid: a.sellerUid,
+      sellerKunya: a.sellerKunya,
+      sellerWhatsapp: a.sellerWhatsapp,
+      status: a.status,
+      createdAt: a.createdAt,
+      queue: a.queue || [],
+      likes: a.likes || [],
+      views: a.views || 0
+    }));
+    localStorage.setItem('bs_cached_ads', JSON.stringify(optimizedCache));
   } catch (e) {
     console.warn('LocalStorage quota exceeded. Trimming cache...');
     try {
-      const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-      const cleanAds = ads.filter(a => !deletedIds.includes(a.id));
-      localStorage.setItem('bs_cached_ads', JSON.stringify(cleanAds));
+      const minimalCache = cleanAds.slice(0, 30);
+      localStorage.setItem('bs_cached_ads', JSON.stringify(minimalCache));
     } catch(err) {
       try { localStorage.removeItem('bs_cached_ads'); } catch(e2) {}
     }
@@ -344,7 +373,11 @@ if (currentUser) {
             favorites = [...new Set([...(Array.isArray(favorites) ? favorites : []), ...freshMe.favorites])];
             try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
           }
-          currentUser = { ...currentUser, ...freshMe, favorites };
+          currentUser = { ...currentUser, ...freshMe, role: freshMe.role || 'USER', favorites };
+          saveUserSession(currentUser, true);
+        } else if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
+          // Если суперпользователь не подтвержден реальной базой Supabase, сбрасываем права
+          currentUser.role = 'USER';
           saveUserSession(currentUser, true);
         }
       }
@@ -440,20 +473,40 @@ async function fetchLiveExchangeRates(manual = false) {
       if (p) { const r = parseFloat(p.rate); if (!isNaN(r) && r > 1 && r < 500) tryVal = r; }
     }
     if (tryVal === null && rawUsd !== null && rawTry !== null && rawTry > 0) tryVal = +(rawUsd / rawTry).toFixed(2);
-    if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) {
-      EXCHANGE_RATES.SYP = +sypVal.toFixed(2);
-      if (tryVal !== null && !isNaN(tryVal)) EXCHANGE_RATES.TRY = +tryVal.toFixed(2);
+if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) {
+      const newSyp = +sypVal.toFixed(2);
+      const newTry = (tryVal !== null && !isNaN(tryVal)) ? +tryVal.toFixed(2) : EXCHANGE_RATES.TRY;
+      const hasChanged = (newSyp !== EXCHANGE_RATES.SYP) || (newTry !== EXCHANGE_RATES.TRY);
+
+      EXCHANGE_RATES.SYP = newSyp;
+      EXCHANGE_RATES.TRY = newTry;
       lastRatesUpdate = new Date();
       localStorage.setItem('bs_rates', JSON.stringify(EXCHANGE_RATES));
-      renderAds();
-      if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
-      if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent();
+
+      if (hasChanged || manual) {
+        renderAds();
+        if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
+        if (!byId('modal-admin-panel').classList.contains('hidden') && SYSTEM_CONFIG.adminTab === 'rates') renderAdminTabContent();
+      }
+
       if (manual) showToast(`Курс обновлен: $1 = ${EXCHANGE_RATES.SYP} SYP / ${EXCHANGE_RATES.TRY} TRY`, 'success');
     } else if (manual) showToast('Не удалось разобрать курс из ответа сервера', 'error');
-  } catch (err) {
+	} catch (err) {
     console.warn('Live rates error:', err);
     if (manual) showToast('Ошибка получения курса валют', 'error');
   }
+}
+
+function saveTranslateCacheToStorage() {
+  try {
+    const keys = Object.keys(TRANSLATE_CACHE);
+    if (keys.length > 500) {
+      const trimmed = {};
+      keys.slice(-300).forEach(k => trimmed[k] = TRANSLATE_CACHE[k]);
+      TRANSLATE_CACHE = trimmed;
+    }
+    localStorage.setItem('bs_trans_cache', JSON.stringify(TRANSLATE_CACHE));
+  } catch (e) {}
 }
 
 async function translateDynamic(text, targetLang = currentLang) {
@@ -469,36 +522,54 @@ async function translateDynamic(text, targetLang = currentLang) {
   if (targetLang === 'ar' && isArabicText) return clean;
   if (targetLang === 'ru' && !isArabicText) return clean;
 
+  if (IN_FLIGHT_TRANSLATIONS[cacheKey]) {
+    return await IN_FLIGHT_TRANSLATIONS[cacheKey];
+  }
+
   const sl = isArabicText ? 'ar' : 'ru';
   const tl = targetLang;
 
-  try {
-    const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(clean)}`;
-    const res = await fetch(googleUrl);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data[0]) {
-        const result = data[0].map(x => x[0]).join('');
-        TRANSLATE_CACHE[cacheKey] = result;
-        return result;
+  const translationPromise = (async () => {
+    try {
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(clean)}`;
+      const res = await fetch(googleUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data[0]) {
+          const result = data[0].map(x => x[0]).join('');
+          TRANSLATE_CACHE[cacheKey] = result;
+          saveTranslateCacheToStorage();
+          return result;
+        }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
 
-  try {
-    const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean.slice(0, 450))}&langpair=${sl}|${tl}`;
-    const res = await fetch(proxyUrl);
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.responseData?.translatedText && !data.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
-        const result = data.responseData.translatedText;
-        TRANSLATE_CACHE[cacheKey] = result;
-        return result;
+    try {
+      const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean.slice(0, 450))}&langpair=${sl}|${tl}`;
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.responseData?.translatedText && !data.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
+          const result = data.responseData.translatedText;
+          TRANSLATE_CACHE[cacheKey] = result;
+          saveTranslateCacheToStorage();
+          return result;
+        }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
 
-  return clean;
+    return clean;
+  })();
+
+  IN_FLIGHT_TRANSLATIONS[cacheKey] = translationPromise;
+  try {
+    const finalResult = await translationPromise;
+    delete IN_FLIGHT_TRANSLATIONS[cacheKey];
+    return finalResult;
+  } catch (err) {
+    delete IN_FLIGHT_TRANSLATIONS[cacheKey];
+    return clean;
+  }
 }
 
 /* ================= MARQUEE FUNCTIONS ================= */
@@ -626,16 +697,30 @@ function translateStaticUI(lang) {
     sortLbl.innerText = lang === 'ar' ? (DICTIONARY[rawSort] || rawSort) : rawSort;
   }
 
-  const supTitle = byId('support-modal-title');
-  if (supTitle) supTitle.innerText = lang === 'ar' ? DICTIONARY['Поддержка сервера — ShamCash'] : 'Поддержка сервера — ShamCash';
-  const supDesc = byId('support-modal-desc');
-  if (supDesc) supDesc.innerText = lang === 'ar' ? DICTIONARY['Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.'] : 'Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.';
-  const supIdLbl = byId('support-modal-idlabel');
-  if (supIdLbl) supIdLbl.innerText = lang === 'ar' ? DICTIONARY['ID счёта ShamCash'] : 'ID счёта ShamCash';
-  const supCopy = byId('support-modal-copybtn')?.querySelector('span');
-  if (supCopy) supCopy.innerText = lang === 'ar' ? DICTIONARY['Скопировать ID'] : 'Скопировать ID';
+// Поисковые плейсхолдеры
+  const searchDesktop = byId('search-input-desktop');
+  if (searchDesktop) searchDesktop.placeholder = t('Поиск');
+  const searchMobile = byId('search-input');
+  if (searchMobile) searchMobile.placeholder = t('Поиск');
 
-const createTitle = document.querySelector('#modal-create-ad h3');
+  // Оверлей радиуса
+  const radiusTitle = document.querySelector('#radius-menu-overlay .text-sm.font-bold');
+  if (radiusTitle) radiusTitle.innerHTML = `<i class="fa-solid fa-location-crosshairs text-blue-500"></i> ${t('Поиск в радиусе')}`;
+  const radiusOffBtn = byId('radius-btn-off');
+  if (radiusOffBtn) radiusOffBtn.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${t('Отключить поиск рядом')}`;
+
+  // 1. Модальное окно ShamCash QR
+  const supTitle = byId('support-modal-title');
+  if (supTitle) supTitle.innerText = t('Поддержка сервера — ShamCash');
+  const supDesc = byId('support-modal-desc');
+  if (supDesc) supDesc.innerText = t('Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.');
+  const supIdLbl = byId('support-modal-idlabel');
+  if (supIdLbl) supIdLbl.innerText = t('ID счёта ShamCash');
+  const supCopy = byId('support-modal-copybtn')?.querySelector('span');
+  if (supCopy) supCopy.innerText = t('Скопировать ID');
+
+  // 2. Модальное окно подачи объявления
+  const createTitle = document.querySelector('#modal-create-ad h3');
   if (createTitle) createTitle.innerText = t('Подача объявления');
   const adTitleInp = byId('ad-title');
   if (adTitleInp) adTitleInp.placeholder = t('Заголовок объявления *');
@@ -648,10 +733,228 @@ const createTitle = document.querySelector('#modal-create-ad h3');
   const createSubBtn = document.querySelector('#modal-create-ad button[type="submit"]');
   if (createSubBtn) createSubBtn.innerText = t('Опубликовать объявление');
 
-  const gKunya = byId('guest-kunya');
-  if (gKunya) gKunya.placeholder = t('Ваше Имя / Кунья *');
-  const gUser = byId('guest-username');
-  if (gUser) gUser.placeholder = t('Придумайте логин *');
-  const gPass = byId('guest-password');
-  if (gPass) gPass.placeholder = t('Придумайте пароль *');
+  const draftBannerText = byId('draft-restore-banner')?.querySelector('span');
+  if (draftBannerText) draftBannerText.innerHTML = `<i class="fa-solid fa-rotate-left"></i> ${t('Найден черновик')}`;
+  const draftBtns = byId('draft-restore-banner')?.querySelectorAll('button');
+  if (draftBtns && draftBtns.length >= 2) {
+    draftBtns[0].innerText = t('Восстановить');
+    draftBtns[1].innerText = t('Удалить');
+  }
+
+  const photosLbl = byId('ad-photos-label');
+  if (photosLbl) photosLbl.innerText = t('Фотографии товара (до 6 шт.) *');
+  const uploadBtnText = byId('ad-upload-btn-text');
+  if (uploadBtnText) uploadBtnText.innerText = t('Выбрать фотографии');
+
+  const freeSpan = byId('ad-is-free')?.nextElementSibling;
+  if (freeSpan) freeSpan.innerText = t('Даром 🎁');
+  const negSpan = byId('ad-is-negotiable')?.nextElementSibling;
+  if (negSpan) negSpan.innerText = t('Договорная 🤝');
+  const womenSpan = byId('ad-is-women-only')?.nextElementSibling;
+  if (womenSpan) womenSpan.innerText = t('Для женщин 🌸');
+
+  const locSummary = byId('ad-location-summary');
+  if (locSummary && (!locSummary.innerText.includes('(') || locSummary.innerText.includes('Дамаск'))) {
+    locSummary.innerText = t('Локация: Дамаск (по GPS)');
+  }
+  const autoBadge = locSummary?.parentElement?.nextElementSibling;
+  if (autoBadge) autoBadge.innerText = t('Автоматически');
+
+const guestTitle = byId('guest-auth-block')?.querySelector('.text-xs');
+  if (guestTitle) guestTitle.innerHTML = `<i class="fa-brands fa-whatsapp text-sm"></i> ${t('Контакт для связи (профиль создастся автоматически):')}`;
+  const guestWa = byId('guest-whatsapp');
+  if (guestWa) guestWa.placeholder = t('Ваш номер WhatsApp (+963…)*');
+
+  const loggedBadge = byId('user-logged-badge');
+  if (loggedBadge) {
+    const span = loggedBadge.querySelector('span');
+    if (span && span.childNodes.length > 0) {
+      span.childNodes[0].nodeValue = t('Публикация от имени:') + ' ';
+    }
+  }
+
+  // Окно редактирования анкеты
+  const epTitle = document.querySelector('#modal-edit-profile h3');
+  if (epTitle) epTitle.innerText = t('Редактирование анкеты');
+  const epLogin = byId('edit-profile-login');
+  if (epLogin) epLogin.placeholder = t('Логин *');
+  const epPass = byId('edit-profile-password');
+  if (epPass) epPass.placeholder = t('Новый пароль (необязательно)');
+  const epKunya = byId('edit-profile-kunya');
+  if (epKunya) epKunya.placeholder = t('Имя / Кунья *');
+  const epWa = byId('edit-profile-whatsapp');
+  if (epWa) epWa.placeholder = t('WhatsApp *');
+  const epBtn = document.querySelector('#modal-edit-profile button[type="submit"]');
+  if (epBtn) epBtn.innerText = t('Сохранить изменения');
+
+  // Перевод AvitoCash (плейсхолдеры)
+  const trAmountInp = byId('transfer-amount');
+  if (trAmountInp) trAmountInp.placeholder = t('Например, 5');
+  const trNoteInp = byId('transfer-note');
+  if (trNoteInp) trNoteInp.placeholder = t('Например, оплата товара');
+
+  // Сортировка
+  const sortTitle = document.querySelector('#sort-menu-overlay .text-center.font-bold');
+  if (sortTitle) sortTitle.innerText = t('Сортировать по:');
+  const sortBtns = document.querySelectorAll('#sort-menu-overlay button');
+  if (sortBtns.length >= 5) {
+    sortBtns[0].querySelector('span').innerText = t('🕒 Сначала новые');
+    sortBtns[1].querySelector('span').innerText = t('💰 Сначала дешевые');
+    sortBtns[2].querySelector('span').innerText = t('💎 Сначала дорогие');
+    sortBtns[3].querySelector('span').innerText = t('🔥 Популярные');
+    sortBtns[4].innerText = t('Закрыть');
+  }
+
+  const advBtn = document.querySelector('button[onclick="toggleAdvancedCreateFields()"] span');
+  if (advBtn) advBtn.innerHTML = `<i class="fa-solid fa-sliders text-purple-400"></i> ${t('Расширенные настройки')}`;
+  
+  const advLabels = document.querySelectorAll('#create-ad-advanced-fields label');
+  if (advLabels.length >= 4) {
+    advLabels[0].innerText = t('Регион вручную');
+    advLabels[1].innerText = t('Точный город/район');
+    advLabels[2].innerText = t('Валюта');
+    advLabels[3].innerText = t('Уточнить точку на карте (необязательно)');
+  }
+
+  // 3. Модальное окно редактирования объявления
+  const editTitle = document.querySelector('#modal-edit-ad h3');
+  if (editTitle) editTitle.innerText = t('Редактирование объявления');
+  const editOwnerLbl = byId('edit-ad-owner-container')?.querySelector('label');
+  if (editOwnerLbl) editOwnerLbl.innerHTML = `<i class="fa-solid fa-user-shield"></i> ${t('Привязать к аккаунту (владелец)')}`;
+  const editTitleInp = byId('edit-ad-title');
+  if (editTitleInp) editTitleInp.placeholder = t('Заголовок объявления *');
+  const editCityInp = byId('edit-ad-city');
+  if (editCityInp) editCityInp.placeholder = t('Точный город/район');
+  const editPriceInp = byId('edit-ad-price');
+  if (editPriceInp) editPriceInp.placeholder = t('Цена *');
+  const editDescInp = byId('edit-ad-desc');
+  if (editDescInp) editDescInp.placeholder = t('Описание и возможные изъяны *');
+  const editSubBtn = byId('edit-ad-submit-btn');
+  if (editSubBtn) editSubBtn.innerText = t('Сохранить изменения');
+
+  const editWomenLbl = byId('edit-ad-is-women-only')?.parentElement?.querySelector('.font-bold');
+  if (editWomenLbl) editWomenLbl.innerText = t('Только для женщин 🌸');
+  const editFreeLbl = byId('edit-ad-is-free')?.parentElement?.querySelector('.font-bold');
+  if (editFreeLbl) editFreeLbl.innerText = t('Отдать даром (Бесплатно) 🎁');
+  const editNegLbl = byId('edit-ad-is-negotiable')?.parentElement?.querySelector('.font-bold');
+  if (editNegLbl) editNegLbl.innerText = t('Цена договорная 🤝');
+
+  const editDiscLbl = byId('edit-ad-has-discount')?.parentElement?.querySelector('span');
+  if (editDiscLbl) editDiscLbl.innerHTML = `<i class="fa-solid fa-percent"></i> ${t('Сделать скидку на товар')}`;
+  const discFieldLabels = document.querySelectorAll('#discount-fields-wrap label');
+  if (discFieldLabels.length >= 2) {
+    discFieldLabels[0].innerText = t('Старая цена (зачеркнутая)');
+    discFieldLabels[1].innerText = t('Срок действия скидки');
+  }
+
+  // 4. Модальное окно «Поделиться»
+  const shareTitle = document.querySelector('#modal-share .text-center.font-bold');
+  if (shareTitle) shareTitle.innerText = t('Поделиться объявлением');
+  const shareSysBtn = byId('share-system');
+  if (shareSysBtn) shareSysBtn.innerHTML = `<i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> ${t('Поделиться карточкой')}`;
+  const shareBtns = document.querySelectorAll('#modal-share button, #modal-share a');
+  shareBtns.forEach(btn => {
+    const txt = btn.innerText.trim();
+    if (txt.includes('WhatsApp (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> ${t('WhatsApp (с картинкой)')}`;
+    if (txt.includes('Telegram (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> ${t('Telegram (с картинкой)')}`;
+    if (txt.includes('Viber (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> ${t('Viber (с картинкой)')}`;
+    if (txt.includes('WhatsApp (только ссылка)')) btn.innerHTML = `<i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> ${t('WhatsApp (только ссылка)')}`;
+    if (txt.includes('Скачать красивую карточку')) btn.innerHTML = `<i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> ${t('Скачать красивую карточку')}`;
+    if (txt.includes('Скопировать ссылку')) btn.innerHTML = `<i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> ${t('Скопировать ссылку')}`;
+    if (txt === 'Отмена') btn.innerText = t('Отмена');
+  });
+
+  // 5. Модальное окно подтверждения
+  const confirmCancel = byId('confirm-btn-cancel');
+  if (confirmCancel) confirmCancel.innerText = t('Отмена');
+  const confirmOk = byId('confirm-btn-ok');
+  if (confirmOk) confirmOk.innerText = t('Да, выполнить');
+
+  // 6. Модальное окно жалобы
+  const repTitle = document.querySelector('#modal-report-ad h3');
+  if (repTitle) repTitle.innerText = t('Пожаловаться на объявление');
+  const repDesc = document.querySelector('#modal-report-ad p');
+  if (repDesc) repDesc.innerText = t('Мы проверим это объявление на нарушение правил.');
+  const repReason = byId('report-reason');
+  if (repReason && repReason.options.length >= 6) {
+    repReason.options[0].text = t('Выберите причину...');
+    repReason.options[1].text = t('Мошенничество / Скам');
+    repReason.options[2].text = t('Фейковый товар / Фото');
+    repReason.options[3].text = t('Запрещенный товар');
+    repReason.options[4].text = t('Спам / Дубликат');
+    repReason.options[5].text = t('Другое');
+  }
+  const repComm = byId('report-comment');
+  if (repComm) repComm.placeholder = t('Комментарий (необязательно)');
+  const repSub = document.querySelector('#modal-report-ad button[type="submit"]');
+  if (repSub) repSub.innerText = t('Отправить жалобу');
+
+  // 7. Пополнение AvitoCash
+  const topupTitle = document.querySelector('#modal-avitocash-topup h3');
+  if (topupTitle) topupTitle.innerText = t('Пополнение баланса AvitoCash через ShamCash');
+  const topupAmountLbl = document.querySelector('#modal-avitocash-topup label');
+  if (topupAmountLbl) topupAmountLbl.childNodes[0].nodeValue = t('Сумма пополнения (в AvitoCash / USD)');
+  const topupGenBtn = document.querySelector('#modal-avitocash-topup button[onclick="createTopupRequest()"]');
+  if (topupGenBtn) topupGenBtn.innerText = t('Сгенерировать код пополнения');
+  const topupNote = document.querySelector('#topup-result .text-xs');
+  if (topupNote) topupNote.innerText = t('Переведите средства через платежную систему ShamCash на счет проекта, затем отправьте этот код администратору в WhatsApp для зачисления AvitoCash на ваш баланс.');
+  const topupWaBtn = document.querySelector('#topup-result a');
+  if (topupWaBtn) topupWaBtn.innerHTML = `<i class="fa-brands fa-whatsapp"></i> ${t('Отправить код админу')}`;
+
+  // 8. Подарочные коды
+  const giftTitle = document.querySelector('#modal-gift-code h3');
+  if (giftTitle) giftTitle.innerHTML = `<i class="fa-solid fa-gift" style="color:#f59e0b"></i> ${t('Подарочный код AvitoCash')}`;
+  const giftAmountLbl = document.querySelector('#gift-generator-form label:nth-child(1)');
+  if (giftAmountLbl) giftAmountLbl.childNodes[0].nodeValue = t('Сумма подарка, AC');
+  const giftDaysLbl = document.querySelector('#gift-generator-form label:nth-child(2)');
+  if (giftDaysLbl) giftDaysLbl.childNodes[0].nodeValue = t('Срок действия, дней');
+  const giftGenBtn = document.querySelector('#gift-generator-form button');
+  if (giftGenBtn) giftGenBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${t('Создать подарочный код')}`;
+  const giftResetBtn = document.querySelector('#gift-result button[onclick="resetGiftGenerator()"]');
+  if (giftResetBtn) giftResetBtn.innerText = t('Создать ещё код');
+
+  // 9. Активация подарка
+  const redeemTitle = document.querySelector('#modal-redeem-gift h3');
+  if (redeemTitle) redeemTitle.innerHTML = `<i class="fa-solid fa-gift" style="color:#f59e0b"></i> ${t('Активировать подарок')}`;
+  const redeemDesc = document.querySelector('#modal-redeem-gift p');
+  if (redeemDesc) redeemDesc.innerText = t('Введите подарочный код, чтобы получить AvitoCash на свой баланс.');
+  const redeemBtn = document.querySelector('#modal-redeem-gift button[onclick="redeemGiftCode()"]');
+  if (redeemBtn) redeemBtn.innerHTML = `<i class="fa-solid fa-check"></i> ${t('Активировать код')}`;
+
+  // 10. Перевод AvitoCash
+  const transferTitle = document.querySelector('#modal-transfer-shamcash h3');
+  if (transferTitle) transferTitle.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left" style="color:#10b981"></i> ${t('Оплатить AvitoCash')}`;
+  const transferDesc = document.querySelector('#modal-transfer-shamcash p');
+  if (transferDesc) transferDesc.innerText = t('Перевод другому пользователю будет сохранен в журнале транзакций.');
+  const transferLabels = document.querySelectorAll('#modal-transfer-shamcash label');
+  if (transferLabels.length >= 3) {
+    transferLabels[0].childNodes[0].nodeValue = t('Получатель');
+    transferLabels[1].childNodes[0].nodeValue = t('Сумма, AC');
+    transferLabels[2].childNodes[0].nodeValue = t('Назначение платежа');
+  }
+  const transferBtn = document.querySelector('#modal-transfer-shamcash button[onclick="transferShamCash()"]');
+  if (transferBtn) transferBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${t('Отправить оплату')}`;
+
+  // 11. Офлайн-экран
+  const offlineH2 = document.querySelector('#offline-screen h2');
+  if (offlineH2) offlineH2.innerText = t('Нет подключения к сети');
+  const offlineP = document.querySelector('#offline-screen p');
+  if (offlineP) offlineP.innerText = t('Проверьте интернет-соединение. Приложение автоматически продолжит работу, как только связь восстановится.');
+  const offlineBadge = document.querySelector('#offline-screen .font-mono');
+  if (offlineBadge) offlineBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> ${t('Ожидание сети...')}`;
+
+// 12. Плавающая кнопка техподдержки
+  const floatSupport = document.querySelector('a[aria-label="Написать в техподдержку WhatsApp"]');
+  if (floatSupport) {
+    floatSupport.title = t('Написать в техподдержку WhatsApp');
+    floatSupport.setAttribute('aria-label', t('Написать в техподдержку WhatsApp'));
+  }
+
+  // 13. Модальное окно правил сервиса
+  const rulesTitle = document.querySelector('#modal-rules-agreement h2');
+  if (rulesTitle) rulesTitle.innerText = t('Правила и рекомендации Авито Шам');
+  const rulesTipsHeader = document.querySelector('#modal-rules-agreement .font-bold.flex span');
+  if (rulesTipsHeader) rulesTipsHeader.innerText = t('3 главных совета для удачных сделок:');
+  const rulesAcceptBtn = byId('rules-accept-btn');
+  if (rulesAcceptBtn) rulesAcceptBtn.innerText = t('Я подтверждаю и принимаю условия');
 }

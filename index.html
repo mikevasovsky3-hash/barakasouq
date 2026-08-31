@@ -251,7 +251,7 @@ body { top: 0px !important; }
 <button id="sb-profile" onclick="handleNavClick('profile')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Профиль</span></button>
 </nav>
 <div class="space-y-1 pt-3 border-t b-ig">
-<a href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" target="_blank" rel="noopener" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
+<a href="#" onclick="contactSupport(); return false;" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
   <span class="w-6 h-6 rounded-md text-white flex items-center justify-center bg-[#25D366]"><i class="fa-brands fa-whatsapp text-[13px]"></i></span>
   <span id="sb-support-label" class="hidden xl:block text-[15px] font-semibold">Техподдержка</span>
 </a>
@@ -1005,27 +1005,31 @@ body { top: 0px !important; }
 <canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
 <!-- ============ SCRIPTS CONNECTED IN CORRECT ORDER ============ -->
-<script src="config.js" defer></script>
-<script src="api.js" defer></script>
-<script src="ui.components.js" defer></script>
-<script src="handlers.js" defer></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="ui.components.js"></script>
+<script src="handlers.js"></script>
 <script>
-  // Плавное скрытие прелоадера после инициализации
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const preloader = document.getElementById('app-preloader');
-      if (preloader) {
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.remove(), 500);
-      }
-    }, 400);
-  });
+  function hideAppPreloader() {
+    const preloader = document.getElementById('app-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.pointerEvents = 'none';
+      setTimeout(() => {
+        try { preloader.remove(); } catch(e) {}
+      }, 400);
+    }
+  }
+
+  // Гарантированное снятие прелоадера
+  window.addEventListener('DOMContentLoaded', hideAppPreloader);
+  window.addEventListener('load', hideAppPreloader);
+  setTimeout(hideAppPreloader, 1200);
 </script>
+
 <!-- Плавающая кнопка связи с техподдержкой в WhatsApp (слева, мобильный режим) -->
 <a 
-  href="https://wa.me/447887280238?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%9C%D0%BD%D0%B5%20%D0%BD%D1%83%D0%B6%D0%BD%D0%B0%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%20%D0%BF%D0%BE%20%D1%81%D0%B0%D0%B9%D1%82%D1%83%20Avito%20Sham" 
-  target="_blank" 
-  rel="noopener noreferrer"
+  href="#" onclick="contactSupport(); return false;"
   class="md:hidden fixed bottom-20 left-4 z-40 w-12 h-12 rounded-full text-white shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
   style="background:#25D366; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.45);"
   title="Написать в техподдержку WhatsApp"
@@ -1054,9 +1058,9 @@ body { top: 0px !important; }
 </div>
 
 <script>
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('./sw.js')
         .then(() => console.log('Offline SW ready'))
         .catch((err) => console.warn('SW error:', err));
     });

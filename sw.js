@@ -1,11 +1,17 @@
-const CACHE_NAME = 'baraka-offline-v1';
+const CACHE_NAME = 'avito-sham-v2';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
   '/config.js',
   '/api.js',
   '/ui.components.js',
-  '/handlers.js'
+  '/handlers.js',
+  'https://cdn.tailwindcss.com',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -26,11 +32,23 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('supabase.co') || event.request.url.includes('workers.dev')) {
+  const url = event.request.url;
+
+  // Пропускаем динамические API Supabase, курсы валют, WhatsApp шлюз и переводчик без задержек кэша
+  if (url.includes('supabase.co') || url.includes('workers.dev') || url.includes('whatsapp-gateway') || url.includes('translate.googleapis.com')) {
     return;
   }
 
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((res) => res || caches.match('/index.html')))
+    fetch(event.request)
+      .then((response) => {
+        // При наличии сети отдаем актуальный ответ и обновляем кэш в фоне
+        if (response && response.status === 200 && event.request.method === 'GET') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then((res) => res || caches.match('/index.html')))
   );
 });

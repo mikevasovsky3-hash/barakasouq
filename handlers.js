@@ -59,6 +59,15 @@ function openModal(id) {
 function closeModal(id) { 
   const m = byId(id); 
   if (m) m.classList.add('hidden'); 
+  if (id === 'modal-ad-detail' && typeof detailMap !== 'undefined' && detailMap) {
+    try { detailMap.remove(); detailMap = null; } catch(e) {}
+  }
+  if (id === 'modal-create-ad' && typeof createMap !== 'undefined' && createMap) {
+    try { createMap.remove(); createMap = null; createMarker = null; } catch(e) {}
+  }
+  if (id === 'modal-shop-showcase' && typeof showcaseMap !== 'undefined' && showcaseMap) {
+    try { showcaseMap.remove(); showcaseMap = null; } catch(e) {}
+  }
   const wasTop = modalStack[modalStack.length - 1] === id; 
   modalStack = modalStack.filter(x => x !== id); 
   if (modalStack.length === 0) document.body.classList.remove('overflow-hidden'); 
@@ -196,19 +205,23 @@ if (typeof translateStaticUI === 'function') {
 function checkExpiredAdsStatus() {
   const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
   const now = Date.now();
-  let changed = false;
+  const expiredIds = [];
 
   ads.forEach(a => {
     if (a.status === 'ACTIVE' && a.createdAt && (now - a.createdAt > THIRTY_DAYS)) {
       a.status = 'EXPIRED';
-      changed = true;
-      if (supabaseClient) {
-        supabaseClient.from('ads').update({ status: 'EXPIRED' }).eq('id', a.id).then();
-      }
+      expiredIds.push(a.id);
     }
   });
 
-  if (changed) saveCachedAds();
+  if (expiredIds.length > 0) {
+    saveCachedAds();
+    if (supabaseClient) {
+      supabaseClient.from('ads').update({ status: 'EXPIRED' }).in('id', expiredIds).then().catch(err => {
+        console.warn('Batch expiry sync warning:', err);
+      });
+    }
+  }
 }
 
 async function renewAdExpiry(adId) {
@@ -246,7 +259,7 @@ async function bumpAdToTop(adId) {
   showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
 }
 
-// Универсальная чистая нормализация для русского, английского и арабского языков
+// Универсальная нормализация для русского, английского и арабского языков
 function normalizeArabicText(str) {
   if (!str || typeof str !== 'string') return '';
   const isArabic = /[\u0600-\u06FF]/.test(str);
@@ -434,11 +447,11 @@ async function shareAd(adId) {
   const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
   const url = base + '#ad-' + ad.id;
   sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
-  const state = byId('share-preview-state'), preview = byId('share-preview-wrap');
-  if (state) { state.innerText = 'Генерируем красивую карточку...'; state.classList.remove('hidden'); }
+const state = byId('share-preview-state'), preview = byId('share-preview-wrap');
+  if (state) { state.innerText = t('Генерируем красивую карточку...'); state.classList.remove('hidden'); }
   if (preview) preview.classList.add('hidden');
   openShareSheet();
-  showToast('Генерация красивой карточки…', 'info');
+  showToast(t('Генерация красивой карточки…'), 'info');
   const blob = await generateShareImage(ad);
   lastShareBlob = blob;
   if (lastShareObjectUrl) { URL.revokeObjectURL(lastShareObjectUrl); lastShareObjectUrl = null; }
@@ -449,8 +462,8 @@ async function shareAd(adId) {
     if (preview) preview.classList.remove('hidden');
     if (state) state.classList.add('hidden');
   } else if (state) {
-    state.innerText = 'Не удалось создать карточку. Можно отправить ссылку.';
-    showToast('Не удалось создать карточку, ссылка доступна ниже', 'warning');
+    state.innerText = t('Не удалось создать карточку. Можно отправить ссылку.');
+    showToast(t('Не удалось создать карточку, ссылка доступна ниже'), 'warning');
   }
   updateShareActions();
 }
@@ -465,7 +478,7 @@ function updateShareActions() {
 }
 
 async function shareImageToApp(app) {
-  if (!lastShareBlob) { showToast('Сначала нажмите "Поделиться", чтобы создать картинку', 'warning'); return; }
+  if (!lastShareBlob) { showToast(t('Сначала нажмите "Поделиться", чтобы создать картинку'), 'warning'); return; }
   const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
@@ -477,7 +490,7 @@ async function shareImageToApp(app) {
       console.warn('Share failed', err);
     }
   }
-  showToast('Браузер не поддерживает отправку файлов, открываю ссылку...', 'warning');
+  showToast(t('Браузер не поддерживает отправку файлов, открываю ссылку...'), 'warning');
   const enc = encodeURIComponent;
   const u = sharePayload.url, tx = sharePayload.text;
   let link = '';
@@ -488,7 +501,7 @@ async function shareImageToApp(app) {
 }
 
 async function downloadShareCard() {
-  if (!lastShareBlob) { showToast('Карточка еще не готова — нажмите Поделиться сначала', 'warning'); return; }
+  if (!lastShareBlob) { showToast(t('Карточка еще не готова — нажмите Поделиться сначала'), 'warning'); return; }
   const file = new File([lastShareBlob], 'avito-sham-card.jpg', { type: 'image/jpeg' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
@@ -509,13 +522,13 @@ async function downloadShareCard() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      showToast('Красивая карточка скачана', 'success');
+      showToast(t('Красивая карточка скачана'), 'success');
       closeModal('modal-share');
     };
     reader.readAsDataURL(lastShareBlob);
     closeModal('modal-share');
   } catch (e) {
-    showToast('Ошибка сохранения', 'error');
+    showToast(t('Ошибка сохранения'), 'error');
   }
 }
 
@@ -572,14 +585,14 @@ function saveCategoryForm() {
 function deleteCategoryWithConfirm(catId) { 
   const c = categories.find(x => x.id === catId); 
   if (!c) return; 
-  showConfirmModal('Удаление категории', `Удалить категорию "${c.name}"? Объявления останутся в базе, но категория исчезнет из ленты.`, () => { 
+  showConfirmModal(t('Удаление категории'), `${t('Удалить')} "${t(c.name)}"?`, () => { 
     categories = categories.filter(x => x.id !== catId); 
     pushCategoriesToCloud(); 
     if (selectedCategory === catId) selectedCategory = 'all'; 
     renderCategoryPills(); 
     renderAdminTabContent(); 
     renderAds(); 
-    showToast('Категория удалена', 'info'); 
+    showToast(t('Категория удалена'), 'info'); 
   }); 
 }
 
@@ -626,7 +639,7 @@ function openCreateAdModal() {
       if (byId('ad-lat')) byId('ad-lat').value = pos.coords.latitude.toFixed(6);
       if (byId('ad-lng')) byId('ad-lng').value = pos.coords.longitude.toFixed(6);
       const sumEl = byId('ad-location-summary');
-      if (sumEl) sumEl.innerText = `Локация: GPS определена (${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)})`;
+      if (sumEl) sumEl.innerText = `${t('Локация: GPS определена')} (${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)})`;
     }, () => {}, { timeout: 7000 });
   }
 
@@ -641,9 +654,9 @@ function openCreateAdModal() {
     } catch (e) {}
   } 
 
-  const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); 
+const sc = byId('ad-store-cat-container'), ss = byId('ad-store-category'); 
   if (currentUser && currentUser.shop && currentUser.shop.customCategories && currentUser.shop.customCategories.length > 0) { 
-    ss.innerHTML = `<option value="">Без специальной категории магазина</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); 
+    ss.innerHTML = `<option value="">${t('Без специальной категории магазина')}</option>` + currentUser.shop.customCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); 
     sc.classList.remove('hidden'); 
   } else if (sc) sc.classList.add('hidden'); 
 
@@ -657,8 +670,8 @@ function openCreateAdModal() {
   const onbC = byId('ad-onbehalf-container'), onbS = byId('ad-post-onbehalf'); 
   if (onbC && onbS) { 
     if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) { 
-      onbS.innerHTML = `<option value="${currentUser.username}">Себя — ${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join(''); 
-      if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; } 
+      onbS.innerHTML = `<option value="${currentUser.username}">${t('Себя — ')}${currentUser.kunya || currentUser.username}</option>` + users.filter(u => u.username !== currentUser.username).map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || t('без имени')}</option>`).join(''); 
+      if (onBehalfPreset) { onbS.value = onBehalfPreset; onBehalfPreset = null; }
       onbC.classList.remove('hidden'); 
     } else onbC.classList.add('hidden'); 
   } 
@@ -885,11 +898,11 @@ async function handleCreateAdSubmit(e) {
         return;
       }
 
-      postingUser = regRes.user;
+postingUser = regRes.user;
       users.push(postingUser);
       saveUserSession(postingUser, true);
-      showToast(`Профиль создан! Логин: @${postingUser.username}`, 'success');
-    }
+      showToast(`${t('Профиль создан! Логин:')} @${postingUser.username}`, 'success');
+	  }
   }
   
   const onbS = byId('ad-post-onbehalf');
@@ -902,7 +915,7 @@ async function handleCreateAdSubmit(e) {
   const isNegotiable = byId('ad-is-negotiable')?.checked || false;
   const price = (isFree || isNegotiable) ? 0 : parseFloat(byId('ad-price')?.value || 0);
 
-  // Проверка лимитов и тарифов
+// Проверка лимитов и тарифов
   const hasShop = !!(postingUser.shop);
   const myActiveAdsCount = ads.filter(a => 
     a.sellerUsername && 
@@ -910,14 +923,14 @@ async function handleCreateAdSubmit(e) {
     a.status === 'ACTIVE'
   ).length;
 
-  if (hasShop) {
+  if (hasShop && !(typeof isMasterFreeActive === 'function' && isMasterFreeActive())) {
     const shopLimit = postingUser.shop.maxAds || 50;
     if (myActiveAdsCount >= shopLimit) {
       showToast(`Лимит объявлений магазина (${shopLimit} шт.) исчерпан.`, 'warning');
       return;
     }
   }
-
+  
   const imgs = [...pendingCreateImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
 
@@ -1019,11 +1032,15 @@ function openEditAdModal(adId) {
     return;
   }
 
-  const ownerContainer = byId('edit-ad-owner-container');
+  if (typeof translateStaticUI === 'function') {
+    translateStaticUI(currentLang);
+  }
+  
+const ownerContainer = byId('edit-ad-owner-container');
   const ownerSelect = byId('edit-ad-seller-username');
   if (ownerContainer && ownerSelect) {
     if (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') {
-      ownerSelect.innerHTML = users.map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || 'без имени'}</option>`).join('');
+      ownerSelect.innerHTML = users.map(u => `<option value="${u.username}">@${u.username} — ${u.kunya || t('без имени')}</option>`).join('');
       ownerSelect.value = ad.sellerUsername || currentUser.username;
       ownerContainer.classList.remove('hidden');
     } else {
@@ -1167,15 +1184,17 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   }
 }
 
-function doToggleLike(adId) { 
-  if (!currentUser) { openAuthModal(); showToast('Войдите в аккаунт, чтобы ставить лайки', 'warning'); return false; } 
+async function doToggleLike(adId) { 
+  if (!currentUser) { openAuthModal(); showToast(t('Войдите в аккаунт, чтобы ставить лайки'), 'warning'); return false; }
   const isCombo = typeof adId === 'string' && adId.startsWith('COMBO-');
   const target = isCombo ? combos.find(c => c.id === adId) : ads.find(a => a.id === adId);
   if (!target) return false; 
 
   if (!Array.isArray(target.likes)) target.likes = []; 
   const i = target.likes.indexOf(currentUser.username); 
-  if (i === -1) target.likes.push(currentUser.username); 
+  const isAdding = i === -1;
+  
+  if (isAdding) target.likes.push(currentUser.username); 
   else target.likes.splice(i, 1); 
 
   saveCachedAds(); 
@@ -1183,9 +1202,21 @@ function doToggleLike(adId) {
 
   if (supabaseClient) {
     const table = isCombo ? 'combos' : 'ads';
-    supabaseClient.from(table).update({ likes: target.likes }).eq('id', adId).then(({ error }) => {
-      if (error) console.warn('Sync like error:', error);
-    });
+    try {
+      const { data: fresh } = await supabaseClient.from(table).select('likes').eq('id', adId).single();
+      let remoteLikes = Array.isArray(fresh?.likes) ? [...fresh.likes] : [];
+      const remoteIdx = remoteLikes.indexOf(currentUser.username);
+      if (isAdding && remoteIdx === -1) {
+        remoteLikes.push(currentUser.username);
+      } else if (!isAdding && remoteIdx !== -1) {
+        remoteLikes.splice(remoteIdx, 1);
+      }
+      target.likes = remoteLikes;
+      saveCachedAds();
+      await supabaseClient.from(table).update({ likes: remoteLikes }).eq('id', adId);
+    } catch(err) {
+      console.warn('Sync like error:', err);
+    }
   }
   return true; 
 }
@@ -1319,13 +1350,27 @@ function openAuthModal() {
   const l = byId('tab-login'), r = byId('tab-register'), b = byId('auth-submit-btn');
   if (l) l.innerText = t('Вход');
   if (r) r.innerText = t('Регистрация');
-  if (b) b.innerText = byId('reg-fields')?.classList.contains('hidden') ? t('Войти') : t('Зарегистрироваться');
+  if (b) b.innerText = byId('reg-fields')?.classList.contains('hidden') ? t('Войти') : t('Получить код');
   
-  const uInp = byId('auth-username'), pInp = byId('auth-password'), kInp = byId('auth-kunya'), wInp = byId('auth-whatsapp');
+  const uInp = byId('auth-username'), pInp = byId('auth-password'), wInp = byId('auth-whatsapp');
   if (uInp) uInp.placeholder = t('Логин *');
   if (pInp) pInp.placeholder = t('Пароль *');
-  if (kInp) kInp.placeholder = t('Имя / Кунья *');
   if (wInp) wInp.placeholder = t('WhatsApp номер * (+963…)');
+
+  const genderLbl = document.querySelector('#reg-fields .text-\\[10px\\]');
+  if (genderLbl) genderLbl.innerText = t('Выберите ваш пол *');
+  const genderRadios = document.querySelectorAll('#reg-fields label span');
+  if (genderRadios.length >= 2) {
+    genderRadios[0].innerText = t('Мужчина');
+    genderRadios[1].innerText = t('Женщина 🌸');
+  }
+
+  const otpInp = byId('auth-otp-code');
+  if (otpInp) otpInp.placeholder = t('Введите 6-значный код *');
+  const otpNote = byId('auth-otp-block')?.querySelector('.t2');
+  if (otpNote) otpNote.innerText = t('Код отправлен в WhatsApp');
+  const resendBtn = byId('auth-resend-btn');
+  if (resendBtn) resendBtn.innerText = t('Отправить код повторно');
   
   const remLbl = byId('auth-remember-me')?.parentElement?.querySelector('span');
   if (remLbl) remLbl.innerText = t('Запомнить мой вход на этом устройстве');
@@ -1478,14 +1523,14 @@ const cleanWa = whatsapp.replace(/\D/g, '');
 
     const localUser = regRes.user;
     users.push(localUser);
-    saveUserSession(localUser, remember);
+saveUserSession(localUser, remember);
     pendingRegVerification = null;
     if (otpBlock) otpBlock.classList.add('hidden');
     closeModal('modal-auth');
-    showToast(`Добро пожаловать! Логин: @${localUser.username}`, 'success');
+    showToast(`${t('Добро пожаловать!')} ${t('Логин:')} @${localUser.username}`, 'success');
     btn.disabled = false; btn.innerText = 'Войти';
     return;
-  } else {
+	} else {
     // Вход по логину или номеру WhatsApp
     btn.innerText = 'Проверка...';
     const loginIdentifier = byId('auth-username').value.trim();
@@ -1534,11 +1579,11 @@ const idx = users.findIndex(u => u.uid === foundUser.uid);
           try { localStorage.setItem('bs_favorites', JSON.stringify(favorites)); } catch (err) {}
         }
 
-        saveUserSession(foundUser, remember);
+saveUserSession(foundUser, remember);
         closeModal('modal-auth');
-        showToast(`С возвращением, ${foundUser.kunya || foundUser.username}!`, 'success');
+        showToast(`${t('С возвращением,')} ${foundUser.kunya || foundUser.username}!`, 'success');
 		} else {
-        showToast(res?.error || 'Неверный логин или пароль!', 'error');
+			showToast(res?.error || 'Неверный логин или пароль!', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -1559,7 +1604,7 @@ function logout() {
 
 /* ================= INITIALIZATION AT STARTUP ================= */
 document.addEventListener('DOMContentLoaded', () => {
-  // Включение прокрутки колесиком мыши для горизонтальных списков на ПК
+// Включение прокрутки колесиком мыши для горизонтальных списков на ПК
   const catScroll = byId('categories-container');
   if (catScroll) {
     catScroll.addEventListener('wheel', (e) => {
@@ -1570,9 +1615,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   }
 
-  if (localStorage.getItem('bs_theme') === 'light') {
+  const isLight = localStorage.getItem('bs_theme') === 'light';
+  if (isLight) {
     document.body.classList.add('light-mode');
   }
+  const themeIc = byId('sb-theme-ic');
+  if (themeIc) {
+    themeIc.innerHTML = isLight ? IGSVG.moon() : IGSVG.sun();
+  }
+
   if (currentLang === 'ar') {
     document.documentElement.dir = 'rtl';
     document.documentElement.lang = 'ar';
@@ -1586,13 +1637,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-restoreUserSession();
-  initSupabaseSync();
-  fetchLiveExchangeRates();
-  setInterval(fetchLiveExchangeRates, 5 * 60 * 1000);
-  setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
-  requestPushPermission();
-  checkUrlHashAdOpen();
+  try {
+    loadCachedAds();
+  } catch(e) {
+    console.warn('loadCachedAds error:', e);
+  }
+
+  try {
+    restoreUserSession();
+  } catch(e) {
+    console.warn('restoreUserSession error:', e);
+  }
+
+  if (typeof renderCategoryPills === 'function') renderCategoryPills();
+  if (typeof renderAds === 'function') renderAds();
+
+  try {
+    initSupabaseSync();
+  } catch(e) {
+    console.warn('initSupabaseSync error:', e);
+  }
+
+  try {
+    fetchLiveExchangeRates();
+    setInterval(fetchLiveExchangeRates, 5 * 60 * 1000);
+    setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
+    requestPushPermission();
+    checkUrlHashAdOpen();
+  } catch(e) {
+    console.warn('Startup async services error:', e);
+  }
 });
 
 window.addEventListener('hashchange', checkUrlHashAdOpen);
@@ -1679,41 +1753,24 @@ function cardNav(event, adId, dir) {
 
 // 3. Смена статуса продавцом: «Продано»
 function markAdSold(adId) {
-  setAdStatusSecure(adId, 'SOLD', 'Объявление отмечено как проданное');
+  setAdStatusSecure(adId, 'SOLD', t('Объявление отмечено как проданное'));
 }
 
 // 4. Смена статуса продавцом: «Передумал»
 function markAdWithdrawn(adId) {
-  setAdStatusSecure(adId, 'WITHDRAWN', 'Статус изменен: передумал продавать');
+  setAdStatusSecure(adId, 'WITHDRAWN', t('Статус изменен: передумал продавать'));
 }
 
 // 5. Архивация объявления с подтверждением
 function archiveAdWithConfirm(adId) {
-  showConfirmModal('Архивация', 'Перенести объявление в архив?', () => {
-    setAdStatusSecure(adId, 'ARCHIVED', 'Объявление перенесено в архив');
+  showConfirmModal(t('Архивация'), t('Перенести объявление в архив?'), () => {
+    setAdStatusSecure(adId, 'ARCHIVED', t('Объявление перенесено в архив'));
   });
 }
 
 // 6. Восстановление объявления из архива
 function restoreAd(adId) {
-  setAdStatusSecure(adId, 'ACTIVE', 'Объявление успешно восстановлено');
-}
-
-// Универсальная нормализация для русского, английского и арабского языков
-function normalizeArabicText(str) {
-  if (!str || typeof str !== 'string') return '';
-  const isArabic = /[\u0600-\u06FF]/.test(str);
-  if (!isArabic) {
-    return str.toLowerCase().trim(); // Для русского и английского — точный поиск по символам
-  }
-  return str
-    .toLowerCase()
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Удаление харакатов и татвиля
-    .replace(/[أإآٱ]/g, 'ا') // Выравнивание алифов
-    .replace(/ة/g, 'ه')     // Та-марбута
-    .replace(/[ىيئ]/g, 'ي')  // Я и алиф максура
-    .replace(/ؤ/g, 'و')     // Вав с хамзой
-    .trim();
+  setAdStatusSecure(adId, 'ACTIVE', t('Объявление успешно восстановлено'));
 }
 
 // Обработчик живого поиска и синхронизации Desktop / Mobile инпутов
@@ -1826,13 +1883,14 @@ function deleteAdPermanently(adId) {
     currentUser.role === 'ADMIN'
   );
 
-  if (!isOwner) {
-    showToast('У вас нет прав для удаления этого объявления', 'error');
+if (!isOwner) {
+    showToast(t('У вас нет прав для удаления этого объявления'), 'error');
     return;
   }
 
-  showConfirmModal('Удаление объявления', 'Вы уверены, что хотите навсегда удалить это объявление? Восстановить его будет невозможно.', async () => {
-    // 1. Фиксируем удаление в локальном черном списке (чтобы не вернулось из кэша)
+  showConfirmModal(t('Удаление объявления'), t('Вы уверены, что хотите навсегда удалить это объявление? Восстановить его будет невозможно.'), async () => {
+
+	  // 1. Фиксируем удаление в локальном черном списке (чтобы не вернулось из кэша)
     markAdDeletedLocally(adId);
 
     // 2. Удаляем из памяти
@@ -1851,7 +1909,7 @@ function deleteAdPermanently(adId) {
       renderAdminTabContent();
     }
 
-    showToast('Объявление удалено навсегда', 'info');
+    showToast(t('Объявление удалено навсегда'), 'info');
 
 // 4. Удаляем из Supabase базы и очищаем Storage
     if (supabaseClient) {
@@ -2069,9 +2127,9 @@ function setRadiusFilter(km) {
       const chk = byId(`radius-check-${k}`);
       if (chk) chk.classList.add('hidden');
     });
-    closeRadiusMenu();
+closeRadiusMenu();
     resetPageAndRender();
-    showToast('Поиск рядом отключен', 'info');
+    showToast(t('Поиск рядом отключен'), 'info');
   }
 }
 
@@ -2246,7 +2304,8 @@ function openGiftForSpecificAd(adId) {
   setTimeout(() => {
     const titleInp = byId('combo-title');
     const priceInp = byId('combo-price');
-    if (titleInp) titleInp.value = `🎁 АКЦИЯ: ${mainAd.title} + Подарок!`;
+    const isAr = currentLang === 'ar';
+    if (titleInp) titleInp.value = isAr ? `🎁 عرض خاص: ${mainAd.title} + هدية مجانية!` : `🎁 АКЦИЯ: ${mainAd.title} + Подарок!`;
     if (priceInp) priceInp.value = mainAd.price || '';
 
     const checkMain = byId(`combo-item-${mainAd.id}`);
@@ -2254,6 +2313,11 @@ function openGiftForSpecificAd(adId) {
       checkMain.checked = true;
       if (typeof updateComboSummary === 'function') updateComboSummary();
     }
-    showToast('Выберите из списка второй товар, который пойдет в подарок!', 'info');
+    showToast(t('Выберите из списка второй товар, который пойдет в подарок!'), 'info');
   }, 200);
+}
+function contactSupport() {
+  const isAr = currentLang === 'ar';
+  const msg = isAr ? 'مرحباً! أحتاج إلى مساعدة في منصة أفيتو الشام' : 'Здравствуйте! Мне нужна помощь по сайту Avito Sham';
+  window.open(`https://wa.me/447887280238?text=${encodeURIComponent(msg)}`, '_blank');
 }
