@@ -372,7 +372,7 @@ for (const f of files.slice(0, slots)) {
 const { error: sbErr } = await supabaseClient.storage
         .from('listings')
         .upload(filePath, compressedFile, {
-          contentType: 'image/jpeg',
+          contentType: 'image/webp',
           cacheControl: '31536000',
           upsert: false
         });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'avito-sham-v2';
+const CACHE_NAME = 'avito-sham-v3';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',

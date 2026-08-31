@@ -216,16 +216,16 @@ async function compressSingleImageFile(file, maxWidth = 1280, maxHeight = 1280, 
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 		
-        canvas.toBlob((blob) => {
+canvas.toBlob((blob) => {
           if (!blob) {
             return reject(new Error('Canvas toBlob failed'));
           }
-          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`, {
-            type: 'image/jpeg'
+          const compressedFile = new File([blob], `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`, {
+            type: 'image/webp'
           });
           resolve(compressedFile);
-        }, 'image/jpeg', quality);
-      };
+        }, 'image/webp', quality);
+		};
       img.onerror = (err) => reject(err);
     };
     reader.onerror = (err) => reject(err);
@@ -309,6 +309,98 @@ function addBalance(uid, amount) {
   return _0xSCTransaction(uid, amount, 'add');
 }
 
+let isBackgroundSyncActive = false;
+
+function mapSupabaseAdToLocal(a) {
+  const owner = (typeof users !== 'undefined' && Array.isArray(users)) 
+    ? users.find(u => u.uid === a.seller_uid || (u.username && a.seller_username && u.username.toLowerCase() === a.seller_username.toLowerCase())) 
+    : null;
+
+  return {
+    id: a.id,
+    title: a.title,
+    category: a.category,
+    storeCategory: a.store_category,
+    region: a.region,
+    city: a.city,
+    isWomenOnly: !!a.is_women_only,
+    isFree: !!a.is_free,
+    isNegotiable: !!a.is_negotiable,
+    price: Number(a.price || 0),
+    oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
+    currency: a.currency,
+    desc: a.description || a.desc || '',
+    images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
+    image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
+    lat: Number(a.lat) || 33.5138,
+    lng: Number(a.lng) || 36.2765,
+    sellerUsername: a.seller_username || owner?.username || '',
+    sellerUid: a.seller_uid || owner?.uid || '',
+    sellerKunya: a.seller_kunya || owner?.kunya || owner?.username || '',
+    sellerWhatsapp: a.seller_whatsapp || owner?.whatsapp || '',
+    status: a.status || 'ACTIVE',
+    createdAt: Number(a.created_at) || Date.now(),
+    queue: Array.isArray(a.queue) ? a.queue : [],
+    likes: Array.isArray(a.likes) ? a.likes : [],
+    views: Number(a.views || 0)
+  };
+}
+
+async function startBackgroundDualClutchSync(startOffset = 20, chunkSize = 20) {
+  if (isBackgroundSyncActive || !supabaseClient) return;
+  isBackgroundSyncActive = true;
+
+  let currentOffset = startOffset;
+  const runSyncChunk = async () => {
+    try {
+      const { data: chunk, error } = await supabaseClient
+        .from('ads')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(currentOffset, currentOffset + chunkSize - 1);
+
+      if (error) throw error;
+
+      if (chunk && chunk.length > 0) {
+        const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
+        const validChunk = chunk.filter(a => !deletedIds.includes(a.id));
+
+        const existingMap = new Map((ads || []).map(a => [a.id, a]));
+        let hasNewData = false;
+
+        validChunk.forEach(rawItem => {
+          const mapped = mapSupabaseAdToLocal(rawItem);
+          if (!existingMap.has(mapped.id)) {
+            ads.push(mapped);
+            hasNewData = true;
+          } else {
+            Object.assign(existingMap.get(mapped.id), mapped);
+          }
+        });
+
+        if (hasNewData) {
+          saveCachedAds();
+          if (typeof renderCategoryPills === 'function') renderCategoryPills();
+          if (typeof renderAds === 'function') renderAds();
+        }
+
+        if (chunk.length === chunkSize) {
+          currentOffset += chunkSize;
+          const scheduleNext = window.requestIdleCallback || ((cb) => setTimeout(cb, 120));
+          scheduleNext(runSyncChunk);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Background clutch sync paused:", e);
+    }
+    isBackgroundSyncActive = false;
+  };
+
+  const scheduleFirst = window.requestIdleCallback || ((cb) => setTimeout(cb, 150));
+  scheduleFirst(runSyncChunk);
+}
+
 async function initSupabaseSync() {
   loadCachedAds();
   renderCategoryPills();
@@ -325,16 +417,16 @@ async function initSupabaseSync() {
   try {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-// Единый параллельный запрос со снятыми ограничениями на количество объявлений и пользователей
-    const [usersRes, adsRes, combosRes, catsRes, reportsRes] = await Promise.all([
-      supabaseClient.from('users').select('*'),
-      supabaseClient.from('ads').select('*').order('created_at', { ascending: false }),
+// Первая быстрая порция (20 объявлений) параллельно с общими данными
+    const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes] = await Promise.all([
+      supabaseClient.from('users').select('uid, username, kunya, gender, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, frozen, is_archived, favorites, shop'),
+      supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
       isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] })
     ]);
 	
-    // Единичный парсинг пользователей
+    // Синхронизация пользователей
     if (usersRes.data && usersRes.data.length > 0) {
       const allParsedUsers = usersRes.data.map(u => ({
         ...u,
@@ -366,42 +458,16 @@ async function initSupabaseSync() {
       }
     }
 
-    if (adsRes.data) {
+    // Применение первой порции объявлений
+    if (adsFirstChunkRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-
-      ads = adsRes.data
+      const incomingFirstAds = adsFirstChunkRes.data
         .filter(a => !deletedIds.includes(a.id))
-        .map(a => {
-          const owner = users.find(u => u.uid === a.seller_uid || (u.username && a.seller_username && u.username.toLowerCase() === a.seller_username.toLowerCase()));
-          return {
-            id: a.id,
-            title: a.title,
-            category: a.category,
-            storeCategory: a.store_category,
-            region: a.region,
-            city: a.city,
-            isWomenOnly: !!a.is_women_only,
-            isFree: !!a.is_free,
-            isNegotiable: !!a.is_negotiable,
-            price: Number(a.price || 0),
-            oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
-            currency: a.currency,
-            desc: a.description || a.desc || '',
-            images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
-            image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
-            lat: Number(a.lat) || 33.5138,
-            lng: Number(a.lng) || 36.2765,
-            sellerUsername: a.seller_username || owner?.username || '',
-            sellerUid: a.seller_uid || owner?.uid || '',
-            sellerKunya: a.seller_kunya || owner?.kunya || owner?.username || '',
-            sellerWhatsapp: a.seller_whatsapp || owner?.whatsapp || '',
-            status: a.status || 'ACTIVE',
-            createdAt: Number(a.created_at) || Date.now(),
-            queue: Array.isArray(a.queue) ? a.queue : [],
-            likes: Array.isArray(a.likes) ? a.likes : [],
-            views: Number(a.views || 0)
-          };
-        });
+        .map(mapSupabaseAdToLocal);
+
+      const existingMap = new Map((ads || []).map(a => [a.id, a]));
+      incomingFirstAds.forEach(a => existingMap.set(a.id, a));
+      ads = Array.from(existingMap.values());
     }
 
     if (combosRes.data) {
@@ -426,6 +492,9 @@ async function initSupabaseSync() {
     renderAds();
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
     if (typeof checkUrlHashAdOpen === 'function') checkUrlHashAdOpen();
+
+    // Запуск фоновой бесшовной догрузки остальных данных (второй диск сцепления)
+    startBackgroundDualClutchSync(20, 20);
 
   } catch (error) {
     console.error("Ошибка синхронизации Supabase:", error);
