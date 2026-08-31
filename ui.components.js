@@ -724,9 +724,9 @@ return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.
   </div>
 </div>`;
     }).join('');
-  } else {
+} else {
     grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
-    grid.innerHTML = pageAds.map(ad => {
+    grid.innerHTML = pageAds.map((ad, index) => {
 		cardPhotoIndex[ad.id] = 0;
       const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
       const kunya = getSellerKunya(ad);
@@ -774,7 +774,7 @@ return `
 <div class="relative bg-black overflow-hidden cursor-pointer select-none" style="aspect-ratio:4/5" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, (dir) => cardNav(event, '${ad.id}', dir))" onclick="openAdDetail('${ad.id}')">
 ${ad.isCombo ? renderComboSlashCollage(ad) : `
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
-<img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onerror="this.src=PLACEHOLDER_IMG" onload="this.style.opacity='1'; if(this.naturalWidth<=300 && this.src.includes('imgbb')) this.src=PLACEHOLDER_IMG;" style="opacity:0.85">
+<img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onerror="this.src=PLACEHOLDER_IMG" onload="this.style.opacity='1'; if(this.naturalWidth<=300 && this.src.includes('imgbb')) this.src=PLACEHOLDER_IMG;" style="opacity:0.85">
 `}
 ${ad.isCombo ? `
   <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-xl border border-white/20" style="background:linear-gradient(45deg,#f97316,#ef4444)">
