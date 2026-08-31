@@ -4019,9 +4019,3 @@ function handleCategoryClick(catId) {
   renderCategoryPills();
   renderAds();
 }
-
-function contactSupport() {
-  const isAr = currentLang === 'ar';
-  const msg = isAr ? 'مرحباً! أحتاج إلى مساعدة في منصة أفيتو الشام' : 'Здравствуйте! Мне нужна помощь по сайту Avito Sham';
-  window.open(`https://wa.me/447887280238?text=${encodeURIComponent(msg)}`, '_blank');
-}
