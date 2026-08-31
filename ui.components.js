@@ -1348,18 +1348,35 @@ function renderAdminTabContent() {
     if (editor) editor.value = currentText;
     updateMarqueeControls();
     updateMarqueePreview(currentText);
-  } else if (tab === 'backup') { 
+} else if (tab === 'backup') { 
     c.innerHTML = `
+<div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)">
+  <div class="flex items-center justify-between">
+    <h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-brands fa-google text-emerald-500"></i> ${t('Авто-бэкап в Google Диск')}</h4>
+    <label class="ig-switch shrink-0"><input type="checkbox" id="cfg-drive-enable" onchange="toggleDriveBackup()" ${DRIVE_BACKUP_CONFIG.enabled ? 'checked' : ''}><span class="slider"></span></label>
+  </div>
+  <div class="space-y-2 pt-1 ${DRIVE_BACKUP_CONFIG.enabled ? '' : 'opacity-50 pointer-events-none'}" id="drive-cfg-block">
+    <label class="block text-[10px] t2">URL Google Apps Script (Web App)<input type="text" id="cfg-drive-url" value="${DRIVE_BACKUP_CONFIG.gasUrl}" class="ig-input w-full px-3 py-2 text-xs mt-1 font-mono" placeholder="https://script.google.com/..."></label>
+    <label class="block text-[10px] t2">${t('Интервал (в часах)')}<input type="number" min="1" max="168" id="cfg-drive-interval" value="${DRIVE_BACKUP_CONFIG.intervalHours}" class="ig-input w-full px-3 py-2 text-xs mt-1"></label>
+    <div class="flex gap-2 pt-2">
+      <button onclick="saveDriveConfig()" class="flex-1 py-2.5 rounded-lg text-white font-bold text-xs shadow-sm bg-emerald-500 active:scale-95 transition">${t('Сохранить')}</button>
+      <button onclick="executeSilentDriveBackup(true)" class="px-4 py-2.5 rounded-lg text-emerald-500 font-bold text-xs border border-emerald-500/30 bg-emerald-500/10 active:scale-95 transition">Тест</button>
+    </div>
+    <div class="text-[10px] t2 pt-1">Последний запуск: <span id="admin-backup-last-run" class="t1 font-bold">${DRIVE_BACKUP_CONFIG.lastRun ? new Date(DRIVE_BACKUP_CONFIG.lastRun).toLocaleString() : 'Никогда'}</span></div>
+  </div>
+</div>
+
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-database" style="color:#f59e0b"></i> Полный резервный бэкап платформы (JSON)</h4>
+<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-database" style="color:#f59e0b"></i> ${t('Полный резервный бэкап платформы (JSON)')}</h4>
 <p class="text-xs t2 leading-relaxed">Выгрузка и восстановление всей базы данных платформы (объявления, пользователи, магазины, категории, акции, курсы, жалобы) в один клик.</p>
 <div class="grid grid-cols-2 gap-3 pt-2">
-<button onclick="exportFullDatabaseJSON()" class="py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95" style="background:#f59e0b;color:#000"><i class="fa-solid fa-download"></i> Экспорт БД</button>
-<label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> Импорт БД<input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden"></label>
+<button onclick="exportFullDatabaseJSON()" class="py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95" style="background:#f59e0b;color:#000"><i class="fa-solid fa-download"></i> ${t('Экспорт БД')}</button>
+<label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> ${t('Импорт БД')}<input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden"></label>
 </div>
 </div>
+
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-broom" style="color:#ef4444"></i> Очистка неиспользуемых изображений</h4>
+<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-broom" style="color:#ef4444"></i> ${t('Очистка неиспользуемых изображений')}</h4>
 <p class="text-xs t2 leading-relaxed">Сканирует бакет listings в Supabase Storage и навсегда удаляет файлы, которые не привязаны ни к одному объявлению или профилю.</p>
 <button onclick="cleanUnusedStorageImagesAdmin()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-sm transition active:scale-95" style="background:#ef4444">
   <i class="fa-solid fa-trash-can"></i> Найти и удалить неиспользуемые фото
@@ -1367,7 +1384,7 @@ function renderAdminTabContent() {
 </div>
 
 <div class="p-4 rounded-xl border space-y-3">
-<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-list" style="color:#6b7280"></i> Журнал бэкапов</h4>
+<h4 class="font-extrabold t1 text-xs flex items-center gap-2"><i class="fa-solid fa-list" style="color:#6b7280"></i> ${t('Журнал бэкапов')}</h4>
 <p class="text-xs t2">Список метаданных бэкапов, созданных администраторами. Можно воссоздать и скачать снимок или удалить запись из журнала.</p>
 <div id="admin-backup-list" class="space-y-2 pt-2">
 <div class="text-[12px] t2">Загрузка списка...</div>
@@ -1375,8 +1392,8 @@ function renderAdminTabContent() {
 </div>
 `;
     renderBackupList(); 
-  } 
-}/* ================= AD DETAIL & MODALS ================= */
+  }
+  }/* ================= AD DETAIL & MODALS ================= */
 
 function buildWhatsAppMessage(ad, inQ, rank) {
   const isAr = currentLang === 'ar';
@@ -4019,3 +4036,17 @@ function handleCategoryClick(catId) {
   renderCategoryPills();
   renderAds();
 }
+window.toggleDriveBackup = function() {
+  const isEnabled = byId('cfg-drive-enable').checked;
+  byId('drive-cfg-block').classList.toggle('opacity-50', !isEnabled);
+  byId('drive-cfg-block').classList.toggle('pointer-events-none', !isEnabled);
+};
+
+window.saveDriveConfig = function() {
+  DRIVE_BACKUP_CONFIG.gasUrl = byId('cfg-drive-url').value.trim();
+  DRIVE_BACKUP_CONFIG.intervalHours = Number(byId('cfg-drive-interval').value) || 12;
+  DRIVE_BACKUP_CONFIG.enabled = byId('cfg-drive-enable').checked;
+  localStorage.setItem('bs_drive_backup', JSON.stringify(DRIVE_BACKUP_CONFIG));
+  initDriveAutoBackup();
+  showToast(t('Настройки авто-бэкапа сохранены'), 'success');
+};

@@ -806,3 +806,15 @@ function t(text) {
   const trimmed = typeof text === 'string' ? text.trim() : text;
   return DICTIONARY[trimmed] || DICTIONARY[text] || text;
 }
+let DRIVE_BACKUP_CONFIG = {
+  enabled: false,
+  intervalHours: 12,
+  gasUrl: '', 
+  lastRun: 0
+};
+try {
+  const savedDriveCfg = localStorage.getItem('bs_drive_backup');
+  if (savedDriveCfg) DRIVE_BACKUP_CONFIG = JSON.parse(savedDriveCfg);
+} catch(e) {}
+
+let autoBackupTimerId = null;

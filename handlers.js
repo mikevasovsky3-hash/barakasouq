@@ -1652,12 +1652,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof renderCategoryPills === 'function') renderCategoryPills();
   if (typeof renderAds === 'function') renderAds();
 
-  try {
+try {
     initSupabaseSync();
+    initDriveAutoBackup();
   } catch(e) {
     console.warn('initSupabaseSync error:', e);
   }
-
+  
   try {
     fetchLiveExchangeRates();
     setInterval(fetchLiveExchangeRates, 5 * 60 * 1000);

@@ -958,3 +958,105 @@ const guestTitle = byId('guest-auth-block')?.querySelector('.text-xs');
   const rulesAcceptBtn = byId('rules-accept-btn');
   if (rulesAcceptBtn) rulesAcceptBtn.innerText = t('Я подтверждаю и принимаю условия');
 }
+async function executeSilentDriveBackup(manual = false) {
+  if (!DRIVE_BACKUP_CONFIG.gasUrl) {
+    if (manual) showToast(t('URL Google Apps Script не настроен'), 'error');
+    return;
+  }
+  try {
+    if (manual) showToast('Сбор данных и конвертация фото...', 'info');
+
+    // 1. Конвертируем все фотографии объявлений в Base64
+    const packagedAds = [];
+    for (let i = 0; i < ads.length; i++) {
+      const a = ads[i];
+      const rawImgs = Array.isArray(a.images) ? a.images : [a.image].filter(Boolean);
+      const b64Images = [];
+      for (const imgUrl of rawImgs) {
+        b64Images.push(await urlToBase64(imgUrl));
+      }
+      packagedAds.push({
+        ...a,
+        images: b64Images,
+        image: b64Images[0] || a.image
+      });
+    }
+
+    // 2. Конвертируем аватары и логотипы магазинов
+    const packagedUsers = [];
+    for (const u of users) {
+      let b64Avatar = u.avatar;
+      let shopCopy = u.shop ? { ...u.shop } : null;
+      if (u.avatar) b64Avatar = await urlToBase64(u.avatar);
+      if (shopCopy && shopCopy.logo) shopCopy.logo = await urlToBase64(shopCopy.logo);
+      packagedUsers.push({
+        ...u,
+        avatar: b64Avatar,
+        shop: shopCopy
+      });
+    }
+
+    const backupData = {
+      version: '4.0_FULL_MEDIA_AUTO',
+      exportDate: new Date().toISOString(),
+      users: packagedUsers,
+      archivedUsers: archivedUsers,
+      ads: packagedAds,
+      categories: categories,
+      combos: combos,
+      rates: EXCHANGE_RATES,
+      reports: reports
+    };
+
+    if (manual) showToast(t('Отправка бэкапа в Google Диск...'), 'info');
+
+    const res = await fetch(DRIVE_BACKUP_CONFIG.gasUrl, {
+      method: 'POST',
+      body: JSON.stringify(backupData),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+
+    const textResponse = await res.text();
+
+    if (res.ok && textResponse === "OK") {
+      DRIVE_BACKUP_CONFIG.lastRun = Date.now();
+      localStorage.setItem('bs_drive_backup', JSON.stringify(DRIVE_BACKUP_CONFIG));
+      
+      // Автоматически фиксируем запуск в журнале бэкапов админки
+      const backupId = 'BK-AUTO-' + Date.now();
+      if (typeof BACKUPS_META === 'object') {
+        BACKUPS_META[backupId] = {
+          type: 'auto_full_with_media',
+          exportDate: backupData.exportDate,
+          by: 'auto_system'
+        };
+        if (typeof saveBackupsMeta === 'function') saveBackupsMeta();
+        if (byId('admin-backup-list') && typeof renderBackupList === 'function') renderBackupList();
+      }
+
+      if (manual) showToast(t('Авто-бэкап успешно загружен на Диск!'), 'success');
+      if (byId('admin-backup-last-run')) byId('admin-backup-last-run').innerText = new Date().toLocaleString();
+    } else {
+      throw new Error(textResponse || 'Скрипт не вернул ответ');
+    }
+  } catch (err) {
+    console.warn('Auto-backup failed:', err);
+    if (manual) alert('ОШИБКА GOOGLE APPS SCRIPT:\n\n' + err.message);
+  }
+}
+
+function initDriveAutoBackup() {
+  if (autoBackupTimerId) clearInterval(autoBackupTimerId);
+  if (!DRIVE_BACKUP_CONFIG.enabled || !DRIVE_BACKUP_CONFIG.gasUrl) return;
+
+  const intervalMs = DRIVE_BACKUP_CONFIG.intervalHours * 60 * 60 * 1000;
+  
+  // Проверяем, не пора ли запустить бэкап прямо сейчас (если пропустили, пока сайт был закрыт)
+  if (Date.now() - DRIVE_BACKUP_CONFIG.lastRun >= intervalMs) {
+    setTimeout(() => executeSilentDriveBackup(false), 15000); // Отложенный запуск через 15 сек после старта
+  }
+
+  autoBackupTimerId = setInterval(() => {
+    executeSilentDriveBackup(false);
+  }, intervalMs);
+}
