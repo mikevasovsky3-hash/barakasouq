@@ -1599,10 +1599,21 @@ async function openAdDetail(adId, countView = true) {
         ` : ''}
       </div>
 
-      <div class="shrink-0">
+<div class="shrink-0">
         <div class="text-xs font-bold t2 uppercase tracking-wide mb-1">${t('Описание и изъяны')}</div>
         <p id="detail-ad-desc" class="text-xs t1 leading-relaxed bg-field p-3 rounded-xl border b-ig whitespace-pre-line">${displayDesc}</p>
       </div>
+
+      ${ad.link ? `
+      <div class="shrink-0">
+        <a href="${ad.link}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-between text-xs font-bold t1 transition group">
+          <span class="flex items-center gap-2 truncate">
+            <i class="${ad.link.includes('t.me') ? 'fa-brands fa-telegram text-[#229ED9]' : (ad.link.includes('wa.me') || ad.link.includes('whatsapp') ? 'fa-brands fa-whatsapp text-[#25D366]' : 'fa-solid fa-globe text-blue-500')} text-sm"></i>
+            <span class="truncate">${ad.link.includes('t.me') ? 'Telegram-канал / чат' : (ad.link.includes('wa.me') || ad.link.includes('whatsapp') ? 'WhatsApp ссылка' : 'Перейти на сайт')}</span>
+          </span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-xs t2 group-hover:text-blue-500 transition-colors"></i>
+        </a>
+      </div>` : ''}
 
 ${!isRealOwner && !ad.isFree ? `
       <div class="p-2.5 rounded-xl bg-field border b-ig flex items-center gap-2 shrink-0">

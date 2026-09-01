@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Avito Sham — Авито Шам</title>
+<meta name="description" content="Avito Sham (Авито Шам) — ведущая доска объявлений Сирии. Покупка и продажа электроники, транспорта, недвижимости, создание магазинов и размещение товаров.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E...%3C/svg%3E">
+<link rel="preconnect" href="https://wykjwznojmzlbrujikft.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://wykjwznojmzlbrujikft.supabase.co">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+<link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.min.js" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<style>
+@font-face {
+  font-family: 'Grand Hotel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/grand-hotel@5.0.8/files/grand-hotel-latin-400-normal.woff2') format('woff2');
+}
+/* === АНИМЕ СЛЭШ-КОЛЛАЖ ДЛЯ КОМБО-АКЦИЙ === */
+.anime-slash-collage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.anime-slash-left {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(0 0, 68% 0, 32% 100%, 0 100%);
+  z-index: 2;
+}
+.anime-slash-right {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(68% 0, 100% 0, 100% 100%, 32% 100%);
+  z-index: 1;
+}
+.anime-slash-line {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  width: 3px;
+  height: 120%;
+  background: linear-gradient(180deg, #ff4500, #ffcc00, #ff0055);
+  box-shadow: 0 0 10px #ff3b00, 0 0 20px #ff9900;
+  transform: rotate(20deg);
+  z-index: 3;
+  pointer-events: none;
+}
+</style>
+<style>
+:root{
+--ig-bg:#000000; --ig-card:#000000; --ig-border:#262626; --ig-text:#f5f5f5;
+--ig-text2:#a8a8a8; --ig-field:#121212; --ig-hover:#1a1a1a;
+}
+body.light-mode{
+--ig-bg:#fafafa; --ig-card:#ffffff; --ig-border:#dbdbdb; --ig-text:#262626;
+--ig-text2:#8e8e8e; --ig-field:#efefef; --ig-hover:#f2f2f2;
+}
+html,body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+background:var(--ig-bg); color:var(--ig-text); font-size:14px;
+max-width:100vw; overflow-x:hidden;
+scroll-behavior:smooth;
+overflow-y:auto !important;
+user-select:auto !important;
+cursor:default;
+}
+.ig-logo{font-family:'Grand Hotel',cursive;font-weight:400;letter-spacing:.5px}
+.t1{color:var(--ig-text)} .t2{color:var(--ig-text2)}
+.bg-ig{background:var(--ig-bg)} .bg-card{background:var(--ig-card)} .bg-field{background:var(--ig-field)}
+.b-ig{border-color:var(--ig-border)}
+.ig-card{background:var(--ig-card);border:1px solid var(--ig-border)}
+.ig-hover:hover{background:var(--ig-hover)}
+.ig-sheet{background:var(--ig-card);border:1px solid var(--ig-border)}
+.ig-modal-blur{background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
+.ig-input{background:var(--ig-field);border:1px solid transparent;color:var(--ig-text);border-radius:8px;outline:none;transition:border .15s}
+.ig-input:focus{border-color:var(--ig-text2)}
+.search-wrapper .ig-input::placeholder{color:transparent}
+#modal-auth .ig-input::placeholder{color:var(--ig-text2);opacity:.8}
+#modal-auth .ig-input:focus::placeholder{color:transparent;opacity:0}
+select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
+.ig-btn{background:#0095f6;color:#fff;border-radius:8px;font-weight:600;transition:background .15s}
+.ig-btn:hover{background:#1877f2}
+.ig-btn:disabled{opacity:.4;cursor:not-allowed}
+.ig-btn-outline{background:transparent;border:1px solid var(--ig-border);color:var(--ig-text);border-radius:8px;font-weight:600}
+.ig-btn-outline:hover{background:var(--ig-hover)}
+.ig-btn-danger{background:#ed4956;color:#fff;border-radius:8px;font-weight:600}
+.ig-btn-danger:hover{background:#d3323f}
+.ig-switch{position:relative;display:inline-block;width:36px;height:20px}
+.ig-switch input{opacity:0;width:0;height:0}
+.ig-switch .slider{position:absolute;cursor:pointer;inset:0;background:var(--ig-border);border-radius:20px;transition:.2s}
+.ig-switch .slider:before{content:"";position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.ig-switch input:checked+.slider{background:#ec4899}
+.ig-switch input:checked+.slider:before{transform:translateX(16px)}
+.story-ring{background:conic-gradient(from 210deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75)}
+.ig-btn-nav{color:var(--ig-text);transition:opacity .15s}
+.ig-btn-nav:hover{opacity:.55}
+.heart-pop{animation:heartPop .38s ease}
+@keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+.card-in{animation:cardIn .3s ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* === ОГНЕННОЕ ПЛАМЯ ДЛЯ АКЦИЙ И СКИДОК === */
+.fire-card {
+  position: relative;
+  border: 2px solid #ff4500 !important;
+  animation: fireGlow 2.2s infinite alternate ease-in-out;
+}
+@keyframes fireGlow {
+  0% {
+    box-shadow: 0 0 6px rgba(255, 69, 0, 0.4), 0 0 12px rgba(255, 140, 0, 0.2), inset 0 0 4px rgba(255, 69, 0, 0.2);
+    border-color: #ff3b00;
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 69, 0, 0.75), 0 0 24px rgba(255, 165, 0, 0.45), inset 0 0 8px rgba(255, 69, 0, 0.35);
+    border-color: #ff8c00;
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 0, 50, 0.85), 0 0 32px rgba(255, 69, 0, 0.6), inset 0 0 12px rgba(255, 140, 0, 0.45);
+    border-color: #ff0033;
+  }
+}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--ig-border);border-radius:9999px}
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+body.overflow-hidden{
+  overflow:hidden !important;
+}
+.modal-scroll-body{
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#support-qr-box img,#support-qr-box canvas{display:block;margin:0 auto;border-radius:4px}
+.sort-dropdown { animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+#btn-scroll-top { transition: all 0.3s ease; opacity: 0; pointer-events: none; transform: translateY(20px); }
+#btn-scroll-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+/* === БЕГУЩАЯ СТРОКА В ПОИСКЕ === */
+.search-wrapper { position: relative; width: 100%; height: 36px; display: flex; align-items: center; background: var(--ig-field); border-radius: 8px; overflow: hidden; }
+.marquee-container { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; overflow: hidden; pointer-events: none; padding-left: 36px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
+.marquee-content { white-space: nowrap; color: var(--marquee-color, var(--ig-text2)); font-size: var(--marquee-font-size, 13px); animation: marqueeScroll var(--marquee-speed, 20s) linear infinite; }
+.marquee-pause-hover:hover .marquee-content { animation-play-state: paused; }
+@keyframes marqueeScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.ig-input:focus ~ .marquee-container, .ig-input:not(:placeholder-shown) ~ .marquee-container { opacity: 0; }
+.search-wrapper .ig-input { background: transparent; position: relative; z-index: 2; }
+.ig-input:focus::placeholder { color: var(--ig-text2); opacity: .5; }
+/* === APP-STYLE: СТРЕЛКА НАЗАД + ПОЛНЫЙ ЭКРАН НА ТЕЛЕФОНЕ === */
+.app-back{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ig-text);font-size:18px;flex-shrink:0;}
+.app-back:active{background:var(--ig-hover);}
+#modal-admin-panel #admin-tab-content{min-width:0;}
+#modal-admin-panel #admin-tab-content .ig-card{min-width:0;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between{flex-wrap:wrap;}
+#modal-admin-panel #admin-tab-content button{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+#modal-admin-panel h3{min-width:0;overflow-wrap:anywhere;}
+#modal-auth .ig-sheet > .text-center{padding-top:2.5rem;}
+#modal-shamcash-qr .ig-sheet > .w-14{margin-top:2.5rem;}
+#modal-report-ad .ig-sheet > .text-center{padding-top:2.5rem;}
+#modal-edit-profile .ig-sheet > h3{min-height:40px;padding-left:3.25rem;display:flex;align-items:center;overflow-wrap:anywhere;}
+#modal-profile #profile-content{padding-top:2.5rem;}
+.ig-sheet h2,.ig-sheet h3{min-width:0;overflow-wrap:anywhere;}
+.ig-sheet button{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+#app-mobile-header,#app-mobile-nav{position:fixed !important;z-index:1000 !important;}
+.ig-modal-blur{z-index:500;}
+@media (max-width:640px){
+.ig-modal-blur:not(#modal-confirm):not(#modal-share){padding:0 !important;align-items:stretch !important;justify-content:stretch !important;}
+.ig-modal-blur:not(#modal-confirm):not(#modal-share)>.ig-sheet{width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;}
+#modal-admin-panel #admin-tab-content{padding:.75rem;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :first-child{flex:1 1 100%;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :last-child{flex:1 1 100%;justify-content:flex-start;}
+#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between button{flex-shrink:1;}
+}
+@media (max-width:1023px){
+#app-mobile-header{top:0;right:0;left:0;}
+#app-mobile-nav{right:0;bottom:0;left:0;}
+.ig-modal-blur{top:52px !important;right:0;bottom:52px !important;left:0;}
+.ig-modal-blur > .ig-sheet{max-height:100% !important;}
+}
+/* === ПОДДЕРЖКА АРАБСКОГО ЯЗЫКА (RTL) === */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] .marquee-content { animation-direction: reverse !important; }
+[dir="rtl"] aside { left: auto !important; right: 0 !important; border-left-width: 1px; border-right-width: 0; }
+[dir="rtl"] main { margin-left: 0 !important; margin-right: 0 !important; }
+@media (min-width: 1024px) {
+  [dir="rtl"] main { margin-right: 73px !important; margin-left: 0 !important; }
+}
+@media (min-width: 1280px) {
+  [dir="rtl"] main { margin-right: 244px !important; margin-left: 0 !important; }
+}
+[dir="rtl"] #app-mobile-header, [dir="rtl"] #app-mobile-nav { left: 0 !important; right: 0 !important; width: 100% !important; }
+[dir="rtl"] .search-wrapper input { padding-left: 0.75rem !important; padding-right: 2.25rem !important; }
+[dir="rtl"] #sb-search-ic, [dir="rtl"] #hd-search-ic { left: auto !important; right: 0.75rem !important; }
+[dir="rtl"] .app-back i, [dir="rtl"] .fa-arrow-left, [dir="rtl"] .fa-chevron-left { transform: scaleX(-1); }
+#modal-ad-detail .ig-sheet { display: flex; flex-direction: column; overflow: hidden; width: 100%; max-height: 88vh; }
+#modal-ad-detail #detail-content { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; width: 100%; overflow: hidden; }
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+body { top: 0px !important; }
+.skiptranslate iframe { display: none !important; }
+</style>
+</head>
+<body class="min-h-full flex flex-col">
+<!-- Прелоадер для плавной загрузки -->
+<div id="app-preloader" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center transition-opacity duration-500">
+  <div class="flex flex-col items-center space-y-4">
+    <i class="fa-solid fa-gear text-5xl text-blue-500 animate-spin"></i>
+    <span class="ig-logo text-2xl text-white tracking-widest">Avito Sham</span>
+  </div>
+</div>
+<h1 class="sr-only hidden">Avito Sham — Доска объявлений Сирии</h1>
+
+<!-- ============ DESKTOP SIDEBAR ============ -->
+<aside class="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 w-[73px] xl:w-[244px] px-3 pt-8 pb-4 border-r b-ig bg-card">
+<div onclick="handleNavClick('home')" class="cursor-pointer px-3 pb-8">
+<span class="ig-logo hidden xl:block text-[28px] t1 leading-none">Avito Sham</span>
+<span class="xl:hidden flex w-7 h-7 rounded-lg text-white items-center justify-center font-bold text-sm story-ring">A</span>
+</div>
+<div class="relative hidden xl:block mb-3">
+<div class="search-wrapper flex items-center">
+<button type="button" onclick="byId('search-input-desktop').focus()" class="w-9 h-9 shrink-0 flex items-center justify-center t2 hover:text-blue-500 z-20 cursor-pointer transition-colors" title="Найти">
+  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+</button>
+<input type="text" id="search-input-desktop" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-1 pr-3 text-sm relative z-10">
+<div class="marquee-container" style="padding-left: 36px;"><div class="marquee-content" id="desktop-marquee-text">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через AvitoCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+</div>
+<div id="search-suggestions-desktop" class="hidden absolute top-10 inset-x-0 bg-card border b-ig rounded-xl shadow-2xl z-50 overflow-hidden"></div>
+</div>
+
+<nav class="space-y-1 flex-1">
+<button id="sb-home" onclick="handleNavClick('home')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Главная</span></button>
+<button id="sb-shops" onclick="handleNavClick('shops')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Магазины</span></button>
+<button id="sb-create" onclick="handleNavClick('create')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Создать</span></button>
+<button id="sb-fav" onclick="handleNavClick('favorites')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Избранное</span></button>
+<button id="sb-profile" onclick="handleNavClick('profile')" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1"><span class="nav-ic"></span><span class="hidden xl:block text-[15px] nav-label">Профиль</span></button>
+</nav>
+<div class="space-y-1 pt-3 border-t b-ig">
+<a href="#" onclick="contactSupport(); return false;" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
+  <span class="w-6 h-6 rounded-md text-white flex items-center justify-center bg-[#25D366]"><i class="fa-brands fa-whatsapp text-[13px]"></i></span>
+  <span id="sb-support-label" class="hidden xl:block text-[15px] font-semibold">Техподдержка</span>
+</a>
+<button onclick="openSupportModal()" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
+<span class="w-6 h-6 rounded-md text-white flex items-center justify-center" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar text-[11px]"></i></span>
+<span id="sb-donate-label" class="hidden xl:block text-[15px] font-semibold">Поддержать проект</span>
+</button>
+<button onclick="toggleTheme()" class="w-full flex items-center gap-4 p-3 rounded-lg ig-hover t1">
+<span class="nav-ic" id="sb-theme-ic"></span>
+<span id="sb-theme-label" class="hidden xl:block text-[15px]">Сменить тему</span>
+</button>
+<div class="flex items-center gap-2 p-2 border-t b-ig">
+  <button type="button" onclick="changeLanguage('ru')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">RU</button>
+  <button type="button" onclick="changeLanguage('ar')" class="flex-1 py-1.5 rounded-lg text-xs font-bold border b-ig ig-hover t1">عربي</button>
+</div>
+</div>
+</aside>
+
+<!-- ============ MOBILE HEADER ============ -->
+<header id="app-mobile-header" class="lg:hidden fixed inset-x-0 top-0 z-40 h-[52px] border-b b-ig bg-card flex items-center gap-3 px-4">
+<span class="ig-logo text-[26px] t1 leading-none whitespace-nowrap cursor-pointer" onclick="handleNavClick('home')">Avito Sham</span>
+<div class="relative flex-1">
+<div class="search-wrapper flex items-center">
+<button type="button" onclick="byId('search-input').focus()" class="w-9 h-9 shrink-0 flex items-center justify-center t2 hover:text-blue-500 z-20 cursor-pointer transition-colors" title="Найти">
+  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+</button>
+<input type="text" id="search-input" onkeyup="onSearchInput(this)" placeholder="Поиск" class="ig-input w-full h-9 pl-1 pr-3 text-sm relative z-10">
+<div class="marquee-container" style="padding-left: 36px;"><div class="marquee-content" id="mobile-marquee-text">🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через AvitoCash • 🔍 Ищите товары, услуги и недвижимость по всей стране</div></div>
+</div>
+<div id="search-suggestions-mobile" class="hidden absolute top-10 inset-x-0 bg-card border b-ig rounded-xl shadow-2xl z-50 overflow-hidden"></div>
+</div>
+
+<div class="flex items-center gap-1 shrink-0">
+  <button type="button" onclick="changeLanguage('ru')" class="px-2 py-1 rounded-lg text-xs font-bold border b-ig bg-field t1">RU</button>
+  <button type="button" onclick="changeLanguage('ar')" class="px-2 py-1 rounded-lg text-xs font-bold border b-ig bg-field t1">عربي</button>
+</div>
+<button onclick="openSupportModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0" style="background:linear-gradient(45deg,#10b981,#14b8a6)" title="Поддержать проект"><i class="fa-solid fa-hand-holding-dollar text-sm"></i></button>
+</header>
+
+<!-- ============ MAIN FEED ============ -->
+<main class="lg:ml-[73px] xl:ml-[244px] pt-[68px] lg:pt-6 pb-6 px-3 sm:px-8">
+<div class="max-w-[1600px] mx-auto space-y-4">
+<div class="ig-card rounded-xl px-2 py-3">
+<div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
+</div>
+<div class="ig-card rounded-xl flex flex-col gap-2 px-3 py-2">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<button onclick="toggleRegionMenu()" class="flex items-center gap-2 text-sm font-semibold t1 hover:opacity-70 transition-opacity">
+<i class="fa-solid fa-location-dot text-xs t2"></i>
+<span id="current-region-label">Все регионы</span>
+<i class="fa-solid fa-chevron-down text-[10px] t2"></i>
+</button>
+<button id="near-me-btn" onclick="openRadiusMenu()" title="Поиск рядом по GPS" class="px-2.5 py-1 rounded-lg border b-ig bg-field text-xs font-semibold t1 flex items-center gap-1 transition active:scale-95">
+<i class="fa-solid fa-location-crosshairs text-blue-500 text-[11px]"></i>
+<span id="near-me-label">Рядом</span>
+</button>
+</div>
+<button onclick="toggleSortMenu()" class="text-xs font-bold t1 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-field transition-colors">
+<i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
+</button>
+</div>
+<div id="radius-menu-overlay" class="hidden fixed inset-0 z-[1050] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2 sort-dropdown mb-[56px] sm:mb-0" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="flex items-center justify-between pb-2 border-b b-ig">
+  <span class="text-sm font-bold t1"><i class="fa-solid fa-location-crosshairs text-blue-500"></i> Поиск в радиусе</span>
+  <button onclick="closeRadiusMenu()" class="text-xs t2 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+  <button id="radius-btn-5" onclick="setRadiusFilter(5)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 5 км</span> <i id="radius-check-5" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-15" onclick="setRadiusFilter(15)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 15 км</span> <i id="radius-check-15" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-30" onclick="setRadiusFilter(30)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 30 км</span> <i id="radius-check-30" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+  <button id="radius-btn-50" onclick="setRadiusFilter(50)" class="p-3 rounded-xl ig-card hover:bg-field text-xs font-bold t1 flex items-center justify-between transition active:scale-95"><span>📍 50 км</span> <i id="radius-check-50" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+</div>
+<button id="radius-btn-off" onclick="setRadiusFilter(0)" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 flex items-center justify-center gap-2 transition active:scale-95 mt-2">
+  <i class="fa-solid fa-circle-xmark"></i> Отключить поиск рядом
+</button>
+</div>
+</div>
+<select id="region-filter" onchange="resetPageAndRender(); updateRegionLabel()" class="hidden">
+<option value="ALL">Все регионы (Сирия)</option>
+<option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option>
+<option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option>
+<option value="HOMS">Хомс</option><option value="HAMA">Хама</option>
+<option value="LAT">Латакия</option><option value="TAR">Тартус</option>
+<option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option>
+<option value="HAS">Хасеке</option><option value="DAR">Дараа</option>
+<option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+</select>
+</div>
+<div id="region-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRegionMenu()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown max-h-[80vh] overflow-y-auto modal-scroll-body" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig mb-2">Выберите регион</div>
+<div id="region-list-container" class="space-y-1"></div>
+<button onclick="closeRegionMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-2">Закрыть</button>
+</div>
+</div>
+<div id="sort-menu-overlay" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeSortMenu()">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1 sort-dropdown" onclick="event.stopPropagation()">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Сортировать по:</div>
+<button onclick="applySort('newest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🕒 Сначала новые</span> <i id="sort-check-newest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('cheapest')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💰 Сначала дешевые</span> <i id="sort-check-cheapest" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('expensive')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>💎 Сначала дорогие</span> <i id="sort-check-expensive" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="applySort('popular')" class="w-full text-left p-3 rounded-xl ig-hover t1 text-sm font-semibold flex justify-between"><span>🔥 Популярные</span> <i id="sort-check-popular" class="fa-solid fa-check text-blue-500 hidden"></i></button>
+<button onclick="closeSortMenu()" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Закрыть</button>
+</div>
+</div>
+<div id="cloud-sync-status" class="hidden items-center justify-center gap-2 text-xs t2 py-1.5">
+<i class="fa-solid fa-arrows-rotate animate-spin"></i><span id="cloud-sync-label">Синхронизация с облаком…</span>
+</div>
+<div id="listings-view" class="space-y-4"></div>
+<div id="pagination-container" class="flex items-center justify-center gap-2 flex-wrap pt-2 pb-4 text-sm"></div>
+</div>
+</main>
+<button id="btn-scroll-top" aria-label="Наверх" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-20 right-4 z-40 w-10 h-10 rounded-full bg-field border b-ig t1 shadow-lg flex items-center justify-center hover:bg-ig-hover">
+<i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<!-- ============ MOBILE BOTTOM NAV ============ -->
+<nav id="app-mobile-nav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 h-[52px] border-t b-ig bg-card flex items-center justify-around">
+<button id="bn-home" aria-label="Главная" onclick="handleNavClick('home')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-shops" aria-label="Магазины" onclick="handleNavClick('shops')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-create" aria-label="Создать объявление" onclick="handleNavClick('create')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-fav" aria-label="Избранное" onclick="handleNavClick('favorites')" class="ig-btn-nav p-2"><span class="nav-ic"></span></button>
+<button id="bn-profile" aria-label="Профиль" onclick="handleNavClick('profile')" class="p-2"><span id="bn-profile-ic" class="w-7 h-7 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center"></span></button>
+</nav>
+
+<!-- ============ SUPPORT / AVITOCASH QR ============ -->
+<div id="modal-shamcash-qr" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 text-center space-y-4 relative shadow-2xl">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-shamcash-qr')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<div class="w-14 h-14 mx-auto rounded-2xl text-white flex items-center justify-center text-2xl" style="background:linear-gradient(45deg,#10b981,#14b8a6)"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+<div>
+<h2 id="support-modal-title" class="text-base font-bold t1">Поддержка сервера — ShamCash</h2>
+<p id="support-modal-desc" class="text-xs t2 mt-1 leading-relaxed">Отсканируйте QR-код в приложении ShamCash, чтобы оплатить и поддержать платформу Авито Шам.</p>
+</div>
+<div class="bg-white p-3 rounded-2xl w-fit mx-auto shadow-inner">
+<div id="support-qr-box" class="w-[208px] h-[208px] flex items-center justify-center"><i class="fa-solid fa-qrcode text-5xl text-slate-300"></i></div>
+</div>
+<div class="space-y-1">
+<div id="support-modal-idlabel" class="text-[10px] t2 uppercase tracking-wide font-semibold">ID счёта ShamCash</div>
+<div class="font-mono text-xs t1 bg-field border b-ig rounded-lg px-3 py-2 break-all select-all">3adfe36abcbe52f1a4b008cd324082fb</div>
+</div>
+<button type="button" id="support-modal-copybtn" onclick="copyShamCashCode()" class="ig-btn w-full py-2.5 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-copy"></i> <span>Скопировать ID</span></button>
+</div>
+</div>
+
+<!-- ============ SHARE SHEET ============ -->
+<div id="modal-share" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-end sm:items-center justify-center">
+<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1">
+<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
+<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
+<div id="share-preview-state" class="text-center text-xs t2 py-2 hidden">Генерируем красивую карточку...</div>
+<div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1"><img id="share-preview-image" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Предпросмотр карточки объявления Авито Шам" class="w-full max-h-[52vh] object-contain rounded-lg">
+</div>
+<button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Поделиться карточкой</button>
+<button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
+<button onclick="shareImageToApp('telegram')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram (с картинкой)</button>
+<button onclick="shareImageToApp('viber')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber (с картинкой)</button>
+<a id="share-wa-link" href="#" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
+<button onclick="downloadShareCard()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> Скачать красивую карточку</button>
+<button onclick="copyShareLink()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> Скопировать ссылку</button>
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
+</div>
+</div>
+
+<!-- ============ FULLSCREEN IMAGE VIEWER ============ -->
+<div id="modal-image-viewer" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-0 select-none" ontouchstart="handleTouchSwipeStart(event)" ontouchend="handleTouchSwipeEnd(event, handleFullscreenSwipe)">
+  <button type="button" aria-label="Закрыть" onclick="closeModal('modal-image-viewer')" class="absolute top-4 left-4 z-30 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 text-lg transition"><i class="fa-solid fa-arrow-left"></i></button>
+  
+  <!-- Клик по левой половине экрана: предыдущее фото -->
+  <div onclick="handleFullscreenNav(-1)" class="absolute inset-y-0 left-0 w-1/2 z-10 cursor-w-resize flex items-center justify-start pl-4 group">
+    <button type="button" class="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/30 text-white hidden sm:flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-chevron-left text-lg"></i></button>
+  </div>
+
+  <img id="fullscreen-viewer-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Просмотр фотографии" class="relative max-w-full max-h-[92vh] object-contain rounded-lg pointer-events-none z-0">
+
+  <!-- Клик по правой половине экрана: следующее фото -->
+  <div onclick="handleFullscreenNav(1)" class="absolute inset-y-0 right-0 w-1/2 z-10 cursor-e-resize flex items-center justify-end pr-4 group">
+    <button type="button" class="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/30 text-white hidden sm:flex items-center justify-center transition shadow-lg"><i class="fa-solid fa-chevron-right text-lg"></i></button>
+  </div>
+</div>
+
+<!-- ============ RULES MODAL ============ -->
+<div id="modal-rules-agreement" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-lg rounded-2xl p-6 space-y-4 max-h-[90vh] flex flex-col">
+<div class="text-center space-y-2 shrink-0">
+<div class="w-14 h-14 rounded-2xl bg-field t1 flex items-center justify-center text-2xl mx-auto border b-ig"><i class="fa-solid fa-scale-balanced"></i></div>
+<h2 class="text-base font-bold t1">Правила и рекомендации Авито Шам</h2>
+<p class="text-xs font-semibold" style="color:#d69e2e">اتَّقُوا اللَّهَ فِي التِّجَارَةِ • Бойтесь Аллаха в торговле!</p>
+</div>
+<div class="text-xs space-y-3 t1 overflow-y-auto pr-1 leading-relaxed bg-field p-4 rounded-xl border b-ig modal-scroll-body">
+<div class="border-b b-ig pb-3 mb-2 space-y-2">
+<div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-lightbulb" style="color:#d69e2e"></i><span>3 главных совета для удачных сделок:</span></div>
+<p>1. <strong>Честное описание и изъяны:</strong> Указывайте все дефекты. Прозрачность ускоряет продажу.</p>
+<p>2. <strong>Безопасные места встреч:</strong> Встречайтесь в людных и известных публичных местах.</p>
+<p>3. <strong>Используйте Очередь:</strong> Нажимайте «Занять очередь» для бронирования товаров.</p>
+</div>
+<p>1. <strong>Честность и прозрачность:</strong> Категорически запрещено скрывать дефекты, изъяны или повреждения товара.</p>
+<p>2. <strong>Запрещенные товары:</strong> Строго запрещена публикация любого оружия, боеприпасов, нелегальных веществ и контрабанды.</p>
+<p>3. <strong>Гражданский ресурс:</strong> Платформа является исключительно гражданской торговой площадкой.</p>
+</div>
+<button type="button" id="rules-accept-btn" onclick="acceptLaunchRules()" class="ig-btn w-full py-3 text-sm shrink-0">Я подтверждаю и принимаю условия</button>
+</div>
+</div>
+
+<!-- ============ AUTH MODAL ============ -->
+<div id="modal-auth" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-auth')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<div class="text-center pt-2"><span class="ig-logo text-[34px] t1">Avito Sham</span></div>
+<div class="flex border-b b-ig text-sm">
+<button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold border-b-2" style="border-color:#0095f6;color:#0095f6">Вход</button>
+<button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold border-b-2 border-transparent t2">Регистрация</button>
+</div>
+<form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-sm">
+<div id="login-fields" class="space-y-2.5">
+  <input type="text" id="auth-username" placeholder="Логин или WhatsApp *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+  <input type="password" id="auth-password" placeholder="Пароль *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+</div>
+<div id="reg-fields" class="hidden space-y-2.5">
+  <input type="text" id="auth-whatsapp" placeholder="Номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+  
+  <div class="space-y-1">
+    <div class="text-[10px] t2 font-bold px-1 uppercase">Выберите ваш пол *</div>
+    <div class="flex items-center justify-around p-2.5 rounded-xl bg-field border b-ig text-xs">
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="auth-gender" value="MALE" class="accent-[#0095f6] w-4 h-4 cursor-pointer">
+        <span>Мужчина</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="auth-gender" value="FEMALE" class="accent-[#ec4899] w-4 h-4 cursor-pointer">
+        <span class="text-pink-400">Женщина 🌸</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="auth-otp-block" class="hidden space-y-1.5 pt-1">
+    <input type="text" id="auth-otp-code" placeholder="Введите 6-значный код *" maxlength="6" class="ig-input w-full px-3.5 py-2.5 text-xs text-center font-bold tracking-widest text-emerald-400">
+    <div class="flex items-center justify-between text-[10px] px-1">
+      <span class="t2">Код отправлен в WhatsApp</span>
+      <span id="auth-otp-timer" class="font-mono font-bold text-amber-500">01:00</span>
+    </div>
+    <button type="button" id="auth-resend-btn" onclick="resendWhatsAppCode()" class="hidden w-full text-[11px] text-blue-400 font-bold hover:underline text-center pt-1">Отправить код повторно</button>
+  </div>
+  </div>
+<label class="flex items-center gap-2 text-xs t2 cursor-pointer"><input type="checkbox" id="auth-remember-me" checked class="accent-[#0095f6]"><span>Запомнить мой вход на этом устройстве</span></label>
+<button type="submit" id="auth-submit-btn" class="ig-btn w-full py-2.5 text-sm">Войти</button>
+</form>
+</div>
+</div>
+
+<!-- ============ CREATE AD MODAL ============ -->
+<div id="modal-create-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-sm font-bold t1">Подача объявления</h3>
+</div>
+<form onsubmit="handleCreateAdSubmit(event)" class="p-4 overflow-y-auto space-y-3 text-sm flex-1 modal-scroll-body">
+<div id="draft-restore-banner" class="hidden p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between">
+<span class="text-xs text-blue-400 font-semibold"><i class="fa-solid fa-rotate-left"></i> Найден черновик</span>
+<div class="flex gap-2">
+<button type="button" onclick="restoreDraft()" class="text-xs text-blue-400 font-bold underline">Восстановить</button>
+<button type="button" onclick="clearDraft(true)" class="text-xs t2 hover:text-white">Удалить</button>
+</div>
+</div>
+
+<!-- 1. Загрузка фото -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label id="ad-photos-label" class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
+<span id="create-photo-count-badge" class="text-[11px] font-mono font-bold t2">0 / 6</span>
+</div>
+<label for="ad-image-file" class="w-full py-2.5 px-4 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold t1">
+<i class="fa-solid fa-camera text-[#0095f6] text-sm"></i>
+<span id="ad-upload-btn-text">Выбрать фотографии</span>
+</label>
+<input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" style="display:none !important">
+<div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
+</div>
+
+<!-- 2. Заголовок -->
+<input type="text" id="ad-title" required placeholder="Заголовок объявления *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field">
+
+<!-- 3. Категория -->
+<select id="ad-category" required class="ig-input w-full px-3 py-2.5 text-xs draft-field"><option value="" disabled selected>Категория *</option></select>
+
+<!-- 4. Цена и быстрые чекбоксы -->
+<div class="space-y-2">
+  <div id="price-container" class="flex gap-2">
+    <input type="number" id="ad-price" step="0.01" required placeholder="Цена, $ *" class="ig-input flex-1 px-3.5 py-2.5 text-xs font-bold draft-field">
+    <div class="px-3 py-2 rounded-lg bg-field border b-ig text-xs font-bold t2 flex items-center">USD ($)</div>
+  </div>
+  <div class="flex items-center justify-between gap-2 text-xs flex-wrap">
+    <div class="flex items-center gap-3">
+      <label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-free" onchange="toggleFreePriceField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#10b981"><span style="color:#10b981" class="font-semibold">Даром 🎁</span></label>
+<label class="flex items-center gap-1.5 cursor-pointer t2"><input type="checkbox" id="ad-is-negotiable" onchange="toggleNegotiableField(this.checked)" class="w-4 h-4 rounded draft-field" style="accent-color:#3b82f6"><span style="color:#3b82f6" class="font-semibold">Договорная 🤝</span></label>    </div>
+    <div id="women-only-container" class="hidden items-center">
+      <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="ad-is-women-only" class="w-4 h-4 rounded draft-field" style="accent-color:#ec4899"><span style="color:#ec4899" class="font-semibold">Для женщин 🌸</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Описание -->
+<textarea id="ad-desc" required rows="2" placeholder="Описание и возможные изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs draft-field"></textarea>
+
+<!-- Поле внешней ссылки -->
+<div class="relative">
+  <input type="url" id="ad-external-link" placeholder="Ссылка (Telegram-канал, WhatsApp, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs draft-field pl-8">
+  <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
+</div>
+
+<!-- 6. Автоматическая локация -->
+<div class="p-2.5 rounded-xl bg-field border b-ig flex items-center justify-between text-xs">
+  <div class="flex items-center gap-2 t1">
+    <i class="fa-solid fa-location-crosshairs text-blue-500"></i>
+    <span id="ad-location-summary">Локация: Дамаск (по GPS)</span>
+  </div>
+  <span class="text-[10px] text-emerald-500 font-semibold">Автоматически</span>
+</div>
+
+<!-- 7. Блок автора для неавторизованного гостя -->
+<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
+  <div class="text-xs font-bold flex items-center gap-1.5" style="color:#0095f6">
+    <i class="fa-brands fa-whatsapp text-sm"></i> Контакт для связи (профиль создастся автоматически):
+  </div>
+  <input type="text" id="guest-whatsapp" placeholder="Ваш номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+</div>
+
+<!-- Информация для авторизованного -->
+<div id="user-logged-badge" class="hidden p-2.5 rounded-xl bg-field border b-ig flex items-center gap-2 text-xs font-semibold t1">
+  <i class="fa-solid fa-circle-check text-emerald-500"></i>
+  <span>Публикация от имени: <b id="user-logged-name" class="text-blue-500"></b></span>
+</div>
+
+<!-- 8. Спойлер «Расширенный режим» -->
+<div class="pt-1">
+  <button type="button" onclick="toggleAdvancedCreateFields()" class="w-full py-2 px-3 rounded-xl border b-ig bg-field hover:bg-ig text-xs font-bold t2 flex items-center justify-between">
+    <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-purple-400"></i> Расширенные настройки</span>
+    <i id="advanced-toggle-icon" class="fa-solid fa-chevron-down text-xs transition-transform"></i>
+  </button>
+</div>
+
+<!-- Скрытый блок расширенных настроек -->
+<div id="create-ad-advanced-fields" class="hidden space-y-3 pt-2 border-t b-ig">
+  <div class="grid grid-cols-2 gap-2">
+    <div>
+      <label class="text-[10px] t2 block mb-1">Регион вручную</label>
+      <select id="ad-region" onchange="handleRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2 text-xs draft-field">
+        <option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[10px] t2 block mb-1">Точный город/район</label>
+      <input type="text" id="ad-city" placeholder="Город/район" class="ig-input w-full px-3 py-2 text-xs draft-field">
+    </div>
+  </div>
+
+  <div>
+    <label class="text-[10px] t2 block mb-1">Валюта</label>
+    <select id="ad-currency" class="ig-input w-full px-3 py-2 text-xs draft-field">
+      <option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option>
+    </select>
+  </div>
+
+  <div id="ad-onbehalf-container" class="hidden">
+    <label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> От имени пользователя (Админ)</label>
+    <select id="ad-post-onbehalf" class="ig-input w-full px-3 py-2 text-xs"></select>
+  </div>
+
+  <div id="ad-store-cat-container" class="hidden">
+    <label class="block text-xs font-bold mb-1" style="color:#9333ea"><i class="fa-solid fa-tags"></i> Категория магазина</label>
+    <select id="ad-store-category" class="ig-input w-full px-3 py-2 text-xs"></select>
+  </div>
+
+  <div>
+    <label class="block text-xs t2 mb-1">Уточнить точку на карте (необязательно)</label>
+    <div id="create-map" class="h-32 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
+    <input type="hidden" id="ad-lat" value="33.5138"><input type="hidden" id="ad-lng" value="36.2765">
+  </div>
+</div>
+
+<div class="sticky bottom-0 bg-card pt-2 pb-1">
+<button type="submit" id="create-ad-submit-btn" class="ig-btn w-full py-3 text-sm font-bold shadow-lg">Опубликовать объявление</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- ============ EDIT AD MODAL ============ -->
+<div id="modal-edit-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-edit-ad')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-sm font-bold t1">Редактирование объявления</h3>
+</div>
+<form onsubmit="handleEditAdSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
+<input type="hidden" id="edit-ad-id">
+<div id="edit-ad-owner-container" class="hidden">
+<label class="block text-xs font-bold mb-1" style="color:#0095f6"><i class="fa-solid fa-user-shield"></i> Привязать к аккаунту (владелец)</label>
+<select id="edit-ad-seller-username" class="ig-input w-full px-3 py-2.5 text-xs"></select>
+</div>
+<input type="text" id="edit-ad-title" required placeholder="Заголовок *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<div class="grid grid-cols-2 gap-3">
+<select id="edit-ad-category" required class="ig-input w-full px-3 py-2.5 text-xs"><option value="" disabled selected>Категория *</option></select>
+<select id="edit-ad-region" required class="ig-input w-full px-3 py-2.5 text-xs">
+<option value="" disabled selected>Регион *</option>
+<option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+</select>
+</div>
+<div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#f9a8d4;background:rgba(236,72,153,.08)">
+<div class="font-bold text-xs" style="color:#ec4899">Только для женщин 🌸</div>
+<input type="checkbox" id="edit-ad-is-women-only" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#ec4899">
+</div>
+<input type="text" id="edit-ad-city" required placeholder="Город *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
+<div class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div>
+<input type="checkbox" id="edit-ad-is-free" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#10b981">
+</div>
+<div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
+<div class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div>
+<input type="checkbox" id="edit-ad-is-negotiable" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
+</div>
+<div class="grid grid-cols-2 gap-3">
+<input type="number" id="edit-ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+<select id="edit-ad-currency" class="ig-input w-full px-3 py-2.5 text-xs"><option value="USD">USD ($)</option><option value="SYP">SYP (ل.س)</option><option value="TRY">TRY (₺)</option></select>
+</div>
+<div class="p-3 rounded-xl border space-y-2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.06)">
+  <div class="flex items-center justify-between text-xs font-bold" style="color:#f97316">
+    <span><i class="fa-solid fa-percent"></i> Сделать скидку на товар</span>
+    <input type="checkbox" id="edit-ad-has-discount" onchange="byId('discount-fields-wrap').classList.toggle('hidden', !this.checked)" class="w-4 h-4 cursor-pointer" style="accent-color:#f97316">
+  </div>
+  <div id="discount-fields-wrap" class="hidden grid grid-cols-2 gap-2 pt-1">
+    <div>
+      <label class="text-[10px] t2">Старая цена (зачеркнутая)</label>
+      <input type="number" id="edit-ad-old-price" step="0.01" placeholder="Напр. 50" class="ig-input w-full px-2.5 py-1.5 text-xs mt-0.5">
+    </div>
+    <div>
+      <label class="text-[10px] t2">Срок действия скидки</label>
+      <select id="edit-ad-discount-duration" class="ig-input w-full px-2 py-1.5 text-xs mt-0.5">
+        <option value="forever">Бессрочно</option>
+        <option value="24h">24 часа</option>
+        <option value="3d">3 дня</option>
+        <option value="7d">7 дней</option>
+      </select>
+    </div>
+  </div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1">
+<label id="edit-photos-label" class="text-xs font-bold t1">Фотографии товара (до 6 шт.) *</label>
+<span id="edit-photo-count-badge" class="text-[11px] font-mono font-bold t2">0 / 6</span>
+</div>
+<label for="edit-image-file" class="w-full py-2.5 px-4 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center gap-2 cursor-pointer transition text-xs font-semibold t1">
+<i class="fa-solid fa-camera text-blue-500"></i>
+<span id="edit-upload-btn-text">Выбрать фотографии</span>
+</label>
+<input type="file" id="edit-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'edit')" class="hidden">
+<div id="edit-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
+</div>
+<div class="relative">
+  <input type="url" id="edit-ad-external-link" placeholder="Ссылка (Telegram, WhatsApp, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs pl-8">
+  <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
+</div>
+<textarea id="edit-ad-desc" required rows="3" placeholder="Описание и изъяны *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
+<div class="sticky bottom-0 bg-card pt-2 pb-1">
+<button type="submit" id="edit-ad-submit-btn" class="w-full py-3 rounded-lg text-white text-sm font-bold shadow-lg" style="background:#d97706">Сохранить изменения</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- ============ AD DETAIL MODAL ============ -->
+<div id="modal-ad-detail" class="fixed inset-0 z-30 lg:z-50 ig-modal-blur hidden flex items-center justify-center p-0 sm:p-4 lg:p-6">
+<div class="ig-sheet w-full max-w-5xl rounded-none sm:rounded-2xl overflow-hidden h-full sm:h-[88vh] max-h-full sm:max-h-[88vh] flex flex-col relative bg-card">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-ad-detail')" class="absolute top-3 left-3 z-30 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"><i class="fa-solid fa-arrow-left"></i></button>
+<div id="detail-content" class="w-full h-full overflow-hidden flex flex-col"></div>
+</div>
+</div>
+
+<!-- ============ PROFILE MODAL ============ -->
+<div id="modal-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-2xl rounded-2xl p-6 relative max-h-[92vh] overflow-y-auto modal-scroll-body">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<div id="profile-content" class="space-y-4"></div>
+</div>
+</div>
+
+<!-- ============ EDIT PROFILE MODAL ============ -->
+<div id="modal-edit-profile" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-3 text-sm max-h-[92vh] overflow-y-auto modal-scroll-body">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-edit-profile')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="font-bold text-sm t1">Редактирование анкеты</h3>
+<form onsubmit="handleSaveProfile(event)" class="space-y-2.5">
+<input type="hidden" id="edit-profile-username">
+<input type="text" id="edit-profile-login" required placeholder="Логин *" class="ig-input w-full px-3 py-2 text-xs">
+<input type="password" id="edit-profile-password" placeholder="Новый пароль (необязательно)" class="ig-input w-full px-3 py-2 text-xs">
+<input type="text" id="edit-profile-kunya" required placeholder="Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
+<input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
+<input type="hidden" id="edit-profile-avatar-data">
+<div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью аватара" class="w-full h-full object-cover"></div>
+<input type="text" id="edit-profile-whatsapp" required placeholder="WhatsApp *" class="ig-input w-full px-3 py-2 text-xs">
+<div id="edit-profile-admin-fields" class="space-y-2.5 pt-2 border-t b-ig hidden">
+<select id="edit-profile-gender" class="ig-input w-full px-3 py-2 text-xs"><option value="MALE">Мужчина</option><option value="FEMALE">Женщина 🌸</option></select>
+<select id="edit-profile-role" class="ig-input w-full px-3 py-2 text-xs"><option value="USER">Пользователь</option><option value="ADMIN">Модератор / Администратор</option><option value="SUPERUSER">Главный Администратор</option></select>
+</div>
+<button type="submit" class="ig-btn w-full py-2.5 text-sm">Сохранить изменения</button>
+</form>
+</div>
+</div>
+
+<!-- ============ CREATE / EDIT SHOP MODAL ============ -->
+<div id="modal-create-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-create-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 id="shop-modal-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i><span>Открытие нового магазина</span></h3>
+</div>
+<form onsubmit="handleCreateShopSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
+<div id="shop-admin-target-banner" class="hidden p-3 rounded-xl border text-xs font-bold" style="border-color:#93c5fd;background:rgba(59,130,246,.1);color:#60a5fa"><i class="fa-solid fa-user-shield"></i> <span id="shop-admin-target-text"></span></div>
+<input type="text" id="shop-name" required placeholder="Название магазина *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="text" id="shop-slogan" required placeholder="Слоган / краткое описание *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<div class="grid grid-cols-2 gap-3">
+<select id="shop-category" required class="ig-input w-full px-3 py-2.5 text-xs">
+<option value="" disabled selected>Категория магазина *</option>
+<option value="electronics">Электроника и Техника</option><option value="transport">Авто & Запчасти</option><option value="realestate">Недвижимость</option><option value="home">Товары для дома</option><option value="services">Услуги & Сервис</option><option value="other">Разное</option>
+</select>
+<select id="shop-region" required onchange="handleShopRegionMapUpdate(this.value)" class="ig-input w-full px-3 py-2.5 text-xs">
+<option value="" disabled selected>Регион *</option>
+<option value="DAM">Дамаск</option><option value="RIF_DAM">Риф-Дамаск</option><option value="ALEP">Алеппо</option><option value="IDL">Идлиб</option><option value="HOMS">Хомс</option><option value="HAMA">Хама</option><option value="LAT">Латакия</option><option value="TAR">Тартус</option><option value="RAQ">Ракка</option><option value="DEIR">Дейр-эз-Зор</option><option value="HAS">Хасеке</option><option value="DAR">Дараа</option><option value="SUW">Эс-Сувейда</option><option value="QUN">Эль-Кунейтра</option>
+</select>
+</div>
+<input type="text" id="shop-address" required placeholder="Точный физический адрес *" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="text" id="shop-hours" placeholder="Часы работы (напр. Сб–Чт 09:00–20:00)" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<div>
+<label class="block text-xs t2 mb-1">Расположение на карте * (клик — установить метку)</label>
+<div id="shop-create-map" class="h-36 rounded-xl border b-ig overflow-hidden relative z-0 bg-field"></div>
+<input type="hidden" id="shop-lat" value="33.5138"><input type="hidden" id="shop-lng" value="36.2765">
+</div>
+<input type="text" id="shop-whatsapp" required placeholder="WhatsApp магазина * (+963…)" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<textarea id="shop-desc" required rows="3" placeholder="Подробная информация о магазине *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
+<div>
+<label class="block text-xs t2 mb-1">Логотип магазина (1:1) *</label>
+<input type="file" id="shop-logo-file" accept="image/*" onchange="processShopLogoUpload(event)" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#9333ea] file:text-white cursor-pointer">
+<input type="hidden" id="shop-logo-data">
+<div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью логотипа" class="w-full h-full object-cover"></div>
+</div>
+<div class="p-3 rounded-xl text-xs leading-relaxed border b-ig bg-field t2"><i class="fa-solid fa-circle-info"></i> Магазин будет отправлен на проверку администратору.</div>
+<button type="submit" id="shop-submit-btn" class="w-full py-3 rounded-lg text-white text-sm font-semibold" style="background:#9333ea">Сохранить магазин</button>
+</form>
+</div>
+</div>
+
+<!-- ============ SHOP SHOWCASE MODAL ============ -->
+<div id="modal-shop-showcase" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-3xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col relative">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-shop-showcase')" class="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+<div id="shop-showcase-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
+</div>
+</div>
+
+<!-- ============ MY SHOP MODAL ============ -->
+<div id="modal-my-shop" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-2xl rounded-2xl overflow-hidden max-h-[92vh] flex flex-col">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-my-shop')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-store" style="color:#9333ea"></i> Панель управления магазином</h3>
+</div>
+<div id="my-shop-content" class="p-5 overflow-y-auto space-y-4 text-sm flex-1 modal-scroll-body"></div>
+</div>
+</div>
+
+<!-- ============ COMBO / PROMO BUILDER ============ -->
+<div id="modal-combo-builder" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-lg rounded-2xl overflow-hidden max-h-[92vh] flex flex-col" style="border-color:rgba(249,115,22,.4)">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-combo-builder')" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 id="combo-builder-title" class="text-sm font-bold t1 flex items-center gap-2"><i class="fa-solid fa-fire" style="color:#f97316"></i> Новая акция (комбо-набор)</h3>
+</div>
+<form onsubmit="handleComboSubmit(event)" class="p-5 overflow-y-auto space-y-3.5 text-sm flex-1 modal-scroll-body">
+<input type="hidden" id="combo-edit-id"><input type="hidden" id="combo-target-uid">
+<div class="p-3 rounded-xl border text-[11px] leading-relaxed t2" style="border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08)">
+<i class="fa-solid fa-circle-info"></i> Выберите несколько товаров и назначьте одну специальную цену комплекта. Цены товаров по отдельности не меняются, а комбо появится в ленте отдельным объявлением.
+</div>
+<input type="text" id="combo-title" placeholder="Название акции (напр.: Комплект солнечной энергетики)" class="ig-input w-full px-3.5 py-2.5 text-xs">
+<input type="number" id="combo-price" step="0.01" min="0" required oninput="updateComboSummary()" placeholder="Специальная цена комплекта, $ *" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+<div>
+<label class="text-xs font-bold t1 block mb-1">Товары в комплекте (минимум 2) *</label>
+<div id="combo-items-list" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+</div>
+<div id="combo-summary" class="p-3 rounded-xl bg-field border b-ig text-[11px] t2"></div>
+<button type="submit" class="w-full py-3 rounded-lg text-white text-sm font-bold" style="background:linear-gradient(45deg,#f97316,#ef4444)"><i class="fa-solid fa-fire"></i> Сохранить акцию</button>
+</form>
+</div>
+</div>
+
+<!-- ============ QUICK DISCOUNT MODAL ============ -->
+<div id="modal-quick-discount" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-5 relative space-y-4">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-quick-discount')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-6 flex items-center gap-2"><i class="fa-solid fa-tags" style="color:#ef4444"></i> Установить скидку / Акцию</h3>
+<input type="hidden" id="quick-discount-ad-id">
+<div>
+  <div id="quick-discount-ad-title" class="text-xs font-bold t1 truncate"></div>
+  <div id="quick-discount-ad-current" class="text-[11px] t2"></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+  <label class="text-[10px] t2 font-semibold">Новая цена ($)<input type="number" id="quick-discount-price" step="0.01" min="0.01" class="ig-input w-full px-3 py-2 text-xs mt-1 font-bold"></label>
+  <label class="text-[10px] t2 font-semibold">Срок действия
+    <select id="quick-discount-duration" class="ig-input w-full px-2 py-2 text-xs mt-1">
+      <option value="forever">Бессрочно</option>
+      <option value="24h">24 часа (Скидка дня)</option>
+      <option value="3d">3 дня (Выходные)</option>
+      <option value="7d">7 дней (Неделя скидок)</option>
+    </select>
+  </label>
+</div>
+<div class="grid grid-cols-3 gap-1.5 pt-1">
+  <button type="button" onclick="applyPresetDiscountPercent(10)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-10%</button>
+  <button type="button" onclick="applyPresetDiscountPercent(20)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-20%</button>
+  <button type="button" onclick="applyPresetDiscountPercent(30)" class="py-1.5 rounded-lg border b-ig bg-field text-[10px] font-bold t1 hover:bg-ig">-30%</button>
+</div>
+<button type="button" onclick="saveQuickDiscountSubmit()" class="w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-md" style="background:linear-gradient(45deg,#ef4444,#dc2626)">Применить скидку</button>
+<button type="button" onclick="removeQuickDiscountSubmit()" class="w-full py-1.5 text-xs font-semibold t2 hover:text-white border-t b-ig">Отменить скидку (вернуть старую цену)</button>
+</div>
+</div>
+
+<!-- ============ CONFIRM MODAL ============ -->
+<div id="modal-confirm" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 text-center space-y-4">
+<h3 id="confirm-modal-title" class="text-sm font-bold t1">Подтверждение действия</h3>
+<p id="confirm-modal-msg" class="text-xs t2 leading-relaxed"></p>
+<div class="flex gap-2">
+<button id="confirm-btn-cancel" class="flex-1 py-2.5 ig-btn-outline text-sm">Отмена</button>
+<button id="confirm-btn-ok" class="flex-1 py-2.5 ig-btn-danger text-sm">Да, выполнить</button>
+</div>
+</div>
+</div>
+
+<!-- ============ REPORT MODAL ============ -->
+<div id="modal-report-ad" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-report-ad')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<div class="text-center space-y-2">
+<div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-xl mx-auto"><i class="fa-solid fa-flag"></i></div>
+<h3 class="text-base font-bold t1">Пожаловаться на объявление</h3>
+<p class="text-xs t2">Мы проверим это объявление на нарушение правил.</p>
+</div>
+<form onsubmit="submitReport(event)" class="space-y-3">
+<input type="hidden" id="report-ad-id">
+<select id="report-reason" required class="ig-input w-full px-3 py-2.5 text-sm">
+<option value="" disabled selected>Выберите причину...</option>
+<option value="scam">Мошенничество / Скам</option>
+<option value="fake">Фейковый товар / Фото</option>
+<option value="prohibited">Запрещенный товар</option>
+<option value="spam">Спам / Дубликат</option>
+<option value="other">Другое</option>
+</select>
+<textarea id="report-comment" rows="2" placeholder="Комментарий (необязательно)" class="ig-input w-full px-3 py-2.5 text-sm"></textarea>
+<button type="submit" class="ig-btn-danger w-full py-2.5 text-sm font-bold">Отправить жалобу</button>
+</form>
+</div>
+</div>
+
+<!-- ============ ADMIN PANEL ============ -->
+<div id="modal-admin-panel" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-stretch justify-stretch p-0">
+<div class="ig-sheet w-full h-full max-w-none max-h-none rounded-none overflow-hidden flex flex-col">
+<div class="px-3 py-2.5 border-b b-ig flex items-center gap-2 shrink-0">
+<button onclick="adminPanelBack()" class="app-back" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<div class="flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color:#0095f6"></i><h3 class="text-sm font-bold t1">Панель управления Главного Администратора</h3></div>
+</div>
+<div class="border-b b-ig overflow-x-auto no-scrollbar text-sm shrink-0 flex gap-4 px-4" role="tablist" aria-label="Разделы админ-панели">
+<button id="atab-overview" onclick="switchAdminTab('overview')" class="py-3 whitespace-nowrap">Обзор</button>
+<button id="atab-users" onclick="switchAdminTab('users')" class="py-3 whitespace-nowrap">Пользователи</button>
+<button id="atab-ads" onclick="switchAdminTab('ads')" class="py-3 whitespace-nowrap">Объявления</button>
+<button id="atab-finance" onclick="switchAdminTab('finance')" class="py-3 whitespace-nowrap">Финансы / Тарифы</button>
+<button id="atab-payments" onclick="switchAdminTab('payments')" class="py-3 whitespace-nowrap">Верификация платежей</button>
+<button id="atab-tx" onclick="switchAdminTab('tx')" class="py-3 whitespace-nowrap">Транзакции</button>
+</div>
+<div id="admin-tab-content" class="p-5 overflow-y-auto flex-1 space-y-4 text-sm modal-scroll-body"></div>
+</div>
+</div>
+
+<!-- ============ AVITOCASH TOP-UP ============ -->
+<div id="modal-avitocash-topup" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-avitocash-topup')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8">Пополнение баланса AvitoCash через ShamCash</h3>
+<label class="block text-xs font-semibold t2">Сумма пополнения (в AvitoCash / USD)
+<input id="topup-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10">
+</label>
+<button onclick="createTopupRequest()" class="ig-btn w-full py-2.5 text-sm font-bold">Сгенерировать код пополнения</button>
+<div id="topup-result" class="hidden space-y-3 text-center">
+<div id="topup-qr" class="bg-white p-3 rounded-xl w-fit mx-auto"></div>
+<div class="text-xs t2">Переведите средства через платежную систему <b>ShamCash</b> на счет проекта, затем отправьте этот код администратору в WhatsApp для зачисления <b>AvitoCash</b> на ваш баланс.</div>
+<div id="topup-code" class="font-mono font-bold text-lg t1 bg-field border b-ig rounded-lg px-3 py-2 break-all select-all"></div>
+<a href="https://wa.me/447887280238" target="_blank" class="ig-btn w-full py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp"></i> Отправить код админу</a>
+</div>
+</div>
+</div>
+
+<!-- ============ GIFT CODE GENERATOR ============ -->
+<div id="modal-gift-code" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-md rounded-2xl p-5 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-gift-code')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-gift" style="color:#f59e0b"></i> Подарочный код AvitoCash</h3>
+<div id="gift-generator-form" class="space-y-3">
+<label class="block text-xs font-semibold t2">Сумма подарка, AC<input id="gift-amount" type="number" min="1" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 10"></label>
+<label class="block text-xs font-semibold t2">Срок действия, дней<input id="gift-days" type="number" min="0" step="1" value="30" class="ig-input w-full px-3 py-2.5 mt-1"></label>
+<button onclick="generateGiftCode()" class="ig-btn w-full py-2.5 text-sm font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Создать подарочный код</button>
+</div>
+<div id="gift-result" class="hidden space-y-3 text-center">
+<canvas id="gift-card-canvas" width="900" height="1200" class="w-full rounded-xl"></canvas>
+<div id="gift-qr" class="bg-white p-3 rounded-xl w-fit mx-auto"></div>
+<div id="gift-code-label" class="font-mono font-bold text-xl t1 bg-field border b-ig rounded-lg px-3 py-2 break-all select-all"></div>
+<div id="gift-details" class="text-xs t2"></div>
+<div class="grid grid-cols-2 gap-2"><button onclick="downloadGiftCard()" class="ig-btn py-2.5 text-xs font-bold"><i class="fa-solid fa-download"></i> Скачать</button><button onclick="shareGiftCard()" class="ig-btn-outline py-2.5 text-xs font-bold"><i class="fa-solid fa-share-nodes"></i> Поделиться</button></div>
+<button onclick="resetGiftGenerator()" class="w-full py-2.5 text-xs t2 border-t b-ig">Создать ещё код</button>
+</div>
+</div>
+</div>
+
+<!-- ============ GIFT CODE REDEEM ============ -->
+<div id="modal-redeem-gift" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-redeem-gift')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-gift" style="color:#f59e0b"></i> Активировать подарок</h3>
+<p class="text-xs t2">Введите подарочный код, чтобы получить AvitoCash на свой баланс.</p>
+<input id="redeem-gift-code" type="text" class="ig-input w-full px-3 py-2.5 font-mono uppercase" placeholder="GIFT-XXXXX-XXXXX" autocomplete="off">
+<button onclick="redeemGiftCode()" class="ig-btn w-full py-2.5 text-sm font-bold"><i class="fa-solid fa-check"></i> Активировать код</button>
+</div>
+</div>
+
+<!-- ============ AVITOCASH TRANSFER ============ -->
+<div id="modal-transfer-shamcash" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+<div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4">
+<button type="button" aria-label="Закрыть" onclick="closeModal('modal-transfer-shamcash')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+<h3 class="text-base font-bold t1 pt-8"><i class="fa-solid fa-arrow-right-arrow-left" style="color:#10b981"></i> Оплатить AvitoCash</h3>
+<p class="text-xs t2">Перевод другому пользователю будет сохранен в журнале транзакций.</p>
+<label class="block text-xs font-semibold t2">Получатель<select id="transfer-recipient" class="ig-input w-full px-3 py-2.5 mt-1"></select></label>
+<label class="block text-xs font-semibold t2">Сумма, AC<input id="transfer-amount" type="number" min="0.01" step="0.01" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, 5"></label>
+<label class="block text-xs font-semibold t2">Назначение платежа<input id="transfer-note" type="text" maxlength="120" class="ig-input w-full px-3 py-2.5 mt-1" placeholder="Например, оплата товара"></label>
+<button onclick="transferShamCash()" class="ig-btn w-full py-2.5 text-sm font-bold"><i class="fa-solid fa-paper-plane"></i> Отправить оплату</button>
+</div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="w-full mt-auto py-0 -mt-5 lg:mt-auto text-center t2">
+<div class="max-w-[240px] sm:max-w-[470px] mx-auto flex flex-col items-center justify-center text-[10px] leading-tight pb-2">
+<div><span id="ft-dev-label">Разработчик:</span> <a href="https://wa.me/447887280238" target="_blank" class="font-bold t1 hover:underline inline-flex items-center gap-1"><span>Салим Нашхо</span> <i class="fa-brands fa-whatsapp text-xs" style="color:#10b981"></i></a></div>
+<div id="ft-copy-label" class="font-mono text-[9px] opacity-75 mt-0.5">Авито Шам © 2026</div>
+</div>
+</footer>
+
+<div id="toast-container" class="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4" style="z-index:3000"></div>
+<canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
+
+<!-- ============ SCRIPTS CONNECTED IN CORRECT ORDER ============ -->
+<script src="config.js" defer></script>
+<script src="api.js" defer></script>
+<script src="ui.components.js" defer></script>
+<script src="handlers.js" defer></script>
+<script>
+  function hideAppPreloader() {
+    const preloader = document.getElementById('app-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.pointerEvents = 'none';
+      setTimeout(() => {
+        try { preloader.remove(); } catch(e) {}
+      }, 400);
+    }
+  }
+
+  // Гарантированное снятие прелоадера
+  window.addEventListener('DOMContentLoaded', hideAppPreloader);
+  window.addEventListener('load', hideAppPreloader);
+  setTimeout(hideAppPreloader, 1200);
+</script>
+
+<!-- Плавающая кнопка связи с техподдержкой в WhatsApp (слева, мобильный режим) -->
+<a 
+  href="#" onclick="contactSupport(); return false;"
+  class="md:hidden fixed bottom-20 left-4 z-40 w-12 h-12 rounded-full text-white shadow-2xl flex items-center justify-center text-2xl active:scale-95 transition-transform"
+  style="background:#25D366; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.45);"
+  title="Написать в техподдержку WhatsApp"
+  aria-label="Написать в техподдержку WhatsApp">
+  <i class="fa-brands fa-whatsapp"></i>
+</a>
+<!-- Полноэкранный оверлей при потере интернета -->
+<div id="offline-screen" class="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center p-6 text-center select-none">
+  <div class="relative flex items-center justify-center mb-6">
+    <!-- Пульсирующий круг -->
+    <div class="absolute w-28 h-28 rounded-full bg-red-500/20 animate-ping"></div>
+    <div class="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center text-red-500 text-3xl shadow-[0_0_25px_rgba(239,68,68,0.3)]">
+      <i class="fa-solid fa-wifi-slash animate-pulse"></i>
+    </div>
+  </div>
+  
+  <h2 class="text-xl font-bold text-white mb-2 tracking-wide">Нет подключения к сети</h2>
+  <p class="text-xs text-neutral-400 max-w-xs leading-relaxed mb-6">
+    Проверьте интернет-соединение. Приложение автоматически продолжит работу, как только связь восстановится.
+  </p>
+
+  <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs font-mono">
+    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+    Ожидание сети...
+  </div>
+</div>
+
+<script>
+  if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Offline SW ready'))
+        .catch((err) => console.warn('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>

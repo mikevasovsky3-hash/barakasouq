@@ -49,6 +49,7 @@ function saveCachedAds() {
       oldPrice: a.oldPrice,
       currency: a.currency,
       desc: (a.desc || '').slice(0, 300),
+      link: a.link || '',
       images: Array.isArray(a.images) ? a.images.slice(0, 6) : [a.image],
       image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
       lat: a.lat,
@@ -272,7 +273,7 @@ async function saveAdToSupabase(ad) {
     id: ad.id, title: ad.title, category: ad.category, store_category: ad.storeCategory || '',
     region: ad.region, city: ad.city, is_women_only: !!ad.isWomenOnly, is_free: !!ad.isFree,
     is_negotiable: !!ad.isNegotiable, price: Number(ad.price || 0), old_price: ad.oldPrice !== null && ad.oldPrice !== undefined ? Number(ad.oldPrice) : null, currency: ad.currency,
-    description: ad.desc || '', images: ad.images || [], image: ad.image || '',
+    description: ad.desc || '', link: ad.link || '', images: ad.images || [], image: ad.image || '',
     lat: Number(ad.lat || 33.5138), lng: Number(ad.lng || 36.2765),
     seller_username: ad.sellerUsername || '', seller_uid: ad.sellerUid || '',
     seller_kunya: ad.sellerKunya || '', seller_whatsapp: ad.sellerWhatsapp || '',
@@ -328,8 +329,9 @@ function mapSupabaseAdToLocal(a) {
     isNegotiable: !!a.is_negotiable,
     price: Number(a.price || 0),
     oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
-    currency: a.currency,
+currency: a.currency,
     desc: a.description || a.desc || '',
+    link: a.link || '',
     images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
     image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
     lat: Number(a.lat) || 33.5138,
@@ -470,7 +472,7 @@ async function initSupabaseSync() {
 
     const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes] = await Promise.all([
       supabaseClient.from('users').select('uid, username, kunya, gender, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, frozen, is_archived, favorites, shop'),
-      supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
+      supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, description, link, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
       isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] })

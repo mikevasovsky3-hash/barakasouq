@@ -600,8 +600,8 @@ function deleteCategoryWithConfirm(catId) {
 }
 
 function loadDraftCheck() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { byId('draft-restore-banner').classList.remove('hidden'); } } catch(e){} }
-function saveDraft() { try { const data = { title: byId('ad-title').value, category: byId('ad-category').value, region: byId('ad-region').value, city: byId('ad-city').value, price: byId('ad-price').value, currency: byId('ad-currency').value, desc: byId('ad-desc').value }; localStorage.setItem('bs_ad_draft', JSON.stringify(data)); } catch(e){} }
-function restoreDraft() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { const data = JSON.parse(d); byId('ad-title').value = data.title || ''; byId('ad-category').value = data.category || 'electronics'; byId('ad-region').value = data.region || 'DAM'; byId('ad-city').value = data.city || ''; byId('ad-price').value = data.price || ''; byId('ad-currency').value = data.currency || 'USD'; byId('ad-desc').value = data.desc || ''; byId('draft-restore-banner').classList.add('hidden'); } } catch(e){} }
+function saveDraft() { try { const data = { title: byId('ad-title').value, category: byId('ad-category').value, region: byId('ad-region').value, city: byId('ad-city').value, price: byId('ad-price').value, currency: byId('ad-currency').value, desc: byId('ad-desc').value, link: byId('ad-external-link') ? byId('ad-external-link').value : '' }; localStorage.setItem('bs_ad_draft', JSON.stringify(data)); } catch(e){} }
+function restoreDraft() { try { const d = localStorage.getItem('bs_ad_draft'); if (d) { const data = JSON.parse(d); byId('ad-title').value = data.title || ''; byId('ad-category').value = data.category || 'electronics'; byId('ad-region').value = data.region || 'DAM'; byId('ad-city').value = data.city || ''; byId('ad-price').value = data.price || ''; byId('ad-currency').value = data.currency || 'USD'; byId('ad-desc').value = data.desc || ''; if (byId('ad-external-link')) byId('ad-external-link').value = data.link || ''; byId('draft-restore-banner').classList.add('hidden'); } } catch(e){} }
 function clearDraft(silent) { localStorage.removeItem('bs_ad_draft'); byId('draft-restore-banner').classList.add('hidden'); if(!silent) showToast('Черновик удален', 'info'); }
 
 function toggleAdvancedCreateFields() {
@@ -685,13 +685,18 @@ openModal('modal-create-ad');
     el.addEventListener('change', saveDraft); 
   });
 
-  const titleField = byId('ad-title');
+const titleField = byId('ad-title');
   if (titleField) {
     titleField.oninput = () => {
       saveDraft();
       detectCategoryByTitle(titleField.value);
     };
   }
+
+  const isFreeInit = byId('ad-is-free')?.checked;
+  const isNegInit = byId('ad-is-negotiable')?.checked;
+  if (isFreeInit) toggleFreePriceField(true);
+  else if (isNegInit) toggleNegotiableField(true);
 }
 
 function detectCategoryByTitle(text) {
@@ -785,22 +790,32 @@ function handleRegionMapUpdate(code) {
 
 function toggleFreePriceField(isFree) { 
   const p = byId('ad-price'), c = byId('price-container'); 
+  const isNeg = byId('ad-is-negotiable')?.checked;
   if (isFree) { 
+    if (byId('ad-is-negotiable')) byId('ad-is-negotiable').checked = false;
     if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } 
     if (c) c.style.opacity = '.4'; 
-  } else { 
+  } else if (!isNeg) { 
     if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } 
     if (c) c.style.opacity = '1'; 
   } 
 }
 
 function toggleNegotiableField(isNeg) { 
-  const p = byId('ad-price'); 
+  const p = byId('ad-price'), c = byId('price-container'); 
+  const isFree = byId('ad-is-free')?.checked;
   if (!p) return; 
   if (isNeg) { 
-    p.value = '0'; p.removeAttribute('required'); p.disabled = true; 
-  } else if (!byId('ad-is-free') || !byId('ad-is-free').checked) { 
-    p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; 
+    if (byId('ad-is-free')) byId('ad-is-free').checked = false;
+    p.value = '0'; 
+    p.removeAttribute('required'); 
+    p.disabled = true; 
+    if (c) c.style.opacity = '.4';
+  } else if (!isFree) { 
+    p.value = ''; 
+    p.setAttribute('required', 'required'); 
+    p.disabled = false; 
+    if (c) c.style.opacity = '1';
   } 
 }
 
@@ -896,6 +911,11 @@ postingUser = regRes.user;
   const regionVal = byId('ad-region')?.value || 'DAM';
   const cityVal = byId('ad-city')?.value.trim() || REGION_NAMES[regionVal] || 'Дамаск';
 
+let extLink = (byId('ad-external-link')?.value || '').trim();
+  if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {
+    extLink = 'https://' + extLink;
+  }
+
   const adId = 'AD-' + Date.now().toString(36).toUpperCase();
   const newAd = {
     id: adId,
@@ -910,6 +930,7 @@ postingUser = regRes.user;
     price,
     currency: byId('ad-currency')?.value || 'USD',
     desc: byId('ad-desc').value.trim(),
+    link: extLink,
     images: imgs,
     image: imgs[0],
     lat: parseFloat(byId('ad-lat')?.value || 33.5138),
@@ -939,6 +960,7 @@ postingUser = regRes.user;
       price: newAd.price,
       currency: newAd.currency,
       description: newAd.desc,
+      link: newAd.link,
       images: newAd.images,
       image: newAd.image,
       lat: newAd.lat,
@@ -953,7 +975,7 @@ postingUser = regRes.user;
       likes: [],
       views: 0
     });
-
+	
     if (insertErr) {
       showToast('Ошибка сохранения в базе: ' + insertErr.message, 'error');
       return;
@@ -1019,7 +1041,8 @@ const ownerContainer = byId('edit-ad-owner-container');
   byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable;
   byId('edit-ad-price').value = ad.price || 0;
   byId('edit-ad-currency').value = ad.currency || 'USD';
-  byId('edit-ad-desc').value = ad.desc || '';
+byId('edit-ad-desc').value = ad.desc || '';
+  if (byId('edit-ad-external-link')) byId('edit-ad-external-link').value = ad.link || '';
   
   const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
   byId('edit-ad-has-discount').checked = hasDisc;
@@ -1045,8 +1068,12 @@ async function handleEditAdSubmit(e) {
   const imgs = [...pendingEditImages];
   if (!imgs.length) imgs.push(PLACEHOLDER_IMG);
 
-  const isDisc = byId('edit-ad-has-discount')?.checked;
+const isDisc = byId('edit-ad-has-discount')?.checked;
   const oldPriceVal = isDisc ? parseFloat(byId('edit-ad-old-price').value || 0) : null;
+  let extEditLink = (byId('edit-ad-external-link')?.value || '').trim();
+  if (extEditLink && !extEditLink.startsWith('http://') && !extEditLink.startsWith('https://')) {
+    extEditLink = 'https://' + extEditLink;
+  }
 
   const updatedData = {
     id: adId,
@@ -1062,6 +1089,7 @@ async function handleEditAdSubmit(e) {
     oldPrice: oldPriceVal,
     currency: byId('edit-ad-currency').value,
     desc: byId('edit-ad-desc').value.trim(),
+    link: extEditLink,
     images: imgs,
     image: imgs[0],
     sellerUsername: targetUser.username,
@@ -1087,6 +1115,7 @@ async function handleEditAdSubmit(e) {
       old_price: updatedData.oldPrice,
       currency: updatedData.currency,
       description: updatedData.desc,
+      link: updatedData.link,
       images: updatedData.images,
       image: updatedData.image,
       seller_username: updatedData.sellerUsername,
@@ -1094,7 +1123,7 @@ async function handleEditAdSubmit(e) {
       seller_kunya: updatedData.sellerKunya,
       seller_whatsapp: updatedData.sellerWhatsapp
     };
-
+	
     supabaseClient.from('ads').update(dbPayload).eq('id', adId).then().catch(err => console.warn('Supabase background sync:', err));
   }
 
