@@ -693,11 +693,11 @@ body { top: 0px !important; }
 <input type="text" id="edit-ad-city" required placeholder="Город *" class="ig-input w-full px-3.5 py-2.5 text-xs">
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#6ee7b7;background:rgba(16,185,129,.08)">
 <div class="font-bold text-xs" style="color:#10b981">Отдать даром (Бесплатно) 🎁</div>
-<input type="checkbox" id="edit-ad-is-free" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#10b981">
+<input type="checkbox" id="edit-ad-is-free" onchange="toggleEditFreePriceField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#10b981">
 </div>
 <div class="flex items-center justify-between p-3 rounded-xl border" style="border-color:#93c5fd;background:rgba(59,130,246,.08)">
 <div class="font-bold text-xs" style="color:#3b82f6">Цена договорная 🤝</div>
-<input type="checkbox" id="edit-ad-is-negotiable" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
+<input type="checkbox" id="edit-ad-is-negotiable" onchange="toggleEditNegotiableField(this.checked)" class="w-5 h-5 rounded cursor-pointer" style="accent-color:#3b82f6">
 </div>
 <div class="grid grid-cols-2 gap-3">
 <input type="number" id="edit-ad-price" step="0.01" required placeholder="Цена *" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">

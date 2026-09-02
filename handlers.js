@@ -793,10 +793,10 @@ function toggleFreePriceField(isFree) {
   const isNeg = byId('ad-is-negotiable')?.checked;
   if (isFree) { 
     if (byId('ad-is-negotiable')) byId('ad-is-negotiable').checked = false;
-    if (p) { p.value = '0'; p.removeAttribute('required'); p.disabled = true; } 
+    if (p) { p.value = '0'; p.required = false; p.readOnly = true; } 
     if (c) c.style.opacity = '.4'; 
   } else if (!isNeg) { 
-    if (p) { p.value = ''; p.setAttribute('required', 'required'); p.disabled = false; } 
+    if (p) { p.value = ''; p.required = true; p.readOnly = false; } 
     if (c) c.style.opacity = '1'; 
   } 
 }
@@ -808,15 +808,49 @@ function toggleNegotiableField(isNeg) {
   if (isNeg) { 
     if (byId('ad-is-free')) byId('ad-is-free').checked = false;
     p.value = '0'; 
-    p.removeAttribute('required'); 
-    p.disabled = true; 
+    p.required = false; 
+    p.readOnly = true; 
     if (c) c.style.opacity = '.4';
   } else if (!isFree) { 
     p.value = ''; 
-    p.setAttribute('required', 'required'); 
-    p.disabled = false; 
+    p.required = true; 
+    p.readOnly = false; 
     if (c) c.style.opacity = '1';
   } 
+}
+
+function toggleEditFreePriceField(isFree) {
+  const p = byId('edit-ad-price');
+  const isNeg = byId('edit-ad-is-negotiable')?.checked;
+  if (!p) return;
+  if (isFree) {
+    if (byId('edit-ad-is-negotiable')) byId('edit-ad-is-negotiable').checked = false;
+    p.value = '0';
+    p.required = false;
+    p.readOnly = true;
+    p.style.opacity = '.4';
+  } else if (!isNeg) {
+    p.required = true;
+    p.readOnly = false;
+    p.style.opacity = '1';
+  }
+}
+
+function toggleEditNegotiableField(isNeg) {
+  const p = byId('edit-ad-price');
+  const isFree = byId('edit-ad-is-free')?.checked;
+  if (!p) return;
+  if (isNeg) {
+    if (byId('edit-ad-is-free')) byId('edit-ad-is-free').checked = false;
+    p.value = '0';
+    p.required = false;
+    p.readOnly = true;
+    p.style.opacity = '.4';
+  } else if (!isFree) {
+    p.required = true;
+    p.readOnly = false;
+    p.style.opacity = '1';
+  }
 }
 
 // Функция compressSingleImageFile централизованно используется из модуля api.js
@@ -1043,12 +1077,16 @@ const ownerContainer = byId('edit-ad-owner-container');
   byId('edit-ad-title').value = ad.title || '';
   byId('edit-ad-region').value = ad.region || 'DAM';
   byId('edit-ad-city').value = ad.city || '';
-  byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly;
+byId('edit-ad-is-women-only').checked = !!ad.isWomenOnly;
   byId('edit-ad-is-free').checked = !!ad.isFree;
   byId('edit-ad-is-negotiable').checked = !!ad.isNegotiable;
-  byId('edit-ad-price').value = ad.price || 0;
+  byId('edit-ad-price').value = (ad.isFree || ad.isNegotiable) ? '0' : (ad.price || 0);
   byId('edit-ad-currency').value = ad.currency || 'USD';
-byId('edit-ad-desc').value = ad.desc || '';
+
+  if (ad.isFree) toggleEditFreePriceField(true);
+  else if (ad.isNegotiable) toggleEditNegotiableField(true);
+  else toggleEditNegotiableField(false);
+  byId('edit-ad-desc').value = ad.desc || '';
   if (byId('edit-ad-external-link')) byId('edit-ad-external-link').value = ad.link || '';
   
   const hasDisc = !!(ad.oldPrice && ad.oldPrice > ad.price);
