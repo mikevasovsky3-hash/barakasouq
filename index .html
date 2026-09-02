@@ -539,7 +539,7 @@ body { top: 0px !important; }
 <i class="fa-solid fa-camera text-[#0095f6] text-sm"></i>
 <span id="ad-upload-btn-text">Выбрать фотографии</span>
 </label>
-<input type="file" id="ad-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'create')" style="display:none !important">
+<input type="file" id="ad-image-file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleMultiImageCompressUpload(event,'create')" style="display:none !important">
 <div id="create-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
 
@@ -570,6 +570,12 @@ body { top: 0px !important; }
 
 <!-- Поле внешней ссылки -->
 <div class="relative">
+  <input type="url" id="ad-external-link" placeholder="Ссылка (Telegram, WhatsApp-канал, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs draft-field pl-8">
+  <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
+</div>
+
+<!-- Поле внешней ссылки -->
+<div class="relative">
   <input type="url" id="ad-external-link" placeholder="Ссылка (Telegram-канал, WhatsApp, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs draft-field pl-8">
   <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
 </div>
@@ -584,11 +590,25 @@ body { top: 0px !important; }
 </div>
 
 <!-- 7. Блок автора для неавторизованного гостя -->
-<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
+<div id="guest-auth-block" class="p-3.5 rounded-xl border space-y-2.5" style="border-color:rgba(0,149,246,.35);background:rgba(0,149,246,.06)">
   <div class="text-xs font-bold flex items-center gap-1.5" style="color:#0095f6">
     <i class="fa-brands fa-whatsapp text-sm"></i> Контакт для связи (профиль создастся автоматически):
   </div>
   <input type="text" id="guest-whatsapp" placeholder="Ваш номер WhatsApp (+963…)*" class="ig-input w-full px-3.5 py-2.5 text-xs font-bold">
+  
+  <div class="space-y-1">
+    <div class="text-[10px] t2 font-bold px-1 uppercase">Выберите ваш пол *</div>
+    <div class="flex items-center justify-around p-2 rounded-xl bg-field border b-ig text-xs">
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="guest-gender" value="MALE" checked class="accent-[#0095f6] w-4 h-4 cursor-pointer">
+        <span>Мужчина</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer t1 font-semibold">
+        <input type="radio" name="guest-gender" value="FEMALE" class="accent-[#ec4899] w-4 h-4 cursor-pointer">
+        <span class="text-pink-400">Женщина 🌸</span>
+      </label>
+    </div>
+  </div>
 </div>
 
 <!-- Информация для авторизованного -->
@@ -719,10 +739,14 @@ body { top: 0px !important; }
 <i class="fa-solid fa-camera text-blue-500"></i>
 <span id="edit-upload-btn-text">Выбрать фотографии</span>
 </label>
-<input type="file" id="edit-image-file" multiple accept="image/*" onchange="handleMultiImageCompressUpload(event,'edit')" class="hidden">
+<input type="file" id="edit-image-file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleMultiImageCompressUpload(event,'edit')" class="hidden">
 <div id="edit-thumbnails-grid" class="grid grid-cols-6 gap-2 mt-2"></div>
 </div>
 <div class="relative">
+  <input type="url" id="edit-ad-external-link" placeholder="Ссылка (Telegram, WhatsApp, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs pl-8">
+  <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
+</div>
+<div class="relative mb-2">
   <input type="url" id="edit-ad-external-link" placeholder="Ссылка (Telegram, WhatsApp, сайт)..." class="ig-input w-full px-3.5 py-2.5 text-xs pl-8">
   <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-xs t2"></i>
 </div>
@@ -760,7 +784,7 @@ body { top: 0px !important; }
 <input type="text" id="edit-profile-login" required placeholder="Логин *" class="ig-input w-full px-3 py-2 text-xs">
 <input type="password" id="edit-profile-password" placeholder="Новый пароль (необязательно)" class="ig-input w-full px-3 py-2 text-xs">
 <input type="text" id="edit-profile-kunya" required placeholder="Имя / Кунья *" class="ig-input w-full px-3 py-2 text-xs">
-<input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="processAvatarUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
+<input type="file" id="edit-profile-avatar-file" accept="image/jpeg,image/png,image/webp" onchange="processAvatarUpload(event,'edit')" class="w-full text-xs t2 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0095f6] file:text-white cursor-pointer">
 <input type="hidden" id="edit-profile-avatar-data">
 <div id="edit-profile-avatar-preview-box" class="w-14 h-14 rounded-full overflow-hidden border b-ig hidden"><img id="edit-profile-avatar-preview-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью аватара" class="w-full h-full object-cover"></div>
 <input type="text" id="edit-profile-whatsapp" required placeholder="WhatsApp *" class="ig-input w-full px-3 py-2 text-xs">
@@ -805,7 +829,7 @@ body { top: 0px !important; }
 <textarea id="shop-desc" required rows="3" placeholder="Подробная информация о магазине *" class="ig-input w-full px-3.5 py-2.5 text-xs"></textarea>
 <div>
 <label class="block text-xs t2 mb-1">Логотип магазина (1:1) *</label>
-<input type="file" id="shop-logo-file" accept="image/*" onchange="processShopLogoUpload(event)" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#9333ea] file:text-white cursor-pointer">
+<input type="file" id="shop-logo-file" accept="image/jpeg,image/png,image/webp" onchange="processShopLogoUpload(event)" class="w-full text-xs t2 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#9333ea] file:text-white cursor-pointer">
 <input type="hidden" id="shop-logo-data">
 <div id="shop-logo-preview-box" class="hidden mt-2 w-16 h-16 rounded-full overflow-hidden border b-ig"><img id="shop-logo-preview-img" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью логотипа" class="w-full h-full object-cover"></div>
 </div>
@@ -1009,14 +1033,81 @@ body { top: 0px !important; }
 </div>
 
 <!-- ============ FOOTER ============ -->
-<footer class="w-full mt-auto py-0 -mt-5 lg:mt-auto text-center t2">
+<footer class="hidden lg:block w-full mt-auto py-0 -mt-5 lg:mt-auto text-center t2">
 <div class="max-w-[240px] sm:max-w-[470px] mx-auto flex flex-col items-center justify-center text-[10px] leading-tight pb-2">
 <div><span id="ft-dev-label">Разработчик:</span> <a href="https://wa.me/447887280238" target="_blank" class="font-bold t1 hover:underline inline-flex items-center gap-1"><span>Салим Нашхо</span> <i class="fa-brands fa-whatsapp text-xs" style="color:#10b981"></i></a></div>
+<div class="flex items-center justify-center gap-2 mt-1">
+  <button type="button" onclick="openModal('modal-faq-help')" class="text-[10px] font-semibold text-blue-500 hover:underline flex items-center gap-1">
+    <i class="fa-solid fa-circle-question"></i> <span id="ft-faq-label">Зачем нужны доступы и данные?</span>
+  </button>
+</div>
 <div id="ft-copy-label" class="font-mono text-[9px] opacity-75 mt-0.5">Авито Шам © 2026</div>
 </div>
 </footer>
 
+<!-- ============ FAQ / PERMISSIONS HELP MODAL ============ -->
+<div id="modal-faq-help" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+  <div class="ig-sheet w-full max-w-lg rounded-2xl p-5 relative space-y-4 max-h-[90vh] flex flex-col">
+    <button type="button" aria-label="Закрыть" onclick="closeModal('modal-faq-help')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+    
+    <div class="text-center pt-2 shrink-0">
+      <div class="w-12 h-12 rounded-2xl bg-field border b-ig flex items-center justify-center text-xl text-blue-500 mx-auto mb-2">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h3 id="faq-modal-title" class="text-base font-bold t1">Зачем нужны доступы и регистрация?</h3>
+      <p id="faq-modal-desc" class="text-xs t2 mt-0.5">Разъяснение о конфиденциальности, доступах и правилах платформы</p>
+    </div>
+
+    <div id="faq-modal-body" class="overflow-y-auto space-y-3 text-xs leading-relaxed t1 pr-1 modal-scroll-body flex-1 bg-field p-3.5 rounded-xl border b-ig">
+      <div class="p-2.5 rounded-lg bg-card border b-ig space-y-1">
+        <div class="font-bold flex items-center gap-2 text-blue-500">
+          <i class="fa-brands fa-whatsapp text-sm text-[#25D366]"></i>
+          <span>Зачем указывать номер WhatsApp?</span>
+        </div>
+        <p class="t2">Это основной канал прямой связи между покупателем и продавцом без посредников. Также по номеру подтверждается ваш аккаунт, чтобы никто чужой не мог редактировать или удалять ваши публикации.</p>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-card border b-ig space-y-1">
+        <div class="font-bold flex items-center gap-2 text-pink-400">
+          <i class="fa-solid fa-venus-mars text-sm"></i>
+          <span>Зачем указывать пол (Мужчина / Женщина 🌸)?</span>
+        </div>
+        <p class="t2">Из шариатских норм и соображений скромности на платформе есть закрытая категория «Для женщин». Объявления в ней (женская одежда, платья, косметика, услуги сестёр) открыты исключительно для женских профилей и гарантированно скрыты от мужчин.</p>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-card border b-ig space-y-1">
+        <div class="font-bold flex items-center gap-2 text-amber-500">
+          <i class="fa-solid fa-location-dot text-sm"></i>
+          <span>Зачем запрашивается геопозиция (GPS)?</span>
+        </div>
+        <p class="t2">1. Чтобы вам не приходилось вручную искать свой район и ставить метку на карте при подаче объявления.<br>2. Чтобы вы могли включить кнопку «Рядом» и мгновенно увидеть товары, которые продаются прямо в вашем районе или в радиусе 5–50 км.</p>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-card border b-ig space-y-1">
+        <div class="font-bold flex items-center gap-2 text-emerald-500">
+          <i class="fa-solid fa-images text-sm"></i>
+          <span>Зачем нужен доступ к галерее и камере?</span>
+        </div>
+        <p class="t2">Только для того, чтобы прикрепить до 6 реальных фотографий товара с возможными дефектами. Приложение не читает другие файлы на вашем устройстве.</p>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-card border b-ig space-y-1">
+        <div class="font-bold flex items-center gap-2 text-purple-400">
+          <i class="fa-solid fa-user-lock text-sm"></i>
+          <span>Зачем нужна авторизация?</span>
+        </div>
+        <p class="t2">Только автор объявления имеет право изменять цену, ставить скидку, снимать с продажи или удалять товар. Кроме того, авторизация нужна для ведения очереди покупок и использования кошелька AvitoCash.</p>
+      </div>
+    </div>
+
+    <button type="button" onclick="closeModal('modal-faq-help')" class="ig-btn w-full py-2.5 text-xs font-bold shrink-0">
+      Всё понятно
+    </button>
+  </div>
+</div>
+
 <div id="toast-container" class="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4" style="z-index:3000"></div>
+
 <canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
 <!-- ============ SCRIPTS CONNECTED IN CORRECT ORDER ============ -->

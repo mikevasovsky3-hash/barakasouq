@@ -1902,7 +1902,7 @@ function openProfileModal() {
             <div class="space-y-1 max-h-28 overflow-y-auto pr-1 modal-scroll-body">${renderMyReceipts()}</div>
         </div>
 
-        <!-- Кнопки управления аккаунтом -->
+<!-- Кнопки управления аккаунтом -->
         <div class="space-y-1.5 pt-1">
             ${isAdmin ? `<button onclick="openAdminPanel()" class="ig-btn w-full py-2 text-xs font-bold flex items-center justify-center gap-2"><i class="fa-solid fa-user-shield"></i> ${t('Панель Администратора')}</button>` : ''}
             <div class="flex gap-2">
@@ -1910,9 +1910,27 @@ function openProfileModal() {
                 <button onclick="logout()" class="ig-btn-danger px-3.5 py-2 text-xs font-semibold"><i class="fa-solid fa-right-from-bracket"></i> ${t('Выйти')}</button>
             </div>
         </div>
+
+        <!-- Инфо-блок разработчика и справка (для мобильных) -->
+        <div class="pt-3 border-t b-ig text-center space-y-1 text-xs t2">
+            <div>
+                <span>${t('Разработчик:')}</span> 
+                <a href="https://wa.me/447887280238" target="_blank" class="font-bold t1 hover:underline inline-flex items-center gap-1">
+                    <span>${currentLang === 'ar' ? 'سليم نشوق' : 'Салим Нашхо'}</span> 
+                    <i class="fa-brands fa-whatsapp text-xs" style="color:#10b981"></i>
+                </a>
+            </div>
+            <div>
+                <button type="button" onclick="openModal('modal-faq-help')" class="text-[11px] font-semibold text-blue-500 hover:underline inline-flex items-center gap-1">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>${t('Зачем нужны доступы и данные?')}</span>
+                </button>
+            </div>
+            <div class="font-mono text-[9px] opacity-75">Авито Шам © 2026</div>
+        </div>
     </div>`;
-    openModal('modal-profile'); 
-}
+    openModal('modal-profile');
+	}
 
 function setFeedLayout(layout) {
   localStorage.setItem('bs_feed_layout', layout);

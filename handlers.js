@@ -839,7 +839,14 @@ async function handleCreateAdSubmit(e) {
       showToast(waCheck.error, 'error');
       return;
     }
-    const cleanWa = waCheck.number;
+const cleanWa = waCheck.number;
+
+    const guestGenderRadio = document.querySelector('input[name="guest-gender"]:checked');
+    if (!guestGenderRadio) {
+      showToast(currentLang === 'ar' ? 'الرجاء تحديد الجنس (رجل / امرأة)' : 'Пожалуйста, укажите ваш пол!', 'warning');
+      return;
+    }
+    const guestGender = guestGenderRadio.value;
 
     // Если аккаунт с таким номером уже существует — привязываем к нему
     const existing = users.find(u => u.whatsapp && u.whatsapp.replace(/\D/g, '') === cleanWa.replace(/\D/g, ''));
@@ -862,7 +869,7 @@ async function handleCreateAdSubmit(e) {
         p_username: autoLogin,
         p_password_hash: passHash,
         p_kunya: 'Пользователь',
-        p_gender: 'MALE',
+        p_gender: guestGender,
         p_whatsapp: cleanWa,
         p_avatar: null
       });
@@ -872,11 +879,11 @@ async function handleCreateAdSubmit(e) {
         return;
       }
 
-postingUser = regRes.user;
+      postingUser = regRes.user;
       users.push(postingUser);
       saveUserSession(postingUser, true);
       showToast(`${t('Профиль создан! Логин:')} @${postingUser.username}`, 'success');
-	  }
+    }
   }
   
   const onbS = byId('ad-post-onbehalf');
@@ -910,6 +917,11 @@ postingUser = regRes.user;
 
   const regionVal = byId('ad-region')?.value || 'DAM';
   const cityVal = byId('ad-city')?.value.trim() || REGION_NAMES[regionVal] || 'Дамаск';
+
+let extLink = (byId('ad-external-link')?.value || '').trim();
+  if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {
+    extLink = 'https://' + extLink;
+  }
 
 let extLink = (byId('ad-external-link')?.value || '').trim();
   if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {

@@ -48,7 +48,7 @@ function saveCachedAds() {
       price: a.price,
       oldPrice: a.oldPrice,
       currency: a.currency,
-      desc: (a.desc || '').slice(0, 300),
+desc: (a.desc || '').slice(0, 300),
       link: a.link || '',
       images: Array.isArray(a.images) ? a.images.slice(0, 6) : [a.image],
       image: a.image || (Array.isArray(a.images) ? a.images[0] : null),
@@ -330,7 +330,7 @@ function mapSupabaseAdToLocal(a) {
     price: Number(a.price || 0),
     oldPrice: a.old_price !== null && a.old_price !== undefined ? Number(a.old_price) : null,
 currency: a.currency,
-    desc: a.description || a.desc || '',
+desc: a.description || a.desc || '',
     link: a.link || '',
     images: (Array.isArray(a.images) ? a.images : [a.image || '']).map(fixDirectImageUrl),
     image: fixDirectImageUrl(a.image || (Array.isArray(a.images) ? a.images[0] : null)),
@@ -1135,8 +1135,18 @@ const guestTitle = byId('guest-auth-block')?.querySelector('.text-xs');
   if (rulesTitle) rulesTitle.innerText = t('Правила и рекомендации Авито Шам');
   const rulesTipsHeader = document.querySelector('#modal-rules-agreement .font-bold.flex span');
   if (rulesTipsHeader) rulesTipsHeader.innerText = t('3 главных совета для удачных сделок:');
-  const rulesAcceptBtn = byId('rules-accept-btn');
+const rulesAcceptBtn = byId('rules-accept-btn');
   if (rulesAcceptBtn) rulesAcceptBtn.innerText = t('Я подтверждаю и принимаю условия');
+
+  // 14. Справка о доступах и конфиденциальности
+  const faqBtnLabel = byId('ft-faq-label');
+  if (faqBtnLabel) faqBtnLabel.innerText = t('Зачем нужны доступы и данные?');
+  const faqTitle = byId('faq-modal-title');
+  if (faqTitle) faqTitle.innerText = t('Зачем нужны доступы и регистрация?');
+  const faqDesc = byId('faq-modal-desc');
+  if (faqDesc) faqDesc.innerText = t('Разъяснение о конфиденциальности, доступах и правилах платформы');
+  const faqCloseBtn = document.querySelector('#modal-faq-help button[onclick*="closeModal"]');
+  if (faqCloseBtn && faqCloseBtn.innerText) faqCloseBtn.innerText = t('Всё понятно');
 }
 async function executeSilentDriveBackup(manual = false) {
   if (!DRIVE_BACKUP_CONFIG.gasUrl) {
