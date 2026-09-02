@@ -409,22 +409,73 @@ body { top: 0px !important; }
 </div>
 
 <!-- ============ SHARE SHEET ============ -->
-<div id="modal-share" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-end sm:items-center justify-center">
-<div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-3 space-y-1">
-<div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
-<div class="text-center text-sm font-bold t1 pb-2 border-b b-ig">Поделиться объявлением</div>
-<div id="share-preview-state" class="text-center text-xs t2 py-2 hidden">Генерируем красивую карточку...</div>
-<div id="share-preview-wrap" class="hidden rounded-xl bg-field border b-ig p-2 mb-1"><img id="share-preview-image" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Предпросмотр карточки объявления Авито Шам" class="w-full max-h-[52vh] object-contain rounded-lg">
-</div>
-<button id="share-system" onclick="systemShare()" class="hidden w-full items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> Поделиться карточкой</button>
-<button onclick="shareImageToApp('whatsapp')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> WhatsApp (с картинкой)</button>
-<button onclick="shareImageToApp('telegram')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> Telegram (с картинкой)</button>
-<button onclick="shareImageToApp('viber')" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> Viber (с картинкой)</button>
-<a id="share-wa-link" href="#" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> WhatsApp (только ссылка)</a>
-<button onclick="downloadShareCard()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> Скачать красивую карточку</button>
-<button onclick="copyShareLink()" class="w-full flex items-center gap-3 p-3 rounded-xl ig-hover t1 text-sm font-semibold"><i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> Скопировать ссылку</button>
-<button type="button" aria-label="Закрыть" onclick="closeModal('modal-share')" class="w-full p-3 rounded-xl t2 text-sm font-bold border-t b-ig mt-1">Отмена</button>
-</div>
+<div id="modal-share" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-end md:items-center justify-center p-0 md:p-6">
+  <div class="ig-sheet w-full md:max-w-2xl rounded-t-2xl md:rounded-2xl p-4 md:p-6 relative shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 md:hidden shrink-0"></div>
+    
+    <div class="flex items-center justify-between pb-3 border-b b-ig shrink-0">
+      <h3 class="text-sm md:text-base font-bold t1 flex items-center gap-2">
+        <i class="fa-solid fa-share-nodes text-blue-500"></i>
+        <span>Поделиться объявлением</span>
+      </h3>
+      <button type="button" aria-label="Закрыть" onclick="closeModal('modal-share')" class="w-8 h-8 rounded-full bg-field border b-ig t2 hover:text-white flex items-center justify-center transition">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <div id="share-preview-state" class="text-center text-xs t2 py-4 hidden">Генерируем красивую карточку...</div>
+
+    <div class="flex flex-col md:flex-row gap-4 pt-3 overflow-y-auto modal-scroll-body flex-1 items-center md:items-stretch">
+      <!-- Превью карточки -->
+      <div id="share-preview-wrap" class="hidden w-full md:w-5/12 bg-field border b-ig rounded-xl p-2 flex items-center justify-center shrink-0">
+        <img id="share-preview-image" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'/%3E" alt="Превью" class="w-full max-h-[42vh] md:max-h-[50vh] object-contain rounded-lg shadow-md">
+      </div>
+
+      <!-- Кнопки действий -->
+      <div class="w-full md:w-7/12 flex flex-col justify-between space-y-1.5 flex-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <button id="share-system" onclick="systemShare()" class="hidden sm:col-span-2 items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-solid fa-share-nodes w-5 text-center text-blue-500"></i>
+            <span>Поделиться карточкой</span>
+          </button>
+
+          <button onclick="shareImageToApp('whatsapp')" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-brands fa-whatsapp w-5 text-center text-[#25D366] text-base"></i>
+            <span>WhatsApp (картинка)</span>
+          </button>
+
+          <button onclick="shareImageToApp('telegram')" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-brands fa-telegram w-5 text-center text-[#229ED9] text-base"></i>
+            <span>Telegram (картинка)</span>
+          </button>
+
+          <button onclick="shareImageToApp('viber')" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-brands fa-viber w-5 text-center text-[#7360F2] text-base"></i>
+            <span>Viber (картинка)</span>
+          </button>
+
+          <a id="share-wa-link" href="#" target="_blank" rel="noopener" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-solid fa-link w-5 text-center t2"></i>
+            <span>WhatsApp (ссылка)</span>
+          </a>
+
+          <button onclick="downloadShareCard()" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-solid fa-download w-5 text-center text-[#d62976]"></i>
+            <span>Скачать карточку</span>
+          </button>
+
+          <button onclick="copyShareLink()" class="flex items-center gap-2.5 p-2.5 rounded-xl border b-ig bg-field hover:bg-ig t1 text-xs font-semibold transition">
+            <i class="fa-solid fa-copy w-5 text-center text-amber-500"></i>
+            <span>Скопировать ссылку</span>
+          </button>
+        </div>
+
+        <button type="button" onclick="closeModal('modal-share')" class="w-full py-2.5 rounded-xl t2 text-xs font-bold border b-ig hover:bg-field transition mt-2">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ FULLSCREEN IMAGE VIEWER ============ -->

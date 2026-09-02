@@ -449,8 +449,13 @@ async function shareAd(adId) {
   const ad = (typeof getListingById === 'function') ? getListingById(adId) : (ads.find(a => a.id === adId) || combos.find(x => x.id === adId)); if (!ad) return;
   const base = (location.origin && location.origin !== 'null') ? location.origin + location.pathname : location.href.split('#')[0];
   const url = base + '#ad-' + ad.id;
-  sharePayload = { title: ad.title, text: `${ad.title} — Авито Шам (Сирия)`, url: url };
-const state = byId('share-preview-state'), preview = byId('share-preview-wrap');
+  let shareTitle = ad.title || '';
+  if (typeof translateDynamic === 'function' && shareTitle) {
+    shareTitle = await translateDynamic(shareTitle, currentLang);
+  }
+  const brandSuffix = currentLang === 'ar' ? 'أفيتو الشام (سوريا)' : 'Авито Шам (Сирия)';
+  sharePayload = { title: shareTitle, text: `${shareTitle} — ${brandSuffix}`, url: url };
+  const state = byId('share-preview-state'), preview = byId('share-preview-wrap');
   if (state) { state.innerText = t('Генерируем красивую карточку...'); state.classList.remove('hidden'); }
   if (preview) preview.classList.add('hidden');
   openShareSheet();

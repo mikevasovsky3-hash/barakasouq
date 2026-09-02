@@ -117,12 +117,12 @@ async function generateShareImage(ad) {
     const verified = getSellerVerified(ad);
     const avatar = getSellerAvatar(ad);
 
-    let regionRaw = REGION_NAMES[ad.region] || ad.region || 'Сирия';
+let regionRaw = REGION_NAMES[ad.region] || ad.region || 'Сирия';
     let regionName = isAr && typeof DICTIONARY !== 'undefined' && DICTIONARY[regionRaw] ? DICTIONARY[regionRaw] : regionRaw;
     let cardTitle = ad.title || '';
 
-    if (isAr && typeof translateDynamic === 'function') {
-      cardTitle = await translateDynamic(ad.title, 'ar');
+    if (typeof translateDynamic === 'function' && cardTitle) {
+      cardTitle = await translateDynamic(ad.title, currentLang);
     }
     const likesCount = (ad.likes || []).length;
     const viewsCount = ad.views || 0;
@@ -372,8 +372,8 @@ async function generateShareImage(ad) {
 // Если это комбо — выводим названия товаров комплекта
     if (isCombo && Array.isArray(ad.comboItems) && ad.comboItems.length > 0) {
       let comboTitles = ad.comboItems.map(it => it.title);
-      if (isAr && typeof translateDynamic === 'function') {
-        comboTitles = await Promise.all(comboTitles.map(tStr => translateDynamic(tStr, 'ar')));
+      if (typeof translateDynamic === 'function') {
+        comboTitles = await Promise.all(comboTitles.map(tStr => translateDynamic(tStr, currentLang)));
       }
       const itemsListStr = `${t('В комплекте:')} ` + comboTitles.join(' + ');
       ctx.fillStyle = '#f97316';
