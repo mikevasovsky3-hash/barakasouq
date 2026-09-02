@@ -918,7 +918,7 @@ const cleanWa = waCheck.number;
   const regionVal = byId('ad-region')?.value || 'DAM';
   const cityVal = byId('ad-city')?.value.trim() || REGION_NAMES[regionVal] || 'Дамаск';
 
-extLink = (byId('ad-external-link')?.value || '').trim();
+var extLink = (byId('ad-external-link')?.value || '').trim();
   if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {
     extLink = 'https://' + extLink;
   }
