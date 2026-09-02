@@ -194,7 +194,9 @@ if (typeof translateStaticUI === 'function') {
   }
 
 const currentMarqueeRaw = MARQUEE_SETTINGS.text || localStorage.getItem(MARQUEE_STORAGE_KEY) || '';
-  if (currentMarqueeRaw) {
+  const dMarquee = byId('desktop-marquee-text');
+  const mMarquee = byId('mobile-marquee-text');
+  if (currentMarqueeRaw && (!dMarquee || !dMarquee.innerText.trim())) {
     updateMarqueeText(currentMarqueeRaw);
   }
   

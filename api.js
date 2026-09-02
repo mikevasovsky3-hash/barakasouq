@@ -563,14 +563,15 @@ if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
     if (catsRes.data && catsRes.data.length) categories = catsRes.data;
     if (reportsRes.data) reports = reportsRes.data;
 
-    saveCachedAds();
+saveCachedAds();
     renderCategoryPills();
     renderAds();
+    if (typeof fetchGlobalMarquee === 'function') fetchGlobalMarquee();
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
     if (typeof checkUrlHashAdOpen === 'function') checkUrlHashAdOpen();
 
     startBackgroundDualClutchSync(20, 20);
-
+	
   } catch (error) {
     console.error("Ошибка синхронизации Supabase:", error);
     if (st) { st.classList.add('hidden'); st.classList.remove('flex'); }
@@ -863,31 +864,54 @@ async function saveMarqueeSettings() {
   const text = input.value.trim();
   if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
 
+  // 1. Мгновенно отображаем на текущем экране
   MARQUEE_SETTINGS.text = text;
-  const settings = { ...MARQUEE_SETTINGS, text };
-  
   localStorage.setItem(MARQUEE_STORAGE_KEY, text);
-  applyMarqueeSettings(settings);
-  
   const dEl = byId('desktop-marquee-text');
   const mEl = byId('mobile-marquee-text');
   if (dEl) dEl.innerText = text;
   if (mEl) mEl.innerText = text;
 
+  // 2. Отправляем в Supabase прямым простым запросом
   if (supabaseClient) {
     try {
-      await supabaseClient.from('system_settings').upsert({
-        key: 'marquee_settings',
-        value: settings
-      });
-      hasCloudMarqueeSettings = true;
+      const { error } = await supabaseClient
+        .from('marquee_broadcast')
+        .upsert({ id: 1, content: text, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      showToast('Бегущая строка сохранена для всех устройств!', 'success');
     } catch (err) {
-      console.warn('Ошибка сохранения бегущей строки в Supabase:', err);
+      console.error('Marquee save error:', err);
+      showToast('Ошибка сохранения в базу: ' + (err.message || ''), 'error');
+      return;
     }
+  } else {
+    showToast('Сохранено локально (нет подключения к БД)', 'warning');
   }
 
-  showToast('Бегущая строка успешно обновлена!', 'success');
   updateMarqueeText(text);
+}
+
+async function fetchGlobalMarquee() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('marquee_broadcast')
+      .select('content')
+      .eq('id', 1)
+      .maybeSingle();
+
+    if (!error && data && data.content) {
+      const remoteText = data.content.trim();
+      if (remoteText) {
+        MARQUEE_SETTINGS.text = remoteText;
+        localStorage.setItem(MARQUEE_STORAGE_KEY, remoteText);
+        updateMarqueeText(remoteText);
+      }
+    }
+  } catch (e) {
+    console.warn('fetchGlobalMarquee error:', e);
+  }
 }
 
 function translateStaticUI(lang) {
