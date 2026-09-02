@@ -78,22 +78,14 @@ body.light-mode{
 --ig-bg:#fafafa; --ig-card:#ffffff; --ig-border:#dbdbdb; --ig-text:#262626;
 --ig-text2:#8e8e8e; --ig-field:#efefef; --ig-hover:#f2f2f2;
 }
-html{
-scroll-behavior:auto !important;
--webkit-overflow-scrolling:touch !important;
-overscroll-behavior-y:auto;
-}
-body{
+html,body{
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 background:var(--ig-bg); color:var(--ig-text); font-size:14px;
 max-width:100vw; overflow-x:hidden;
+scroll-behavior:smooth;
 overflow-y:auto !important;
--webkit-overflow-scrolling:touch !important;
-overscroll-behavior-y:auto;
 user-select:auto !important;
 cursor:default;
-transform:translateZ(0);
--webkit-transform:translateZ(0);
 }
 .ig-logo{font-family:'Grand Hotel',cursive;font-weight:400;letter-spacing:.5px}
 .t1{color:var(--ig-text)} .t2{color:var(--ig-text2)}
@@ -127,12 +119,7 @@ select.ig-input option{background:var(--ig-field);color:var(--ig-text)}
 .ig-btn-nav:hover{opacity:.55}
 .heart-pop{animation:heartPop .38s ease}
 @keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.9)}100%{transform:scale(1)}}
-.card-in{
-  animation:cardIn .3s ease;
-  content-visibility:auto;
-  contain-intrinsic-size:1px 400px;
-  will-change:transform;
-}
+.card-in{animation:cardIn .3s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
 /* === ОГНЕННОЕ ПЛАМЯ ДЛЯ АКЦИЙ И СКИДОК === */
