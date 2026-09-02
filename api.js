@@ -663,9 +663,15 @@ async function translateDynamic(text, targetLang = currentLang) {
   if (!clean) return text;
   if (DICTIONARY[clean] && targetLang === 'ar') return DICTIONARY[clean];
 
-  const cacheKey = `${targetLang}_${clean}`;
-  if (TRANSLATE_CACHE[cacheKey]) return TRANSLATE_CACHE[cacheKey];
-
+const cacheKey = `${targetLang}_${clean}`;
+  if (TRANSLATE_CACHE[cacheKey]) {
+    if (TRANSLATE_CACHE[cacheKey].includes('INVALID SOURCE') || TRANSLATE_CACHE[cacheKey].includes('PLEASE SELECT TWO')) {
+      delete TRANSLATE_CACHE[cacheKey];
+    } else {
+      return TRANSLATE_CACHE[cacheKey];
+    }
+  }
+  
   // 1. Проверяем, состоит ли весь текст только из одной священной фразы
   for (const item of ISLAMIC_PATTERNS) {
     if (item.pattern.test(clean) && clean.replace(item.pattern, '').trim().length === 0) {
@@ -723,41 +729,28 @@ async function translateDynamic(text, targetLang = currentLang) {
       }
     } catch (e) {}
 
-    // 2. Google Translate Web API Client (запасной)
+// 2. Google Translate Web API Client (запасной)
     if (!translated || !translated.trim()) {
       try {
-        const altUrl = `https://translate.google.com/translate_a/single?client=at&dt=t&dt=ld&dt=qca&dt=rm&dt=bd&dj=1&hl=${tl}&ie=UTF-8&oe=UTF-8&inputm=2&otf=2&iid=1dd3b03a-145c-4279-b4ae-325039e0573e`;
-        const resAlt = await fetch(altUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `sl=auto&tl=${tl}&q=${encodeURIComponent(protectedText)}`
-        });
+        const altUrl = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=${tl}&dt=t&q=${encodeURIComponent(protectedText)}`;
+        const resAlt = await fetch(altUrl);
         if (resAlt.ok) {
           const altData = await resAlt.json();
-          if (altData && Array.isArray(altData.sentences)) {
-            translated = altData.sentences.map(s => s.trans || '').join('');
+          if (altData && Array.isArray(altData[0])) {
+            translated = altData[0].map(x => x[0]).filter(Boolean).join('');
           }
         }
       } catch (e) {}
     }
 
-    // 3. Fallback на MyMemory
-    if (!translated || !translated.trim()) {
-      try {
-        const slMem = arabicChars > cyrillicChars ? 'ar' : 'ru';
-        const proxyUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(protectedText.slice(0, 450))}&langpair=${slMem}|${tl}`;
-        const resMem = await fetch(proxyUrl);
-        if (resMem.ok) {
-          const dataMem = await resMem.json();
-          if (dataMem?.responseData?.translatedText && !dataMem.responseData.translatedText.includes('QUERY LENGTH LIMIT')) {
-            translated = dataMem.responseData.translatedText;
-          }
-        }
-      } catch (e) {}
-    }
+    // Проверка на мусорные системные ответы API
+    const isErrorText = !translated || 
+      translated.includes('INVALID SOURCE LANGUAGE') || 
+      translated.includes('PLEASE SELECT TWO') || 
+      translated.includes('QUERY LENGTH LIMIT');
 
-    let finalOutput = translated && translated.trim() ? translated : protectedText;
-
+    let finalOutput = (!isErrorText && translated.trim()) ? translated : protectedText;
+	
     // 4. Восстанавливаем оригинальные арабские фразы с сохранением огласовок
     replacements.forEach(r => {
       const tokenRegex = new RegExp(`\\s*${r.placeholder}\\s*`, 'gi');

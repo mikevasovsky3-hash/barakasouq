@@ -1377,9 +1377,23 @@ function toggleTheme() {
 
 function changeLanguage(lang) {
   if (currentLang === lang) return;
+  currentLang = lang;
   localStorage.setItem('bs_app_lang', lang);
-  try { localStorage.removeItem('bs_trans_cache'); } catch(e) {}
-  window.location.reload();
+
+  if (lang === 'ar') {
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
+  } else {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = 'ru';
+  }
+
+  if (typeof translateStaticUI === 'function') {
+    translateStaticUI(lang);
+  }
+  updateNavState();
+  renderCategoryPills();
+  renderAds();
 }
 
 function openAuthModal() { 
