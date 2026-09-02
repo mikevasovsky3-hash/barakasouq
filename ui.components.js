@@ -3219,8 +3219,10 @@ async function removeQuickDiscountSubmit() {
   }
 }
 
+let showcaseShopUserUid = null;
 function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') { 
-  const seller = users.find(u => (u.uid && String(u.uid) === String(shopUserUid)) || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase())); 
+  showcaseShopUserUid = shopUserUid;
+  const seller = users.find(u => (u.uid && String(u.uid) === String(shopUserUid)) || (u.username && u.username.toLowerCase() === String(shopUserUid).toLowerCase()));
   if (!seller || !seller.shop) { showToast(t('Магазин не найден'), 'error'); return; } 
   const shop = seller.shop; 
   

@@ -452,10 +452,13 @@ function setupRealtimeAdsSubscription() {
 }
 
 async function initSupabaseSync() {
+  if (typeof translateStaticUI === 'function') {
+    translateStaticUI(currentLang);
+  }
   loadCachedAds();
   renderCategoryPills();
   renderAds();
-
+  
   if (!supabaseClient) {
     console.warn("Supabase client not initialized yet.");
     return;
@@ -1027,23 +1030,37 @@ const guestTitle = byId('guest-auth-block')?.querySelector('.text-xs');
     discFieldLabels[1].innerText = t('Срок действия скидки');
   }
 
-  // 4. Модальное окно «Поделиться»
-  const shareTitle = document.querySelector('#modal-share .text-center.font-bold');
+// 4. Модальное окно «Поделиться»
+  const shareTitle = document.querySelector('#modal-share h3 span');
   if (shareTitle) shareTitle.innerText = t('Поделиться объявлением');
-  const shareSysBtn = byId('share-system');
-  if (shareSysBtn) shareSysBtn.innerHTML = `<i class="fa-solid fa-share-nodes w-6 text-center" style="color:#0095f6"></i> ${t('Поделиться карточкой')}`;
+  const sharePreviewState = byId('share-preview-state');
+  if (sharePreviewState) sharePreviewState.innerText = t('Генерируем красивую карточку...');
+
+  const shareSysSpan = byId('share-system')?.querySelector('span');
+  if (shareSysSpan) shareSysSpan.innerText = t('Поделиться карточкой');
+
   const shareBtns = document.querySelectorAll('#modal-share button, #modal-share a');
   shareBtns.forEach(btn => {
-    const txt = btn.innerText.trim();
-    if (txt.includes('WhatsApp (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-whatsapp w-6 text-center text-[#25D366] text-lg"></i> ${t('WhatsApp (с картинкой)')}`;
-    if (txt.includes('Telegram (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-telegram w-6 text-center text-[#229ED9] text-lg"></i> ${t('Telegram (с картинкой)')}`;
-    if (txt.includes('Viber (с картинкой)')) btn.innerHTML = `<i class="fa-brands fa-viber w-6 text-center text-[#7360F2] text-lg"></i> ${t('Viber (с картинкой)')}`;
-    if (txt.includes('WhatsApp (только ссылка)')) btn.innerHTML = `<i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> ${t('WhatsApp (только ссылка)')}`;
-    if (txt.includes('Скачать красивую карточку')) btn.innerHTML = `<i class="fa-solid fa-image w-6 text-center text-lg" style="color:#d62976"></i> ${t('Скачать красивую карточку')}`;
-    if (txt.includes('Скопировать ссылку')) btn.innerHTML = `<i class="fa-solid fa-link w-6 text-center t2 text-lg"></i> ${t('Скопировать ссылку')}`;
-    if (txt === 'Отмена') btn.innerText = t('Отмена');
-  });
+    const span = btn.querySelector('span');
+    const txt = (span ? span.innerText : btn.innerText).trim();
 
+    if (txt.includes('WhatsApp') && (txt.includes('картинка') || txt.includes('صورة'))) {
+      if (span) span.innerText = t('WhatsApp (картинка)');
+    } else if (txt.includes('Telegram') || txt.includes('تيليجرام')) {
+      if (span) span.innerText = t('Telegram (картинка)');
+    } else if (txt.includes('Viber') || txt.includes('فايبر')) {
+      if (span) span.innerText = t('Viber (картинка)');
+    } else if (txt.includes('WhatsApp') && (txt.includes('ссылка') || txt.includes('رابط'))) {
+      if (span) span.innerText = t('WhatsApp (ссылка)');
+    } else if (txt.includes('Скачать') || txt.includes('تحميل')) {
+      if (span) span.innerText = t('Скачать карточку');
+    } else if (txt.includes('Скопировать') || txt.includes('نسخ')) {
+      if (span) span.innerText = t('Скопировать ссылку');
+    } else if (txt === 'Отмена' || txt === 'إلغاء') {
+      btn.innerText = t('Отмена');
+    }
+  });
+  
   // 5. Модальное окно подтверждения
   const confirmCancel = byId('confirm-btn-cancel');
   if (confirmCancel) confirmCancel.innerText = t('Отмена');

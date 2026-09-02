@@ -1372,19 +1372,10 @@ function toggleTheme() {
 }
 
 function changeLanguage(lang) {
-  currentLang = lang;
+  if (currentLang === lang) return;
   localStorage.setItem('bs_app_lang', lang);
-  // Сбрасываем кэш переводов для чистого перевода с исключениями
-  TRANSLATE_CACHE = {};
   try { localStorage.removeItem('bs_trans_cache'); } catch(e) {}
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.lang = lang;
-  translateStaticUI(lang);
-  renderCategoryPills();
-  renderAds();
-  updateNavState();
-  if (!byId('modal-profile').classList.contains('hidden')) openProfileModal();
-  showToast(lang === 'ar' ? 'تم تحويل اللغة إلى العربية' : 'Язык переключен на русский', 'info');
+  window.location.reload();
 }
 
 function openAuthModal() { 

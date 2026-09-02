@@ -1152,6 +1152,18 @@ body { top: 0px !important; }
 <canvas id="share-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
 <!-- ============ SCRIPTS CONNECTED IN CORRECT ORDER ============ -->
+<script>
+  (function() {
+    const savedLang = localStorage.getItem('bs_app_lang') || 'ru';
+    if (savedLang === 'ar') {
+      document.documentElement.dir = 'rtl';
+      document.documentElement.lang = 'ar';
+    } else {
+      document.documentElement.dir = 'ltr';
+      document.documentElement.lang = 'ru';
+    }
+  })();
+</script>
 <script src="config.js" defer></script>
 <script src="api.js" defer></script>
 <script src="ui.components.js" defer></script>
