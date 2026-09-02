@@ -918,16 +918,11 @@ const cleanWa = waCheck.number;
   const regionVal = byId('ad-region')?.value || 'DAM';
   const cityVal = byId('ad-city')?.value.trim() || REGION_NAMES[regionVal] || 'Дамаск';
 
-let extLink = (byId('ad-external-link')?.value || '').trim();
+extLink = (byId('ad-external-link')?.value || '').trim();
   if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {
     extLink = 'https://' + extLink;
   }
-
-let extLink = (byId('ad-external-link')?.value || '').trim();
-  if (extLink && !extLink.startsWith('http://') && !extLink.startsWith('https://')) {
-    extLink = 'https://' + extLink;
-  }
-
+  
   const adId = 'AD-' + Date.now().toString(36).toUpperCase();
   const newAd = {
     id: adId,
