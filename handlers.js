@@ -193,9 +193,11 @@ if (typeof translateStaticUI === 'function') {
     sortLbl.innerText = t(sortLabels[currentSortMode] || 'Новые');
   }
 
-  const currentMarqueeRaw = localStorage.getItem(MARQUEE_STORAGE_KEY) || MARQUEE_SETTINGS.text || '🔥 Добро пожаловать на Avito Sham! • 🇸🇾 Лучшая доска объявлений Сирии • 💰 Курсы валют обновляются автоматически • 🚀 Создавайте магазины и продавайте быстрее • ✨ Поддержите проект через AvitoCash • 🔍 Ищите товары, услуги и недвижимость по всей стране';
-  updateMarqueeText(currentMarqueeRaw);
-
+const currentMarqueeRaw = MARQUEE_SETTINGS.text || localStorage.getItem(MARQUEE_STORAGE_KEY) || '';
+  if (currentMarqueeRaw) {
+    updateMarqueeText(currentMarqueeRaw);
+  }
+  
   const avHtml = (currentUser && currentUser.avatar) ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs t2"></i>`;
   const sp = byId('sb-profile'), bp = byId('bn-profile-ic');
   if (sp) { sp.querySelector('.nav-ic').innerHTML = `<span class="w-6 h-6 rounded-full overflow-hidden border b-ig bg-field flex items-center justify-center" style="${active === 'profile' ? 'border-color:#f59e0b' : ''}">${avHtml}</span>`; sp.classList.toggle('font-bold', active === 'profile'); }

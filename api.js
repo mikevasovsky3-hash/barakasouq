@@ -482,10 +482,11 @@ const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes, marqueeRes] =
       supabaseClient.from('system_settings').select('value').eq('key', 'marquee_settings').maybeSingle()
     ]);
 
-    if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
+if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
       const cloudSettings = marqueeRes.data.value;
-      if (cloudSettings.text) {
+      if (cloudSettings && cloudSettings.text) {
         hasCloudMarqueeSettings = true;
+        MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...cloudSettings };
         localStorage.setItem(MARQUEE_STORAGE_KEY, cloudSettings.text);
         applyMarqueeSettings(cloudSettings);
       }
@@ -847,10 +848,17 @@ async function saveMarqueeSettings() {
   if (!input) return;
   const text = input.value.trim();
   if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
+
+  MARQUEE_SETTINGS.text = text;
   const settings = { ...MARQUEE_SETTINGS, text };
+  
   localStorage.setItem(MARQUEE_STORAGE_KEY, text);
   applyMarqueeSettings(settings);
-  await updateMarqueeText(text);
+  
+  const dEl = byId('desktop-marquee-text');
+  const mEl = byId('mobile-marquee-text');
+  if (dEl) dEl.innerText = text;
+  if (mEl) mEl.innerText = text;
 
   if (supabaseClient) {
     try {
@@ -864,7 +872,8 @@ async function saveMarqueeSettings() {
     }
   }
 
-  showToast('Бегущая строка сохранена в облаке и синхронизирована!', 'success');
+  showToast('Бегущая строка успешно обновлена!', 'success');
+  updateMarqueeText(text);
 }
 
 function translateStaticUI(lang) {
