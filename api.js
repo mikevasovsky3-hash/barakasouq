@@ -473,13 +473,23 @@ async function initSupabaseSync() {
   try {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-    const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes] = await Promise.all([
+const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes, marqueeRes] = await Promise.all([
       supabaseClient.from('users').select('uid, username, kunya, gender, role, verified_shop, avitocash_balance, trial_balance, show_women_ads, frozen, is_archived, favorites, shop'),
       supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, description, link, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
-      isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] })
+      isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] }),
+      supabaseClient.from('system_settings').select('value').eq('key', 'marquee_settings').maybeSingle()
     ]);
+
+    if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
+      const cloudSettings = marqueeRes.data.value;
+      if (cloudSettings.text) {
+        hasCloudMarqueeSettings = true;
+        localStorage.setItem(MARQUEE_STORAGE_KEY, cloudSettings.text);
+        applyMarqueeSettings(cloudSettings);
+      }
+    }
 	
     // Синхронизация пользователей
     if (usersRes.data && usersRes.data.length > 0) {
@@ -841,7 +851,20 @@ async function saveMarqueeSettings() {
   localStorage.setItem(MARQUEE_STORAGE_KEY, text);
   applyMarqueeSettings(settings);
   await updateMarqueeText(text);
-  showToast('Бегущая строка сохранена и автоматически переведена!', 'success');
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'marquee_settings',
+        value: settings
+      });
+      hasCloudMarqueeSettings = true;
+    } catch (err) {
+      console.warn('Ошибка сохранения бегущей строки в Supabase:', err);
+    }
+  }
+
+  showToast('Бегущая строка сохранена в облаке и синхронизирована!', 'success');
 }
 
 function translateStaticUI(lang) {
