@@ -443,9 +443,23 @@ function setupRealtimeAdsSubscription() {
         if (idx !== -1) {
           ads[idx] = mapped;
         }
-        saveCachedAds();
+saveCachedAds();
         if (typeof renderCategoryPills === 'function') renderCategoryPills();
         if (typeof renderAds === 'function') renderAds();
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'system_settings' },
+      (payload) => {
+        const item = payload?.new;
+        if (item && item.key === 'marquee_settings' && item.value) {
+          const settings = item.value;
+          hasCloudMarqueeSettings = true;
+          MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...settings };
+          localStorage.setItem(MARQUEE_STORAGE_KEY, settings.text || '');
+          applyMarqueeSettings(settings);
+        }
       }
     )
     .subscribe();

@@ -1671,12 +1671,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  try {
+try {
     loadCachedAds();
+    if (typeof loadMarqueeText === 'function') {
+      loadMarqueeText();
+    }
   } catch(e) {
     console.warn('loadCachedAds error:', e);
   }
-
+  
   try {
     restoreUserSession();
   } catch(e) {
