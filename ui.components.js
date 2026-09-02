@@ -79,7 +79,7 @@ function getListingById(id) {
 }
 
 function getSellerWhatsapp(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return String((s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || '')); }
-function getSellerKunya(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return (s && s.kunya) ? s.kunya : (ad.sellerKunya || ad.sellerUsername || ''); }
+function getSellerKunya(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); const k = (s && s.kunya) ? s.kunya : (ad.sellerKunya || ad.sellerUsername || ''); return currentLang === 'ar' ? (DICTIONARY[k] || k) : k; }
 function getSellerAvatar(ad) { if (!ad) return null; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return s?.avatar || null; }
 function getSellerVerified(ad) { if (ad && ad.isCombo && typeof ad.verified === 'boolean') return ad.verified; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return !!(s && (s.verifiedShop || (s.shop && s.shop.isVerified))); }
 function getCategoryName(catId) { const c = categories.find(x => x.id === catId); return c ? c.name : 'Прочее'; }
