@@ -248,31 +248,59 @@ async function renewAdExpiry(adId) {
 
 async function bumpAdToTop(adId) {
   const ad = ads.find(a => a.id === adId);
-  if (!ad || !currentUser) return;
+  if (!ad) return;
 
-  const nowTime = Date.now();
-  ad.createdAt = nowTime;
-  ad.created_at = nowTime;
+  if (!currentUser) {
+    openAuthModal();
+    showToast('Войдите как владелец магазина', 'warning');
+    return;
+  }
+
+  const isOwner = !!(
+    (currentUser.uid && ad.sellerUid && String(currentUser.uid) === String(ad.sellerUid)) ||
+    (currentUser.username && ad.sellerUsername && currentUser.username.toLowerCase() === ad.sellerUsername.toLowerCase()) ||
+    currentUser.role === 'SUPERUSER' || 
+    currentUser.role === 'ADMIN'
+  );
+
+  if (!isOwner) {
+    showToast('Только владелец магазина может поднять этот товар', 'error');
+    return;
+  }
+
+  let nowTime = Date.now();
 
   if (supabaseClient) {
     try {
-      const { error } = await supabaseClient
-        .from('ads')
-        .update({ created_at: nowTime })
-        .eq('id', ad.id);
+      const callerIdentifier = currentUser.uid || currentUser.username;
+      const { data: res, error: rpcErr } = await supabaseClient.rpc('bump_ad_to_top', {
+        p_ad_id: ad.id,
+        p_caller_id: callerIdentifier
+      });
 
-      if (error) {
-        console.warn('Ошибка поднятия в топ в Supabase:', error);
+      if (rpcErr || !res || !res.success) {
+        showToast(res?.error || rpcErr?.message || 'Ошибка проверки прав владельца в базе', 'error');
+        return;
+      }
+
+      if (res && res.created_at) {
+        nowTime = Number(res.created_at);
       }
     } catch (err) {
-      console.warn('Сетевой сбой при поднятии в топ:', err);
+      console.error('Сетевой сбой при поднятии в топ:', err);
+      showToast('Ошибка соединения с сервером', 'error');
+      return;
     }
   }
+
+  ad.createdAt = nowTime;
+  ad.created_at = nowTime;
 
   // Перемещаем в начало локального массива
   ads = [ad, ...ads.filter(a => a.id !== adId)];
   saveCachedAds();
   renderAds();
+
   if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
     openShopShowcase(ad.sellerUid || ad.sellerUsername);
   }
@@ -282,6 +310,7 @@ async function bumpAdToTop(adId) {
   if (byId('modal-profile') && !byId('modal-profile').classList.contains('hidden')) {
     openProfileModal();
   }
+
   showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
 }
 
