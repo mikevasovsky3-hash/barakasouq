@@ -765,40 +765,53 @@ function detectCategoryByTitle(text) {
   const catSel = byId('ad-category');
   if (!catSel) return;
 
-  // 1. ЭЛЕКТРОНИКА И ГАДЖЕТЫ
-  if (/iphone|айфон|samsung|самсунг|телефон|смартфон|ноутбук|пк|компьютер|планшет|часы|наушники|xiaomi|redmi|macbook|монитор|видеокарта|принтер|телевизор|колонка|павербанк|هاتف|جوال|موبايل|لابتوب|كمبيوتر|شاشة|ساعة|ايباد|راوتر|تلفزيون|سماعات/i.test(q)) {
-    catSel.value = 'electronics';
-  } 
-  // 2. ТРАНСПОРТ И ЗАПЧАСТИ
-  else if (/машина|авто|автомобиль|bmw|mercedes|kia|hyundai|запчасти|колеса|шины|мото|скутер|диски|аккумулятор|starex|масло|фара|крыло|бампер|сиارة|مركبة|موتور|دراجة|قطع غيار|إطارات|بطارية|محرك|سيارات/i.test(q)) {
-    catSel.value = 'transport';
-  } 
-  // 3. НЕДВИЖИМОСТЬ
-  else if (/квартира|дом|аренда|комната|участок|офис|магазин|недвижимость|дача|гараж|شقة|منزل|بيت|أرض|عقار|محل|إيجار|مكتب|فيلا/i.test(q)) {
+  if (/солнечн|панел|инвертор|аккумулятор|lifepo4|solar|инвертер|طاقة شمسية|الواح شمسية|انفرتر|لوح شمسي/i.test(q)) {
+    catSel.value = 'solar_energy';
+  } else if (/генератор|дизель-генератор|бензогенератор|مولدة|مولد|كهرباء/i.test(q)) {
+    catSel.value = 'generators';
+  } else if (/ноутбук|компьютер|пк|macbook|монитор|видеокарта|системный блок|لابتوب|كمبيوتر|شاشة كمبيوتر/i.test(q)) {
+    catSel.value = 'computers';
+  } else if (/стиралк|холодильник|пылесос|утюг|блендер|микроволновка|плита|غسالة|براد|ثلاجة|مكواة|مكنسة/i.test(q)) {
+    catSel.value = 'appliances';
+  } else if (/мотоцикл|скутер|мопед|мото|دراجة نارية|سكوتر|موتور/i.test(q)) {
+    catSel.value = 'moto';
+  } else if (/грузовик|фура|тягач|экскаватор|погрузчик|شاحنة|قاطرة|حفارة/i.test(q)) {
+    catSel.value = 'trucks';
+  } else if (/запчаст|шины|диски|фара|бампер|масло моторное|колодки|قطع غيار|دواليب|اطارات|جنوط|زيت محرك/i.test(q)) {
+    catSel.value = 'auto_parts';
+  } else if (/аренда|сдам|сниму|посуточно|إيجار|للايجار/i.test(q)) {
+    catSel.value = 'rent';
+  } else if (/офис|магазин|склад|коммерческ|محل تجاري|مستودع|مكتب/i.test(q)) {
+    catSel.value = 'commercial_re';
+  } else if (/квартира|дом|вилла|участок|земля|شقة|منزل|بيت|أرض|فيلا/i.test(q)) {
     catSel.value = 'realestate';
-  } 
-  // 4. ИНСТРУМЕНТЫ И СТРОЙКА
-  else if (/дрель|перфоратор|болгарка|шуруповерт|инструмент|молоток|пила|ключи|сварочный|отвертка|пассатижи|рулетка|шпатель|перфоратор|лестница|منشار|شابور|دريل|صاروخ|مفتاح|عدة|مطرقة|عده|مفك|قاس/i.test(q)) {
+  } else if (/цемент|кирпич|арматура|краска|гипсокартон|профиль|اسمنت|حديد بناء|بلوك|دهان/i.test(q)) {
+    catSel.value = 'building_materials';
+  } else if (/дрель|болгарка|перфоратор|сварочный|шуруповерт|молоток|دريل|صاروخ|لحام|عدة|مطرقة/i.test(q)) {
     catSel.value = 'tools';
-  } 
-  // 5. ТОВАРЫ ДЛЯ ДОМА, ПОСУДА, МЕБЕЛЬ
-  else if (/диван|стол|стул|шкаф|кровать|мебель|ковер|посуда|лампа|люстра|холодильник|плита|стиралка|матрас|тумба|кресло|кастрюля|сковорода|тарелка|вилка|ложка|стакан|чайник|утюг|пылесос|اثاث|أثاث|طاولة|كرسي|كنبة|خزانة|فرش|سجاد|براد|غسالة|مطبخ|قدر|مخلاة|ملعقة|كأس|غلاية|مكواة|مكنسة/i.test(q)) {
+  } else if (/ковер|посуда|кастрюля|тарелка|чайник|плед|постельное|سجاد|اواني|طناجر|صحون|فرش منزلي/i.test(q)) {
+    catSel.value = 'home_textiles';
+  } else if (/диван|шкаф|стол|стул|кровать|матрас|тумба|اثاث|كنبة|خزانة|طاولة|كرسي|سرير/i.test(q)) {
     catSel.value = 'home';
-  } 
-  // 6. ПРОДУКТЫ ПИТАНИЯ
-  else if (/арбуз|картошка|мясо|овощи|фрукты|продукты|мед|молоко|хлеб|рис|сахар|чай|кофе|сыр|масло|яйца|помидор|огурец|лук|чеснок|яблоко|банан|апельсин|курица|рыба|طماطم|بطاطا|بطاطس|لحم|دجاج|خضار|فواكه|بطيخ|عسل|حليب|خبز|طعام|غذاء|أرز|سكر|شاي|قهوة|جبن|زيت|بيض|خيار|بصل|ثوم|تفاح|موز|برتقال|سمك/i.test(q)) {
-    catSel.value = 'food';
-  } 
-  // 7. ОДЕЖДА, ОБУВЬ И АКСЕССУАРЫ
-  else if (/куртка|платье|рубашка|обувь|кроссовки|джинсы|костюм|сумка|одежда|брюки|штаны|футболка|свитер|пальто|шапка|шарф|носки|туфли|сандалии|ремень|кошелек|ملابس|قميص|فستان|حذاء|بنطلون|جاكيت|شنطة|حقيبة|أزياء|قميص|بلوزة|تنورة|معطف|قبعة|وشاح|جوارب|حزام|محفظة/i.test(q)) {
-    catSel.value = 'fashion';
-  } 
-  // 8. ДЕТСКИЕ ТОВАРЫ
-  else if (/коляска|игрушка|памперс|детск|подгузник|кроватка|самокат|кукла|машинка|конструктор|велосипед|مرحاض|لعبة|حفاضات|أطفال|طفل|مرضعة|لعب|عربة اطفال|سرير أطفال/i.test(q)) {
+  } else if (/коляска|кроватка|памперс|подгузник|игрушка|кукла|عربة اطفال|سرير طفل|حفاضات|العاب اطفال/i.test(q)) {
     catSel.value = 'kids';
-  } 
-  // 9. УСЛУГИ И СЕРВИС
-  else if (/ремонт|услуги|мастер|перевозки|такси|доставка|курсы|уборка|строительство|парикмахер|маникюр|репетитор|чистка|خدمة|خدمات|صيانة|تصليح|معلم|تكسي|شحن|نقل|تعليم|بناء|تنظيف|حلاقة/i.test(q)) {
+  } else if (/трактор|сеялка|плуг|комбайн|мотоблок|جرار زراعي|عزاقة|محراث/i.test(q)) {
+    catSel.value = 'agriculture';
+  } else if (/корова|баран|овца|куры|корм|сено|ячмень|ابقار|اغنام|دجاج|اعلاف/i.test(q)) {
+    catSel.value = 'animals';
+  } else if (/коляска инвалидная|инвалидн|тонометр|глюкометр|костыли|كرسي متحرك|جهاز ضغط|عكاز/i.test(q)) {
+    catSel.value = 'medical';
+  } else if (/грузоперевозки|такси|доставка|переезд|شحن بضائع|تكسي|نقل اثاث/i.test(q)) {
+    catSel.value = 'freight';
+  } else if (/машина|авто|автомобиль|bmw|mercedes|kia|hyundai|сиارة|مركبة/i.test(q)) {
+    catSel.value = 'transport';
+  } else if (/iphone|айфон|samsung|самсунг|телефон|смартфон|планшет|наушники|هاتف|جوال|موبايل/i.test(q)) {
+    catSel.value = 'electronics';
+  } else if (/мясо|овощи|фрукты|продукты|мед|масло|طعام|خضار|فواكه|لحم|عسل|زيت/i.test(q)) {
+    catSel.value = 'food';
+  } else if (/куртка|джинсы|костюм|обувь|кроссовки|рубашка|ملابس|حذاء|بنطال|قميص/i.test(q)) {
+    catSel.value = 'fashion';
+  } else if (/ремонт|услуги|мастер|строительство|خدمة|خدمات|صيانة|تصليح/i.test(q)) {
     catSel.value = 'services';
   }
 }
@@ -1244,37 +1257,60 @@ async function setAdStatusSecure(adId, newStatus, successMsg) {
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
 
-  // 1. Мгновенно меняем статус локально и принудительно ставим ACTIVE для возврата
-  ad.status = newStatus;
+  if (!currentUser) {
+    openAuthModal();
+    showToast('Войдите в аккаунт', 'warning');
+    return;
+  }
+
+  const callerId = currentUser.uid || currentUser.username;
+  const targetStatus = String(newStatus).toUpperCase();
+
+  // 1. Сначала гарантированно сохраняем в Supabase
+  if (supabaseClient) {
+    try {
+      const { data: res, error } = await supabaseClient.rpc('set_ad_status', {
+        p_ad_id: ad.id,
+        p_caller_id: callerId,
+        p_new_status: targetStatus
+      });
+
+      if (error || (res && !res.success)) {
+        // Запасной прямой апдейт
+        const { error: directErr } = await supabaseClient
+          .from('ads')
+          .update({ status: targetStatus })
+          .eq('id', ad.id);
+
+        if (directErr) {
+          console.error('Ошибка записи статуса в БД:', directErr);
+          showToast('Ошибка сохранения статуса в базе: ' + directErr.message, 'error');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Сбой сети при обновлении статуса:', err);
+      showToast('Ошибка соединения с сервером', 'error');
+      return;
+    }
+  }
+
+  // 2. Фиксируем в локальном массиве и кэше
+  ad.status = targetStatus;
   saveCachedAds();
-  
+
   closeModal('modal-ad-detail');
   closeModal('modal-my-shop');
-  
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(ad.sellerUid || ad.sellerUsername);
+  }
+
   renderAds();
   renderCategoryPills();
   if (typeof SYSTEM_CONFIG !== 'undefined' && SYSTEM_CONFIG.adminTab === 'ads') {
     renderAdminTabContent();
   }
   showToast(successMsg, 'success');
-
-  // 2. Отправляем обновление в Supabase (и в RPC, и напрямую в таблицу для 100% гарантии)
-  if (supabaseClient) {
-    try {
-      await supabaseClient.from('ads').update({ status: newStatus }).eq('id', adId);
-      
-      if (currentUser) {
-        supabaseClient.rpc('secure_manage_ad', {
-          p_ad_id: adId,
-          p_caller_id: currentUser.uid || currentUser.username,
-          p_action: 'SET_STATUS',
-          p_status: newStatus
-        }).then().catch(() => {});
-      }
-    } catch (err) {
-      console.warn('Status update sync error:', err);
-    }
-  }
 }
 
 async function doToggleLike(adId) { 

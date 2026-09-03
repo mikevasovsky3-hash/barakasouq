@@ -560,9 +560,18 @@ if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
       saveCachedCombos();
     }
 
-    if (catsRes.data && catsRes.data.length) categories = catsRes.data;
+if (catsRes.data && catsRes.data.length) {
+      const dbMap = new Map(catsRes.data.map(c => [c.id, c]));
+      categories = categories.map(c => dbMap.get(c.id) || c);
+      catsRes.data.forEach(c => {
+        if (!categories.some(x => x.id === c.id)) categories.push(c);
+      });
+      pushCategoriesToCloud();
+    } else {
+      pushCategoriesToCloud();
+    }
     if (reportsRes.data) reports = reportsRes.data;
-
+	
 saveCachedAds();
     renderCategoryPills();
     renderAds();

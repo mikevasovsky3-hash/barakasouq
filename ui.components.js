@@ -478,6 +478,7 @@ function updateComboSummary() {
 function getCategoryAdsCount(catId) { 
   if (catId === 'combos') return combos.length; 
   if (catId === 'discounts') return ads.filter(a => a.status === 'ACTIVE' && a.oldPrice && a.oldPrice > a.price).length;
+  if (catId === 'sold_archive') return ads.filter(a => a.status === 'SOLD').length;
   return ads.filter(ad => { 
     if (ad.status !== 'ACTIVE') return false; 
     if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false; 
@@ -491,22 +492,37 @@ function renderCategoryPills() {
   const c = byId('categories-container');
   if (!c) return;
   let pills = [{ id: 'all', icon: 'fa-border-all', name: t('Все') }];
-  if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) pills.push({ id: 'women_only', icon: 'fa-venus', name: t('Для женщин 🌸') });
+  if (currentUser && (currentUser.gender === 'FEMALE' || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN')) {
+    pills.push({ id: 'women_only', icon: 'fa-venus', name: t('Для женщин 🌸') });
+  }
   pills.push({ id: 'free', icon: 'fa-gift', name: t('Даром 🎁') });
+  pills.push({ id: 'sold_archive', icon: 'fa-handshake', name: t('Продано 🤝') });
   pills.push({ id: 'discounts', icon: 'fa-percent', name: t('Скидки') });
   pills.push({ id: 'combos', icon: 'fa-fire', name: t('Акции') });
   pills = pills.concat(categories.map(x => ({ id: x.id, icon: x.icon || 'fa-tag', name: t(x.name) })));
-  c.innerHTML = pills.map(p => {
-    const count = p.id === 'all' ? (ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role !== 'ADMIN')))).length + combos.length) : getCategoryAdsCount(p.id);
+
+  const systemAlwaysShown = ['all', 'sold_archive', 'free', 'discounts', 'combos', 'women_only'];
+
+  const visiblePills = pills.map(p => {
+    const count = p.id === 'all' 
+      ? (ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role !== 'ADMIN')))).length + combos.length) 
+      : getCategoryAdsCount(p.id);
+    return { ...p, count };
+  }).filter(p => {
+    if (systemAlwaysShown.includes(p.id)) return true;
+    if (selectedCategory === p.id) return true;
+    return p.count > 0;
+  });
+
+  c.innerHTML = visiblePills.map(p => {
     const active = selectedCategory === p.id;
     return `<button onclick="handleCategoryClick('${p.id}')" class="flex flex-col items-center gap-1 shrink-0 w-[48px] group">
 <div class="w-8 h-8 rounded-full p-[2px] ${active ? 'story-ring shadow-md' : ''}" style="${active ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1px]"><div class="w-full h-full rounded-full bg-field flex items-center justify-center t1 text-sm"><i class="fa-solid ${p.icon}"></i></div></div></div>
-<span class="text-[10px] ${active ? 'font-bold t1' : 't2'} truncate w-12 text-center">${p.name}</span><span class="text-[8px] t2 -mt-1">${count}</span></button>`;
+<span class="text-[10px] ${active ? 'font-bold t1' : 't2'} truncate w-12 text-center">${p.name}</span><span class="text-[8px] t2 -mt-1">${p.count}</span></button>`;
   }).join('');
 }
 
 let currentRenderCycle = 0;
-
 function renderAds() {
   const grid = byId('listings-view'), pag = byId('pagination-container');
   if (!grid) return;
@@ -541,23 +557,28 @@ if (selectedCategory === 'shops_dir') {
   const merged = ads.concat(combos.map(comboToVirtualAd).filter(Boolean));
   const filtered = merged.filter(ad => {
     const isCombo = !!ad.isCombo;
-    if (!isCombo) {
-      if (ad.status !== 'ACTIVE') return false;
-      if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false;
+    if (selectedCategory === 'sold_archive') {
+      if (isCombo || ad.status !== 'SOLD') return false;
+    } else {
+      if (!isCombo) {
+        if (ad.status !== 'ACTIVE') return false;
+        if (ad.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false;
+      }
+      if (selectedCategory === 'favorites') {
+        if (!favorites.includes(ad.id)) return false;
+      } else if (selectedCategory === 'combos') {
+        if (!isCombo) return false;
+      } else if (selectedCategory === 'discounts') {
+        if (isCombo || !ad.oldPrice || ad.oldPrice <= ad.price) return false;
+      } else if (selectedCategory === 'women_only') {
+        if (isCombo || !ad.isWomenOnly) return false;
+      } else if (selectedCategory === 'free') {
+        if (isCombo || (!ad.isFree && ad.price > 0)) return false;
+      } else if (selectedCategory !== 'all') {
+        if (isCombo || ad.category !== selectedCategory) return false;
+      }
     }
-    if (selectedCategory === 'favorites') {
-      if (!favorites.includes(ad.id)) return false;
-    } else if (selectedCategory === 'combos') {
-      if (!isCombo) return false;
-    } else if (selectedCategory === 'discounts') {
-      if (isCombo || !ad.oldPrice || ad.oldPrice <= ad.price) return false;
-    } else if (selectedCategory === 'women_only') {
-      if (isCombo || !ad.isWomenOnly) return false;
-    } else if (selectedCategory === 'free') {
-      if (isCombo || (!ad.isFree && ad.price > 0)) return false;
-    } else if (selectedCategory !== 'all') {
-      if (isCombo || ad.category !== selectedCategory) return false;
-    }
+	
 if (selectedCategory !== 'favorites') {
       if (region !== 'ALL' && ad.region !== region) return false;
       if (activeRadiusKm > 0 && userCurrentCoords) {
@@ -776,6 +797,13 @@ ${ad.isCombo ? renderComboSlashCollage(ad) : `
 <div id="cbg-${ad.id}" class="absolute inset-0 bg-cover bg-center blur-md opacity-25 scale-105" style="background-image:url('${imgs[0]}'); transition: opacity 0.3s;"></div>
 <img id="cimg-${ad.id}" src="${imgs[0]}" alt="${ad.title}" loading="lazy" decoding="async" class="relative w-full h-full object-contain z-[1] transition-opacity duration-200" onerror="this.src=PLACEHOLDER_IMG" onload="this.style.opacity='1'; if(this.naturalWidth<=300 && this.src.includes('imgbb')) this.src=PLACEHOLDER_IMG;" style="opacity:0.85">
 `}
+${ad.status === 'SOLD' ? `
+  <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/45 pointer-events-none">
+    <div class="transform -rotate-12 border-4 border-emerald-500 text-emerald-400 font-black tracking-widest text-2xl sm:text-3xl px-6 py-2 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.7)] bg-black/75 uppercase backdrop-blur-sm select-none">
+      ${currentLang === 'ar' ? 'تم البيع ✓' : 'ПРОДАНО ✓'}
+    </div>
+  </div>
+` : ''}
 ${ad.isCombo ? `
   <div class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-xl text-xs font-black text-white flex items-center gap-1.5 shadow-xl border border-white/20" style="background:linear-gradient(45deg,#f97316,#ef4444)">
     <i class="fa-solid fa-fire animate-pulse text-sm"></i> ${t('АКЦИЯ')} • ${t('КОМБО')}
@@ -784,7 +812,7 @@ ${ad.isCombo ? `
     <i class="fa-solid fa-fire-flame-curved animate-bounce"></i> ${t('Скидка')} -${discPercent}%
   </div>` : `<span class="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10">${priceBadge(ad)}</span>`)}
   ${ad.isWomenOnly ? `<span class="absolute bottom-3 left-3 z-10 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background:rgba(236,72,153,.9)">${t('Для женщин 🌸')}</span>` : ''}
-${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" aria-label="Предыдущее фото" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" aria-label="Следующее фото" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
+  ${imgs.length > 1 ? `<button onclick="cardNav(event,'${ad.id}',-1)" aria-label="Предыдущее фото" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevL()}</button><button onclick="cardNav(event,'${ad.id}',1)" aria-label="Следующее фото" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 text-black flex items-center justify-center shadow hover:bg-white">${IGSVG.chevR()}</button><div id="cdot-${ad.id}" class="absolute bottom-2.5 inset-x-0 z-10 flex justify-center gap-1">${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}</div>` : ''}
 </div>
 <div class="flex items-center gap-4 px-3.5 pt-3 t1">
 <button onclick="toggleLike('${ad.id}', event)" class="ig-btn-nav ${liked ? 'heart-pop' : ''}" title="Лайк">${IGSVG.heart(liked)}</button>
