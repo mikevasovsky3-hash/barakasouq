@@ -250,9 +250,23 @@ async function bumpAdToTop(adId) {
   const ad = ads.find(a => a.id === adId);
   if (!ad || !currentUser) return;
 
-  ad.createdAt = Date.now();
+  const nowTime = Date.now();
+  ad.createdAt = nowTime;
+  ad.created_at = nowTime;
+
   if (supabaseClient) {
-    await supabaseClient.from('ads').update({ created_at: ad.createdAt }).eq('id', ad.id);
+    try {
+      const { error } = await supabaseClient
+        .from('ads')
+        .update({ created_at: nowTime })
+        .eq('id', ad.id);
+
+      if (error) {
+        console.warn('Ошибка поднятия в топ в Supabase:', error);
+      }
+    } catch (err) {
+      console.warn('Сетевой сбой при поднятии в топ:', err);
+    }
   }
 
   // Перемещаем в начало локального массива
