@@ -3243,7 +3243,12 @@ function openShopShowcase(shopUserUid, filterStoreCat = 'ALL') {
     (x.sellerUsername && seller.username && x.sellerUsername.toLowerCase() === seller.username.toLowerCase())
   ).map(comboToVirtualAd).filter(Boolean); 
 
-const isShopOwner = !!(currentUser && ((currentUser.uid && seller.uid && currentUser.uid === seller.uid) || (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) || currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
+const isShopOwner = !!(currentUser && (
+    (currentUser.uid && seller.uid && String(currentUser.uid) === String(seller.uid)) ||
+    (currentUser.username && seller.username && currentUser.username.toLowerCase() === seller.username.toLowerCase()) ||
+    currentUser.role === 'SUPERUSER' || 
+    currentUser.role === 'ADMIN'
+  ));
 
   if (currentLang === 'ar' && typeof translateDynamic === 'function') {
     if (shop.slogan) translateDynamic(shop.slogan, 'ar').then(res => { const el = byId('showcase-shop-slogan'); if (el) el.innerText = res; });
@@ -3263,15 +3268,15 @@ c.innerHTML = `<div class="space-y-4">
   </div>
   <div class="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto">
     <a href="https://wa.me/${(shop.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2.5 text-white text-xs font-bold rounded-xl shrink-0 flex items-center justify-center gap-1.5 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-base"></i> ${t('Связаться')}</a>
-    ${isShopOwner ? `<button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold border b-ig bg-field hover:bg-ig t1 flex items-center justify-center gap-1.5"><i class="fa-solid fa-gear text-purple-400"></i> ${t('Настройки')}</button>` : ''}
+    ${isShopOwner ? `<button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="px-3.5 py-2.5 rounded-xl text-xs font-bold border b-ig bg-field hover:bg-ig t1 flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"><i class="fa-solid fa-gear text-purple-400"></i> ${t('Настройки')}</button>` : ''}
   </div>
 </div>
 
 ${isShopOwner ? `
 <div class="p-3.5 rounded-2xl border space-y-2.5 bg-field" style="border-color:rgba(147,51,234,.35)">
   <div class="flex items-center justify-between text-xs font-bold">
-    <span class="t1 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> ${t('Управление магазином')}</span>
-    <button onclick="openMyShopModal()" class="text-xs text-purple-400 font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-sliders"></i> ${t('Полная панель')}</button>
+    <span class="t1 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> ${t('Панель управления магазином')}</span>
+    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1" style="${(seller.verifiedShop || shop.isVerified) ? 'background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)' : 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)'}"><i class="fa-solid ${(seller.verifiedShop || shop.isVerified) ? 'fa-circle-check' : 'fa-hourglass-half'}"></i> ${(seller.verifiedShop || shop.isVerified) ? t('Подтвержден') : t('На проверке')}</span>
   </div>
   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
     <button onclick="closeModal('modal-shop-showcase'); openCreateAdModal();" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#10b981,#14b8a6)">
@@ -3280,12 +3285,57 @@ ${isShopOwner ? `
     <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:linear-gradient(45deg,#f97316,#ef4444)">
       <i class="fa-solid fa-fire"></i> ${t('Создать комбо')}
     </button>
-    <button onclick="exportShopDatabaseJSON()" class="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:#9333ea">
-      <i class="fa-solid fa-download"></i> ${t('Бэкап (JSON)')}
+    <button onclick="openCreateShopModal('${seller.uid || seller.username}')" class="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" style="background:#9333ea">
+      <i class="fa-solid fa-gear"></i> ${t('Редактировать магазин')}
     </button>
   </div>
+</div>
+
+${(() => {
+  const max = shop.maxAds || 50;
+  const cur = shopAds.length;
+  const percent = Math.min(100, Math.round((cur / max) * 100));
+  const left = Math.max(0, max - cur);
+  const barColor = percent >= 90 ? '#ef4444' : (percent >= 75 ? '#f59e0b' : '#9333ea');
+  return `
+  <div class="p-3.5 rounded-2xl bg-field border b-ig space-y-2">
+    <div class="flex items-center justify-between text-xs">
+      <span class="font-bold t1 flex items-center gap-1.5"><i class="fa-solid fa-boxes-stacked" style="color:${barColor}"></i> ${t('Заполненность магазина')}</span>
+      <span class="font-mono font-extrabold t1">${cur} / ${max} <span class="t2 font-normal text-[10px]">(${percent}%)</span></span>
+    </div>
+    <div class="w-full h-2.5 rounded-full bg-black/40 border b-ig overflow-hidden p-0.5">
+      <div class="h-full rounded-full transition-all duration-300" style="width:${percent}%; background:${barColor}"></div>
+    </div>
+    <div class="flex items-center justify-between text-[10px] pt-0.5">
+      <span class="t2">${left === 0 ? `<b style="color:#ef4444">${t('Лимит исчерпан')}</b>` : `${t('Осталось мест')}: <b class="t1">${left}</b>`}</span>
+      <button onclick="upgradeShopLimitNow()" class="font-bold text-[10px] px-2.5 py-1 rounded-lg text-white transition-all active:scale-95" style="background:linear-gradient(45deg,#9333ea,#7c3aed)">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i> ${t('Расширить лимит (+50 мест / 5 AC)')}
+      </button>
+    </div>
+  </div>`;
+})()}
+
+<div class="p-4 rounded-2xl bg-field border b-ig space-y-3">
+  <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-list-check" style="color:#9333ea"></i> ${t('Личные категории магазина')}</h4>
+  <div class="flex gap-2">
+    <input type="text" id="new-shop-cat-input" placeholder="${t('Например: Запчасти или Чехлы')}" class="ig-input flex-1 px-3 py-2 text-xs">
+    <button onclick="addShopCustomCategory()" class="px-3 py-2 text-white font-bold text-xs rounded-lg shrink-0" style="background:#9333ea"><i class="fa-solid fa-plus"></i> ${t('Добавить')}</button>
+  </div>
+  <div class="flex flex-wrap gap-1.5 pt-1">
+    ${cats.length === 0 ? `<div class="text-[11px] t2">${t('Собственных категорий пока нет')}</div>` : cats.map((cat, idx) => `<span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-2 border" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.35)"><span>${cat}</span><button onclick="removeShopCustomCategory(${idx})" style="color:#ed4956"><i class="fa-solid fa-xmark"></i></button></span>`).join('')}
+  </div>
+</div>
+
+<div class="p-4 rounded-2xl border space-y-3" style="border-color:rgba(147,51,234,.3);background:rgba(147,51,234,.06)">
+  <h4 class="font-extrabold t1 text-xs flex items-center gap-1.5"><i class="fa-solid fa-database" style="color:#f59e0b"></i> ${t('Бэкап (JSON)')}</h4>
+  <div class="grid grid-cols-2 gap-2">
+    <button onclick="exportShopDatabaseJSON()" class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5" style="background:#9333ea"><i class="fa-solid fa-download"></i> ${t('Экспорт')}</button>
+    <label class="py-2.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> ${t('Импорт')}<input type="file" accept=".json" onchange="importShopDatabaseJSON(event)" class="hidden"></label>
+  </div>
 </div>` : ''}
+
 <div id="showcase-shop-map" class="h-36 rounded-2xl border b-ig overflow-hidden bg-field z-0"></div>
+
 ${shopCombos.length > 0 ? `<div class="space-y-2"><div class="font-bold text-xs flex items-center gap-1.5" style="color:#f97316"><i class="fa-solid fa-fire"></i> ${t('Акции магазина:')}</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${shopCombos.map(v => {
   if (currentLang === 'ar' && typeof translateDynamic === 'function') {
     translateDynamic(v.title, 'ar').then(trans => {
@@ -3293,7 +3343,7 @@ ${shopCombos.length > 0 ? `<div class="space-y-2"><div class="font-bold text-xs 
       if (el) el.innerText = trans;
     });
   }
-  return `<div onclick="openAdDetail('${v.id}')" class="ig-card p-3 rounded-xl cursor-pointer hover:bg-field"><div class="flex items-center gap-3"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate flex items-center gap-1"><i class="fa-solid fa-fire" style="color:#f97316"></i> <span id="showcase-combo-title-${v.id}">${v.title}</span></div><div class="text-[11px] font-extrabold" style="color:#f97316">$${Number(v.price).toFixed(2)} <span class="t2 line-through font-normal">$${v.comboOriginalTotal.toFixed(2)}</span></div><div class="text-[10px] t2">${v.comboItems.length} ${t('товаров в комплекте')}</div></div></div></div>`;
+  return `<div class="ig-card p-3 rounded-xl hover:bg-field flex flex-col justify-between gap-2"><div onclick="openAdDetail('${v.id}')" class="flex items-center gap-3 cursor-pointer"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover border b-ig shrink-0"><div class="flex-1 min-w-0"><div class="font-bold t1 text-xs truncate flex items-center gap-1"><i class="fa-solid fa-fire" style="color:#f97316"></i> <span id="showcase-combo-title-${v.id}">${v.title}</span></div><div class="text-[11px] font-extrabold" style="color:#f97316">$${Number(v.price).toFixed(2)} <span class="t2 line-through font-normal">$${v.comboOriginalTotal.toFixed(2)}</span></div><div class="text-[10px] t2">${v.comboItems.length} ${t('товаров в комплекте')}</div></div></div>${isShopOwner ? `<div class="flex items-center justify-end gap-1.5 pt-1.5 border-t b-ig"><button onclick="openComboBuilder('${seller.uid || ''}','${v.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border" style="color:#f97316;border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.12)"><i class="fa-solid fa-pen-to-square"></i> ${t('Изменить акцию')}</button><button onclick="deleteComboWithConfirm('${v.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold" style="color:#ed4956;background:rgba(237,73,86,.12)"><i class="fa-solid fa-trash"></i></button></div>` : ''}</div>`;
 }).join('')}</div></div>` : ''}
 ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"><button onclick="openShopShowcase('${shopUserUid}','ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === 'ALL' ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === 'ALL' ? 'background:#9333ea;border-color:#9333ea' : ''}">${t('Все товары')} (${shopAds.length})</button>${cats.map(cn => `<button onclick="openShopShowcase('${shopUserUid}','${String(cn).replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-lg text-xs font-bold border shrink-0 ${filterStoreCat === cn ? 'text-white' : 'b-ig t1'}" style="${filterStoreCat === cn ? 'background:#9333ea;border-color:#9333ea' : ''}">${cn} (${shopAds.filter(a => a.storeCategory === cn).length})</button>`).join('')}</div>` : ''}
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.length === 0 ? `<div class="col-span-full py-8 text-center t2">${t('Товаров пока нет')}</div>` : list.map(ad => {
@@ -3316,23 +3366,29 @@ ${cats.length > 0 ? `<div class="flex items-center gap-1.5 overflow-x-auto pb-1 
     </div>
   </div>
   ${isShopOwner ? `
-  <div class="pt-1.5 border-t b-ig grid grid-cols-2 gap-1">
-    <button onclick="openQuickDiscountModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="${t('Сделать скидку')}">
-      <i class="fa-solid fa-tag"></i> ${t('Скидка')}
+  <div class="pt-1.5 border-t b-ig grid grid-cols-2 sm:grid-cols-3 gap-1">
+    <button onclick="bumpAdToTop('${ad.id}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" style="background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)" title="${t('Поднять в ТОП')}">
+      <i class="fa-solid fa-rocket text-[11px] shrink-0"></i> <span class="truncate">${t('В ТОП')}</span>
     </button>
-    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="${t('Добавить в комбо')}">
-      <i class="fa-solid fa-fire"></i> ${t('В комбо')}
+    <button onclick="openQuickDiscountModal('${ad.id}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3)" title="${t('Сделать скидку')}">
+      <i class="fa-solid fa-percent text-[11px] shrink-0"></i> <span class="truncate">${t('Скидка')}</span>
     </button>
-    <button onclick="startShopAuction('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="${t('Запустить аукцион')}">
-      <i class="fa-solid fa-gavel"></i> ${t('Аукцион')}
+    <button onclick="openGiftForSpecificAd('${ad.id}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" style="background:rgba(16,185,129,.15);color:#10b981;border-color:rgba(16,185,129,.4)" title="${t('Товар + Подарок')}">
+      <i class="fa-solid fa-gift text-[11px] shrink-0"></i> <span class="truncate">${t('+Подарок')}</span>
     </button>
-    <button onclick="openEditAdModal('${ad.id}')" class="py-1 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95" title="${t('Редактировать')}">
-      <i class="fa-solid fa-pen"></i> ${t('Изменить')}
+    <button onclick="openComboBuilder('${seller.uid || ''}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" style="background:rgba(249,115,22,.12);color:#f97316;border-color:rgba(249,115,22,.3)" title="${t('Добавить в комбо')}">
+      <i class="fa-solid fa-fire text-[11px] shrink-0"></i> <span class="truncate">${t('В комбо')}</span>
+    </button>
+    <button onclick="startShopAuction('${ad.id}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" style="background:rgba(147,51,234,.12);color:#c084fc;border-color:rgba(147,51,234,.3)" title="${t('Запустить аукцион')}">
+      <i class="fa-solid fa-gavel text-[11px] shrink-0"></i> <span class="truncate">${t('Аукцион')}</span>
+    </button>
+    <button onclick="openEditAdModal('${ad.id}')" class="py-1.5 px-1 rounded-lg text-[10px] font-bold border b-ig t2 hover:bg-field flex items-center justify-center gap-1 transition active:scale-95 whitespace-nowrap overflow-hidden" title="${t('Редактировать')}">
+      <i class="fa-solid fa-pen text-[11px] shrink-0"></i> <span class="truncate">${t('Изменить')}</span>
     </button>
   </div>` : ''}
 </div>`;
 }).join('')}</div>
-</div>`; 
+</div>`;
   openModal('modal-shop-showcase');
   setTimeout(() => initShowcaseShopMap(shop.lat || 33.5138, shop.lng || 36.2765, shop.name), 200); 
 } 
@@ -3369,7 +3425,12 @@ async function upgradeShopLimitNow() {
           await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
         }
         saveUserSession(currentUser, true);
-        openMyShopModal();
+        if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+          openShopShowcase(currentUser.uid);
+        }
+        if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+          openMyShopModal();
+        }
         showToast(t('Лимит магазина успешно увеличен!'), 'success');
       }
     }
@@ -3573,7 +3634,12 @@ async function addShopCustomCategory() {
     await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
   }
   saveUserSession(currentUser, true);
-  openMyShopModal();
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(currentUser.uid);
+  }
+  if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+    openMyShopModal();
+  }
   showToast(`Категория "${val}" добавлена!`, 'success');
 }
 
@@ -3584,7 +3650,12 @@ async function removeShopCustomCategory(index) {
     await supabaseClient.from('users').update({ shop: currentUser.shop }).eq('uid', currentUser.uid);
   }
   saveUserSession(currentUser, true);
-  openMyShopModal();
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(currentUser.uid);
+  }
+  if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+    openMyShopModal();
+  }
   showToast('Категория удалена', 'info');
 }
 

@@ -259,7 +259,15 @@ async function bumpAdToTop(adId) {
   ads = [ad, ...ads.filter(a => a.id !== adId)];
   saveCachedAds();
   renderAds();
-  openProfileModal();
+  if (byId('modal-shop-showcase') && !byId('modal-shop-showcase').classList.contains('hidden')) {
+    openShopShowcase(ad.sellerUid || ad.sellerUsername);
+  }
+  if (byId('modal-my-shop') && !byId('modal-my-shop').classList.contains('hidden')) {
+    openMyShopModal();
+  }
+  if (byId('modal-profile') && !byId('modal-profile').classList.contains('hidden')) {
+    openProfileModal();
+  }
   showToast('🚀 Объявление поднято на первое место в ленте!', 'success');
 }
 
