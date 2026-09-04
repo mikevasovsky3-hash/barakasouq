@@ -422,12 +422,14 @@ async function handleMultiImageCompressUpload(e, mode = 'create') {
 for (const f of files.slice(0, slots)) {
     try {
       const compressedFile = await compressSingleImageFile(f, 800, 800, 0.75);
-      const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+      const ext = (compressedFile && compressedFile.type === 'image/webp') ? 'webp' : 'jpg';
+      const mimeType = (compressedFile && compressedFile.type) ? compressedFile.type : 'image/jpeg';
+      const filePath = `public/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 	  
-const { error: sbErr } = await supabaseClient.storage
+      const { error: sbErr } = await supabaseClient.storage
         .from('listings')
         .upload(filePath, compressedFile, {
-          contentType: 'image/webp',
+          contentType: mimeType,
           cacheControl: '31536000',
           upsert: false
         });
@@ -2617,7 +2619,7 @@ async function recoverPasswordViaWhatsApp() {
     targetUser.phoneVerified = true;
     targetUser.phone_verified = true;
 
-   const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
+    const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
     if (uIdx !== -1) {
       users[uIdx].phoneVerified = true;
       users[uIdx].phone_verified = true;
