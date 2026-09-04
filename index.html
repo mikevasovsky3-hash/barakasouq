@@ -528,6 +528,18 @@ body { top: 0px !important; }
 <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold border-b-2" style="border-color:#0095f6;color:#0095f6">Вход</button>
 <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold border-b-2 border-transparent t2">Регистрация</button>
 </div>
+<div class="space-y-2 pt-1">
+  <button type="button" id="tg-instant-auth-btn" onclick="handleTelegramInstantAuth()" class="w-full py-2.5 px-3 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-95" style="background:linear-gradient(45deg,#229ED9,#0088cc)">
+    <i class="fa-brands fa-telegram text-base"></i>
+    <span>Войти через Telegram</span>
+  </button>
+  <div class="flex items-center gap-2 my-2">
+    <div class="h-px bg-field flex-1 border-b b-ig"></div>
+    <span class="text-[10px] t2 uppercase font-semibold">или по логину / номеру</span>
+    <div class="h-px bg-field flex-1 border-b b-ig"></div>
+  </div>
+</div>
+
 <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-sm">
 <div id="login-fields" class="space-y-2.5">
   <input type="text" id="auth-username" placeholder="Логин или WhatsApp *" class="ig-input w-full px-3.5 py-2.5 text-xs">

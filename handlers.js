@@ -1845,11 +1845,16 @@ try {
     requestPushPermission();
     checkUrlHashAdOpen();
 
-    // Инициализация Telegram Mini App
+  // Инициализация Telegram Mini App
     if (window.Telegram && window.Telegram.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
+
+      // Если сессия пустая, но зашли через Telegram — авторизуем автоматически
+      if (!currentUser && tg.initDataUnsafe?.user) {
+        setTimeout(handleTelegramInstantAuth, 300);
+      }
     }
   } catch(e) {
     console.warn('Startup async services error:', e);
@@ -2669,4 +2674,97 @@ async function recoverPasswordViaWhatsApp() {
   // Подставляем данные в форму входа
   if (byId('auth-username')) byId('auth-username').value = targetUser.username;
   if (byId('auth-password')) byId('auth-password').value = newRawPass;
+}
+/* ================= АВТОРИЗАЦИЯ ЧЕРЕЗ TELEGRAM ================= */
+async function handleTelegramInstantAuth() {
+  if (!supabaseClient) {
+    showToast('Нет соединения с базой данных', 'error');
+    return;
+  }
+
+  // 1. Сценарий: Пользователь находится внутри Telegram Mini App
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+    const tgId = String(tgUser.id);
+    const tgUsername = tgUser.username ? tgUser.username : ('tg_' + tgId.slice(-6));
+    const tgName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUsername;
+
+    showToast('Авторизация через Telegram...', 'info');
+
+    try {
+      // Ищем существующего пользователя по telegram_id или username
+      let { data: existingUser, error: searchErr } = await supabaseClient
+        .from('users')
+        .select('*')
+        .or(`username.ilike.${tgUsername},whatsapp.ilike.%${tgId}%`)
+        .maybeSingle();
+
+      if (existingUser) {
+        if (existingUser.is_archived || existingUser.isArchived) {
+          showToast('Этот аккаунт заблокирован.', 'error');
+          return;
+        }
+
+        const normalizedUser = {
+          ...existingUser,
+          passwordHash: existingUser.password_hash,
+          phoneVerified: true,
+          avitocashBalance: Number(existingUser.avitocash_balance || 0),
+          trialBalance: Number(existingUser.trial_balance || 0),
+          showWomenAds: !!existingUser.show_women_ads,
+          verifiedShop: !!existingUser.verified_shop
+        };
+
+        const idx = users.findIndex(u => u.uid === normalizedUser.uid);
+        if (idx !== -1) users[idx] = normalizedUser;
+        else users.push(normalizedUser);
+
+        saveUserSession(normalizedUser, true);
+        closeModal('modal-auth');
+        showToast(`Добро пожаловать, ${normalizedUser.kunya || normalizedUser.username}! 🎉`, 'success');
+        return;
+      }
+
+      // Если пользователя нет — регистрируем в 1 клик
+      const autoPass = 'tg_pass_' + Math.random().toString(36).slice(-8);
+      const passHash = await sha256(autoPass);
+      const newUid = 'u_tg_' + tgId;
+
+      const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+        p_uid: newUid,
+        p_username: tgUsername,
+        p_password_hash: passHash,
+        p_kunya: tgName,
+        p_gender: 'MALE',
+        p_whatsapp: tgId,
+        p_avatar: tgUser.photo_url || null
+      });
+
+      if (regErr || !regRes || !regRes.success) {
+        showToast(regRes?.error || 'Ошибка автоматической регистрации', 'error');
+        return;
+      }
+
+      const localUser = {
+        ...regRes.user,
+        phoneVerified: true
+      };
+
+      users.push(localUser);
+      saveUserSession(localUser, true);
+      closeModal('modal-auth');
+      showToast(`Профиль создан! Добро пожаловать, ${localUser.kunya}! 🎉`, 'success');
+      return;
+
+    } catch (err) {
+      console.error('Telegram auth error:', err);
+      showToast('Сбой входа через Telegram', 'error');
+      return;
+    }
+  }
+
+  // 2. Сценарий: Пользователь открыл сайт в обычном браузере
+  // Перенаправляем его в бота с параметром авторизации
+  showToast('Перенаправляем в Telegram-бота...', 'info');
+  window.open('https://t.me/AvitoSham_bot/app', '_blank');
 }
