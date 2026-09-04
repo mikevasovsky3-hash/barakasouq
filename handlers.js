@@ -2617,10 +2617,15 @@ async function recoverPasswordViaWhatsApp() {
     targetUser.phoneVerified = true;
     targetUser.phone_verified = true;
 
-    const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
+   const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
     if (uIdx !== -1) {
       users[uIdx].phoneVerified = true;
       users[uIdx].phone_verified = true;
       users[uIdx].passwordHash = newPassHash;
     }
   }
+
+  // Подставляем данные в форму входа
+  if (byId('auth-username')) byId('auth-username').value = targetUser.username;
+  if (byId('auth-password')) byId('auth-password').value = newRawPass;
+}
