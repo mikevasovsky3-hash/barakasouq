@@ -1836,14 +1836,32 @@ function openProfileModal() {
     const myAds = ads.filter(a => a.sellerUsername && a.sellerUsername.toLowerCase() === (currentUser.username || '').toLowerCase()); 
     const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); 
     const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
-    const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
     const isDnd = !!currentUser.isDnd;
+    const isPhoneVerified = !!(currentUser.phoneVerified || currentUser.phone_verified);
 
     c.innerHTML = `
     <div class="space-y-3 pt-1">
+        ${!isPhoneVerified ? `
+        <!-- Плашка-уведомление о необходимости верификации WhatsApp -->
+        <div class="p-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 flex items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <i class="fa-brands fa-whatsapp text-xl text-amber-500 shrink-0"></i>
+                <div class="min-w-0">
+                    <div class="text-xs font-bold text-amber-500 flex items-center gap-1.5">
+                        <span>${t('Номер не подтвержден')}</span>
+                    </div>
+                    <div class="text-[10px] t2 truncate">${t('Подтвердите ваш WhatsApp для безопасности объявлений')}</div>
+                </div>
+            </div>
+            <button onclick="startUserWhatsAppVerification()" class="px-3 py-1.5 rounded-xl text-xs font-bold text-black bg-amber-500 hover:bg-amber-400 active:scale-95 transition shrink-0 shadow">
+                ${t('Подтвердить')}
+            </button>
+        </div>` : ''}
+
         <!-- Шапка: Аватар + Инфо -->
         <div class="bg-field p-3.5 rounded-2xl border b-ig flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
+		<div class="flex items-center gap-3 min-w-0">
                 <div class="w-12 h-12 rounded-full overflow-hidden bg-card border b-ig flex items-center justify-center shrink-0">
                     ${currentUser.avatar ? `<img src="${currentUser.avatar}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-user text-base t2"></i>'}
                 </div>
@@ -1993,7 +2011,14 @@ async function toggleShowWomenAds(enabled) {
 function openEditProfileModal(targetUsername) { 
   const user = users.find(u => u.username === targetUsername) || currentUser; 
   if (!user) return; 
-  byId('edit-profile-username').value = user.username; 
+  const isSelf = currentUser && (currentUser.username === user.username || currentUser.uid === user.uid);
+  const isAdmin = currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN');
+  if (isSelf && !isAdmin && !(user.phoneVerified || user.phone_verified)) {
+    showToast(t('Сначала подтвердите текущий номер WhatsApp!'), 'warning');
+    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
+    return;
+  }
+  byId('edit-profile-username').value = user.username;
   byId('edit-profile-login').value = user.username; 
   byId('edit-profile-password').value = ''; 
   byId('edit-profile-kunya').value = user.kunya || ''; 
@@ -2478,6 +2503,11 @@ function generateGiftCode() {
 }
 
 function openRedeemGiftModal() {
+  if (currentUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
+    showToast(t('Финансовые операции доступны только с подтвержденным номером!'), 'warning');
+    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
+    return;
+  }
   byId('redeem-gift-code').value = '';
   openModal('modal-redeem-gift');
 }
@@ -2485,6 +2515,11 @@ function openRedeemGiftModal() {
 function openTransferModal() {
   if (!currentUser) {
     openAuthModal();
+    return;
+  }
+  if (!(currentUser.phoneVerified || currentUser.phone_verified)) {
+    showToast(t('Финансовые операции доступны только с подтвержденным номером!'), 'warning');
+    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
     return;
   }
   const select = byId('transfer-recipient');
@@ -2871,6 +2906,11 @@ if (!targetUser) {
     openAuthModal(); 
     showToast(t('Войдите в аккаунт'), 'warning'); 
     return; 
+  }
+  if (!shopEditTargetUid && !(targetUser.phoneVerified || targetUser.phone_verified)) {
+    showToast(t('Открытие магазина доступно только после подтверждения номера!'), 'warning');
+    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
+    return;
   }
   const titleEl = byId('shop-modal-title'), submitBtn = byId('shop-submit-btn'); 
   if (shopEditTargetUid) { 

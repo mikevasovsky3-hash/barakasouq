@@ -675,8 +675,13 @@ function toggleAdvancedCreateFields() {
 }
 
 function openCreateAdModal() { 
+  if (currentUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
+    showToast(t('Для подачи объявлений подтвердите номер WhatsApp!'), 'warning');
+    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
+    return;
+  }
   pendingCreateImages = []; 
-  renderPhotoThumbnailsGrid('create'); 
+  renderPhotoThumbnailsGrid('create');
   fillCategorySelect(byId('ad-category')); 
   loadDraftCheck();
 
@@ -2462,3 +2467,160 @@ function contactSupport() {
   const msg = isAr ? 'مرحباً! أحتاج إلى مساعدة في منصة أفيتو الشام' : 'Здравствуйте! Мне нужна помощь по сайту Avito Sham';
   window.open(`https://wa.me/447887280238?text=${encodeURIComponent(msg)}`, '_blank');
 }
+/* ================= ВЕРИФИКАЦИЯ WHATSAPP ДЛЯ СТАРЫХ АККАУНТОВ ================= */
+let pendingOldUserOtp = null;
+
+async function startUserWhatsAppVerification() {
+  if (!currentUser) return;
+  const rawWa = currentUser.whatsapp || '';
+  const waCheck = validateWhatsApp(rawWa);
+  if (!waCheck.valid) {
+    showToast('Сначала укажите корректный WhatsApp в анкете', 'warning');
+    openEditProfileModal(currentUser.username);
+    return;
+  }
+
+  const cleanWa = waCheck.number;
+  const generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+  pendingOldUserOtp = {
+    code: generatedCode,
+    whatsapp: cleanWa,
+    timestamp: Date.now()
+  };
+
+  showToast('Отправка проверочного кода в WhatsApp...', 'info');
+
+  try {
+    const res = await fetch('https://whatsapp-gateway-kohl.vercel.app/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: cleanWa,
+        code: `${generatedCode}\n🔐 Код подтверждения аккаунта Avito Sham`
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Ошибка шлюза');
+    showToast('Код верификации отправлен в ваш WhatsApp!', 'success');
+  } catch (err) {
+    console.warn('Gateway fallback:', err);
+    showToast(`⚠️ Шлюз недоступен. Ваш код подтверждения: ${generatedCode}`, 'warning');
+  }
+
+  const entered = prompt(`Введите 6-значный проверочный код из WhatsApp для номера ${cleanWa}:`);
+  if (!entered) return;
+
+  if (entered.trim() !== pendingOldUserOtp.code) {
+    showToast('Неверный код верификации!', 'error');
+    return;
+  }
+
+  // Обновляем статус
+  currentUser.phoneVerified = true;
+  currentUser.phone_verified = true;
+
+  if (supabaseClient && currentUser.uid) {
+    await supabaseClient.from('users').update({ phone_verified: true }).eq('uid', currentUser.uid);
+  }
+
+  saveUserSession(currentUser, true);
+  pendingOldUserOtp = null;
+  openProfileModal();
+  showToast('Ваш аккаунт и номер WhatsApp успешно подтверждены! 🎉', 'success');
+}
+/* ================= НАПОМНИТЬ / СБРОСИТЬ ПАРОЛЬ ЧЕРЕЗ WHATSAPP ================= */
+async function recoverPasswordViaWhatsApp() {
+  const loginInput = (byId('auth-username')?.value || '').trim();
+  const promptVal = prompt('Введите ваш логин или номер WhatsApp для восстановления доступа:', loginInput);
+  if (!promptVal) return;
+
+  const targetIdentifier = promptVal.trim();
+  const cleanNum = targetIdentifier.replace(/\D/g, '');
+
+  // 1. Ищем пользователя в базе или локальном списке
+  let targetUser = users.find(u => 
+    (u.username && u.username.toLowerCase() === targetIdentifier.toLowerCase()) ||
+    (cleanNum.length >= 7 && u.whatsapp && u.whatsapp.replace(/\D/g, '').includes(cleanNum))
+  );
+
+  if (!targetUser && supabaseClient) {
+    showToast('Поиск аккаунта...', 'info');
+    try {
+      const { data: dbUser } = await supabaseClient
+        .from('users')
+        .select('*')
+        .or(`username.ilike.${targetIdentifier},whatsapp.ilike.%${cleanNum}%`)
+        .maybeSingle();
+      if (dbUser) targetUser = dbUser;
+    } catch (e) {
+      console.warn('User search error:', e);
+    }
+  }
+
+  if (!targetUser || !targetUser.whatsapp) {
+    showToast('Пользователь с такими данными не найден!', 'error');
+    return;
+  }
+
+  const targetWa = targetUser.whatsapp.replace(/[^\d+]/g, '');
+  showToast('Генерация нового пароля и отправка в WhatsApp...', 'info');
+
+  // 2. Генерируем новый надежный пароль
+  const newRawPass = 'sham' + Math.floor(100000 + Math.random() * 900000);
+  const newPassHash = await sha256(newRawPass);
+
+  // 3. Отправляем логин и новый пароль в WhatsApp шлюз
+  try {
+    const res = await fetch('https://whatsapp-gateway-kohl.vercel.app/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: targetWa,
+        code: `🔐 Восстановление доступа к Avito Sham:\n\n👤 Ваш логин: ${targetUser.username}\n🔑 Новый пароль: ${newRawPass}\n\n(Вы можете изменить его в профиле после входа)`
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Ошибка шлюза');
+
+// 4. Записываем новый хэш пароля и подтверждаем верификацию в Supabase
+    if (supabaseClient && targetUser.uid) {
+      await supabaseClient.from('users').update({ 
+        password_hash: newPassHash,
+        phone_verified: true 
+      }).eq('uid', targetUser.uid);
+    }
+    targetUser.passwordHash = newPassHash;
+    targetUser.phoneVerified = true;
+    targetUser.phone_verified = true;
+
+    // Обновляем статус в общем массиве пользователей
+    const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
+    if (uIdx !== -1) {
+      users[uIdx].phoneVerified = true;
+      users[uIdx].phone_verified = true;
+      users[uIdx].passwordHash = newPassHash;
+    }
+
+    showToast(t('Новые данные для входа отправлены в ваш WhatsApp!'), 'success');
+  } catch (err) {
+    console.warn('Password recovery error:', err);
+    // Запасной вариант при сбое шлюза
+    showToast(`⚠️ Шлюз временно недоступен. Новый пароль: ${newRawPass}`, 'warning');
+    if (supabaseClient && targetUser.uid) {
+      await supabaseClient.from('users').update({ 
+        password_hash: newPassHash,
+        phone_verified: true 
+      }).eq('uid', targetUser.uid);
+    }
+    targetUser.passwordHash = newPassHash;
+    targetUser.phoneVerified = true;
+    targetUser.phone_verified = true;
+
+    const uIdx = users.findIndex(u => (u.uid && u.uid === targetUser.uid) || (u.username && u.username.toLowerCase() === targetUser.username.toLowerCase()));
+    if (uIdx !== -1) {
+      users[uIdx].phoneVerified = true;
+      users[uIdx].phone_verified = true;
+      users[uIdx].passwordHash = newPassHash;
+    }
+  }

@@ -558,7 +558,10 @@ body { top: 0px !important; }
     <button type="button" id="auth-resend-btn" onclick="resendWhatsAppCode()" class="hidden w-full text-[11px] text-blue-400 font-bold hover:underline text-center pt-1">Отправить код повторно</button>
   </div>
   </div>
-<label class="flex items-center gap-2 text-xs t2 cursor-pointer"><input type="checkbox" id="auth-remember-me" checked class="accent-[#0095f6]"><span>Запомнить мой вход на этом устройстве</span></label>
+<div class="flex items-center justify-between text-xs">
+  <label class="flex items-center gap-2 t2 cursor-pointer"><input type="checkbox" id="auth-remember-me" checked class="accent-[#0095f6]"><span>Запомнить вход</span></label>
+  <button type="button" onclick="recoverPasswordViaWhatsApp()" class="text-[11px] text-blue-400 hover:underline">Забыли пароль?</button>
+</div>
 <button type="submit" id="auth-submit-btn" class="ig-btn w-full py-2.5 text-sm">Войти</button>
 </form>
 </div>
