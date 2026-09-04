@@ -2074,17 +2074,16 @@ async function finalizeProfileSave(u, orig, nl, nk, nw, na) {
       showToast('Этот номер WhatsApp уже используется другим пользователем!', 'error'); return; 
     } 
   }
-  let safeRole = u.role || 'USER'; let safePasswordHash = u.passwordHash;
+let safeRole = u.role || 'USER';
   if (supabaseClient && u.uid) { 
     try { 
-      const { data: cloudData } = await supabaseClient.from('users').select('role, password_hash').eq('uid', u.uid).single(); 
+      const { data: cloudData } = await supabaseClient.from('users').select('role').eq('uid', u.uid).single(); 
       if (cloudData) { 
         safeRole = cloudData.role || 'USER'; 
-        if (cloudData.password_hash) safePasswordHash = cloudData.password_hash; 
       } 
     } catch (e) { console.warn('Security check failed', e); } 
   }
-  u.role = safeRole; u.passwordHash = safePasswordHash;
+  u.role = safeRole;
   if (currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN') && currentUser.uid !== u.uid) { 
     u.gender = byId('edit-profile-gender').value; 
     u.role = byId('edit-profile-role').value; 

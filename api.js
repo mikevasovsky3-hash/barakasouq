@@ -506,8 +506,8 @@ if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
       }
     }
 	
-    // Синхронизация пользователей
-if (usersRes.data && usersRes.data.length > 0) {
+// Синхронизация пользователей
+    if (usersRes.data && usersRes.data.length > 0) {
       const allParsedUsers = usersRes.data.map(u => ({
         ...u,
         passwordHash: u.password_hash,

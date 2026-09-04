@@ -1698,17 +1698,49 @@ saveUserSession(localUser, remember);
       return;
     }
 
-    try {
-      const { data: res, error } = await supabaseClient.rpc('verify_user_login', {
-        p_username: loginIdentifier,
-        p_password_hash: password
-      });
-      
-      if (error) throw error;
+try {
+      let foundUser = null;
 
-      if (res && res.success && res.user) {
-        const foundUser = res.user;
-        if (foundUser.is_archived || foundUser.isArchived) {
+      // 1. Попытка через RPC-функцию базы
+      try {
+        const { data: res, error: rpcErr } = await supabaseClient.rpc('verify_user_login', {
+          p_username: loginIdentifier,
+          p_password_hash: password
+        });
+        if (!rpcErr && res && res.success && res.user) {
+          foundUser = res.user;
+        }
+      } catch (e) {}
+
+      // 2. Прямой поиск в таблице users по логину или номеру
+      if (!foundUser) {
+        const cleanWa = loginIdentifier.replace(/\D/g, '');
+        let q = supabaseClient.from('users').select('*');
+        if (cleanWa.length >= 7) {
+          q = q.or(`username.ilike.${loginIdentifier},whatsapp.ilike.%${cleanWa}%`);
+        } else {
+          q = q.ilike('username', loginIdentifier);
+        }
+
+        const { data: dbUsers } = await q;
+        if (dbUsers && dbUsers.length > 0) {
+          const match = dbUsers.find(u => u.password_hash === password);
+          if (match) {
+            foundUser = {
+              ...match,
+              passwordHash: match.password_hash,
+              phoneVerified: Boolean(match.phone_verified || match.phoneVerified),
+              avitocashBalance: Number(match.avitocash_balance || 0),
+              trialBalance: Number(match.trial_balance || 0),
+              showWomenAds: !!match.show_women_ads,
+              verifiedShop: !!match.verified_shop
+            };
+          }
+        }
+      }
+	  
+      if (foundUser) {
+		  if (foundUser.is_archived || foundUser.isArchived) {
           showToast('Этот аккаунт заблокирован и находится в архиве.', 'error');
           btn.disabled = false; btn.innerText = originalText;
           return;
