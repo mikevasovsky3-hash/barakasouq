@@ -78,7 +78,23 @@ function getListingById(id) {
   return c ? comboToVirtualAd(c) : null; 
 }
 
-function getSellerWhatsapp(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return String((s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || '')); }
+function getSellerWhatsapp(ad) { 
+  if (!ad) return ''; 
+  const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); 
+  const val = String((s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || '')).trim();
+  // Если это Telegram-юзернейм или ID, не считаем его за WhatsApp
+  if (val.startsWith('@') || val.startsWith('tg_') || (!val.replace(/\D/g, ''))) return '';
+  return val;
+}
+function getSellerTelegram(ad) {
+  if (!ad) return '';
+  const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase());
+  const rawWa = String((s && s.whatsapp) ? s.whatsapp : (ad.sellerWhatsapp || '')).trim();
+  if (rawWa.startsWith('@')) return rawWa.replace('@', '');
+  if (s && s.uid && s.uid.startsWith('u_tg_')) return s.username || '';
+  if (ad.sellerUid && ad.sellerUid.startsWith('u_tg_')) return ad.sellerUsername || '';
+  return '';
+}
 function getSellerKunya(ad) { if (!ad) return ''; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); const k = (s && s.kunya) ? s.kunya : (ad.sellerKunya || ad.sellerUsername || ''); return currentLang === 'ar' ? (DICTIONARY[k] || k) : k; }
 function getSellerAvatar(ad) { if (!ad) return null; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return s?.avatar || null; }
 function getSellerVerified(ad) { if (ad && ad.isCombo && typeof ad.verified === 'boolean') return ad.verified; const s = users.find(u => u.username && ad.sellerUsername && u.username.toLowerCase() === ad.sellerUsername.toLowerCase()); return !!(s && (s.verifiedShop || (s.shop && s.shop.isVerified))); }
@@ -1665,8 +1681,50 @@ ${!isRealOwner && !ad.isFree ? `
         </button>
       </div>` : ''}
 	  
-      <div class="flex items-center gap-2 pt-2 shrink-0">
-        ${!isRealOwner ? `<a href="https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366"><i class="fa-brands fa-whatsapp text-lg shrink-0"></i><span class="truncate">${t('Связаться через WhatsApp')}</span></a>` : ''}
+      <div class="flex items-center gap-2 pt-2 shrink-0 flex-wrap sm:flex-nowrap">
+        ${(() => {
+          if (isRealOwner) return '';
+          const cleanWaNum = (wa || '').replace(/[^0-9]/g, '');
+          const tgUsername = getSellerTelegram(ad);
+          const hasWa = cleanWaNum.length >= 7;
+          const hasTg = Boolean(tgUsername);
+
+          const tgMsg = encodeURIComponent(`Здравствуйте! По поводу объявления "${ad.title}" (ID: ${ad.id}) на Avito Sham:\nhttps://barakasouq.vercel.app/#ad-${ad.id}`);
+
+          let buttonsHtml = '';
+
+          // 1. Кнопка WhatsApp (показывается только если указан реальный телефон)
+          if (hasWa) {
+            buttonsHtml += `
+              <a href="https://wa.me/${cleanWaNum}?text=${buildWhatsAppMessage(ad, inQ, rank)}" target="_blank" class="flex-1 min-w-[130px] h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#25D366">
+                <i class="fa-brands fa-whatsapp text-lg shrink-0"></i>
+                <span class="truncate">${hasTg ? 'WhatsApp' : t('Связаться через WhatsApp')}</span>
+              </a>
+            `;
+          }
+
+          // 2. Кнопка Telegram (показывается, если профиль привязан к Telegram)
+          if (hasTg) {
+            buttonsHtml += `
+              <a href="https://t.me/${tgUsername}?text=${tgMsg}" target="_blank" class="flex-1 min-w-[130px] h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:linear-gradient(45deg,#229ED9,#0088cc)">
+                <i class="fa-brands fa-telegram text-lg shrink-0"></i>
+                <span class="truncate">${hasWa ? 'Telegram' : 'Написать в Telegram'}</span>
+              </a>
+            `;
+          }
+
+          // 3. Запасной вариант, если у продавца вообще нет контактов
+          if (!hasWa && !hasTg) {
+            buttonsHtml += `
+              <button disabled class="flex-1 min-w-[130px] h-11 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 bg-field border b-ig t2 opacity-60 cursor-not-allowed">
+                <i class="fa-solid fa-comment-slash"></i>
+                <span>Контакты не указаны</span>
+              </button>
+            `;
+          }
+
+          return buttonsHtml;
+        })()}
         ${canBuyWithBalance ? `<button onclick="purchaseAd('${ad.id}')" class="flex-1 min-w-0 h-11 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-md" style="background:#f59e0b"><i class="fa-solid fa-coins shrink-0"></i><span class="truncate">${t('Оплатить из баланса')}</span></button>` : ''}
         <button onclick="shareAd('${ad.id}')" class="h-11 w-11 rounded-xl border b-ig bg-field hover:bg-ig flex items-center justify-center text-blue-500 shrink-0 transition active:scale-95 shadow-sm" title="${t('Поделиться')}"><i class="fa-solid fa-paper-plane text-base"></i></button>
       </div>
@@ -2037,7 +2095,8 @@ function openEditProfileModal(targetUsername) {
   byId('edit-profile-login').value = user.username; 
   byId('edit-profile-password').value = ''; 
   byId('edit-profile-kunya').value = user.kunya || ''; 
-  byId('edit-profile-whatsapp').value = user.whatsapp || ''; 
+  const rawWaVal = user.whatsapp || '';
+  byId('edit-profile-whatsapp').value = (rawWaVal.startsWith('@') || rawWaVal.startsWith('tg_')) ? '' : rawWaVal; 
   byId('edit-profile-avatar-data').value = user.avatar || ''; 
   const box = byId('edit-profile-avatar-preview-box'), img = byId('edit-profile-avatar-preview-img'); 
   if (user.avatar && box && img) { 

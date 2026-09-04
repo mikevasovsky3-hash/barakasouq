@@ -1491,53 +1491,38 @@ function changeLanguage(lang) {
   renderAds();
 }
 
+function switchAuthTab(tab) { 
+  const l = byId('tab-login'), r = byId('tab-register');
+  const lf = byId('login-fields'), rf = byId('reg-fields');
+
+  if (tab === 'login') { 
+    if (l) { l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; }
+    if (r) { r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; }
+    if (lf) lf.classList.remove('hidden');
+    if (rf) rf.classList.add('hidden');
+  } else { 
+    if (r) { r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; }
+    if (l) { l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; }
+    if (lf) lf.classList.add('hidden');
+    if (rf) rf.classList.remove('hidden');
+  } 
+}
+
 function openAuthModal() { 
   const l = byId('tab-login'), r = byId('tab-register'), b = byId('auth-submit-btn');
   if (l) l.innerText = t('Вход');
   if (r) r.innerText = t('Регистрация');
-  if (b) b.innerText = byId('reg-fields')?.classList.contains('hidden') ? t('Войти') : t('Получить код');
+  if (b) b.innerText = t('Войти');
   
-  const uInp = byId('auth-username'), pInp = byId('auth-password'), wInp = byId('auth-whatsapp');
-  if (uInp) uInp.placeholder = t('Логин *');
+  const uInp = byId('auth-username'), pInp = byId('auth-password');
+  if (uInp) uInp.placeholder = t('Логин или WhatsApp *');
   if (pInp) pInp.placeholder = t('Пароль *');
-  if (wInp) wInp.placeholder = t('WhatsApp номер * (+963…)');
 
-  const genderLbl = document.querySelector('#reg-fields .text-\\[10px\\]');
-  if (genderLbl) genderLbl.innerText = t('Выберите ваш пол *');
-  const genderRadios = document.querySelectorAll('#reg-fields label span');
-  if (genderRadios.length >= 2) {
-    genderRadios[0].innerText = t('Мужчина');
-    genderRadios[1].innerText = t('Женщина 🌸');
-  }
-
-  const otpInp = byId('auth-otp-code');
-  if (otpInp) otpInp.placeholder = t('Введите 6-значный код *');
-  const otpNote = byId('auth-otp-block')?.querySelector('.t2');
-  if (otpNote) otpNote.innerText = t('Код отправлен в WhatsApp');
-  const resendBtn = byId('auth-resend-btn');
-  if (resendBtn) resendBtn.innerText = t('Отправить код повторно');
-  
   const remLbl = byId('auth-remember-me')?.parentElement?.querySelector('span');
-  if (remLbl) remLbl.innerText = t('Запомнить мой вход на этом устройстве');
+  if (remLbl) remLbl.innerText = t('Запомнить вход');
 
+  switchAuthTab('login');
   openModal('modal-auth'); 
-}
-
-function switchAuthTab(tab) { 
-  const l = byId('tab-login'), r = byId('tab-register'), f = byId('reg-fields'), lf = byId('login-fields'), b = byId('auth-submit-btn'); 
-  if (tab === 'login') { 
-    l.style.borderColor = '#0095f6'; l.style.color = '#0095f6'; 
-    r.style.borderColor = 'transparent'; r.style.color = 'var(--ig-text2)'; 
-    if (lf) lf.classList.remove('hidden');
-    if (f) f.classList.add('hidden'); 
-    b.innerText = t('Войти'); 
-  } else { 
-    r.style.borderColor = '#0095f6'; r.style.color = '#0095f6'; 
-    l.style.borderColor = 'transparent'; l.style.color = 'var(--ig-text2)'; 
-    if (lf) lf.classList.add('hidden');
-    if (f) f.classList.remove('hidden'); 
-    b.innerText = t('Получить код'); 
-  } 
 }
 
 async function handleAuthSubmit(e) {
@@ -1560,7 +1545,7 @@ async function handleAuthSubmit(e) {
 
 const cleanWa = whatsapp.replace(/\D/g, '');
 
-    const genderRadio = document.querySelector('input[name="auth-gender"]:checked');
+const genderRadio = document.querySelector('input[name="quick-auth-gender"]:checked') || document.querySelector('input[name="auth-gender"]:checked');
     if (!genderRadio) {
       showToast(currentLang === 'ar' ? 'الرجاء تحديد الجنس (رجل / امرأة)' : 'Пожалуйста, укажите ваш пол!', 'warning');
       btn.disabled = false;
@@ -1568,7 +1553,7 @@ const cleanWa = whatsapp.replace(/\D/g, '');
       return;
     }
     const selectedGender = genderRadio.value;
-
+	
     // 1. Проверяем существование номера строго в актуальной базе Supabase
     if (supabaseClient) {
       const { data: dbUser } = await supabaseClient
@@ -2731,16 +2716,18 @@ async function handleTelegramInstantAuth() {
       const passHash = await sha256(autoPass);
       const newUid = 'u_tg_' + tgId;
 
-const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+const selectedGender = document.querySelector('input[name="quick-auth-gender"]:checked')?.value || 'MALE';
+
+      const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
         p_uid: newUid,
         p_username: tgUsername,
         p_password_hash: passHash,
         p_kunya: tgName,
-        p_gender: 'MALE',
+        p_gender: selectedGender,
         p_whatsapp: tgUser.username ? `@${tgUser.username}` : `tg_${tgId}`,
         p_avatar: tgUser.photo_url || null
       });
-
+	  
       if (regErr || !regRes || !regRes.success) {
         showToast(regRes?.error || 'Ошибка автоматической регистрации', 'error');
         return;
@@ -2778,3 +2765,40 @@ const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_u
   showToast('Перенаправляем в Telegram-бота...', 'info');
   window.open('https://t.me/AvitoSham_bot/app', '_blank');
 }
+/* ================= КОНТРОЛЬ ВЫБОРА ПОЛА И БЫСТРЫЙ ВХОД ================= */
+function onGenderSelectionChanged() {
+  const selected = document.querySelector('input[name="quick-auth-gender"]:checked')?.value;
+  const btnTg = byId('btn-quick-tg');
+  const btnWa = byId('btn-quick-wa');
+
+  if (selected) {
+    if (btnTg) {
+      btnTg.disabled = false;
+      btnTg.classList.remove('opacity-40', 'cursor-not-allowed');
+      btnTg.classList.add('active:scale-95');
+    }
+    if (btnWa) {
+      btnWa.disabled = false;
+      btnWa.classList.remove('opacity-40', 'cursor-not-allowed');
+      btnWa.classList.add('active:scale-95');
+    }
+  }
+}
+
+/* ================= БЫСТРЫЙ ВХОД / РЕГИСТРАЦИЯ WHATSAPP ================= */
+async function handleWhatsAppInstantAuth() {
+  const genderRadio = document.querySelector('input[name="quick-auth-gender"]:checked');
+  const gender = genderRadio ? genderRadio.value : 'MALE';
+
+  const sessionToken = 'WAKEY_' + Math.random().toString(36).substring(2, 9).toUpperCase();
+  const botNumber = '447887280238';
+  
+  const msg = encodeURIComponent(`Авторизация в Avito Sham\nКод сессии: ${sessionToken}\nПол: ${gender}`);
+  window.open(`https://wa.me/${botNumber}?text=${msg}`, '_blank');
+  
+  showToast('Отправьте сообщение в WhatsApp для подтверждения входа', 'info');
+}
+window.switchAuthTab = switchAuthTab;
+window.openAuthModal = openAuthModal;
+window.handleTelegramInstantAuth = handleTelegramInstantAuth;
+window.handleWhatsAppInstantAuth = handleWhatsAppInstantAuth;
