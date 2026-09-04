@@ -3224,32 +3224,76 @@ function applyPresetDiscountPercent(pct) {
 
 async function saveQuickDiscountSubmit() {
   const adId = byId('quick-discount-ad-id')?.value;
-  const ad = ads.find(a => a.id === adId) || currentDiscountTargetAd;
+  const ad = (typeof ads !== 'undefined' ? ads.find(a => a.id === adId) : null) || currentDiscountTargetAd;
   if (!ad || !currentUser) return;
 
-const newP = parseFloat(byId('quick-discount-price')?.value);
+  const newP = parseFloat(byId('quick-discount-price')?.value);
   if (isNaN(newP) || newP <= 0) {
     showToast(t('Укажите корректную новую цену'), 'warning');
     return;
   }
   
-  const basePrice = Number(ad.oldPrice || ad.price || 0);
-  if (newP >= basePrice && !ad.oldPrice) {
-    ad.price = newP;
-    ad.oldPrice = null;
-  } else {
-    ad.oldPrice = basePrice;
-    ad.price = newP;
+  // 1. Фиксируем базовую цену как старую, а новую ставим со скидкой
+  const currentPrice = Number(ad.price || 0);
+  const prevOld = (ad.oldPrice !== null && ad.oldPrice !== undefined && Number(ad.oldPrice) > 0) ? Number(ad.oldPrice) : null;
+  const finalOldPrice = (prevOld && prevOld > newP) ? prevOld : currentPrice;
+
+  ad.oldPrice = finalOldPrice;
+  ad.old_price = finalOldPrice;
+  ad.price = newP;
+
+  // 2. Мгновенно сохраняем в localStorage, чтобы не зависеть от перезагрузок
+  if (typeof saveCachedAds === 'function') saveCachedAds();
+
+  // 3. Закрываем окно и сразу перерисовываем карточки на экране
+  closeModal('modal-quick-discount');
+  if (typeof renderCategoryPills === 'function') renderCategoryPills();
+  if (typeof renderAds === 'function') renderAds();
+
+  // 4. Отправляем в Supabase
+  if (supabaseClient) {
+    try {
+// Вызов через RPC для обхода AdBlock-фильтров
+      const { error } = await supabaseClient.rpc('apply_ad_discount', {
+        p_ad_id: ad.id,
+        p_new_price: Number(newP),
+        p_old_price: Number(finalOldPrice)
+      });
+	  
+      if (error) {
+        console.warn('Supabase discount error:', error);
+      }
+    } catch(err) {
+      console.warn('Supabase network block:', err);
+    }
   }
+
+  showToast(`Скидка на "${ad.title}" установлена: $${newP.toFixed(2)}`, 'success');
+  return;
+  
+  // Сохраняем локальный кэш сразу
+  if (typeof saveCachedAds === 'function') saveCachedAds();
 
   if (supabaseClient) {
     try {
-      await supabaseClient.from('ads').update({ price: ad.price, old_price: ad.oldPrice }).eq('id', ad.id);
+      const { error } = await supabaseClient
+        .from('ads')
+        .update({ 
+          price: Number(ad.price), 
+          old_price: Number(ad.oldPrice) 
+        })
+        .eq('id', ad.id);
+
+if (error) {
+        console.error('Ошибка записи скидки в Supabase:', error);
+        showToast('Сохранено локально (БД вернула ошибку)', 'warning');
+      }
     } catch(err) {
-      console.warn('Supabase discount update:', err);
+      console.warn('Supabase discount network block:', err);
+      showToast('Сохранено локально (сеть заблокирована браузером)', 'warning');
     }
-  }
-  saveCachedAds();
+	}
+
   closeModal('modal-quick-discount');
   renderCategoryPills();
   renderAds();

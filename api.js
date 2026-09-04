@@ -539,14 +539,24 @@ if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
       }
     }
 
-    // Применение свежих объявлений: первичный список полностью заменяется данными сервера
+// Применение свежих объявлений с сохранением локальных скидок
     if (adsFirstChunkRes.data) {
       const deletedIds = (typeof getDeletedAdsList === 'function') ? getDeletedAdsList() : [];
-      ads = adsFirstChunkRes.data
+      const incomingAds = adsFirstChunkRes.data
         .filter(a => !deletedIds.includes(a.id))
         .map(mapSupabaseAdToLocal);
-    }
 
+      // Сохраняем локально установленные скидки, если сервер ещё не обновился
+      const currentMap = new Map((ads || []).map(a => [a.id, a]));
+      ads = incomingAds.map(serverAd => {
+        const localAd = currentMap.get(serverAd.id);
+        if (localAd && localAd.oldPrice && !serverAd.oldPrice) {
+          return { ...serverAd, price: localAd.price, oldPrice: localAd.oldPrice };
+        }
+        return serverAd;
+      });
+    }
+	
     if (combosRes.data) {
       combos = combosRes.data.map(c => ({
         id: c.id,
