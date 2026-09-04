@@ -1830,7 +1830,8 @@ try {
     setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
     requestPushPermission();
     checkUrlHashAdOpen();
-
+    if (typeof recordSiteVisitTraffic === 'function') recordSiteVisitTraffic();
+	
   // Инициализация Telegram Mini App
     if (window.Telegram && window.Telegram.WebApp) {
       const tg = window.Telegram.WebApp;

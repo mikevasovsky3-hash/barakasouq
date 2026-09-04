@@ -321,6 +321,29 @@ body { top: 0px !important; }
 <i class="fa-solid fa-arrow-down-wide-short"></i> <span id="current-sort-label">Новые</span>
 </button>
 </div>
+
+<!-- Компактная живая полоса активности (видна на всех мобильных экранах) -->
+<div class="pt-1.5 border-t b-ig flex items-center justify-between text-[11px] select-none">
+  <div class="flex items-center gap-1.5 text-emerald-400 font-bold">
+    <span class="relative flex h-2 w-2">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    </span>
+    <span class="tracking-wide">Онлайн</span>
+  </div>
+
+  <div class="flex items-center gap-2 font-mono text-[10px]">
+    <span class="t2 flex items-center gap-1">
+      <i class="fa-solid fa-users text-[9px] text-blue-400"></i>
+      <b id="stat-unique-visitors" class="t1 font-bold">...</b>
+    </span>
+    <span class="text-neutral-600 dark:text-neutral-700">•</span>
+    <span class="t2 flex items-center gap-1">
+      <i class="fa-solid fa-eye text-[9px] text-purple-400"></i>
+      <b id="stat-total-visits" class="t1 font-bold">...</b>
+    </span>
+  </div>
+</div>
 <div id="radius-menu-overlay" class="hidden fixed inset-0 z-[1050] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" onclick="closeRadiusMenu()">
 <div class="ig-sheet w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2 sort-dropdown mb-[56px] sm:mb-0" onclick="event.stopPropagation()">
 <div class="w-10 h-1 rounded-full bg-field mx-auto mb-2 sm:hidden"></div>
@@ -1131,8 +1154,20 @@ body { top: 0px !important; }
     <i class="fa-solid fa-circle-question"></i> <span id="ft-faq-label">Зачем нужны доступы и данные?</span>
   </button>
 </div>
-<div id="ft-copy-label" class="font-mono text-[9px] opacity-75 mt-0.5">Авито Шам © 2026</div>
+
+<!-- Стильный виджет активности платформы -->
+<div id="site-traffic-badge" class="my-1.5 inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-field border b-ig shadow-sm text-[10px]">
+  <span class="flex items-center gap-1.5 text-emerald-400 font-bold">
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+    Платформа активна
+  </span>
+  <span class="text-neutral-600 dark:text-neutral-700">|</span>
+  <span class="t2">Уникальных: <b id="stat-unique-visitors" class="t1 font-mono font-bold">...</b></span>
+  <span class="text-neutral-600 dark:text-neutral-700">|</span>
+  <span class="t2">Просмотров: <b id="stat-total-visits" class="t1 font-mono font-bold">...</b></span>
 </div>
+
+<div id="ft-copy-label" class="font-mono text-[9px] opacity-75 mt-0.5">Авито Шам © 2026</div></div>
 </footer>
 
 <!-- ============ FAQ / PERMISSIONS HELP MODAL ============ -->

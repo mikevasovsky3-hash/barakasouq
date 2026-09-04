@@ -1391,3 +1391,46 @@ function initDriveAutoBackup() {
     executeSilentDriveBackup(false);
   }, intervalMs);
 }
+/* ================= УЧЕТ ТРАФИКА И СТАТИСТИКИ ПОСЕЩЕНИЙ ================= */
+async function recordSiteVisitTraffic() {
+  const visitorKey = 'bs_visitor_token';
+  const hasVisitedBefore = localStorage.getItem(visitorKey);
+  const isUnique = !hasVisitedBefore;
+
+  if (isUnique) {
+    localStorage.setItem(visitorKey, 'v_' + Math.random().toString(36).substring(2, 9) + Date.now());
+  }
+
+  // Защита от накрутки частыми перезагрузками вкладки (сессионная отсечка 5 минут)
+  const lastPing = Number(sessionStorage.getItem('bs_last_visit_ping') || 0);
+  const shouldCountHit = (Date.now() - lastPing) > 5 * 60 * 1000;
+
+  if (supabaseClient) {
+    try {
+      let stats = null;
+
+      if (shouldCountHit || isUnique) {
+        sessionStorage.setItem('bs_last_visit_ping', String(Date.now()));
+        const { data } = await supabaseClient.rpc('track_site_visit', { is_unique: isUnique });
+        stats = data;
+      } else {
+        const { data } = await supabaseClient
+          .from('system_settings')
+          .select('value')
+          .eq('key', 'site_traffic_stats')
+          .maybeSingle();
+        stats = data?.value;
+      }
+
+if (stats) {
+        const uniqueText = Number(stats.unique_visitors || 1).toLocaleString();
+        const totalText = Number(stats.total_visits || 1).toLocaleString();
+
+        document.querySelectorAll('#stat-unique-visitors').forEach(el => el.innerText = uniqueText);
+        document.querySelectorAll('#stat-total-visits').forEach(el => el.innerText = totalText);
+      }
+	  } catch (err) {
+      console.warn('Traffic counter sync error:', err);
+    }
+  }
+}
