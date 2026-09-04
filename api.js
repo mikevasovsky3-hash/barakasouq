@@ -969,6 +969,16 @@ async function fetchGlobalMarquee() {
 }
 
 function translateStaticUI(lang) {
+  // Перевод плашки активности
+  const onlLbl = byId('badge-online-label');
+  if (onlLbl) onlLbl.innerText = lang === 'ar' ? 'متصل الآن' : 'Онлайн';
+
+  const gstLbl = byId('badge-guests-label');
+  if (gstLbl) gstLbl.innerText = lang === 'ar' ? 'الزوار:' : 'Гостей:';
+
+  const vwsLbl = byId('badge-views-label');
+  if (vwsLbl) vwsLbl.innerText = lang === 'ar' ? 'المشاهدات:' : 'Визитов:';
+
   const navMap = {
     'sb-home': 'Главная', 'sb-shops': 'Магазины', 'sb-create': 'Создать',
     'sb-fav': 'Избранное', 'sb-profile': 'Профиль'
