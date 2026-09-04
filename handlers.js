@@ -1527,12 +1527,12 @@ function openAuthModal() {
 
 async function handleAuthSubmit(e) {
   e.preventDefault();
-  const isReg = !byId('reg-fields').classList.contains('hidden');
-  const remember = byId('auth-remember-me').checked;
-  const btn = byId('auth-submit-btn');
-  const originalText = btn.innerText;
-  btn.disabled = true;
-
+const isReg = !byId('reg-fields').classList.contains('hidden');
+  const remember = byId('auth-remember-me') ? byId('auth-remember-me').checked : true;
+  const btn = isReg ? (byId('auth-reg-submit-btn') || e.submitter) : byId('auth-submit-btn');
+  const originalText = btn ? btn.innerText : 'Отправить';
+  if (btn) btn.disabled = true;
+  
   if (isReg) {
     const whatsappRaw = byId('auth-whatsapp').value.trim();
     const whatsappCheck = validateWhatsApp(whatsappRaw);
@@ -2785,20 +2785,7 @@ function onGenderSelectionChanged() {
   }
 }
 
-/* ================= БЫСТРЫЙ ВХОД / РЕГИСТРАЦИЯ WHATSAPP ================= */
-async function handleWhatsAppInstantAuth() {
-  const genderRadio = document.querySelector('input[name="quick-auth-gender"]:checked');
-  const gender = genderRadio ? genderRadio.value : 'MALE';
 
-  const sessionToken = 'WAKEY_' + Math.random().toString(36).substring(2, 9).toUpperCase();
-  const botNumber = '447887280238';
-  
-  const msg = encodeURIComponent(`Авторизация в Avito Sham\nКод сессии: ${sessionToken}\nПол: ${gender}`);
-  window.open(`https://wa.me/${botNumber}?text=${msg}`, '_blank');
-  
-  showToast('Отправьте сообщение в WhatsApp для подтверждения входа', 'info');
-}
 window.switchAuthTab = switchAuthTab;
 window.openAuthModal = openAuthModal;
 window.handleTelegramInstantAuth = handleTelegramInstantAuth;
-window.handleWhatsAppInstantAuth = handleWhatsAppInstantAuth;
