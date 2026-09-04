@@ -1838,16 +1838,23 @@ try {
     console.warn('initSupabaseSync error:', e);
   }
   
-  try {
+try {
     fetchLiveExchangeRates();
     setInterval(fetchLiveExchangeRates, 5 * 60 * 1000);
     setInterval(checkExpiredAdsStatus, 60 * 60 * 1000);
     requestPushPermission();
     checkUrlHashAdOpen();
+
+    // Инициализация Telegram Mini App
+    if (window.Telegram && window.Telegram.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+    }
   } catch(e) {
     console.warn('Startup async services error:', e);
   }
-});
+  });
 
 window.addEventListener('hashchange', checkUrlHashAdOpen);
 
