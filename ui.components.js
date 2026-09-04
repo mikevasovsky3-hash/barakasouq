@@ -669,10 +669,17 @@ if (layout === 'grid') {
       }, 10);
 	  
 return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'border b-ig'}">
-  <div onclick="openAdDetail('${ad.id}')" class="relative aspect-square cursor-pointer overflow-hidden bg-black">
+<div onclick="openAdDetail('${ad.id}')" class="relative aspect-square cursor-pointer overflow-hidden bg-black">
     ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
+    ${ad.status === 'SOLD' ? `
+      <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/50 pointer-events-none">
+        <div class="transform -rotate-12 border-2 border-emerald-500 text-emerald-400 font-black tracking-wider text-xs px-2.5 py-1 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.7)] bg-black/80 uppercase backdrop-blur-sm select-none">
+          ${currentLang === 'ar' ? 'تم البيع ✓' : 'ПРОДАНО ✓'}
+        </div>
+      </div>
+    ` : ''}
     ${hasDisc ? `
-      <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
+	<div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg text-[10px] font-black text-white shadow-lg flex items-center gap-1" style="background:linear-gradient(45deg,#ef4444,#b91c1c)">
         <i class="fa-solid ${isCombo ? 'fa-fire' : 'fa-fire-flame-curved'}"></i> ${isCombo ? t('КОМБО') : '-' + discPercent + '%'}
       </div>` : ''}
 	  <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2.5 space-y-0.5">
@@ -717,8 +724,15 @@ return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-be
 
 return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.5 transition-all hover:scale-[1.01] ${hasDisc ? 'fire-card' : 'b-ig'}">
   <div onclick="openAdDetail('${ad.id}')" class="flex gap-3 cursor-pointer">
-    <div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
+<div class="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0">
       ${isCombo ? renderComboSlashCollage(ad) : `<img src="${img}" class="w-full h-full object-cover">`}
+      ${ad.status === 'SOLD' ? `
+        <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/50 pointer-events-none">
+          <div class="transform -rotate-12 border border-emerald-500 text-emerald-400 font-black tracking-wider text-[9px] px-1.5 py-0.5 rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.7)] bg-black/80 uppercase backdrop-blur-sm select-none">
+            ${currentLang === 'ar' ? 'تم البيع ✓' : 'ПРОДАНО ✓'}
+          </div>
+        </div>
+      ` : ''}
       ${hasDisc ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-black text-white shadow" style="background:#ef4444">${isCombo ? t('КОМБО') : '-' + discPercent + '%'}</span>` : ''}
     </div>
     <div class="flex-1 min-w-0 flex flex-col justify-between">
