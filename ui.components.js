@@ -1403,11 +1403,11 @@ function renderAdminTabContent() {
 <i class="fa-solid fa-circle-info"></i> Совет: Используйте разделители (например, •) для разделения новостей.
 </div>
 </div>`;
-    const editor = byId('admin-marquee-input');
-    if (editor) editor.value = currentText;
+const editor = byId('admin-marquee-input');
+    if (editor) editor.value = MARQUEE_SETTINGS.text || currentText;
     updateMarqueeControls();
-    updateMarqueePreview(currentText);
-} else if (tab === 'backup') { 
+    updateMarqueePreview(MARQUEE_SETTINGS.text || currentText);
+	} else if (tab === 'backup') { 
     c.innerHTML = `
 <div class="p-4 rounded-xl border space-y-3" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)">
   <div class="flex items-center justify-between">

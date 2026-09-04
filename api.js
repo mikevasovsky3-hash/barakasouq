@@ -867,6 +867,14 @@ function handleMarqueeSettingsInput() {
 }
 
 function loadMarqueeText() {
+  try {
+    const full = localStorage.getItem('bs_marquee_full_settings');
+    if (full) {
+      MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...JSON.parse(full) };
+      applyMarqueeSettings(MARQUEE_SETTINGS);
+      return;
+    }
+  } catch(e) {}
   const savedText = localStorage.getItem(MARQUEE_STORAGE_KEY);
   if (savedText) updateMarqueeText(savedText);
 }
@@ -885,25 +893,27 @@ async function saveMarqueeSettings() {
   if (dEl) dEl.innerText = text;
   if (mEl) mEl.innerText = text;
 
-  // 2. Отправляем в Supabase прямым простым запросом
+// 2. Отправляем в Supabase полный пакет настроек (текст, цвет, скорость, размер, направление)
+  localStorage.setItem('bs_marquee_full_settings', JSON.stringify(MARQUEE_SETTINGS));
+
   if (supabaseClient) {
     try {
-      const { error } = await supabaseClient
-        .from('marquee_broadcast')
-        .upsert({ id: 1, content: text, updated_at: new Date().toISOString() });
-      if (error) throw error;
-      showToast('Бегущая строка сохранена для всех устройств!', 'success');
+      await Promise.all([
+        supabaseClient.from('marquee_broadcast').upsert({ id: 1, content: text, updated_at: new Date().toISOString() }),
+        supabaseClient.from('system_settings').upsert({ key: 'marquee_settings', value: MARQUEE_SETTINGS })
+      ]);
+      showToast('Параметры бегущей строки сохранены для всех устройств!', 'success');
     } catch (err) {
       console.error('Marquee save error:', err);
-      showToast('Ошибка сохранения в базу: ' + (err.message || ''), 'error');
+      showToast('Ошибка сохранения настроек: ' + (err.message || ''), 'error');
       return;
     }
   } else {
     showToast('Сохранено локально (нет подключения к БД)', 'warning');
   }
 
-  updateMarqueeText(text);
-}
+  applyMarqueeSettings(MARQUEE_SETTINGS);
+  }
 
 async function fetchGlobalMarquee() {
   if (!supabaseClient) return;
