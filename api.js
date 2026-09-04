@@ -488,7 +488,7 @@ async function initSupabaseSync() {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
 const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes, marqueeRes] = await Promise.all([
-      supabaseClient.from('users').select('uid, username, kunya, gender, role, verified_shop, phone_verified, avitocash_balance, trial_balance, show_women_ads, frozen, is_archived, favorites, shop'),
+      supabaseClient.from('users').select('*'),
       supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, description, link, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
@@ -507,20 +507,19 @@ if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
     }
 	
     // Синхронизация пользователей
-    if (usersRes.data && usersRes.data.length > 0) {
-const allParsedUsers = usersRes.data.map(u => ({
+if (usersRes.data && usersRes.data.length > 0) {
+      const allParsedUsers = usersRes.data.map(u => ({
         ...u,
         passwordHash: u.password_hash,
         verifiedShop: !!u.verified_shop,
-        phoneVerified: !!u.phone_verified,
-        avitocashBalance: Number(u.avitocash_balance || 0),
+        phoneVerified: Boolean(u.phone_verified || u.phoneVerified),
         avitocashBalance: Number(u.avitocash_balance || 0),
         trialBalance: Number(u.trial_balance || 0),
         showWomenAds: !!u.show_women_ads,
         frozen: !!u.frozen,
         isArchived: !!u.is_archived
       }));
-
+	  
       users = allParsedUsers.filter(u => !u.isArchived);
       archivedUsers = allParsedUsers.filter(u => u.isArchived);
 
