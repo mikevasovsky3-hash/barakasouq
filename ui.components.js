@@ -1851,15 +1851,16 @@ function openProfileModal() {
     const totalLikes = myAds.reduce((s, a) => s + ((a.likes || []).length), 0); 
     const totalViews = myAds.reduce((s, a) => s + (a.views || 0), 0);
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
-    const isDnd = !!currentUser.isDnd;
-    const isPhoneVerified = !!(currentUser.phoneVerified || currentUser.phone_verified);
+const isDnd = !!currentUser.isDnd;
+    const isTgUser = currentUser && (currentUser.uid?.startsWith('u_tg_') || currentUser.whatsapp?.startsWith('@') || currentUser.whatsapp?.startsWith('tg_'));
+    const isPhoneVerified = !!(currentUser.phoneVerified || currentUser.phone_verified || isTgUser);
 
     c.innerHTML = `
     <div class="space-y-3 pt-1">
         ${!isPhoneVerified ? `
         <!-- Плашка-уведомление о необходимости верификации WhatsApp -->
         <div class="p-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 flex items-center justify-between gap-2 shadow-sm">
-            <div class="flex items-center gap-2.5 min-w-0">
+		<div class="flex items-center gap-2.5 min-w-0">
                 <i class="fa-brands fa-whatsapp text-xl text-amber-500 shrink-0"></i>
                 <div class="min-w-0">
                     <div class="text-xs font-bold text-amber-500 flex items-center gap-1.5">
@@ -2530,7 +2531,8 @@ function openTransferModal() {
     openAuthModal();
     return;
   }
-  if (!(currentUser.phoneVerified || currentUser.phone_verified)) {
+  const isTgUser = currentUser && (currentUser.uid?.startsWith('u_tg_') || currentUser.whatsapp?.startsWith('@') || currentUser.whatsapp?.startsWith('tg_'));
+  if (!isTgUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
     showToast(t('Финансовые операции доступны только с подтвержденным номером!'), 'warning');
     if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
     return;
@@ -2920,7 +2922,8 @@ if (!targetUser) {
     showToast(t('Войдите в аккаунт'), 'warning'); 
     return; 
   }
-  if (!shopEditTargetUid && !(targetUser.phoneVerified || targetUser.phone_verified)) {
+const isTgTarget = targetUser && (targetUser.uid?.startsWith('u_tg_') || targetUser.whatsapp?.startsWith('@') || targetUser.whatsapp?.startsWith('tg_'));
+  if (!shopEditTargetUid && !isTgTarget && !(targetUser.phoneVerified || targetUser.phone_verified)) {
     showToast(t('Открытие магазина доступно только после подтверждения номера!'), 'warning');
     if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
     return;

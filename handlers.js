@@ -677,7 +677,8 @@ function toggleAdvancedCreateFields() {
 }
 
 function openCreateAdModal() { 
-  if (currentUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
+  const isTgUser = currentUser && (currentUser.uid?.startsWith('u_tg_') || currentUser.whatsapp?.startsWith('@') || currentUser.whatsapp?.startsWith('tg_'));
+  if (currentUser && !isTgUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
     showToast(t('Для подачи объявлений подтвердите номер WhatsApp!'), 'warning');
     if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
     return;
@@ -2730,13 +2731,13 @@ async function handleTelegramInstantAuth() {
       const passHash = await sha256(autoPass);
       const newUid = 'u_tg_' + tgId;
 
-      const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
+const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
         p_uid: newUid,
         p_username: tgUsername,
         p_password_hash: passHash,
         p_kunya: tgName,
         p_gender: 'MALE',
-        p_whatsapp: tgId,
+        p_whatsapp: tgUser.username ? `@${tgUser.username}` : `tg_${tgId}`,
         p_avatar: tgUser.photo_url || null
       });
 
@@ -2745,11 +2746,20 @@ async function handleTelegramInstantAuth() {
         return;
       }
 
+      // Сразу подтверждаем верификацию в базе без WhatsApp
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ 
+          phone_verified: true,
+          verified_shop: false
+        }).eq('uid', newUid);
+      }
+
       const localUser = {
         ...regRes.user,
-        phoneVerified: true
+        phoneVerified: true,
+        phone_verified: true
       };
-
+	  
       users.push(localUser);
       saveUserSession(localUser, true);
       closeModal('modal-auth');
