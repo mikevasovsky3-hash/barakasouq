@@ -3268,52 +3268,8 @@ async function saveQuickDiscountSubmit() {
     }
   }
 
-  showToast(`Скидка на "${ad.title}" установлена: $${newP.toFixed(2)}`, 'success');
-  return;
-  
-  // Сохраняем локальный кэш сразу
-  if (typeof saveCachedAds === 'function') saveCachedAds();
-
-  if (supabaseClient) {
-    try {
-      const { error } = await supabaseClient
-        .from('ads')
-        .update({ 
-          price: Number(ad.price), 
-          old_price: Number(ad.oldPrice) 
-        })
-        .eq('id', ad.id);
-
-if (error) {
-        console.error('Ошибка записи скидки в Supabase:', error);
-        showToast('Сохранено локально (БД вернула ошибку)', 'warning');
-      }
-    } catch(err) {
-      console.warn('Supabase discount network block:', err);
-      showToast('Сохранено локально (сеть заблокирована браузером)', 'warning');
-    }
-	}
-
-  closeModal('modal-quick-discount');
-  renderCategoryPills();
-  renderAds();
-
-  const showcaseModal = byId('modal-shop-showcase');
-  if (showcaseModal && !showcaseModal.classList.contains('hidden')) {
-    openShopShowcase(ad.sellerUid || ad.sellerUsername);
-  }
-  const myShopModal = byId('modal-my-shop');
-  if (myShopModal && !myShopModal.classList.contains('hidden')) {
-    openMyShopModal();
-  }
-  const detailModal = byId('modal-ad-detail');
-  if (detailModal && !detailModal.classList.contains('hidden')) {
-    openAdDetail(ad.id, false);
-  }
-
-  showToast(`Скидка на "${ad.title}" установлена: $${ad.price.toFixed(2)}`, 'success');
+showToast(`Скидка на "${ad.title}" установлена: $${newP.toFixed(2)}`, 'success');
 }
-
 async function removeQuickDiscountSubmit() {
   const adId = byId('quick-discount-ad-id')?.value;
   const ad = ads.find(a => a.id === adId) || currentDiscountTargetAd;

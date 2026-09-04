@@ -796,22 +796,36 @@ const cacheKey = `${targetLang}_${clean}`;
 
 /* ================= MARQUEE FUNCTIONS ================= */
 async function updateMarqueeText(text) {
-  MARQUEE_SETTINGS.text = text;
+  let cleanText = text;
+
+  // Если случайно пришёл JSON-объект или JSON-строка, достаем только чистый текст
+  if (typeof text === 'object' && text !== null) {
+    cleanText = text.text || '';
+  } else if (typeof text === 'string' && text.trim().startsWith('{') && text.includes('"text"')) {
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed.text !== 'undefined') {
+        cleanText = parsed.text;
+      }
+    } catch(e) {}
+  }
+
+  MARQUEE_SETTINGS.text = cleanText;
   const desktop = byId('desktop-marquee-text');
   const mobile = byId('mobile-marquee-text');
   
-  let displayText = text;
+  let displayText = cleanText;
   if (currentLang === 'ar') {
-    displayText = await translateDynamic(text, 'ar');
+    displayText = await translateDynamic(cleanText, 'ar');
   } else {
-    displayText = await translateDynamic(text, 'ru');
+    displayText = await translateDynamic(cleanText, 'ru');
   }
 
   if (desktop) desktop.innerText = displayText;
   if (mobile) mobile.innerText = displayText;
   
   const input = byId('admin-marquee-input');
-  if (input && document.activeElement !== input) input.value = text;
+  if (input && document.activeElement !== input) input.value = cleanText;
   updateMarqueePreview(displayText);
 }
 
@@ -825,6 +839,9 @@ function applyMarqueeSettings(settings) {
     content.style.setProperty('--marquee-color', MARQUEE_SETTINGS.color || '#a8a8a8');
     content.style.setProperty('--marquee-font-size', `${Number(MARQUEE_SETTINGS.fontSize) || 13}px`);
     content.style.setProperty('--marquee-speed', `${Number(MARQUEE_SETTINGS.speed) || 20}s`);
+    content.style.color = MARQUEE_SETTINGS.color || '#a8a8a8';
+    content.style.fontSize = `${Number(MARQUEE_SETTINGS.fontSize) || 13}px`;
+    content.style.animationDuration = `${Number(MARQUEE_SETTINGS.speed) || 20}s`;
     content.style.animationDirection = MARQUEE_SETTINGS.direction === 'right' ? 'reverse' : 'normal';
   });
   updateMarqueeControls();
@@ -885,23 +902,27 @@ async function saveMarqueeSettings() {
   const text = input.value.trim();
   if (!text) { showToast('Введите текст для бегущей строки', 'warning'); return; }
 
-  // 1. Мгновенно отображаем на текущем экране
   MARQUEE_SETTINGS.text = text;
-  localStorage.setItem(MARQUEE_STORAGE_KEY, text);
+  MARQUEE_SETTINGS.color = byId('admin-marquee-color')?.value || MARQUEE_SETTINGS.color;
+  MARQUEE_SETTINGS.fontSize = Number(byId('admin-marquee-size')?.value || MARQUEE_SETTINGS.fontSize);
+  MARQUEE_SETTINGS.speed = Number(byId('admin-marquee-speed')?.value || MARQUEE_SETTINGS.speed);
+  MARQUEE_SETTINGS.direction = byId('admin-marquee-direction')?.value || MARQUEE_SETTINGS.direction;
+  MARQUEE_SETTINGS.pauseOnHover = !!byId('admin-marquee-pause')?.checked;
+
+  const payloadString = JSON.stringify(MARQUEE_SETTINGS);
+  localStorage.setItem(MARQUEE_STORAGE_KEY, payloadString);
+  localStorage.setItem('bs_marquee_full_settings', payloadString);
+
   const dEl = byId('desktop-marquee-text');
   const mEl = byId('mobile-marquee-text');
   if (dEl) dEl.innerText = text;
   if (mEl) mEl.innerText = text;
 
-// 2. Отправляем в Supabase полный пакет настроек (текст, цвет, скорость, размер, направление)
-  localStorage.setItem('bs_marquee_full_settings', JSON.stringify(MARQUEE_SETTINGS));
+  applyMarqueeSettings(MARQUEE_SETTINGS);
 
   if (supabaseClient) {
     try {
-      await Promise.all([
-        supabaseClient.from('marquee_broadcast').upsert({ id: 1, content: text, updated_at: new Date().toISOString() }),
-        supabaseClient.from('system_settings').upsert({ key: 'marquee_settings', value: MARQUEE_SETTINGS })
-      ]);
+      await supabaseClient.from('marquee_broadcast').upsert({ id: 1, content: payloadString, updated_at: new Date().toISOString() });
       showToast('Параметры бегущей строки сохранены для всех устройств!', 'success');
     } catch (err) {
       console.error('Marquee save error:', err);
@@ -911,9 +932,7 @@ async function saveMarqueeSettings() {
   } else {
     showToast('Сохранено локально (нет подключения к БД)', 'warning');
   }
-
-  applyMarqueeSettings(MARQUEE_SETTINGS);
-  }
+}
 
 async function fetchGlobalMarquee() {
   if (!supabaseClient) return;
@@ -925,11 +944,23 @@ async function fetchGlobalMarquee() {
       .maybeSingle();
 
     if (!error && data && data.content) {
-      const remoteText = data.content.trim();
-      if (remoteText) {
-        MARQUEE_SETTINGS.text = remoteText;
-        localStorage.setItem(MARQUEE_STORAGE_KEY, remoteText);
-        updateMarqueeText(remoteText);
+      const raw = data.content.trim();
+      if (raw) {
+        let textOnly = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            MARQUEE_SETTINGS = { ...MARQUEE_SETTINGS, ...parsed };
+            textOnly = parsed.text || '';
+          }
+        } catch (e) {
+          MARQUEE_SETTINGS.text = raw;
+        }
+
+        MARQUEE_SETTINGS.text = textOnly;
+        localStorage.setItem(MARQUEE_STORAGE_KEY, textOnly);
+        localStorage.setItem('bs_marquee_full_settings', JSON.stringify(MARQUEE_SETTINGS));
+        applyMarqueeSettings(MARQUEE_SETTINGS);
       }
     }
   } catch (e) {
