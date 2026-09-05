@@ -530,13 +530,41 @@ function renderCategoryPills() {
     return p.count > 0;
   });
 
+let seenAds = [];
+  try {
+    seenAds = JSON.parse(localStorage.getItem('bs_seen_ads') || '[]');
+  } catch(e) {}
+
   c.innerHTML = visiblePills.map(p => {
     const active = selectedCategory === p.id;
+
+    // Считаем непросмотренные объявления для каждой категории индивидуально
+    let unreadCount = 0;
+    if (p.id !== 'sold_archive') {
+      const catAds = ads.filter(a => {
+        if (a.status !== 'ACTIVE') return false;
+        if (a.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) return false;
+        if (p.id === 'all') return true;
+        if (p.id === 'free') return a.isFree || (a.price === 0 && !a.isNegotiable);
+        if (p.id === 'women_only') return a.isWomenOnly;
+        if (p.id === 'discounts') return a.oldPrice && a.oldPrice > a.price;
+        return a.category === p.id;
+      });
+      unreadCount = catAds.filter(a => !seenAds.includes(a.id)).length;
+    }
+
+    const badgeHtml = unreadCount > 0 
+      ? `<span class="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-black shadow-md z-10 animate-pulse">${unreadCount > 99 ? '99+' : unreadCount}</span>` 
+      : '';
+
     return `<button onclick="handleCategoryClick('${p.id}')" class="flex flex-col items-center gap-1 shrink-0 w-[48px] group">
-<div class="w-8 h-8 rounded-full p-[2px] ${active ? 'story-ring shadow-md' : ''}" style="${active ? '' : 'background:#363636'}"><div class="w-full h-full rounded-full bg-card p-[1px]"><div class="w-full h-full rounded-full bg-field flex items-center justify-center t1 text-sm"><i class="fa-solid ${p.icon}"></i></div></div></div>
+<div class="relative w-8 h-8 rounded-full p-[2px] ${active ? 'story-ring shadow-md' : ''}" style="${active ? '' : 'background:#363636'}">
+  ${badgeHtml}
+  <div class="w-full h-full rounded-full bg-card p-[1px]"><div class="w-full h-full rounded-full bg-field flex items-center justify-center t1 text-sm"><i class="fa-solid ${p.icon}"></i></div></div>
+</div>
 <span class="text-[10px] ${active ? 'font-bold t1' : 't2'} truncate w-12 text-center">${p.name}</span><span class="text-[8px] t2 -mt-1">${p.count}</span></button>`;
   }).join('');
-}
+  }
 
 let currentRenderCycle = 0;
 function renderAds() {
@@ -1502,6 +1530,17 @@ async function openAdDetail(adId, countView = true) {
   if (typeof adId === 'string' && adId.indexOf('COMBO-') === 0) { openComboDetail(adId); return; }
   const ad = ads.find(a => a.id === adId);
   if (!ad) return;
+
+  // Отмечаем отдельное объявление прочитанным
+  try {
+    let seenAds = JSON.parse(localStorage.getItem('bs_seen_ads') || '[]');
+    if (!seenAds.includes(adId)) {
+      seenAds.push(adId);
+      if (seenAds.length > 1000) seenAds = seenAds.slice(-800);
+      localStorage.setItem('bs_seen_ads', JSON.stringify(seenAds));
+      if (typeof renderCategoryPills === 'function') renderCategoryPills();
+    }
+  } catch(e) {}
   if (countView) {
     let viewedSession = [];
     try {
@@ -4296,6 +4335,27 @@ window.open(`https://wa.me/${(wa || '').replace(/[^0-9]/g, '')}?text=${encodeURI
 function handleCategoryClick(catId) {
   selectedCategory = catId;
   currentPage = 1;
+
+  // Отмечаем объявления открытой категории как прочитанные у текущего пользователя
+  try {
+    let seenAds = JSON.parse(localStorage.getItem('bs_seen_ads') || '[]');
+    const currentCatAds = ads.filter(a => {
+      if (a.status !== 'ACTIVE') return false;
+      if (catId === 'all') return true;
+      if (catId === 'free') return a.isFree || (a.price === 0 && !a.isNegotiable);
+      if (catId === 'women_only') return a.isWomenOnly;
+      if (catId === 'discounts') return a.oldPrice && a.oldPrice > a.price;
+      return a.category === catId;
+    });
+    const newIds = currentCatAds.map(a => a.id).filter(id => !seenAds.includes(id));
+    if (newIds.length > 0) {
+      seenAds = seenAds.concat(newIds);
+      // Ограничиваем историю 1000 записей
+      if (seenAds.length > 1000) seenAds = seenAds.slice(-800);
+      localStorage.setItem('bs_seen_ads', JSON.stringify(seenAds));
+    }
+  } catch(e) {}
+
   renderCategoryPills();
   renderAds();
 }

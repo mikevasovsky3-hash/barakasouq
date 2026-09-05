@@ -546,6 +546,38 @@ body { top: 0px !important; }
 </div>
 
 <!-- ============ AUTH MODAL ============ -->
+<!-- ============ SEPARATE PHONE VERIFY MODAL ============ -->
+<div id="modal-verify-phone" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
+  <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
+    <button type="button" aria-label="Закрыть" onclick="closeModal('modal-verify-phone')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="text-center pt-3">
+      <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl mx-auto mb-2 border border-emerald-500/20">
+        <i class="fa-brands fa-whatsapp text-2xl"></i>
+      </div>
+      <h3 class="text-base font-bold t1">Подтверждение номера</h3>
+      <p class="text-xs t2 mt-1">Введите 6-значный проверочный код, отправленный на ваш WhatsApp</p>
+      <div id="verify-phone-number-badge" class="font-mono font-bold text-xs t1 bg-field border b-ig px-3 py-1.5 rounded-lg mt-2 inline-block"></div>
+    </div>
+
+    <form onsubmit="handleSeparateVerifySubmit(event)" class="space-y-3 pt-1">
+      <div>
+        <input type="text" id="verify-modal-otp-code" required placeholder="000000" maxlength="6" class="ig-input w-full px-3.5 py-3 text-center text-lg font-bold font-mono tracking-widest text-emerald-400">
+        <div class="flex items-center justify-between text-[11px] px-1 mt-1.5">
+          <span class="t2">Срок действия кода:</span>
+          <span id="verify-modal-timer" class="font-mono font-bold text-amber-500">01:00</span>
+        </div>
+      </div>
+
+      <button type="submit" id="verify-modal-submit-btn" class="ig-btn w-full py-2.5 text-sm font-bold shadow-md">
+        Подтвердить номер
+      </button>
+
+      <button type="button" id="verify-modal-resend-btn" onclick="startUserWhatsAppVerification()" class="hidden w-full text-xs text-blue-400 font-bold hover:underline text-center pt-1">
+        Отправить код повторно
+      </button>
+    </form>
+  </div>
+</div>
 <div id="modal-auth" class="fixed inset-0 z-50 ig-modal-blur hidden flex items-center justify-center p-4">
 <div class="ig-sheet w-full max-w-sm rounded-2xl p-6 relative space-y-4 max-h-[92vh] overflow-y-auto modal-scroll-body">
 <button type="button" aria-label="Закрыть" onclick="closeModal('modal-auth')" class="absolute top-3 left-3 app-back bg-field border b-ig" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>

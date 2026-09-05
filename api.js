@@ -450,6 +450,30 @@ saveCachedAds();
     )
     .on(
       'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'ads' },
+      (payload) => {
+        if (!payload?.new?.id) return;
+        const mapped = mapSupabaseAdToLocal(payload.new);
+
+        // Не добавляем чужие неактивные объявления
+        if (mapped.status !== 'ACTIVE') return;
+
+        // Фильтрация закрытых женских объявлений для мужчин
+        if (mapped.isWomenOnly && (!currentUser || (currentUser.gender !== 'FEMALE' && !(currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) && currentUser.role !== 'ADMIN'))) {
+          return;
+        }
+
+        const exists = (ads || []).some(a => a.id === mapped.id);
+        if (!exists) {
+          ads.unshift(mapped);
+          saveCachedAds();
+          if (typeof renderCategoryPills === 'function') renderCategoryPills();
+          if (typeof renderAds === 'function') renderAds();
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
       { event: '*', schema: 'public', table: 'system_settings' },
       (payload) => {
         const item = payload?.new;
@@ -821,8 +845,14 @@ async function updateMarqueeText(text) {
     displayText = await translateDynamic(cleanText, 'ru');
   }
 
-  if (desktop) desktop.innerText = displayText;
-  if (mobile) mobile.innerText = displayText;
+if (desktop) {
+    desktop.innerText = displayText;
+    desktop.dataset.lang = currentLang;
+  }
+  if (mobile) {
+    mobile.innerText = displayText;
+    mobile.dataset.lang = currentLang;
+  }
   
   const input = byId('admin-marquee-input');
   if (input && document.activeElement !== input) input.value = cleanText;

@@ -196,7 +196,9 @@ if (typeof translateStaticUI === 'function') {
 const currentMarqueeRaw = MARQUEE_SETTINGS.text || localStorage.getItem(MARQUEE_STORAGE_KEY) || '';
   const dMarquee = byId('desktop-marquee-text');
   const mMarquee = byId('mobile-marquee-text');
-  if (currentMarqueeRaw && (!dMarquee || !dMarquee.innerText.trim())) {
+  if (currentMarqueeRaw && (!dMarquee || !dMarquee.innerText.trim() || dMarquee.dataset.lang !== currentLang)) {
+    if (dMarquee) dMarquee.dataset.lang = currentLang;
+    if (mMarquee) mMarquee.dataset.lang = currentLang;
     updateMarqueeText(currentMarqueeRaw);
   }
   
@@ -1486,6 +1488,10 @@ function changeLanguage(lang) {
   if (typeof translateStaticUI === 'function') {
     translateStaticUI(lang);
   }
+  const currentMarqueeRaw = MARQUEE_SETTINGS.text || localStorage.getItem(MARQUEE_STORAGE_KEY) || '';
+  if (typeof updateMarqueeText === 'function' && currentMarqueeRaw) {
+    updateMarqueeText(currentMarqueeRaw);
+  }
   updateNavState();
   renderCategoryPills();
   renderAds();
@@ -1624,9 +1630,37 @@ const genderRadio = document.querySelector('input[name="quick-auth-gender"]:chec
       return;
     } 
 
-    // Шаг 2: проверка кода и мгновенная регистрация
+   // Шаг 2: проверка кода
     const enteredCode = otpInput?.value.trim();
-    if (!enteredCode || enteredCode !== pendingRegVerification.code) {
+
+    // Если это верификация старого/текущего аккаунта:
+    if (pendingOldUserOtp && currentUser) {
+      if (!enteredCode || enteredCode !== pendingOldUserOtp.code) {
+        showToast('Неверный код из WhatsApp!', 'error');
+        btn.disabled = false; btn.innerText = 'Подтвердить код';
+        return;
+      }
+
+      currentUser.phoneVerified = true;
+      currentUser.phone_verified = true;
+
+      if (supabaseClient && currentUser.uid) {
+        await supabaseClient.from('users').update({ phone_verified: true }).eq('uid', currentUser.uid);
+      }
+
+      saveUserSession(currentUser, true);
+      pendingOldUserOtp = null;
+      if (otpBlock) otpBlock.classList.add('hidden');
+      closeModal('modal-auth');
+      openProfileModal();
+      renderAds();
+      showToast('Ваш аккаунт и номер WhatsApp успешно подтверждены! 🎉', 'success');
+      btn.disabled = false; btn.innerText = 'Войти';
+      return;
+    }
+
+    // Иначе это обычная новая регистрация:
+    if (!enteredCode || !pendingRegVerification || enteredCode !== pendingRegVerification.code) {
       showToast('Неверный код из WhatsApp!', 'error');
       btn.disabled = false; btn.innerText = 'Подтвердить код';
       return;
@@ -2502,53 +2536,112 @@ function contactSupport() {
 }
 /* ================= ВЕРИФИКАЦИЯ WHATSAPP ДЛЯ СТАРЫХ АККАУНТОВ ================= */
 let pendingOldUserOtp = null;
+let verifyModalTimerId = null;
+
+function startVerifyModalTimer(seconds = 60) {
+  clearInterval(verifyModalTimerId);
+  const timerEl = byId('verify-modal-timer');
+  const resendBtn = byId('verify-modal-resend-btn');
+  if (resendBtn) resendBtn.classList.add('hidden');
+  if (timerEl) { timerEl.classList.remove('hidden'); timerEl.innerText = '01:00'; }
+
+  let timeLeft = seconds;
+  verifyModalTimerId = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    if (timerEl) timerEl.innerText = `${m}:${s}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(verifyModalTimerId);
+      if (timerEl) timerEl.classList.add('hidden');
+      if (resendBtn) resendBtn.classList.remove('hidden');
+    }
+  }, 1000);
+}
 
 async function startUserWhatsAppVerification() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+
   const rawWa = currentUser.whatsapp || '';
   const waCheck = validateWhatsApp(rawWa);
   if (!waCheck.valid) {
-    showToast('Сначала укажите корректный WhatsApp в анкете', 'warning');
+    showToast('Сначала укажите корректный WhatsApp в профиле', 'warning');
     openEditProfileModal(currentUser.username);
     return;
   }
 
-  const cleanWa = waCheck.number;
+  const cleanPhoneDigits = waCheck.number.replace(/\D/g, '');
   const generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+  const textMessage = `🔐 Ваш код подтверждения для Avito Sham: ${generatedCode}`;
+
   pendingOldUserOtp = {
     code: generatedCode,
-    whatsapp: cleanWa,
+    whatsapp: cleanPhoneDigits,
     timestamp: Date.now()
   };
 
-  showToast('Отправка проверочного кода в WhatsApp...', 'info');
+  showToast('Отправка кода в WhatsApp...', 'info');
 
   try {
     const res = await fetch('https://whatsapp-gateway-kohl.vercel.app/send-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        phone: cleanWa,
-        code: `${generatedCode}\n🔐 Код подтверждения аккаунта Avito Sham`
+        phone: cleanPhoneDigits,
+        code: generatedCode,
+        message: textMessage
       })
     });
-    const data = await res.json();
-    if (!res.ok || !data.success) throw new Error(data.error || 'Ошибка шлюза');
-    showToast('Код верификации отправлен в ваш WhatsApp!', 'success');
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || (data && data.success === false)) {
+      throw new Error(data.error || 'Ошибка ответа шлюза');
+    }
+
+    showToast('Код успешно отправлен в WhatsApp!', 'success');
   } catch (err) {
-    console.warn('Gateway fallback:', err);
-    showToast(`⚠️ Шлюз недоступен. Ваш код подтверждения: ${generatedCode}`, 'warning');
+    console.warn('WhatsApp шлюз недоступен, fallback:', err);
+    // Страховочный вариант: открываем WhatsApp диалог, если сервер не ответил
+    const botNum = '447887280238';
+    const fallbackMsg = encodeURIComponent(`Подтверждение аккаунта Avito Sham\nЛогин: ${currentUser.username}\nКод: ${generatedCode}`);
+    window.open(`https://wa.me/${botNum}?text=${fallbackMsg}`, '_blank');
+    showToast(`Код отправлен. Если не пришло, ваш код: ${generatedCode}`, 'info');
   }
 
-  const entered = prompt(`Введите 6-значный проверочный код из WhatsApp для номера ${cleanWa}:`);
-  if (!entered) return;
+  // Открываем отдельное окно подтверждения номера
+  const numBadge = byId('verify-phone-number-badge');
+  if (numBadge) numBadge.innerText = '+' + cleanPhoneDigits;
+  
+  const otpInput = byId('verify-modal-otp-code');
+  if (otpInput) {
+    otpInput.value = '';
+  }
 
-  if (entered.trim() !== pendingOldUserOtp.code) {
-    showToast('Неверный код верификации!', 'error');
+  openModal('modal-verify-phone');
+  if (otpInput) otpInput.focus();
+  startVerifyModalTimer(60);
+}
+
+async function handleSeparateVerifySubmit(e) {
+  e.preventDefault();
+  if (!currentUser || !pendingOldUserOtp) {
+    showToast('Сессия верификации устарела. Запросите код повторно.', 'warning');
     return;
   }
 
-  // Обновляем статус
+  const enteredCode = byId('verify-modal-otp-code')?.value.trim();
+  if (!enteredCode || enteredCode !== pendingOldUserOtp.code) {
+    showToast('Неверный проверочный код!', 'error');
+    return;
+  }
+
+  const submitBtn = byId('verify-modal-submit-btn');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Сохранение...'; }
+
   currentUser.phoneVerified = true;
   currentUser.phone_verified = true;
 
@@ -2556,10 +2649,22 @@ async function startUserWhatsAppVerification() {
     await supabaseClient.from('users').update({ phone_verified: true }).eq('uid', currentUser.uid);
   }
 
+  const uIdx = users.findIndex(u => (u.uid && u.uid === currentUser.uid) || (u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()));
+  if (uIdx !== -1) {
+    users[uIdx].phoneVerified = true;
+    users[uIdx].phone_verified = true;
+  }
+
   saveUserSession(currentUser, true);
   pendingOldUserOtp = null;
+  clearInterval(verifyModalTimerId);
+
+  closeModal('modal-verify-phone');
   openProfileModal();
-  showToast('Ваш аккаунт и номер WhatsApp успешно подтверждены! 🎉', 'success');
+  renderAds();
+  showToast('Номер WhatsApp успешно подтвержден! 🎉', 'success');
+
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Подтвердить номер'; }
 }
 /* ================= НАПОМНИТЬ / СБРОСИТЬ ПАРОЛЬ ЧЕРЕЗ WHATSAPP ================= */
 async function recoverPasswordViaWhatsApp() {
