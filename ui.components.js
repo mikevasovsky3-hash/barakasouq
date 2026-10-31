@@ -1186,13 +1186,14 @@ function renderAdminTabContent() {
                 
                 const createdAt = a.createdAt || Date.now();
                 const daysPassed = Math.floor((Date.now() - createdAt) / (24 * 60 * 60 * 1000));
-                const daysLeft = Math.max(0, 30 - daysPassed);
-                const isExpired = a.status === 'EXPIRED' || daysPassed >= 30;
+                const daysLeft = Math.max(0, AD_EXPIRE_DAYS - daysPassed);
+                const isExpired = a.status === 'EXPIRED' || daysPassed >= AD_EXPIRE_DAYS;
+                const isStale = !isExpired && daysPassed >= AD_STALE_DAYS;
                 const pubDateStr = new Date(createdAt).toLocaleDateString();
 
                 const expiryBadge = isExpired
                   ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold border shrink-0" style="background:rgba(239,68,68,.15);color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="fa-solid fa-triangle-exclamation"></i> Истек срок (0 дн.)</span>`
-                  : `<span class="px-2 py-0.5 rounded text-[9px] font-bold border shrink-0" style="${daysLeft <= 5 ? 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)' : 'background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)'}"><i class="fa-regular fa-clock"></i> Осталось: ${daysLeft} дн.</span>`;
+                  : `<span class="px-2 py-0.5 rounded text-[9px] font-bold border shrink-0" style="${(isStale || daysLeft <= 5) ? 'background:rgba(245,158,11,.15);color:#f59e0b;border-color:rgba(245,158,11,.4)' : 'background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.3)'}"><i class="fa-regular fa-clock"></i> ${isStale ? 'Возможно неактуально • ' : ''}Осталось: ${daysLeft} дн.</span>`;
 
                 return `
                 <div class="ig-card p-3 rounded-xl flex flex-col gap-2.5">
@@ -1219,7 +1220,7 @@ function renderAdminTabContent() {
                     </div>
                     <div class="flex items-center gap-1.5 pt-2 border-t b-ig justify-end flex-wrap">
                         ${a.status === 'ACTIVE' ? `
-                            <button onclick="renewAdExpiry('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)" title="Продлить публикацию еще на 30 дней">
+                            <button onclick="renewAdExpiry('${a.id}')" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3)" title="Продлить публикацию еще на 180 дней">
                                 <i class="fa-solid fa-arrows-rotate"></i>
                             </button>
                             <button onclick="openAdDetail('${a.id}', false)" class="w-8 h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition-colors hover:bg-field" style="background:rgba(0,149,246,.1);color:#0095f6;border-color:rgba(0,149,246,.3)" title="Открыть объявление">
@@ -1627,16 +1628,18 @@ async function openAdDetail(adId, countView = true) {
       ` : ''}
 
       ${(() => {
-        const isExpired = ad.status === 'EXPIRED' || (Date.now() - (ad.createdAt || 0) > 30 * 24 * 60 * 60 * 1000);
+        const ageMs = Date.now() - (ad.createdAt || 0);
+        const isExpired = ad.status === 'EXPIRED' || ageMs > AD_EXPIRE_DAYS * AD_DAY_MS;
+        const isStale = !isExpired && ageMs > AD_STALE_DAYS * AD_DAY_MS;
         const pubDate = new Date(ad.createdAt || Date.now()).toLocaleDateString();
-        const expDate = new Date((ad.createdAt || Date.now()) + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+        const expDate = new Date((ad.createdAt || Date.now()) + AD_EXPIRE_DAYS * AD_DAY_MS).toLocaleDateString();
         return `
-        ${isExpired ? `
-        <div class="p-3 rounded-xl border flex items-start gap-2.5" style="border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:#f87171">
+        ${(isExpired || isStale) ? `
+        <div class="p-3 rounded-xl border flex items-start gap-2.5" style="${isExpired ? 'border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:#f87171' : 'border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);color:#f59e0b'}">
           <i class="fa-solid fa-triangle-exclamation text-base shrink-0 mt-0.5"></i>
           <div class="min-w-0">
             <div class="font-bold text-xs">${t('Неактуально • Возможно, продано')}</div>
-            <div class="text-[10px] opacity-90 mt-0.5">${t('Объявление не обновлялось более 30 дней. Товар может быть уже продан.')}</div>
+            <div class="text-[10px] opacity-90 mt-0.5">${isExpired ? t('Срок публикации истёк. Товар, скорее всего, уже продан.') : t('Объявление не обновлялось более месяца. Товар может быть уже продан.')}</div>
           </div>
         </div>` : ''}
         <div class="flex items-center justify-between text-[10px] t2 bg-field px-3 py-1.5 rounded-lg border b-ig">

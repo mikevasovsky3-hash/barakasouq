@@ -134,7 +134,15 @@ function saveUserSession(user, remember = true) {
   updateAuthUI(); 
 }
 
-function updateAuthUI() { updateNavState(); renderCategoryPills(); renderAds(); }
+function updateTrafficVisibility() {
+  const isStaff = !!(currentUser && (currentUser.role === 'SUPERUSER' || currentUser.role === 'ADMIN'));
+  ['admin-traffic-strip', 'site-traffic-badge'].forEach(id => {
+    const el = byId(id);
+    if (el) el.classList.toggle('hidden', !isStaff);
+  });
+}
+
+function updateAuthUI() { updateTrafficVisibility(); updateNavState(); renderCategoryPills(); renderAds(); }
 
 function handleNavClick(tab) { 
   LAST_NAV = tab; 
@@ -208,13 +216,16 @@ const currentMarqueeRaw = MARQUEE_SETTINGS.text || localStorage.getItem(MARQUEE_
   if (bp) { bp.innerHTML = avHtml; if (active === 'profile') bp.style.borderColor = '#f59e0b'; else bp.style.borderColor = ''; }
 }
 
+const AD_STALE_DAYS = 30;    // через месяц: предупреждение «возможно не актуально»
+const AD_EXPIRE_DAYS = 180;  // через полгода: статус EXPIRED
+const AD_DAY_MS = 24 * 60 * 60 * 1000;
+
 function checkExpiredAdsStatus() {
-  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
   const now = Date.now();
   const expiredIds = [];
 
   ads.forEach(a => {
-    if (a.status === 'ACTIVE' && a.createdAt && (now - a.createdAt > THIRTY_DAYS)) {
+    if (a.status === 'ACTIVE' && a.createdAt && (now - a.createdAt > AD_EXPIRE_DAYS * AD_DAY_MS)) {
       a.status = 'EXPIRED';
       expiredIds.push(a.id);
     }
@@ -1360,8 +1371,8 @@ async function doToggleLike(adId) {
   return true; 
 }
 
-function toggleLike(adId, e) { if (e) e.stopPropagation(); if (!doToggleLike(adId)) return; renderAds(); }
-function toggleLikeDetail(adId) { if (!doToggleLike(adId)) return; renderAds(); openAdDetail(adId, false); }
+async function toggleLike(adId, e) { if (e) e.stopPropagation(); if (!(await doToggleLike(adId))) return; renderAds(); }
+async function toggleLikeDetail(adId) { if (!(await doToggleLike(adId))) return; renderAds(); openAdDetail(adId, false); }
 
 function toggleFavorite(adId, e) { 
   if (e) e.stopPropagation(); 
@@ -1779,7 +1790,7 @@ saveUserSession(foundUser, remember);
         closeModal('modal-auth');
         showToast(`${t('С возвращением,')} ${foundUser.kunya || foundUser.username}!`, 'success');
 		} else {
-			showToast(res?.error || 'Неверный логин или пароль!', 'error');
+			showToast('Неверный логин или пароль!', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -2483,7 +2494,7 @@ function startOtpTimer(seconds = 60) {
 
 function resendWhatsAppCode() {
   pendingRegVerification = null;
-  const submitBtn = byId('auth-submit-btn');
+  const submitBtn = byId('auth-reg-submit-btn');
   if (submitBtn) {
     submitBtn.innerText = 'Получить код';
     submitBtn.click();
@@ -2744,7 +2755,8 @@ async function recoverPasswordViaWhatsApp() {
   } catch (err) {
     console.warn('Password recovery error:', err);
     // Запасной вариант при сбое шлюза
-    showToast(`⚠️ Шлюз временно недоступен. Новый пароль: ${newRawPass}`, 'warning');
+    showToast('Шлюз временно недоступен. Попробуйте позже.', 'warning');
+    return;
     if (supabaseClient && targetUser.uid) {
       await supabaseClient.from('users').update({ 
         password_hash: newPassHash,

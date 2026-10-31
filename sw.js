@@ -1,6 +1,7 @@
-const CACHE_NAME = 'avito-sham-v4';
+const CACHE_NAME = 'avito-sham-v5';
 const OFFLINE_ASSETS = [
   '/',
+  '/protect.js',
   '/index.html',
   '/config.js',
   '/api.js',

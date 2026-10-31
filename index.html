@@ -332,7 +332,7 @@ body { top: 0px !important; }
     <span id="badge-online-label" class="tracking-wide">Онлайн</span>
   </div>
 
-  <div class="flex items-center gap-3 text-[11px] shrink-0 font-mono">
+  <div id="admin-traffic-strip" class="hidden flex items-center gap-3 text-[11px] shrink-0 font-mono">
     <span class="flex items-center gap-1 text-slate-300">
       <i class="fa-solid fa-users text-blue-400 text-xs"></i>
       <span id="badge-guests-label" class="text-[10px] text-slate-400">Гостей:</span>
@@ -1191,7 +1191,7 @@ body { top: 0px !important; }
 </div>
 
 <!-- Стильный виджет активности платформы -->
-<div id="site-traffic-badge" class="my-1.5 inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-field border b-ig shadow-sm text-[10px]">
+<div id="site-traffic-badge" class="hidden my-1.5 inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-field border b-ig shadow-sm text-[10px]">
   <span class="flex items-center gap-1.5 text-emerald-400 font-bold">
     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
     Платформа активна
@@ -1283,6 +1283,7 @@ body { top: 0px !important; }
     }
   })();
 </script>
+<script src="protect.js"></script>
 <script src="config.js" defer></script>
 <script src="api.js" defer></script>
 <script src="ui.components.js" defer></script>
