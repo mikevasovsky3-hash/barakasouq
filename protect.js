@@ -5,7 +5,8 @@
     return !!(el && el.closest && el.closest('input, textarea, select, [contenteditable="true"], .select-all'));
   };
   var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
-                 ('ontouchstart' in window && screen.width < 1024);
+                 ('ontouchstart' in window && screen.width < 1024) ||
+                 (navigator.maxTouchPoints > 0 && screen.width < 1024);
 
   // Запрет выделения текста и перетаскивания картинок
   var style = document.createElement('style');

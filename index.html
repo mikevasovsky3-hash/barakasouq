@@ -3,6 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>
+(function () {
+  var DESKTOP_MIN = 900; // ширина окна, с которой включается компьютерный режим
+  var root = document.documentElement;
+  function detectMode() {
+    var w = window.innerWidth || root.clientWidth || 0;
+    return w >= DESKTOP_MIN ? 'desktop' : 'mobile';
+  }
+  function applyMode(initial) {
+    var mode = detectMode();
+    if (window.APP_MODE === mode) return;
+    window.APP_MODE = mode;
+    root.classList.remove('is-desktop', 'is-mobile');
+    root.classList.add(mode === 'desktop' ? 'is-desktop' : 'is-mobile');
+    root.setAttribute('data-mode', mode);
+    if (!initial) {
+      try { window.dispatchEvent(new CustomEvent('appmodechange', { detail: { mode: mode } })); } catch (e) {}
+    }
+  }
+  applyMode(true);
+  var tmr = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(tmr);
+    tmr = setTimeout(function () { applyMode(false); }, 150);
+  });
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () { applyMode(false); }, 300);
+  });
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Avito Sham — Авито Шам</title>
@@ -187,20 +217,16 @@ body.overflow-hidden{
 .ig-sheet button{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
 #app-mobile-header,#app-mobile-nav{position:fixed !important;z-index:1000 !important;}
 .ig-modal-blur{z-index:500;}
-@media (max-width:640px){
-.ig-modal-blur:not(#modal-confirm):not(#modal-share){padding:0 !important;align-items:stretch !important;justify-content:stretch !important;}
-.ig-modal-blur:not(#modal-confirm):not(#modal-share)>.ig-sheet{width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;}
-#modal-admin-panel #admin-tab-content{padding:.75rem;}
-#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :first-child{flex:1 1 100%;}
-#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :last-child{flex:1 1 100%;justify-content:flex-start;}
-#modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between button{flex-shrink:1;}
-}
-@media (max-width:1023px){
-#app-mobile-header{top:0;right:0;left:0;}
-#app-mobile-nav{right:0;bottom:0;left:0;}
-.ig-modal-blur{top:52px !important;right:0;bottom:52px !important;left:0;}
-.ig-modal-blur > .ig-sheet{max-height:100% !important;}
-}
+html.is-mobile .ig-modal-blur:not(#modal-confirm):not(#modal-share){padding:0 !important;align-items:stretch !important;justify-content:stretch !important;}
+html.is-mobile .ig-modal-blur:not(#modal-confirm):not(#modal-share)>.ig-sheet{width:100%;max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;}
+html.is-mobile #modal-admin-panel #admin-tab-content{padding:.75rem;}
+html.is-mobile #modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :first-child{flex:1 1 100%;}
+html.is-mobile #modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between > :last-child{flex:1 1 100%;justify-content:flex-start;}
+html.is-mobile #modal-admin-panel #admin-tab-content .ig-card > .flex.items-center.justify-between button{flex-shrink:1;}
+html.is-mobile #app-mobile-header{top:0;right:0;left:0;}
+html.is-mobile #app-mobile-nav{right:0;bottom:0;left:0;}
+html.is-mobile .ig-modal-blur{top:52px !important;right:0;bottom:52px !important;left:0;}
+html.is-mobile .ig-modal-blur > .ig-sheet{max-height:100% !important;}
 /* === ПОДДЕРЖКА АРАБСКОГО ЯЗЫКА (RTL) === */
 [dir="rtl"] { text-align: right; }
 [dir="rtl"] .marquee-content { animation-direction: reverse !important; }
@@ -221,6 +247,127 @@ body.overflow-hidden{
 .goog-te-banner-frame.skiptranslate { display: none !important; }
 body { top: 0px !important; }
 .skiptranslate iframe { display: none !important; }
+
+/* ================= РЕЖИМЫ: DESKTOP / MOBILE (html.is-desktop / html.is-mobile) ================= */
+
+/* ---------- DESKTOP: боковая панель с подписями, без нижней навигации ---------- */
+html.is-desktop aside{display:flex !important;width:244px !important}
+html.is-desktop aside .xl\:block{display:block !important}
+html.is-desktop aside .xl\:hidden{display:none !important}
+html.is-desktop #app-mobile-header,
+html.is-desktop #app-mobile-nav{display:none !important}
+html.is-desktop main{margin-left:244px !important;margin-right:0 !important;padding-top:24px !important;padding-bottom:24px !important;padding-left:2rem !important;padding-right:2rem !important}
+html.is-desktop[dir="rtl"] main{margin-left:0 !important;margin-right:244px !important}
+html.is-desktop footer{display:block !important}
+html.is-desktop a.fixed[onclick^="contactSupport"]{display:none !important}
+html.is-desktop #btn-scroll-top{bottom:24px !important}
+html.is-desktop #toast-container{bottom:32px !important}
+
+/* Desktop: стрелка «назад» в окнах превращается в крестик */
+html.is-desktop .ig-modal-blur button .fa-arrow-left::before,
+html.is-desktop #modal-image-viewer button .fa-arrow-left::before{content:"\f00d"}
+html.is-desktop [dir="rtl"] .fa-arrow-left{transform:none}
+
+/* Desktop: меню региона / сортировки / радиуса — окна по центру */
+html.is-desktop #region-menu-overlay,
+html.is-desktop #sort-menu-overlay,
+html.is-desktop #radius-menu-overlay{align-items:center !important}
+html.is-desktop #region-menu-overlay > .ig-sheet,
+html.is-desktop #sort-menu-overlay > .ig-sheet,
+html.is-desktop #radius-menu-overlay > .ig-sheet{border-radius:1rem !important;margin-bottom:0 !important;max-width:24rem}
+html.is-desktop #region-menu-overlay .w-10.h-1,
+html.is-desktop #sort-menu-overlay .w-10.h-1,
+html.is-desktop #radius-menu-overlay .w-10.h-1{display:none !important}
+
+/* Desktop: окно «Поделиться» — по центру, картинка слева, кнопки справа */
+html.is-desktop #modal-share{align-items:center !important;padding:1.5rem !important}
+html.is-desktop #modal-share > .ig-sheet{max-width:42rem !important;border-radius:1rem !important}
+html.is-desktop #modal-share .modal-scroll-body{flex-direction:row !important;align-items:stretch !important}
+html.is-desktop #share-preview-wrap{width:41.6667% !important}
+html.is-desktop #modal-share .modal-scroll-body > div:last-child{width:58.3333% !important}
+
+/* Desktop: карточка объявления — две колонки */
+html.is-desktop #detail-content > .flex{flex-direction:row !important}
+html.is-desktop #detail-content > .flex > div:first-child{width:50% !important;height:auto !important}
+html.is-desktop #detail-content > .flex > div:last-child{width:50% !important}
+html.is-desktop #detail-content > .grid{grid-template-columns:1fr 1fr !important}
+
+/* ---------- MOBILE: шапка + нижняя навигация, без боковой панели ---------- */
+html.is-mobile aside{display:none !important}
+html.is-mobile #app-mobile-header,
+html.is-mobile #app-mobile-nav{display:flex !important}
+html.is-mobile main{margin-left:0 !important;margin-right:0 !important;padding-top:68px !important;padding-bottom:64px !important;padding-left:.75rem !important;padding-right:.75rem !important}
+html.is-mobile footer{display:none !important}
+html.is-mobile a.fixed[onclick^="contactSupport"]{display:flex !important}
+html.is-mobile #btn-scroll-top{bottom:80px !important}
+html.is-mobile #toast-container{bottom:80px !important}
+
+/* Mobile: меню региона / сортировки / радиуса — шторка снизу */
+html.is-mobile #region-menu-overlay,
+html.is-mobile #sort-menu-overlay,
+html.is-mobile #radius-menu-overlay{align-items:flex-end !important}
+html.is-mobile #region-menu-overlay > .ig-sheet,
+html.is-mobile #sort-menu-overlay > .ig-sheet,
+html.is-mobile #radius-menu-overlay > .ig-sheet{border-radius:1rem 1rem 0 0 !important;max-width:100% !important}
+
+/* Mobile: «Поделиться» — шторка снизу, всё в одну колонку */
+html.is-mobile #modal-share{align-items:flex-end !important;padding:0 !important}
+html.is-mobile #modal-share > .ig-sheet{max-width:100% !important;border-radius:1rem 1rem 0 0 !important}
+html.is-mobile #modal-share .modal-scroll-body{flex-direction:column !important;align-items:center !important}
+html.is-mobile #share-preview-wrap,
+html.is-mobile #modal-share .modal-scroll-body > div:last-child{width:100% !important}
+
+/* Mobile: карточка объявления — фото сверху, текст снизу */
+html.is-mobile #detail-content > .flex{flex-direction:column !important}
+html.is-mobile #detail-content > .flex > div:first-child{width:100% !important;height:320px !important;flex:none !important}
+html.is-mobile #detail-content > .flex > div:last-child{width:100% !important}
+html.is-mobile #detail-content > .grid{grid-template-columns:1fr !important}
+
+/* ================= АДМИН-ПАНЕЛЬ ================= */
+
+/* Общее */
+.admin-tab-sep{display:none}
+.admin-tab-ic{width:1.25rem;text-align:center;flex-shrink:0}
+
+/* MOBILE: лента вкладок сверху, редкие разделы скрыты (открываются из «Обзора»), иконки скрыты */
+html.is-mobile .admin-extra-tab{display:none !important}
+html.is-mobile .admin-tab-ic{display:none !important}
+
+/* DESKTOP: левое меню + рабочая область справа */
+html.is-desktop #modal-admin-panel > .ig-sheet{display:grid !important;grid-template-columns:280px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+html.is-desktop #modal-admin-panel > .ig-sheet > div:first-child{grid-column:1 / -1;padding:.9rem 1.5rem}
+html.is-desktop #modal-admin-panel > .ig-sheet > div:first-child h3{font-size:1.05rem}
+
+html.is-desktop #modal-admin-panel [role="tablist"]{grid-column:1;grid-row:2;display:flex !important;flex-direction:column;align-items:stretch;gap:.25rem !important;padding:.75rem !important;overflow-x:hidden !important;overflow-y:auto !important;border-bottom:none !important;border-right:1px solid var(--ig-border)}
+html.is-desktop[dir="rtl"] #modal-admin-panel [role="tablist"]{border-right:none;border-left:1px solid var(--ig-border)}
+
+html.is-desktop .admin-tab-sep{display:block;padding:.9rem .9rem .3rem;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ig-text2);opacity:.75}
+html.is-desktop .admin-tab-sep:first-child{padding-top:.25rem}
+
+html.is-desktop #modal-admin-panel .admin-tab-btn{display:flex;align-items:center;gap:.75rem;width:100%;text-align:left;padding:.7rem .9rem !important;border-radius:.6rem;font-size:14px;border-bottom:none !important;color:var(--ig-text2) !important;transition:background .15s}
+html.is-desktop[dir="rtl"] #modal-admin-panel .admin-tab-btn{text-align:right}
+html.is-desktop #modal-admin-panel .admin-tab-btn:hover{background:var(--ig-hover)}
+html.is-desktop #modal-admin-panel .admin-tab-btn.is-active{background:var(--ig-field);color:var(--ig-text) !important;font-weight:700;box-shadow:inset 3px 0 0 #0095f6}
+html.is-desktop[dir="rtl"] #modal-admin-panel .admin-tab-btn.is-active{box-shadow:inset -3px 0 0 #0095f6}
+
+html.is-desktop #admin-tab-content{grid-column:2;grid-row:2;padding:1.5rem 2rem !important}
+
+/* «Обзор»: плитки в ряд */
+html.is-desktop #admin-tab-content > .grid.text-center{grid-template-columns:repeat(5,minmax(0,1fr)) !important;gap:1rem !important}
+
+/* Списки (пользователи, объявления, магазины, жалобы, транзакции, категории): 2 колонки */
+html.is-desktop #admin-tab-content .space-y-2.max-h-none{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;align-content:start;overflow:visible !important;padding-right:0 !important}
+html.is-desktop #admin-tab-content .space-y-2.max-h-none > *{margin-top:0 !important;margin-bottom:0 !important}
+html.is-desktop #admin-tab-content .space-y-2.max-h-none > .text-center{grid-column:1 / -1}
+
+@media (min-width:1500px){
+  html.is-desktop #admin-tab-content > .grid.text-center{grid-template-columns:repeat(6,minmax(0,1fr)) !important}
+  html.is-desktop #admin-tab-content .space-y-2.max-h-none{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* Кнопки действий в карточках: иконка + текст (текст берётся из title) */
+html.is-desktop #admin-tab-content .ig-card button.w-8.h-8[title]{width:auto !important;height:2rem !important;padding:0 .65rem !important;gap:.4rem;white-space:nowrap !important;font-size:11px}
+html.is-desktop #admin-tab-content .ig-card button.w-8.h-8[title]::after{content:attr(title);font-weight:700}
 </style>
 </head>
 <body class="min-h-full flex flex-col">
@@ -1106,12 +1253,22 @@ body { top: 0px !important; }
 <div class="flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color:#0095f6"></i><h3 class="text-sm font-bold t1">Панель управления Главного Администратора</h3></div>
 </div>
 <div class="border-b b-ig overflow-x-auto no-scrollbar text-sm shrink-0 flex gap-4 px-4" role="tablist" aria-label="Разделы админ-панели">
-<button id="atab-overview" onclick="switchAdminTab('overview')" class="py-3 whitespace-nowrap">Обзор</button>
-<button id="atab-users" onclick="switchAdminTab('users')" class="py-3 whitespace-nowrap">Пользователи</button>
-<button id="atab-ads" onclick="switchAdminTab('ads')" class="py-3 whitespace-nowrap">Объявления</button>
-<button id="atab-finance" onclick="switchAdminTab('finance')" class="py-3 whitespace-nowrap">Финансы / Тарифы</button>
-<button id="atab-payments" onclick="switchAdminTab('payments')" class="py-3 whitespace-nowrap">Верификация платежей</button>
-<button id="atab-tx" onclick="switchAdminTab('tx')" class="py-3 whitespace-nowrap">Транзакции</button>
+<div class="admin-tab-sep">Основное</div>
+<button id="atab-overview" onclick="switchAdminTab('overview')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-gauge-high admin-tab-ic"></i><span>Обзор</span></button>
+<button id="atab-users" onclick="switchAdminTab('users')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-users admin-tab-ic"></i><span>Пользователи</span></button>
+<button id="atab-ads" onclick="switchAdminTab('ads')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-rectangle-list admin-tab-ic"></i><span>Объявления</span></button>
+<button id="atab-shops" onclick="switchAdminTab('shops')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-store admin-tab-ic"></i><span>Магазины и акции</span></button>
+<button id="atab-reports" onclick="switchAdminTab('reports')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-flag admin-tab-ic"></i><span>Жалобы</span></button>
+<button id="atab-archive" onclick="switchAdminTab('archive')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-box-archive admin-tab-ic"></i><span>Архив пользователей</span></button>
+<div class="admin-tab-sep">Финансы</div>
+<button id="atab-finance" onclick="switchAdminTab('finance')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-coins admin-tab-ic"></i><span>Финансы / Тарифы</span></button>
+<button id="atab-payments" onclick="switchAdminTab('payments')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-circle-check admin-tab-ic"></i><span>Верификация платежей</span></button>
+<button id="atab-tx" onclick="switchAdminTab('tx')" class="admin-tab-btn py-3 whitespace-nowrap"><i class="fa-solid fa-receipt admin-tab-ic"></i><span>Транзакции</span></button>
+<div class="admin-tab-sep">Настройки</div>
+<button id="atab-cats" onclick="switchAdminTab('cats')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-tags admin-tab-ic"></i><span>Категории</span></button>
+<button id="atab-rates" onclick="switchAdminTab('rates')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-money-bill-transfer admin-tab-ic"></i><span>Курсы валют</span></button>
+<button id="atab-marquee" onclick="switchAdminTab('marquee')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-text-width admin-tab-ic"></i><span>Бегущая строка</span></button>
+<button id="atab-backup" onclick="switchAdminTab('backup')" class="admin-tab-btn admin-extra-tab py-3 whitespace-nowrap"><i class="fa-solid fa-database admin-tab-ic"></i><span>Бэкап БД</span></button>
 </div>
 <div id="admin-tab-content" class="p-5 overflow-y-auto flex-1 space-y-4 text-sm modal-scroll-body"></div>
 </div>

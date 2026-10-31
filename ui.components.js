@@ -692,7 +692,9 @@ const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
 const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
 
 if (layout === 'grid') {
-    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-1';
+    grid.className = document.documentElement.classList.contains('is-desktop')
+      ? 'grid grid-cols-4 xl:grid-cols-6 gap-3 p-1'
+      : 'grid grid-cols-2 gap-2 p-1';
     grid.innerHTML = pageAds.map(ad => {
       const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
       const isCombo = !!ad.isCombo;
@@ -745,7 +747,9 @@ return `<div class="bg-card rounded-2xl overflow-hidden flex flex-col justify-be
 </div>`;
     }).join('');
 } else if (layout === 'list') {
-    grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3';
+    grid.className = document.documentElement.classList.contains('is-desktop')
+      ? 'grid grid-cols-2 xl:grid-cols-3 gap-3'
+      : 'grid grid-cols-1 gap-3 max-w-[560px] mx-auto w-full';
     grid.innerHTML = pageAds.map(ad => {
       const img = (ad.images && ad.images[0]) || ad.image || PLACEHOLDER_IMG;
       const isCombo = !!ad.isCombo;
@@ -804,7 +808,9 @@ return `<div class="ig-card p-3 rounded-2xl flex flex-col justify-between gap-2.
 </div>`;
     }).join('');
 } else {
-    grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4';
+    grid.className = document.documentElement.classList.contains('is-desktop')
+      ? 'grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4'
+      : 'grid grid-cols-1 gap-4 max-w-[520px] mx-auto w-full';
     grid.innerHTML = pageAds.map((ad, index) => {
 		cardPhotoIndex[ad.id] = 0;
       const imgs = (ad.images && ad.images.length) ? ad.images : [ad.image || PLACEHOLDER_IMG];
@@ -2095,8 +2101,8 @@ const isDnd = !!currentUser.isDnd;
 
 function setFeedLayout(layout) {
   localStorage.setItem('bs_feed_layout', layout);
-  const isDesktop = window.innerWidth >= 1024;
-  itemsPerPage = layout === 'list' ? (isDesktop ? 18 : 10) : (layout === 'grid' ? (isDesktop ? 24 : 12) : (isDesktop ? 12 : 6));
+  itemsPerPage = getItemsPerPage(layout);
+  currentPage = 1;
   renderAds();
   openProfileModal();
   showToast('Вид ленты изменен', 'success');

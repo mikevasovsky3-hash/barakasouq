@@ -2907,3 +2907,77 @@ function onGenderSelectionChanged() {
 window.switchAuthTab = switchAuthTab;
 window.openAuthModal = openAuthModal;
 window.handleTelegramInstantAuth = handleTelegramInstantAuth;
+
+/* ================= ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ DESKTOP / MOBILE ================= */
+window.addEventListener('appmodechange', function () {
+  const layout = localStorage.getItem('bs_feed_layout') || 'instagram';
+  itemsPerPage = getItemsPerPage(layout);
+  currentPage = 1;
+
+  ['region-menu-overlay', 'sort-menu-overlay', 'radius-menu-overlay', 'search-suggestions-desktop', 'search-suggestions-mobile'].forEach(function (id) {
+    const el = byId(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  if (typeof updateNavState === 'function') updateNavState();
+  if (typeof renderCategoryPills === 'function') renderCategoryPills();
+  if (typeof renderAds === 'function') renderAds();
+
+  setTimeout(function () {
+    [detailMap, createMap, shopCreateMap, showcaseMap].forEach(function (m) {
+      try { if (m) m.invalidateSize(); } catch (e) {}
+    });
+  }, 200);
+});
+
+// Компьютерный режим: Esc закрывает верхнее окно
+window.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  if (!document.documentElement.classList.contains('is-desktop')) return;
+  if (!modalStack.length) return;
+  const top = modalStack[modalStack.length - 1];
+  if (top === 'modal-rules-agreement') return;
+  closeModal(top);
+}, true);
+/* ================= АДМИН-ПАНЕЛЬ: РЕЖИМЫ DESKTOP / MOBILE ================= */
+window.adminPanelBack = function () {
+  if (document.documentElement.classList.contains('is-desktop')) {
+    closeModal('modal-admin-panel');
+    return;
+  }
+  try {
+    if (SYSTEM_CONFIG.adminTab && SYSTEM_CONFIG.adminTab !== 'overview') {
+      switchAdminTab('overview');
+      return;
+    }
+  } catch (e) {}
+  closeModal('modal-admin-panel');
+};
+
+window.switchAdminTab = function (tab) {
+  SYSTEM_CONFIG.adminTab = tab;
+  ['overview', 'shops', 'users', 'ads', 'reports', 'archive', 'cats', 'rates', 'marquee', 'backup', 'finance', 'payments', 'tx'].forEach(function (name) {
+    const b = byId('atab-' + name);
+    if (!b) return;
+    const active = name === tab;
+    b.classList.toggle('is-active', active);
+    b.style.borderBottomColor = active ? '#0095f6' : 'transparent';
+    b.style.borderBottomWidth = active ? '2px' : '0';
+    b.style.color = active ? (name === 'reports' ? '#f87171' : 'var(--ig-text)') : 'var(--ig-text2)';
+    if (active) {
+      try { b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+    }
+  });
+  renderAdminTabContent();
+  const content = byId('admin-tab-content');
+  if (content) content.scrollTop = 0;
+};
+
+window.openAdminPanel = function () {
+  if (!currentUser || (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'ADMIN')) {
+    showToast('Доступ запрещен!', 'error');
+    return;
+  }
+  openModal('modal-admin-panel');
+  switchAdminTab(SYSTEM_CONFIG.adminTab || 'overview');
+};
