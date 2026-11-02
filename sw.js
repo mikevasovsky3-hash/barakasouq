@@ -1,4 +1,4 @@
-const CACHE_NAME = 'avito-sham-v7';
+const CACHE_NAME = 'avito-sham-v8';
 const OFFLINE_ASSETS = [
   '/',
   '/protect.js',
@@ -7,6 +7,7 @@ const OFFLINE_ASSETS = [
   '/api.js',
   '/ui.components.js',
   '/handlers.js',
+  '/secure.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -16,7 +17,10 @@ const OFFLINE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      // каждый файл кэшируется отдельно: если один внешний сервер не ответил, остальные всё равно сохранятся
+      Promise.allSettled(OFFLINE_ASSETS.map((url) => cache.add(url)))
+    )
   );
   self.skipWaiting();
 });

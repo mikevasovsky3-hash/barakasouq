@@ -690,12 +690,6 @@ function toggleAdvancedCreateFields() {
 }
 
 function openCreateAdModal() { 
-  const isTgUser = currentUser && (currentUser.uid?.startsWith('u_tg_') || currentUser.whatsapp?.startsWith('@') || currentUser.whatsapp?.startsWith('tg_'));
-  if (currentUser && !isTgUser && !(currentUser.phoneVerified || currentUser.phone_verified)) {
-    showToast(t('Для подачи объявлений подтвердите номер WhatsApp!'), 'warning');
-    if (typeof startUserWhatsAppVerification === 'function') startUserWhatsAppVerification();
-    return;
-  }
   pendingCreateImages = []; 
   renderPhotoThumbnailsGrid('create');
   fillCategorySelect(byId('ad-category')); 
@@ -976,41 +970,27 @@ const cleanWa = waCheck.number;
     }
     const guestGender = guestGenderRadio.value;
 
-    // Если аккаунт с таким номером уже существует — привязываем к нему
-    const existing = users.find(u => u.whatsapp && u.whatsapp.replace(/\D/g, '') === cleanWa.replace(/\D/g, ''));
-    if (existing) {
-      postingUser = existing;
-      saveUserSession(postingUser, true);
-    } else {
+    // Номер уже зарегистрирован — просим войти (раньше сайт молча входил в чужой аккаунт)
+    {
       if (!supabaseClient) {
         showToast('Нет соединения с базой данных', 'error');
         return;
       }
 
-      const autoLogin = 'user_' + cleanWa.replace(/\D/g, '').slice(-6);
-      const autoPass = 'sham' + Math.floor(1000 + Math.random() * 9000);
-      const passHash = await sha256(autoPass);
-      const newUid = 'u_' + Date.now();
-
-      const { data: regRes, error: regErr } = await supabaseClient.rpc('register_new_user', {
-        p_uid: newUid,
-        p_username: autoLogin,
-        p_password_hash: passHash,
-        p_kunya: 'Пользователь',
-        p_gender: guestGender,
-        p_whatsapp: cleanWa,
-        p_avatar: null
-      });
-
-      if (regErr || !regRes || !regRes.success) {
-        showToast(regRes?.error || 'Ошибка создания аккаунта', 'error');
+      const gres = await supabaseClient.rpc('app_register_guest', { p_whatsapp: cleanWa, p_gender: guestGender });
+      const gdata = gres.data;
+      if (gres.error || !gdata || !gdata.success) {
+        showToast(gdata?.error || 'Ошибка создания аккаунта', 'error');
+        if (gdata && gdata.code === 'EXISTS') openAuthModal();
         return;
       }
 
-      postingUser = regRes.user;
+      SecureAPI.setToken(gdata.token, true);
+      postingUser = gdata.user;
       users.push(postingUser);
       saveUserSession(postingUser, true);
       showToast(`${t('Профиль создан! Логин:')} @${postingUser.username}`, 'success');
+      showCredentials(gdata.username, gdata.password);
     }
   }
   
@@ -1902,7 +1882,7 @@ function adToUSD(ad) {
   if (isNaN(rawPrice) || rawPrice <= 0) return 0;
   const curr = (ad.currency || 'USD').toUpperCase();
   if (curr === 'USD') return rawPrice;
-  const fallbackRates = { USD: 1, SYP: 14000, TRY: 33, SAR: 3.75 };
+  const fallbackRates = { USD: 1, SYP: 131.70, TRY: 47.74, SAR: 3.75 };
   const activeRates = (typeof EXCHANGE_RATES !== 'undefined' && EXCHANGE_RATES) ? EXCHANGE_RATES : fallbackRates;
   const rate = parseFloat(activeRates[curr] || fallbackRates[curr]);
   if (!rate || isNaN(rate) || rate <= 0) return rawPrice;

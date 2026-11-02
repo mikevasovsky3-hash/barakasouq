@@ -179,7 +179,8 @@ function generateFastThumbnail(base64Data, size = 320) {
 }
 
 async function pushCategoriesToCloud() {
-  if (supabaseClient) {
+  // категории в базу записывает только администратор
+  if (supabaseClient && currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER')) {
     await supabaseClient.from('categories').upsert(categories);
   }
 }
@@ -241,11 +242,12 @@ async function uploadListingImages(filesArray, bucketName = 'listings') {
 
     const compressed = await compressSingleImageFile(file);
     const filePath = `public/${compressed.name}`;
+    const mimeType = (compressed && compressed.type) ? compressed.type : 'image/webp';
 
     const { data, error } = await supabaseClient.storage
       .from(bucketName)
       .upload(filePath, compressed, {
-        contentType: 'image/jpeg',
+        contentType: mimeType,
         cacheControl: '31536000',
         upsert: false
       });
@@ -511,14 +513,20 @@ async function initSupabaseSync() {
   try {
     const isPrivileged = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPERUSER');
 
-const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes, marqueeRes] = await Promise.all([
+const [usersRes, adsFirstChunkRes, combosRes, catsRes, reportsRes, marqueeRes, topupRes] = await Promise.all([
       supabaseClient.from('users').select('*'),
       supabaseClient.from('ads').select('id, title, category, store_category, region, city, is_women_only, is_free, is_negotiable, price, old_price, currency, description, link, images, image, lat, lng, seller_username, seller_uid, seller_kunya, seller_whatsapp, status, created_at, likes, views').order('created_at', { ascending: false }).range(0, 19),
       supabaseClient.from('combos').select('*'),
       supabaseClient.from('categories').select('*'),
       isPrivileged ? supabaseClient.from('reports').select('*') : Promise.resolve({ data: [] }),
-      supabaseClient.from('system_settings').select('value').eq('key', 'marquee_settings').maybeSingle()
+      supabaseClient.from('system_settings').select('value').eq('key', 'marquee_settings').maybeSingle(),
+      (typeof loadTopupRequestsFromServer === 'function' ? loadTopupRequestsFromServer() : Promise.resolve({ data: null }))
     ]);
+
+if (topupRes && topupRes.data && topupRes.data.value) {
+      TOPUP_REQUESTS = { ...TOPUP_REQUESTS, ...topupRes.data.value };
+      try { localStorage.setItem('bs_topup_requests', JSON.stringify(TOPUP_REQUESTS)); } catch(e) {}
+    }
 
 if (marqueeRes && marqueeRes.data && marqueeRes.data.value) {
       const cloudSettings = marqueeRes.data.value;
@@ -650,10 +658,15 @@ if (sypVal !== null && !isNaN(sypVal) && sypVal > 0) {
       const newTry = (tryVal !== null && !isNaN(tryVal)) ? +tryVal.toFixed(2) : EXCHANGE_RATES.TRY;
       const hasChanged = (newSyp !== EXCHANGE_RATES.SYP) || (newTry !== EXCHANGE_RATES.TRY);
 
-      EXCHANGE_RATES.SYP = newSyp;
+EXCHANGE_RATES.SYP = newSyp;
       EXCHANGE_RATES.TRY = newTry;
       lastRatesUpdate = new Date();
       localStorage.setItem('bs_rates', JSON.stringify(EXCHANGE_RATES));
+
+      const sypEl = document.getElementById('rate-ticker-syp');
+      const tryEl = document.getElementById('rate-ticker-try');
+      if (sypEl) sypEl.innerText = `$1 = ${newSyp} SYP`;
+      if (tryEl) tryEl.innerText = `$1 = ${newTry} TRY`;
 
       if (hasChanged || manual) {
         renderAds();

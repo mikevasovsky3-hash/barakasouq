@@ -451,6 +451,20 @@ html.is-desktop #admin-tab-content .ig-card button.w-8.h-8[title]::after{content
 <div class="ig-card rounded-xl px-2 py-3">
 <div id="categories-container" class="flex items-start gap-3 overflow-x-auto no-scrollbar px-1"></div>
 </div>
+
+<!-- Живой тикер курса валют -->
+<div id="live-rates-bar" class="ig-card rounded-xl px-3 py-2.5 flex items-center justify-between text-xs font-mono shadow-sm">
+  <div class="flex items-center gap-2 t1">
+    <span class="inline-flex w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+    <span class="font-bold">Курс валют:</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <span id="rate-ticker-syp" class="text-amber-400 font-bold">$1 = 131.70 SYP</span>
+    <span class="t2">•</span>
+    <span id="rate-ticker-try" class="text-emerald-400 font-bold">$1 = 47.74 TRY</span>
+  </div>
+</div>
+
 <div class="ig-card rounded-xl flex flex-col gap-2 px-3 py-2">
 <div class="flex items-center justify-between gap-2">
 <div class="flex items-center gap-2">
@@ -1445,6 +1459,7 @@ html.is-desktop #admin-tab-content .ig-card button.w-8.h-8[title]::after{content
 <script src="api.js" defer></script>
 <script src="ui.components.js" defer></script>
 <script src="handlers.js" defer></script>
+<script src="secure.js" defer></script>
 <script>
   function hideAppPreloader() {
     const preloader = document.getElementById('app-preloader');

@@ -521,7 +521,7 @@ function renderCategoryPills() {
 
   const visiblePills = pills.map(p => {
     const count = p.id === 'all' 
-      ? (ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role !== 'ADMIN')))).length + combos.length) 
+      ? (ads.filter(a => a.status === 'ACTIVE' && (!a.isWomenOnly || (currentUser && (currentUser.gender === 'FEMALE' || (currentUser.role === 'SUPERUSER' && currentUser.showWomenAds) || currentUser.role === 'ADMIN')))).length + combos.length) 
       : getCategoryAdsCount(p.id);
     return { ...p, count };
   }).filter(p => {
@@ -2180,9 +2180,7 @@ function handleSaveProfile(e) {
   const nw = nwCheck.number;
   const u = users[idx]; u.username = nl; 
   if (npRaw && npRaw.trim()) { 
-    sha256(npRaw.trim()).then(hashed => { 
-      u.passwordHash = hashed; finalizeProfileSave(u, orig, nl, nk, nw, na); 
-    }); 
+    window.__newPw = npRaw.trim(); finalizeProfileSave(u, orig, nl, nk, nw, na); 
   } else { 
     finalizeProfileSave(u, orig, nl, nk, nw, na); 
   } 
@@ -2216,13 +2214,14 @@ let safeRole = u.role || 'USER';
 
   // Отправка в Supabase в таблицу users напрямую для надежности + через RPC
   if (supabaseClient && u.uid) {
-    await supabaseClient.from('users').update({
+    const { error: profErr } = await supabaseClient.from('users').update({
       username: u.username,
       kunya: u.kunya,
       whatsapp: u.whatsapp,
-      avatar: u.avatar,
-      password_hash: u.passwordHash
+      avatar: u.avatar
     }).eq('uid', u.uid);
+    if (profErr) { window.__newPw = null; showToast(profErr.message || 'Не удалось сохранить профиль', 'error'); return; }
+    if (window.__newPw) { const pw = window.__newPw; window.__newPw = null; await secureChangePassword(pw); }
   }
 
   ads.forEach(ad => { 
@@ -2523,7 +2522,7 @@ function openTopupModal() {
   openModal('modal-avitocash-topup'); 
 }
 
-function createTopupRequest() {
+async function createTopupRequest() {
   const amount = _0xSCAmount(byId('topup-amount')?.value);
   if (!currentUser || amount <= 0) {
     showToast('Укажите корректную сумму', 'warning');
@@ -2547,13 +2546,24 @@ function createTopupRequest() {
     localStorage.setItem('bs_topup_requests', JSON.stringify(TOPUP_REQUESTS));
   } catch(e) {}
 
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('system_settings').upsert({
+        key: 'topup_requests_store',
+        value: TOPUP_REQUESTS
+      });
+    } catch(err) {
+      console.warn('Topup sync error:', err);
+    }
+  }
+
   byId('topup-code').innerText = code;
   byId('topup-result').classList.remove('hidden');
   byId('topup-qr').innerHTML = '';
   if (typeof QRCode !== 'undefined') {
     new QRCode(byId('topup-qr'), { text: AVITOCASH_ID, width: 180, height: 180, colorDark: '#000', colorLight: '#fff' });
   }
-  showToast('Заявка создана. Отправьте код администратору.', 'success');
+  showToast('Заявка создана и отправлена администратору!', 'success');
 }
 
 function openGiftGenerator() { 
