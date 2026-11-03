@@ -355,7 +355,7 @@
   const _logout = window.logout;
   window.logout = function () {
     const tk = getToken();
-    if (tk) real.rpc('app_logout', { p_token: tk }).catch(() => {});
+    try { if (tk) Promise.resolve(real.rpc('app_logout', { p_token: tk })).catch(() => {}); } catch (e) {}
     setToken('');
     meCache = null; mePromise = null;
     return _logout.apply(this, arguments);
