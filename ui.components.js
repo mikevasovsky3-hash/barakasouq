@@ -1481,7 +1481,7 @@ const editor = byId('admin-marquee-input');
 <p class="text-xs t2 leading-relaxed">Выгрузка и восстановление всей базы данных платформы (объявления, пользователи, магазины, категории, акции, курсы, жалобы) в один клик.</p>
 <div class="grid grid-cols-2 gap-3 pt-2">
 <button onclick="exportFullDatabaseJSON()" class="py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95" style="background:#f59e0b;color:#000"><i class="fa-solid fa-download"></i> ${t('Экспорт БД')}</button>
-<label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> ${t('Импорт БД')}<input type="file" accept=".json" onchange="importFullDatabaseJSON(event)" class="hidden"></label>
+<label class="py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 cursor-pointer active:scale-95" style="background:#4f46e5"><i class="fa-solid fa-upload"></i> ${t('Импорт БД')}<input type="file" accept=".json,.gz" onchange="importFullDatabaseJSON(event)" class="hidden"></label>
 </div>
 </div>
 

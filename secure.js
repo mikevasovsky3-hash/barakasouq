@@ -562,4 +562,103 @@
       return true;
     } catch (err) { showToast('Ошибка: ' + err.message, 'error'); return false; }
   };
+
+  /* ===================== КОПИЯ БАЗЫ И ВОССТАНОВЛЕНИЕ (только SUPERUSER) ===================== */
+  const BACKUP_ORDER = ['categories', 'settings', 'system_settings', 'marquee_broadcast', 'users', 'ads', 'combos', 'gift_codes', 'topup_requests', 'transactions', 'reports'];
+  function isSuper() { return !!(currentUser && currentUser.role === 'SUPERUSER' && getToken()); }
+
+  async function fetchFullBackup() {
+    const r = await call('app_admin_export', {});
+    if (!r.success) throw new Error(r.error || 'Нет доступа');
+    return r;
+  }
+
+  window.exportFullDatabaseJSON = async function () {
+    if (!isSuper()) { showToast('Копию базы может скачать только главный администратор', 'error'); return; }
+    try {
+      showToast('Готовим полную копию базы...', 'info');
+      const b = await fetchFullBackup();
+      const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+      const blob = new Blob([JSON.stringify(b)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'backup-' + stamp + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      const summary = BACKUP_ORDER.filter(n => Array.isArray(b.tables[n])).map(n => n + ': ' + b.tables[n].length).join(', ');
+      showToast('Копия скачана. ' + summary, 'success');
+    } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+  };
+
+  async function readBackupFile(f) {
+    let text;
+    if (/\.gz$/i.test(f.name)) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('Браузер не умеет открывать .gz. Распакуйте файл и выберите .json');
+      text = await new Response(f.stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    } else {
+      text = await f.text();
+    }
+    return JSON.parse(text);
+  }
+
+  window.importFullDatabaseJSON = async function (event) {
+    const input = event.target;
+    const f = input.files && input.files[0];
+    if (!f) return;
+    if (!isSuper()) { showToast('Восстановить базу может только главный администратор', 'error'); input.value = ''; return; }
+    let d;
+    try { d = await readBackupFile(f); } catch (err) { showToast('Не удалось прочитать файл: ' + err.message, 'error'); input.value = ''; return; }
+    input.value = '';
+    if (!d || !d.tables) {
+      showToast('Файл старого формата. Выберите копию, скачанную кнопкой «Экспорт БД», или файл из GitHub.', 'error');
+      return;
+    }
+    const names = BACKUP_ORDER.filter(n => Array.isArray(d.tables[n]));
+    const summary = names.map(n => n + ': ' + d.tables[n].length).join(', ');
+    showConfirmModal('Восстановление базы',
+      'Копия от ' + (d.exportDate || '?') + '. Записать её поверх текущих данных? (' + summary + '). Записи из файла заменят совпадающие, ничего не удаляется.',
+      async () => {
+        try {
+          showToast('Восстанавливаем данные, не закрывайте страницу...', 'info');
+          for (const n of names) {
+            const rows = d.tables[n];
+            for (let i = 0; i < rows.length; i += 500) {
+              const r = await call('app_admin_import', { p_table: n, p_rows: rows.slice(i, i + 500) });
+              if (!r.success) throw new Error(r.error || ('Таблица ' + n));
+            }
+          }
+          showToast('База восстановлена!', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } catch (err) { showToast('Ошибка восстановления: ' + err.message, 'error'); }
+      });
+  };
+
+  // Авто-бэкап в Google Диск: для главного администратора отправляем ПОЛНУЮ копию с сервера
+  const _driveBackup = window.executeSilentDriveBackup;
+  window.executeSilentDriveBackup = async function (manual) {
+    if (!isSuper()) return _driveBackup ? _driveBackup.apply(this, arguments) : undefined;
+    if (!DRIVE_BACKUP_CONFIG.gasUrl) { if (manual) showToast(t('URL Google Apps Script не настроен'), 'error'); return; }
+    try {
+      if (manual) showToast('Сбор данных...', 'info');
+      const b = await fetchFullBackup();
+      const T = b.tables;
+      const body = {
+        version: '5.0_SERVER_FULL', exportDate: b.exportDate,
+        users: T.users, ads: T.ads, categories: T.categories, combos: T.combos, reports: T.reports,
+        tables: T
+      };
+      const res = await fetch(DRIVE_BACKUP_CONFIG.gasUrl, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' } });
+      const txt = await res.text();
+      if (res.ok && txt === 'OK') {
+        DRIVE_BACKUP_CONFIG.lastRun = Date.now();
+        try { localStorage.setItem('bs_drive_backup', JSON.stringify(DRIVE_BACKUP_CONFIG)); } catch (e) {}
+        if (manual) showToast(t('Авто-бэкап успешно загружен на Диск!'), 'success');
+        if (byId('admin-backup-last-run')) byId('admin-backup-last-run').innerText = new Date().toLocaleString();
+      } else { throw new Error(txt || 'Скрипт не вернул ответ'); }
+    } catch (err) {
+      console.warn('Auto-backup failed:', err);
+      if (manual) alert('ОШИБКА GOOGLE APPS SCRIPT:\n\n' + err.message);
+    }
+  };
+
 })();
